@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { cities } from "@/features/cities/data/cities";
 import { useSeo } from "@/lib/seo/useSeo";
 
 const pages = [
@@ -33,6 +34,13 @@ export default function SiteMapPage() {
           <li key={page.href}>
             <Link to={page.href} className="text-sm hover:underline">
               {page.label}
+            </Link>
+          </li>
+        ))}
+        {cities.map((city) => (
+          <li key={city.id}>
+            <Link to={`/immobilier/${city.slug}`} className="text-sm hover:underline">
+              Immobilier {city.name}
             </Link>
           </li>
         ))}

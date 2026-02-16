@@ -7,6 +7,7 @@ import { getFeaturedProperties } from "@/features/listings/api/properties.servic
 import { ListingCard } from "@/features/listings/components/ListingCard";
 import { agents } from "@/features/listings/data/agents";
 import { toSearchItem } from "@/features/listings/utils/mappers";
+import { cities } from "@/features/cities/data/cities";
 import { useUiStore } from "@/lib/state/useUiStore";
 import { useSeo } from "@/lib/seo/useSeo";
 
@@ -129,6 +130,24 @@ export default function HomePage() {
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {(featuredQuery.data ?? []).map((property) => (
             <ListingCard key={property.id} item={toSearchItem(property)} />
+          ))}
+        </div>
+      </section>
+
+      <section className="container mx-auto px-4 pb-14">
+        <h2 className="font-display text-3xl">Explorer par ville</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Pages locales dédiées pour faciliter votre recherche immobilière par secteur.
+        </p>
+        <div className="mt-5 flex flex-wrap gap-2">
+          {cities.map((city) => (
+            <Link
+              key={city.id}
+              to={`/immobilier/${city.slug}`}
+              className="rounded-full border border-border px-4 py-2 text-sm transition hover:bg-card"
+            >
+              Immobilier {city.name}
+            </Link>
           ))}
         </div>
       </section>

@@ -7,6 +7,7 @@ const HomePage = lazy(() => import("@/features/content/pages/HomePage"));
 const ListingsIndexPage = lazy(() => import("@/features/listings/pages/ListingsIndexPage"));
 const ListingDetailPage = lazy(() => import("@/features/listings/pages/ListingDetailPage"));
 const AboutPageV2 = lazy(() => import("@/features/content/pages/AboutPageV2"));
+const CityHubPage = lazy(() => import("@/features/cities/pages/CityHubPage"));
 const ContactPageV2 = lazy(() => import("@/features/content/pages/ContactPageV2"));
 const FeesPage = lazy(() => import("@/features/content/pages/FeesPage"));
 const SellPage = lazy(() => import("@/features/content/pages/SellPage"));
@@ -40,6 +41,7 @@ export function AppRouter() {
             <Route path="/property/:slug" element={<LegacyPropertySlugRedirect />} />
 
             <Route path="/apropos" element={<AboutPageV2 />} />
+            <Route path="/immobilier/:ville" element={<CityHubPage />} />
             <Route path="/contact" element={<ContactPageV2 />} />
             <Route path="/vendre" element={<SellPage />} />
             <Route path="/estimation" element={<EstimationPageV2 />} />
