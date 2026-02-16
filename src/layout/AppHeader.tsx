@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
-import { ExternalLink, Menu, Phone, Search, X } from "lucide-react";
+import { ExternalLink, Menu, Phone, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { useUiStore } from "@/lib/state/useUiStore";
 import { trackEvent } from "@/lib/analytics/events";
@@ -61,52 +62,6 @@ export function AppHeader() {
   }, []);
 
   useEffect(() => {
-    const html = document.documentElement;
-    const body = document.body;
-
-    if (!mobileOpen) {
-      return;
-    }
-
-    const scrollY = window.scrollY;
-    const previousHtmlOverflow = html.style.overflow;
-    const previousHtmlHeight = html.style.height;
-    const previousBodyPosition = body.style.position;
-    const previousBodyTop = body.style.top;
-    const previousBodyLeft = body.style.left;
-    const previousBodyRight = body.style.right;
-    const previousBodyWidth = body.style.width;
-    const previousBodyOverflow = body.style.overflow;
-    const previousBodyTouchAction = body.style.touchAction;
-    const previousBodyOverscrollBehavior = body.style.overscrollBehavior;
-
-    html.style.overflow = "hidden";
-    html.style.height = "100%";
-    body.style.position = "fixed";
-    body.style.top = `-${scrollY}px`;
-    body.style.left = "0";
-    body.style.right = "0";
-    body.style.width = "100%";
-    body.style.overflow = "hidden";
-    body.style.touchAction = "none";
-    body.style.overscrollBehavior = "none";
-
-    return () => {
-      html.style.overflow = previousHtmlOverflow;
-      html.style.height = previousHtmlHeight;
-      body.style.position = previousBodyPosition;
-      body.style.top = previousBodyTop;
-      body.style.left = previousBodyLeft;
-      body.style.right = previousBodyRight;
-      body.style.width = previousBodyWidth;
-      body.style.overflow = previousBodyOverflow;
-      body.style.touchAction = previousBodyTouchAction;
-      body.style.overscrollBehavior = previousBodyOverscrollBehavior;
-      window.scrollTo(0, scrollY);
-    };
-  }, [mobileOpen]);
-
-  useEffect(() => {
     setMobileOpen(false);
   }, [location.pathname, location.search]);
 
@@ -133,128 +88,156 @@ export function AppHeader() {
   );
 
   return (
-    <header className={headerClass}>
-      <div className="container mx-auto flex items-center justify-between px-4">
-        <button
-          type="button"
-          className={cn(
-            "inline-flex h-10 w-10 items-center justify-center rounded-full border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent lg:hidden",
-            mobileOpen ? "border-foreground bg-foreground text-background" : "border-border bg-background text-foreground",
-          )}
-          onClick={() => setMobileOpen((current) => !current)}
-          aria-label={mobileOpen ? "Fermer le menu" : "Ouvrir le menu"}
-          aria-expanded={mobileOpen}
-        >
-          {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
-
-        <Link to="/" className="flex items-center gap-2 sm:gap-2.5">
-          <span
-            className={cn(
-              "font-sans text-[1.8rem] font-semibold leading-none tracking-tight transition-all duration-200 md:text-[2rem]",
-              scrolled && "text-[1.55rem] md:text-[1.7rem]",
-            )}
-          >
-            <span className="text-[#000000]">Foch</span>
-            <span className="text-[#2eca6a]">Immobilier</span>
-          </span>
-          <img
-            src={legacyLogoUrl}
-            alt="Réseau UNIS"
-            className={cn("hidden w-auto md:inline-block md:h-[30px]", scrolled && "md:h-7")}
-            loading="eager"
-            decoding="async"
-          />
-        </Link>
-
-        <nav className="hidden items-center gap-5 lg:flex">
-          {primaryLinks.map((item) => (
-            <LinkItem key={item.to} to={item.to} label={item.label} />
-          ))}
-        </nav>
-
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background/90"
-            aria-label="Ouvrir la recherche"
-            onClick={() => {
-              setSearchDrawerOpen(true);
-              trackEvent("search_opened", { source: "header" });
-            }}
-          >
-            <Search className="h-4 w-4" />
-          </button>
-          <a
-            href="tel:0235425176"
-            className="hidden h-10 w-10 items-center justify-center rounded-full border border-border bg-background/90 md:inline-flex"
-            aria-label="Appeler l'agence"
-            onClick={() => trackEvent("phone_clicked", { source: "header" })}
-          >
-            <Phone className="h-4 w-4" />
-          </a>
-          <a
-            href="https://extranet2.ics.fr"
-            target="_blank"
-            rel="noreferrer noopener"
-            className="hidden items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground lg:inline-flex"
-            title="Vous quittez le site"
-            onClick={() => trackEvent("extranet_clicked")}
-          >
-            Extranet
-            <ExternalLink className="h-3 w-3" />
-          </a>
-          <Link to="/estimation" className="hidden md:block">
-            <Button className="rounded-full px-5">Estimer mon bien</Button>
-          </Link>
-        </div>
-      </div>
-
-      {mobileOpen && (
-        <div className="fixed inset-0 z-40 overflow-y-auto bg-background pt-[76px] lg:hidden">
-          <nav className="mx-auto flex w-full max-w-[720px] flex-col gap-2 px-5 pb-10">
-            {primaryLinks.map((item) => (
-              <LinkItem
-                key={item.to}
-                to={item.to}
-                label={item.label}
-                onClick={() => setMobileOpen(false)}
-                className="rounded-lg px-3 py-2 text-base font-semibold text-foreground hover:bg-muted"
-              />
-            ))}
-            <Link
-              to="/estimation"
-              onClick={() => setMobileOpen(false)}
-              className="rounded-lg border border-border px-3 py-2 text-base font-semibold text-foreground"
+    <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+      <header className={headerClass}>
+        <div className="container mx-auto flex items-center justify-between px-4">
+          <SheetTrigger asChild>
+            <button
+              type="button"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background/95 text-foreground shadow-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent lg:hidden"
+              aria-label={mobileOpen ? "Fermer le menu" : "Ouvrir le menu"}
+              aria-expanded={mobileOpen}
             >
-              Estimer mon bien
-            </Link>
+              <Menu className="h-5 w-5" />
+            </button>
+          </SheetTrigger>
+
+          <Link to="/" className="flex items-center gap-2 sm:gap-2.5">
+            <span
+              className={cn(
+                "font-sans text-[1.8rem] font-semibold leading-none tracking-tight transition-all duration-200 md:text-[2rem]",
+                scrolled && "text-[1.55rem] md:text-[1.7rem]",
+              )}
+            >
+              <span className="text-[#000000]">Foch</span>
+              <span className="text-[#2eca6a]">Immobilier</span>
+            </span>
+            <img
+              src={legacyLogoUrl}
+              alt="Réseau UNIS"
+              className={cn("hidden w-auto md:inline-block md:h-[30px]", scrolled && "md:h-7")}
+              loading="eager"
+              decoding="async"
+            />
+          </Link>
+
+          <nav className="hidden items-center gap-5 lg:flex">
+            {primaryLinks.map((item) => (
+              <LinkItem key={item.to} to={item.to} label={item.label} />
+            ))}
+          </nav>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background/90"
+              aria-label="Ouvrir la recherche"
+              onClick={() => {
+                setSearchDrawerOpen(true);
+                trackEvent("search_opened", { source: "header" });
+              }}
+            >
+              <Search className="h-4 w-4" />
+            </button>
+            <a
+              href="tel:0235425176"
+              className="hidden h-10 w-10 items-center justify-center rounded-full border border-border bg-background/90 md:inline-flex"
+              aria-label="Appeler l'agence"
+              onClick={() => trackEvent("phone_clicked", { source: "header" })}
+            >
+              <Phone className="h-4 w-4" />
+            </a>
             <a
               href="https://extranet2.ics.fr"
               target="_blank"
               rel="noreferrer noopener"
-              className="mt-1 inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-base text-foreground"
+              className="hidden items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground lg:inline-flex"
               title="Vous quittez le site"
-              onClick={() => {
-                setMobileOpen(false);
-                trackEvent("extranet_clicked", { source: "mobile_menu" });
-              }}
+              onClick={() => trackEvent("extranet_clicked")}
             >
               Extranet
-              <ExternalLink className="h-4 w-4" />
+              <ExternalLink className="h-3 w-3" />
             </a>
-            <div className="mt-4 border-t border-border pt-4 text-sm text-foreground/85">
-              <p>109 Av. Foch, 76600 Le Havre</p>
-              <a href="tel:0235425176" className="block text-foreground hover:underline">
-                02 35 42 51 76
-              </a>
-              <a href="mailto:vendre@fochimmobilier.com" className="block text-foreground hover:underline">
-                vendre@fochimmobilier.com
-              </a>
+            <Link to="/estimation" className="hidden md:block">
+              <Button className="rounded-full px-5">Estimer mon bien</Button>
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      <SheetContent
+        side="left"
+        className="h-dvh w-[88vw] max-w-[360px] border-r border-border bg-background p-0 text-foreground lg:hidden"
+      >
+        <SheetTitle className="sr-only">Menu principal</SheetTitle>
+
+        <div className="flex h-full flex-col">
+          <div className="border-b border-border px-5 py-5">
+            <SheetClose asChild>
+              <Link to="/" className="inline-flex items-center gap-2">
+                <span className="font-sans text-[1.45rem] font-semibold leading-none tracking-tight">
+                  <span className="text-[#000000]">Foch</span>
+                  <span className="text-[#2eca6a]">Immobilier</span>
+                </span>
+              </Link>
+            </SheetClose>
+          </div>
+
+          <nav className="flex-1 overflow-y-auto px-4 py-5">
+            <div className="flex flex-col gap-2">
+              {primaryLinks.map((item) => (
+                <SheetClose asChild key={item.to}>
+                  <NavLink
+                    to={item.to}
+                    className={({ isActive }) =>
+                      cn(
+                        "rounded-lg border border-transparent px-3 py-3 text-[1rem] font-semibold text-foreground transition-colors",
+                        "hover:border-border hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-accent",
+                        isActive && "border-border bg-muted",
+                      )
+                    }
+                  >
+                    {item.label}
+                  </NavLink>
+                </SheetClose>
+              ))}
+
+              <SheetClose asChild>
+                <Link
+                  to="/estimation"
+                  className="mt-2 rounded-lg border border-border px-3 py-3 text-[1rem] font-semibold text-foreground transition-colors hover:bg-muted"
+                >
+                  Estimer mon bien
+                </Link>
+              </SheetClose>
+
+              <SheetClose asChild>
+                <a
+                  href="https://extranet2.ics.fr"
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="mt-1 inline-flex items-center gap-2 rounded-lg border border-border px-3 py-3 text-[1rem] font-medium text-foreground transition-colors hover:bg-muted"
+                  title="Vous quittez le site"
+                  onClick={() => trackEvent("extranet_clicked", { source: "mobile_menu" })}
+                >
+                  Extranet
+                  <ExternalLink className="h-4 w-4" />
+                </a>
+              </SheetClose>
             </div>
           </nav>
+
+          <div className="border-t border-border px-5 py-4 text-sm text-foreground/90">
+            <p>109 Av. Foch, 76600 Le Havre</p>
+            <a href="tel:0235425176" className="mt-1 block text-foreground hover:underline">
+              02 35 42 51 76
+            </a>
+            <a href="mailto:vendre@fochimmobilier.com" className="block text-foreground hover:underline">
+              vendre@fochimmobilier.com
+            </a>
+          </div>
         </div>
-      )}
-    </header>
+      </SheetContent>
+    </Sheet>
   );
 }
