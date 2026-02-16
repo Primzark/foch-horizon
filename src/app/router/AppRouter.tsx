@@ -2,6 +2,7 @@ import { Suspense, lazy } from "react";
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router-dom";
 import { AppLayout } from "@/layout/AppLayout";
 import { LegacyAnnonceRedirect, LegacyPropertySlugRedirect, QueryRedirect } from "@/app/router/LegacyRedirects";
+import { RouteLoadingScreen } from "@/components/ui/RouteLoadingScreen";
 
 const HomePage = lazy(() => import("@/features/content/pages/HomePage"));
 const ListingsIndexPage = lazy(() => import("@/features/listings/pages/ListingsIndexPage"));
@@ -28,7 +29,7 @@ function LayoutShell() {
 export function AppRouter() {
   return (
     <BrowserRouter>
-      <Suspense fallback={<div className="container mx-auto px-4 py-12 text-sm text-muted-foreground">Chargement…</div>}>
+      <Suspense fallback={<RouteLoadingScreen fullscreen />}>
         <Routes>
           <Route element={<LayoutShell />}>
             <Route path="/" element={<HomePage />} />
