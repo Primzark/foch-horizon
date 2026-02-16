@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildSearchParams, parseSearchParams } from "@/features/listings/utils/query";
-import { parseReferenceFromQuery, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
+import { parseReferenceFromQuery, sanitizePropertySlug, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
 
 describe("listing query helpers", () => {
   it("serializes and parses filter params consistently", () => {
@@ -40,5 +40,10 @@ describe("listing formatting helpers", () => {
     expect(toCanonicalPropertyPath({ id: 5139, slug: "a-deux-pas-de-la-plage" })).toBe(
       "/biens/5139-a-deux-pas-de-la-plage",
     );
+  });
+
+  it("sanitizes unsafe slugs", () => {
+    expect(sanitizePropertySlug("Maison / Vue Mer !!")).toBe("maison-vue-mer");
+    expect(toCanonicalPropertyPath({ id: 6001, slug: "Maison / Vue Mer !!" })).toBe("/biens/6001-maison-vue-mer");
   });
 });

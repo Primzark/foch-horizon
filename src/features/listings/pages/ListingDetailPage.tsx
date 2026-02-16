@@ -8,7 +8,7 @@ import { ListingGallery } from "@/features/listings/components/ListingGallery";
 import { ListingCard } from "@/features/listings/components/ListingCard";
 import { toSearchItem } from "@/features/listings/utils/mappers";
 import { LeadForm } from "@/features/leads/components/LeadForm";
-import { formatPrice, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
+import { formatPrice, sanitizePropertySlug, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
 import { useSeo } from "@/lib/seo/useSeo";
 import { trackEvent } from "@/lib/analytics/events";
 
@@ -104,7 +104,10 @@ export default function ListingDetailPage() {
     );
   }
 
-  if (parsedRoute?.slug !== property.slug) {
+  const canonicalSlug = sanitizePropertySlug(property.slug);
+  const routeSlug = parsedRoute?.slug ? sanitizePropertySlug(parsedRoute.slug) : null;
+
+  if (routeSlug !== canonicalSlug) {
     return <Navigate to={canonicalPath!} replace />;
   }
 

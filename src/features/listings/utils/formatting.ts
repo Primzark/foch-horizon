@@ -9,8 +9,17 @@ export function formatCompactNumber(value: number): string {
   return new Intl.NumberFormat("fr-FR", { notation: "compact", maximumFractionDigits: 1 }).format(value);
 }
 
+export function sanitizePropertySlug(slug: string): string {
+  const sanitized = normalizeKeyword(slug)
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/-{2,}/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  return sanitized || "annonce";
+}
+
 export function toCanonicalPropertyPath(property: Pick<Property, "id" | "slug">): string {
-  return `/biens/${property.id}-${property.slug}`;
+  return `/biens/${property.id}-${sanitizePropertySlug(property.slug)}`;
 }
 
 export function getPropertyStatusLabel(status: PropertyStatus): string | null {

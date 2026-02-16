@@ -1,5 +1,7 @@
 import type { Agent } from "@/types/domain";
 
+const legacyFacebookUrl = "https://www.facebook.com/fochimmobiliermetropole#";
+
 export const agents: Agent[] = [
   {
     id: "agent-jeanne-morel",
@@ -8,6 +10,7 @@ export const agents: Agent[] = [
     phone: "02 35 42 00 01",
     mobile: "06 11 22 33 44",
     email: "contact@foch-immobilier.fr",
+    facebookUrl: legacyFacebookUrl,
     portraitUrl:
       "https://foch.staticlbi.com/original/images/agences/avatar_364a50d41bc519ebda39842d618c1ed5.jpg",
     bio: "Référente transaction depuis plus de 15 ans, Jeanne pilote les ventes résidentielles au Havre et sur le littoral.",
@@ -21,6 +24,7 @@ export const agents: Agent[] = [
     phone: "02 35 42 00 01",
     mobile: "06 55 66 77 88",
     email: "vendre@foch-immobilier.fr",
+    facebookUrl: legacyFacebookUrl,
     portraitUrl:
       "https://foch.staticlbi.com/original/images/agences/avatar_9ab622de29743726ec6e660e1fd5ea8e.jpg",
     bio: "Spécialiste des appartements familiaux et des acquisitions en résidence principale.",
@@ -34,6 +38,7 @@ export const agents: Agent[] = [
     phone: "02 35 42 00 01",
     mobile: "06 99 88 77 66",
     email: "location@foch-immobilier.fr",
+    facebookUrl: legacyFacebookUrl,
     portraitUrl:
       "https://foch.staticlbi.com/original/images/agences/avatar_3b09e05ea7eaad316f237fa19a8ef697.jpg",
     bio: "En charge des locations et de l'administration de biens avec suivi propriétaire-locataire.",
