@@ -8,6 +8,8 @@ This folder contains the Phase 0 audit artifacts generated before implementation
 - `internal-links.txt`: extracted internal URL references.
 - `image-urls.txt`: extracted `staticlbi` image URL references.
 - `seo-baseline.md`: baseline title/canonical for representative pages.
+- `gallery-enrichment-manifest.json`: deterministic `propertyId -> full image set` manifest extracted from legacy detail pages.
+- `gallery-enrichment-validation.md`: availability check results for enriched image URLs.
 
 ## Remaining manual checks (DevTools/Lighthouse)
 - Capture filter requests payload/response in browser Network tab.
