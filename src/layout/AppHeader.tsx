@@ -13,6 +13,7 @@ const primaryLinks = [
   { to: "/apropos", label: "L'agence" },
   { to: "/contact", label: "Contact" },
 ];
+const legacyFiLogoUrl = "https://www.fochimmobilier.com/static/img/favicon.png";
 const legacyLogoUrl = "https://www.fochimmobilier.com/static/img/logo_unis.png";
 
 function LinkItem({ to, label, onClick }: { to: string; label: string; onClick?: () => void }) {
@@ -73,8 +74,16 @@ export function AppHeader() {
         </button>
 
         <Link to="/" className="flex items-center gap-2 sm:gap-2.5">
+          <img
+            src={legacyFiLogoUrl}
+            alt="Logo FI Foch Immobilier"
+            className={cn("h-7 w-7 rounded-sm sm:h-8 sm:w-8", scrolled && "h-6 w-6 sm:h-7 sm:w-7")}
+            loading="eager"
+            decoding="async"
+          />
           <span className={cn("font-display text-xl tracking-tight transition-all duration-200 sm:text-2xl", scrolled && "text-lg sm:text-xl")}>
-            Foch<span className="text-accent">Immobilier</span>
+            <span className="text-[#000000]">Foch</span>
+            <span className="text-[#2eca6a]">Immobilier</span>
           </span>
           <img
             src={legacyLogoUrl}
