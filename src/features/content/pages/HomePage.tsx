@@ -1,5 +1,6 @@
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Building2, Compass, Handshake, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -32,10 +33,40 @@ const serviceCards = [
   },
 ];
 
+const HERO_ROTATE_MS = 6500;
+
 export default function HomePage() {
   const setSearchDrawerOpen = useUiStore((state) => state.setSearchDrawerOpen);
   const featuredQuery = useQuery({ queryKey: ["featured-properties"], queryFn: () => getFeaturedProperties(6) });
-  const heroImage = featuredQuery.data?.[0]?.images[0]?.sourceUrl;
+  const reducedMotion = useReducedMotion();
+  const heroSlides = useMemo(
+    () =>
+      (featuredQuery.data ?? [])
+        .map((property) => ({
+          id: property.id,
+          title: property.title,
+          imageUrl: property.images[0]?.sourceUrl ?? "",
+        }))
+        .filter((slide) => slide.imageUrl.length > 0),
+    [featuredQuery.data],
+  );
+  const [activeHeroIndex, setActiveHeroIndex] = useState(0);
+
+  useEffect(() => {
+    setActiveHeroIndex(0);
+  }, [heroSlides.length]);
+
+  useEffect(() => {
+    if (heroSlides.length <= 1) {
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      setActiveHeroIndex((current) => (current + 1) % heroSlides.length);
+    }, HERO_ROTATE_MS);
+
+    return () => window.clearInterval(timer);
+  }, [heroSlides.length]);
 
   useSeo({
     title: "Foch Immobilier | Immobilier d'exception au Havre",
@@ -69,7 +100,27 @@ export default function HomePage() {
   return (
     <>
       <section className="relative min-h-[68vh] overflow-hidden">
-        {heroImage && <img src={heroImage} alt="Sélection Foch Immobilier" className="absolute inset-0 h-full w-full object-cover" />}
+        <AnimatePresence initial={false}>
+          {heroSlides.length > 0 && (
+            <motion.img
+              key={`${heroSlides[activeHeroIndex].id}-${activeHeroIndex}`}
+              src={heroSlides[activeHeroIndex].imageUrl}
+              alt={heroSlides[activeHeroIndex].title}
+              className="absolute inset-0 h-full w-full object-cover"
+              initial={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 1.03 }}
+              animate={reducedMotion ? { opacity: 1 } : { opacity: 1, scale: 1.09 }}
+              exit={{ opacity: 0 }}
+              transition={
+                reducedMotion
+                  ? { duration: 0.4, ease: "easeOut" }
+                  : {
+                      opacity: { duration: 1.1, ease: "easeInOut" },
+                      scale: { duration: HERO_ROTATE_MS / 1000 + 0.8, ease: "linear" },
+                    }
+              }
+            />
+          )}
+        </AnimatePresence>
         <div className="absolute inset-0 bg-gradient-to-br from-black/55 via-black/35 to-black/55" />
         <div className="container relative mx-auto flex min-h-[68vh] flex-col justify-center px-4 py-16">
           <motion.h1

@@ -13,7 +13,6 @@ const primaryLinks = [
   { to: "/apropos", label: "L'agence" },
   { to: "/contact", label: "Contact" },
 ];
-const legacyFiLogoUrl = "https://www.fochimmobilier.com/static/img/favicon.png";
 const legacyLogoUrl = "https://www.fochimmobilier.com/static/img/logo_unis.png";
 
 function LinkItem({ to, label, onClick }: { to: string; label: string; onClick?: () => void }) {
@@ -74,21 +73,19 @@ export function AppHeader() {
         </button>
 
         <Link to="/" className="flex items-center gap-2 sm:gap-2.5">
-          <img
-            src={legacyFiLogoUrl}
-            alt="Logo FI Foch Immobilier"
-            className={cn("h-7 w-7 rounded-sm sm:h-8 sm:w-8", scrolled && "h-6 w-6 sm:h-7 sm:w-7")}
-            loading="eager"
-            decoding="async"
-          />
-          <span className={cn("font-display text-xl tracking-tight transition-all duration-200 sm:text-2xl", scrolled && "text-lg sm:text-xl")}>
+          <span
+            className={cn(
+              "font-sans text-[1.8rem] font-semibold leading-none tracking-tight transition-all duration-200 md:text-[2rem]",
+              scrolled && "text-[1.55rem] md:text-[1.7rem]",
+            )}
+          >
             <span className="text-[#000000]">Foch</span>
             <span className="text-[#2eca6a]">Immobilier</span>
           </span>
           <img
             src={legacyLogoUrl}
             alt="Réseau UNIS"
-            className={cn("hidden w-auto md:inline-block md:h-7 lg:h-8", scrolled && "md:h-6 lg:h-7")}
+            className={cn("hidden w-auto md:inline-block md:h-[30px]", scrolled && "md:h-7")}
             loading="eager"
             decoding="async"
           />
