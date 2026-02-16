@@ -1,4 +1,4 @@
-import type { Property, PropertyStatus, TransactionType } from "@/types/domain";
+import type { Property, PropertyStatus, PropertyType, TransactionType } from "@/types/domain";
 
 export function formatPrice(amount: number, transactionType: TransactionType): string {
   const formatted = new Intl.NumberFormat("fr-FR").format(amount);
@@ -34,6 +34,17 @@ export function getPropertyStatusLabel(status: PropertyStatus): string | null {
       return "Retiré";
     default:
       return null;
+  }
+}
+
+export function formatPropertyTypeLabel(propertyType: PropertyType): string {
+  switch (propertyType) {
+    case "appartement":
+      return "Appartement";
+    case "maison_villa":
+      return "Maison / Villa";
+    default:
+      return "Autre";
   }
 }
 

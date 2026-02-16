@@ -3,7 +3,12 @@ import { Link } from "react-router-dom";
 import type { PropertySearchItem } from "@/types/api";
 import { cn } from "@/lib/utils";
 import DpeBadge from "@/components/property/DpeBadge";
-import { formatPrice, getPropertyStatusLabel, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
+import {
+  formatPrice,
+  formatPropertyTypeLabel,
+  getPropertyStatusLabel,
+  toCanonicalPropertyPath,
+} from "@/features/listings/utils/formatting";
 import { useFavoritesStore } from "@/features/favorites/useFavoritesStore";
 
 interface ListingCardProps {
@@ -17,6 +22,7 @@ export function ListingCard({ item, viewMode = "grid" }: ListingCardProps) {
 
   const path = toCanonicalPropertyPath({ id: item.id, slug: item.slug });
   const status = getPropertyStatusLabel(item.status);
+  const propertyTypeLabel = formatPropertyTypeLabel(item.type);
 
   if (viewMode === "list") {
     return (
@@ -28,7 +34,12 @@ export function ListingCard({ item, viewMode = "grid" }: ListingCardProps) {
           </div>
 
           <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Réf {item.id}</p>
+            <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+              <p>Réf {item.id}</p>
+              <span className="rounded-full border border-border px-2 py-0.5 normal-case tracking-normal text-foreground/85">
+                {propertyTypeLabel}
+              </span>
+            </div>
             <h3 className="mt-1 font-display text-xl">{item.title}</h3>
             <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
               <MapPin className="h-4 w-4" />
@@ -91,7 +102,12 @@ export function ListingCard({ item, viewMode = "grid" }: ListingCardProps) {
       </Link>
 
       <div className="space-y-3 p-4">
-        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Réf {item.id}</p>
+        <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+          <p>Réf {item.id}</p>
+          <span className="rounded-full border border-border px-2 py-0.5 normal-case tracking-normal text-foreground/85">
+            {propertyTypeLabel}
+          </span>
+        </div>
         <div>
           <h3 className="font-display text-xl">{item.title}</h3>
           <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">

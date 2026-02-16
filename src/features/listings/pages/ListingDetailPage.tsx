@@ -9,7 +9,12 @@ import { ListingCard } from "@/features/listings/components/ListingCard";
 import { agentById } from "@/features/listings/data/agents";
 import { toSearchItem } from "@/features/listings/utils/mappers";
 import { LeadForm } from "@/features/leads/components/LeadForm";
-import { formatPrice, sanitizePropertySlug, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
+import {
+  formatPrice,
+  formatPropertyTypeLabel,
+  sanitizePropertySlug,
+  toCanonicalPropertyPath,
+} from "@/features/listings/utils/formatting";
 import { useSeo } from "@/lib/seo/useSeo";
 import { trackEvent } from "@/lib/analytics/events";
 
@@ -114,6 +119,7 @@ export default function ListingDetailPage() {
 
   const city = cityById.get(property.cityId);
   const agent = agentById.get(property.agentId);
+  const propertyTypeLabel = formatPropertyTypeLabel(property.propertyType);
 
   const quickFacts = [
     { icon: Maximize, label: "Surface", value: `${property.surfaceM2} m²` },
@@ -143,6 +149,9 @@ export default function ListingDetailPage() {
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Réf du bien {property.id}</p>
               <h1 className="mt-1 font-display text-4xl">{property.title}</h1>
+              <p className="mt-2 inline-flex rounded-full border border-border px-3 py-1 text-xs font-medium text-foreground/90">
+                Type : {propertyTypeLabel}
+              </p>
               <p className="mt-2 inline-flex items-center gap-1 text-sm text-muted-foreground">
                 <MapPin className="h-4 w-4" />
                 {city?.name} ({property.postalCode})

@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { buildSearchParams, parseSearchParams } from "@/features/listings/utils/query";
-import { parseReferenceFromQuery, sanitizePropertySlug, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
+import {
+  formatPropertyTypeLabel,
+  parseReferenceFromQuery,
+  sanitizePropertySlug,
+  toCanonicalPropertyPath,
+} from "@/features/listings/utils/formatting";
 
 describe("listing query helpers", () => {
   it("serializes and parses filter params consistently", () => {
@@ -45,5 +50,11 @@ describe("listing formatting helpers", () => {
   it("sanitizes unsafe slugs", () => {
     expect(sanitizePropertySlug("Maison / Vue Mer !!")).toBe("maison-vue-mer");
     expect(toCanonicalPropertyPath({ id: 6001, slug: "Maison / Vue Mer !!" })).toBe("/biens/6001-maison-vue-mer");
+  });
+
+  it("formats property type labels in French", () => {
+    expect(formatPropertyTypeLabel("appartement")).toBe("Appartement");
+    expect(formatPropertyTypeLabel("maison_villa")).toBe("Maison / Villa");
+    expect(formatPropertyTypeLabel("autre")).toBe("Autre");
   });
 });
