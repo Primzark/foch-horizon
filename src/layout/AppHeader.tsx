@@ -13,7 +13,7 @@ const primaryLinks = [
   { to: "/apropos", label: "L'agence" },
   { to: "/contact", label: "Contact" },
 ];
-const legacyLogoUrl = "https://www.foch-immobilier.fr/images/logoSite.png";
+const legacyLogoUrl = "https://www.fochimmobilier.com/static/img/logo_unis.png";
 
 function LinkItem({ to, label, onClick }: { to: string; label: string; onClick?: () => void }) {
   return (
@@ -109,7 +109,7 @@ export function AppHeader() {
             <Search className="h-4 w-4" />
           </button>
           <a
-            href="tel:0235420001"
+            href="tel:0235425176"
             className="hidden h-10 w-10 items-center justify-center rounded-full border border-border bg-background/90 md:inline-flex"
             aria-label="Appeler l'agence"
             onClick={() => trackEvent("phone_clicked", { source: "header" })}
@@ -162,11 +162,11 @@ export function AppHeader() {
             </a>
             <div className="mt-4 border-t border-border pt-4 text-sm text-muted-foreground">
               <p>109 Av. Foch, 76600 Le Havre</p>
-              <a href="tel:0235420001" className="block hover:text-foreground">
-                02 35 42 00 01
+              <a href="tel:0235425176" className="block hover:text-foreground">
+                02 35 42 51 76
               </a>
-              <a href="mailto:contact@foch-immobilier.fr" className="block hover:text-foreground">
-                contact@foch-immobilier.fr
+              <a href="mailto:vendre@fochimmobilier.com" className="block hover:text-foreground">
+                vendre@fochimmobilier.com
               </a>
             </div>
           </nav>

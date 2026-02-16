@@ -47,7 +47,7 @@ export default function HomePage() {
         "@context": "https://schema.org",
         "@type": "Organization",
         name: "Foch Immobilier",
-        url: "https://www.foch-immobilier.fr",
+        url: "https://www.fochimmobilier.com",
         address: {
           "@type": "PostalAddress",
           streetAddress: "109 Av. Foch",
@@ -55,13 +55,13 @@ export default function HomePage() {
           addressLocality: "Le Havre",
           addressCountry: "FR",
         },
-        telephone: "+33235420001",
+        telephone: "+33235425176",
       },
       {
         "@context": "https://schema.org",
         "@type": "WebSite",
         name: "Foch Immobilier",
-        url: "https://www.foch-immobilier.fr",
+        url: "https://www.fochimmobilier.com",
       },
     ],
   });

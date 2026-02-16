@@ -78,7 +78,7 @@ export function useSeo(options: SeoOptions): void {
     upsertMeta("twitter:description", options.description);
 
     if (options.canonicalPath) {
-      const baseUrl = import.meta.env.VITE_PUBLIC_SITE_URL || "https://www.foch-immobilier.fr";
+      const baseUrl = import.meta.env.VITE_PUBLIC_SITE_URL || "https://www.fochimmobilier.com";
       const canonicalUrl = `${baseUrl}${options.canonicalPath}`;
       upsertCanonical(canonicalUrl);
       upsertPropertyMeta("og:url", canonicalUrl);

@@ -6,6 +6,7 @@ import { cityById } from "@/features/cities/data/cities";
 import { getPropertyById, getSimilarProperties } from "@/features/listings/api/properties.service";
 import { ListingGallery } from "@/features/listings/components/ListingGallery";
 import { ListingCard } from "@/features/listings/components/ListingCard";
+import { agentById } from "@/features/listings/data/agents";
 import { toSearchItem } from "@/features/listings/utils/mappers";
 import { LeadForm } from "@/features/leads/components/LeadForm";
 import { formatPrice, sanitizePropertySlug, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
@@ -62,7 +63,7 @@ export default function ListingDetailPage() {
             "@context": "https://schema.org",
             "@type": "RealEstateListing",
             name: property.title,
-            url: `https://www.foch-immobilier.fr${canonicalPath}`,
+            url: `https://www.fochimmobilier.com${canonicalPath}`,
             identifier: String(property.id),
             offers: {
               "@type": "Offer",
@@ -112,6 +113,7 @@ export default function ListingDetailPage() {
   }
 
   const city = cityById.get(property.cityId);
+  const agent = agentById.get(property.agentId);
 
   const quickFacts = [
     { icon: Maximize, label: "Surface", value: `${property.surfaceM2} m²` },
@@ -222,15 +224,20 @@ export default function ListingDetailPage() {
         <aside className="space-y-4 lg:sticky lg:top-24 lg:h-fit">
           <section className="rounded-2xl border border-border bg-card p-5">
             <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Votre interlocuteur</p>
-            <p className="mt-2 font-display text-2xl">{property.agentId === "agent-lucas-bernard" ? "Lucas Bernard" : property.agentId === "agent-clara-durand" ? "Clara Durand" : "Jeanne Morel"}</p>
-            <p className="text-sm text-muted-foreground">Foch Immobilier</p>
+            <p className="mt-2 font-display text-2xl">{agent?.fullName ?? "Foch Immobilier"}</p>
+            <p className="text-sm text-muted-foreground">{agent?.role ?? "Transaction et administration de biens"}</p>
             <a
-              href="tel:0235420001"
+              href={`tel:${(agent?.phone ?? "02 35 42 51 76").replace(/\s+/g, "")}`}
               className="mt-3 inline-flex items-center gap-2 rounded-full border border-border px-3 py-1 text-sm"
               onClick={() => trackEvent("phone_clicked", { source: "property_sidebar", propertyId: property.id })}
             >
-              <Phone className="h-4 w-4" /> 02 35 42 00 01
+              <Phone className="h-4 w-4" /> {agent?.phone ?? "02 35 42 51 76"}
             </a>
+            {agent?.email && (
+              <a href={`mailto:${agent.email}`} className="mt-2 block text-sm text-muted-foreground hover:underline">
+                {agent.email}
+              </a>
+            )}
           </section>
 
           <LeadForm

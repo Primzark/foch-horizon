@@ -2,7 +2,7 @@ import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSeo } from "@/lib/seo/useSeo";
 
-const feesPdfUrl = "https://www.foch-immobilier.fr/static/pdf/honoraires-fochimmobilier-le-havre-76.pdf";
+const feesPdfUrl = "https://www.fochimmobilier.com/static/pdf/honoraires-fochimmobilier-le-havre-76.pdf";
 
 export default function FeesPage() {
   useSeo({

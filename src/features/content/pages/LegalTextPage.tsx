@@ -39,7 +39,7 @@ const legalContent: Record<LegalPageKey, { title: string; description: string; s
       },
       {
         heading: "Vos droits",
-        body: ["Accès, rectification, opposition, effacement et limitation via contact@foch-immobilier.fr."],
+        body: ["Accès, rectification, opposition, effacement et limitation via vendre@fochimmobilier.com."],
       },
     ],
   },
@@ -75,7 +75,7 @@ const legalContent: Record<LegalPageKey, { title: string; description: string; s
       },
       {
         heading: "Contact accessibilité",
-        body: ["Signalement: contact@foch-immobilier.fr"],
+        body: ["Signalement: vendre@fochimmobilier.com"],
       },
     ],
   },

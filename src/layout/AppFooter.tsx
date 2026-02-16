@@ -69,17 +69,17 @@ export function AppFooter() {
             </li>
             <li className="flex items-center gap-2">
               <Phone className="h-4 w-4" />
-              <a href="tel:0235420001" onClick={() => trackEvent("phone_clicked", { source: "footer" })}>
-                02 35 42 00 01
+              <a href="tel:0235425176" onClick={() => trackEvent("phone_clicked", { source: "footer" })}>
+                02 35 42 51 76
               </a>
             </li>
             <li className="flex items-center gap-2">
               <Mail className="h-4 w-4" />
-              <a href="mailto:contact@foch-immobilier.fr">contact@foch-immobilier.fr</a>
+              <a href="mailto:vendre@fochimmobilier.com">vendre@fochimmobilier.com</a>
             </li>
             <li className="flex items-start gap-2">
               <Clock className="mt-0.5 h-4 w-4" />
-              <span>Lun-Ven : 9h-12h30, 14h-18h30 · Samedi sur rendez-vous</span>
+              <span>Lun-Ven : 09:30-12:00, 14:00-18:30 · Samedi sur rendez-vous</span>
             </li>
           </ul>
         </div>
