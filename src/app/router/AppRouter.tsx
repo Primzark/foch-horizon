@@ -33,7 +33,7 @@ export function AppRouter() {
           <Route element={<LayoutShell />}>
             <Route path="/" element={<HomePage />} />
             <Route path="/biens" element={<ListingsIndexPage />} />
-            <Route path="/biens/:id-:slug" element={<ListingDetailPage />} />
+            <Route path="/biens/:idSlug" element={<ListingDetailPage />} />
             <Route path="/annonce/:id" element={<LegacyAnnonceRedirect />} />
             <Route path="/biens-immobiliers" element={<Navigate to="/biens" replace />} />
             <Route path="/buy" element={<QueryRedirect to="/biens?transaction=vente" />} />

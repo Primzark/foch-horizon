@@ -12,18 +12,26 @@ import { formatPrice, toCanonicalPropertyPath } from "@/features/listings/utils/
 import { useSeo } from "@/lib/seo/useSeo";
 import { trackEvent } from "@/lib/analytics/events";
 
-function parseRouteId(rawId?: string): number | null {
-  if (!rawId) {
+function parseRouteIdAndSlug(rawIdSlug?: string): { id: number; slug: string | null } | null {
+  if (!rawIdSlug) {
     return null;
   }
 
+  const [rawId, ...slugParts] = rawIdSlug.split("-");
   const id = Number(rawId);
-  return Number.isInteger(id) ? id : null;
+
+  if (!Number.isInteger(id)) {
+    return null;
+  }
+
+  const slug = slugParts.length > 0 ? slugParts.join("-") : null;
+  return { id, slug };
 }
 
 export default function ListingDetailPage() {
   const params = useParams();
-  const propertyId = parseRouteId(params.id);
+  const parsedRoute = parseRouteIdAndSlug(params.idSlug);
+  const propertyId = parsedRoute?.id ?? null;
 
   const propertyQuery = useQuery({
     queryKey: ["property", propertyId],
@@ -96,7 +104,7 @@ export default function ListingDetailPage() {
     );
   }
 
-  if (params.slug !== property.slug) {
+  if (parsedRoute?.slug !== property.slug) {
     return <Navigate to={canonicalPath!} replace />;
   }
 
