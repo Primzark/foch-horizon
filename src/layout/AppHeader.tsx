@@ -15,7 +15,17 @@ const primaryLinks = [
 ];
 const legacyLogoUrl = "https://www.fochimmobilier.com/static/img/logo_unis.png";
 
-function LinkItem({ to, label, onClick }: { to: string; label: string; onClick?: () => void }) {
+function LinkItem({
+  to,
+  label,
+  onClick,
+  className,
+}: {
+  to: string;
+  label: string;
+  onClick?: () => void;
+  className?: string;
+}) {
   return (
     <NavLink
       to={to}
@@ -24,6 +34,7 @@ function LinkItem({ to, label, onClick }: { to: string; label: string; onClick?:
         cn(
           "group relative px-2 py-1 text-sm font-medium text-foreground/80 transition-colors hover:text-foreground",
           isActive && "text-foreground",
+          className,
         )
       }
     >
@@ -52,11 +63,11 @@ export function AppHeader() {
     () =>
       cn(
         "sticky top-0 z-50 transition-all duration-200",
-        scrolled
+        scrolled || mobileOpen
           ? "border-b border-border/70 bg-background/85 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/70"
           : "border-b border-transparent bg-transparent py-3",
       ),
-    [scrolled],
+    [mobileOpen, scrolled],
   );
 
   return (
@@ -64,7 +75,12 @@ export function AppHeader() {
       <div className="container mx-auto flex items-center justify-between px-4">
         <button
           type="button"
-          className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background/90 lg:hidden"
+          className={cn(
+            "inline-flex h-10 w-10 items-center justify-center rounded-full border text-foreground transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent lg:hidden",
+            mobileOpen
+              ? "border-foreground bg-foreground text-background shadow-[0_10px_24px_-14px_rgba(10,17,26,0.75)]"
+              : "border-border/80 bg-background/92 shadow-[0_10px_24px_-14px_rgba(10,17,26,0.65)]",
+          )}
           onClick={() => setMobileOpen((current) => !current)}
           aria-label={mobileOpen ? "Fermer le menu" : "Ouvrir le menu"}
           aria-expanded={mobileOpen}
@@ -135,10 +151,16 @@ export function AppHeader() {
       </div>
 
       {mobileOpen && (
-        <div className="fixed inset-0 top-[64px] z-40 bg-background/95 px-5 pb-8 pt-6 backdrop-blur lg:hidden">
+        <div className="fixed inset-0 z-40 bg-background/98 px-5 pb-8 pt-[82px] backdrop-blur lg:hidden">
           <nav className="flex flex-col gap-2">
             {primaryLinks.map((item) => (
-              <LinkItem key={item.to} to={item.to} label={item.label} onClick={() => setMobileOpen(false)} />
+              <LinkItem
+                key={item.to}
+                to={item.to}
+                label={item.label}
+                onClick={() => setMobileOpen(false)}
+                className="rounded-lg px-3 py-2 text-base text-foreground hover:bg-muted/70"
+              />
             ))}
             <Link
               to="/estimation"
