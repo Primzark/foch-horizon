@@ -56,21 +56,41 @@ export function AppHeader() {
       return;
     }
 
+    const scrollY = window.scrollY;
     const previousHtmlOverflow = html.style.overflow;
+    const previousHtmlHeight = html.style.height;
+    const previousBodyPosition = body.style.position;
+    const previousBodyTop = body.style.top;
+    const previousBodyLeft = body.style.left;
+    const previousBodyRight = body.style.right;
+    const previousBodyWidth = body.style.width;
     const previousBodyOverflow = body.style.overflow;
     const previousBodyTouchAction = body.style.touchAction;
     const previousBodyOverscrollBehavior = body.style.overscrollBehavior;
 
     html.style.overflow = "hidden";
+    html.style.height = "100%";
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.left = "0";
+    body.style.right = "0";
+    body.style.width = "100%";
     body.style.overflow = "hidden";
     body.style.touchAction = "none";
     body.style.overscrollBehavior = "none";
 
     return () => {
       html.style.overflow = previousHtmlOverflow;
+      html.style.height = previousHtmlHeight;
+      body.style.position = previousBodyPosition;
+      body.style.top = previousBodyTop;
+      body.style.left = previousBodyLeft;
+      body.style.right = previousBodyRight;
+      body.style.width = previousBodyWidth;
       body.style.overflow = previousBodyOverflow;
       body.style.touchAction = previousBodyTouchAction;
       body.style.overscrollBehavior = previousBodyOverscrollBehavior;
+      window.scrollTo(0, scrollY);
     };
   }, [mobileOpen]);
 
