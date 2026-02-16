@@ -33,7 +33,8 @@ const ValuationPage = () => {
     consent: false,
   });
 
-  const update = (field: string, value: any) => setForm(prev => ({ ...prev, [field]: value }));
+  const update = <K extends keyof typeof form>(field: K, value: (typeof form)[K]) =>
+    setForm((prev) => ({ ...prev, [field]: value }));
   const canNext = () => {
     if (step === 0) return !!form.propertyType;
     if (step === 1) return !!form.city;
