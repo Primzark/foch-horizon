@@ -14,7 +14,6 @@ import { useUiStore } from "@/lib/state/useUiStore";
 import { useSeo } from "@/lib/seo/useSeo";
 
 const defaultParams: PropertySearchParams = {
-  transaction: "vente",
   page: 1,
   pageSize: 12,
   sort: "newest",

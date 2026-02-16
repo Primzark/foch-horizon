@@ -17,7 +17,6 @@ import { useUiStore } from "@/lib/state/useUiStore";
 import { trackEvent } from "@/lib/analytics/events";
 
 const defaultFilters: PropertySearchParams = {
-  transaction: "vente",
   page: 1,
   pageSize: 12,
   sort: "newest",
@@ -96,13 +95,19 @@ export function SearchDrawer() {
           <div>
             <Label>Transaction</Label>
             <Select
-              value={draft.transaction ?? "vente"}
-              onValueChange={(value) => setDraft((current) => ({ ...current, transaction: value as "vente" | "location" }))}
+              value={draft.transaction ?? "all"}
+              onValueChange={(value) =>
+                setDraft((current) => ({
+                  ...current,
+                  transaction: value === "all" ? undefined : (value as "vente" | "location"),
+                }))
+              }
             >
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue placeholder="Toutes transactions" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="all">Toutes transactions</SelectItem>
                 {transactionOptions.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}

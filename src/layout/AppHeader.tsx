@@ -72,22 +72,17 @@ export function AppHeader() {
           {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
 
-        <Link to="/" className="flex items-center gap-2 sm:gap-3">
+        <Link to="/" className="flex items-center gap-2 sm:gap-2.5">
+          <span className={cn("font-display text-xl tracking-tight transition-all duration-200 sm:text-2xl", scrolled && "text-lg sm:text-xl")}>
+            Foch<span className="text-accent">Immobilier</span>
+          </span>
           <img
             src={legacyLogoUrl}
-            alt="Logo Foch Immobilier"
-            className={cn("h-10 w-auto transition-all duration-200 sm:h-11", scrolled && "h-8 sm:h-9")}
+            alt="Réseau UNIS"
+            className={cn("hidden w-auto md:inline-block md:h-7 lg:h-8", scrolled && "md:h-6 lg:h-7")}
             loading="eager"
             decoding="async"
           />
-          <span className="flex flex-col items-start">
-            <span className={cn("font-display text-lg tracking-tight transition-all duration-200 sm:text-xl", scrolled && "text-base sm:text-lg")}>
-              Foch Immobilier
-            </span>
-            <span className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground sm:text-[10px] sm:tracking-[0.24em]">
-              Le Havre · Depuis 1972
-            </span>
-          </span>
         </Link>
 
         <nav className="hidden items-center gap-5 lg:flex">

@@ -50,7 +50,7 @@ export default function AboutPageV2() {
             <img
               src={aboutImageOne}
               alt="Agence immobilière Foch Immobilier au Havre, réseau UNIS"
-              className="h-full min-h-[300px] w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+              className="h-[330px] w-full bg-muted/20 object-contain object-center transition-transform duration-500 group-hover:scale-[1.01] md:h-[400px]"
               loading="lazy"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/10 to-transparent" />
@@ -106,7 +106,7 @@ export default function AboutPageV2() {
           <img
             src={aboutImageTwo}
             alt="Agence immobilière Foch Immobilier au Havre"
-            className="h-full w-full object-cover transition-transform duration-500 hover:scale-[1.02]"
+            className="h-[280px] w-full bg-muted/20 object-contain object-center transition-transform duration-500 hover:scale-[1.01] md:h-[340px]"
             loading="lazy"
           />
         </motion.figure>
