@@ -9,6 +9,15 @@ const buildImages = (propertyId: number, urls: string[], label: string): Propert
     altText: `${label} - photo ${index + 1}`,
   }));
 
+const legacyImageBaseUrl = "https://foch.staticlbi.com/900xauto/images/biens";
+
+const buildLegacyImageSet = (propertyId: number, folderPath: string, fileNames: string[], label: string): PropertyImage[] =>
+  buildImages(
+    propertyId,
+    fileNames.map((fileName) => `${legacyImageBaseUrl}/${folderPath}/${fileName}`),
+    label,
+  );
+
 const buildFeatures = (propertyId: number, labels: string[]): PropertyFeature[] =>
   labels.map((label) => ({
     propertyId,
@@ -47,12 +56,19 @@ export const properties: Property[] = [
     publishedAt: "2025-11-08T09:00:00.000Z",
     updatedAt: "2026-02-01T14:20:00.000Z",
     isFeatured: true,
-    images: buildImages(
+    images: buildLegacyImageSet(
       5139,
+      "1/3a0fd2baea64ea8a3b1ef12c85ac3033",
       [
-        "https://foch.staticlbi.com/900xauto/images/biens/1/3a0fd2baea64ea8a3b1ef12c85ac3033/photo_a39e91054c0aaf01296af99b92618f95.jpg",
-        "https://foch.staticlbi.com/900xauto/images/biens/1/3a0fd2baea64ea8a3b1ef12c85ac3033/photo_6581addd038dc55f7f6009676ee5baf7.jpg",
-        "https://foch.staticlbi.com/900xauto/images/biens/1/3a0fd2baea64ea8a3b1ef12c85ac3033/photo_9903418ee794196215b44a6d5f16e589.jpg",
+        "photo_a39e91054c0aaf01296af99b92618f95.jpg",
+        "photo_6581addd038dc55f7f6009676ee5baf7.jpg",
+        "photo_9903418ee794196215b44a6d5f16e589.jpg",
+        "photo_4390048eaafdc7700afa44ab1d45c8ef.jpg",
+        "photo_168d61eb3fa0e01b935a2e4d6f4f7045.jpg",
+        "photo_ade0de8cbebab77cef68ca50c9343336.jpg",
+        "photo_6769e99190f01670ad052b96b131abe8.jpg",
+        "photo_b8f6a7cbfbeaf4339c02bc0c70c66057.jpg",
+        "photo_56f85d85129c89e59c4658e78adadc8c.jpg",
       ],
       "Appartement plage Le Havre",
     ),
@@ -88,12 +104,16 @@ export const properties: Property[] = [
     publishedAt: "2025-10-23T09:00:00.000Z",
     updatedAt: "2026-01-25T11:45:00.000Z",
     isFeatured: true,
-    images: buildImages(
+    images: buildLegacyImageSet(
       5128,
+      "1/287dd229b7bcc92335a7749412c6e08c",
       [
-        "https://foch.staticlbi.com/900xauto/images/biens/1/287dd229b7bcc92335a7749412c6e08c/photo_c355ed7acf6bb7d433a1d6325bf5f506.jpg",
-        "https://foch.staticlbi.com/900xauto/images/biens/1/287dd229b7bcc92335a7749412c6e08c/photo_1d655a0fed3ff571a6a80a4dfc8a5a86.jpg",
-        "https://foch.staticlbi.com/900xauto/images/biens/1/287dd229b7bcc92335a7749412c6e08c/photo_27e326c663e3a587ca756fc4af388191.jpg",
+        "photo_c355ed7acf6bb7d433a1d6325bf5f506.jpg",
+        "photo_1d655a0fed3ff571a6a80a4dfc8a5a86.jpg",
+        "photo_27e326c663e3a587ca756fc4af388191.jpg",
+        "photo_7da278f19b39ee9f88c0196889d005cd.jpg",
+        "photo_0cc238929b477b260d845818060b4dd6.jpg",
+        "photo_6f89d02330629cb678803da9f2ab9813.jpg",
       ],
       "Maison Sainte-Adresse",
     ),
@@ -129,12 +149,19 @@ export const properties: Property[] = [
     publishedAt: "2025-09-16T10:30:00.000Z",
     updatedAt: "2026-01-15T09:00:00.000Z",
     isFeatured: false,
-    images: buildImages(
+    images: buildLegacyImageSet(
       5107,
+      "1/38f856fe074fc18efd5abfbedcf76a1f",
       [
-        "https://foch.staticlbi.com/900xauto/images/biens/1/38f856fe074fc18efd5abfbedcf76a1f/5834-01-13595727-a.jpg",
-        "https://foch.staticlbi.com/900xauto/images/biens/1/38f856fe074fc18efd5abfbedcf76a1f/photo_58feda21e1fdfe38a8bc2ec63aeb28bd.jpg",
-        "https://foch.staticlbi.com/900xauto/images/biens/1/38f856fe074fc18efd5abfbedcf76a1f/photo_f499dfd00895a0763192cad1029ce656.jpg",
+        "5834-01-13595727-a.jpg",
+        "photo_58feda21e1fdfe38a8bc2ec63aeb28bd.jpg",
+        "photo_f499dfd00895a0763192cad1029ce656.jpg",
+        "5834-01-13595727-h.jpg",
+        "5834-01-13595727-i.jpg",
+        "5834-01-13595727-c.jpg",
+        "5834-01-13595727-d.jpg",
+        "5834-01-13595727-u.jpg",
+        "5834-01-13595727-j.jpg",
       ],
       "Appartement Perret",
     ),
@@ -170,12 +197,17 @@ export const properties: Property[] = [
     publishedAt: "2025-12-01T08:00:00.000Z",
     updatedAt: "2026-02-05T17:10:00.000Z",
     isFeatured: true,
-    images: buildImages(
+    images: buildLegacyImageSet(
       5099,
+      "1/e784247cc135e7601592c2433b140dda",
       [
-        "https://foch.staticlbi.com/900xauto/images/biens/1/e784247cc135e7601592c2433b140dda/photo_5838720a448d2dc3c8fef11f6e0021e2.jpg",
-        "https://foch.staticlbi.com/900xauto/images/biens/1/e784247cc135e7601592c2433b140dda/photo_b68170c0bbd91f41ad2e8c8274fd4592.jpg",
-        "https://foch.staticlbi.com/900xauto/images/biens/1/e784247cc135e7601592c2433b140dda/photo_f39645179c0af52a3638e74a5361bb13.jpg",
+        "photo_5838720a448d2dc3c8fef11f6e0021e2.jpg",
+        "photo_b68170c0bbd91f41ad2e8c8274fd4592.jpg",
+        "photo_f39645179c0af52a3638e74a5361bb13.jpg",
+        "photo_668e81be744f645bc7d53d355a34c82b.jpg",
+        "photo_911d921111f23f21a19bf369ad6e9126.jpg",
+        "photo_e3a07aa609fd16048c1e343085bc4646.jpg",
+        "photo_ad66a7dd575bea12bcf7fa69fc9a98be.jpg",
       ],
       "Maison contemporaine Montivilliers",
     ),
@@ -211,12 +243,15 @@ export const properties: Property[] = [
     publishedAt: "2026-01-05T09:15:00.000Z",
     updatedAt: "2026-02-10T08:45:00.000Z",
     isFeatured: false,
-    images: buildImages(
+    images: buildLegacyImageSet(
       5088,
+      "7/c7f39cd93b05418e46bdf36f13f1b8bc",
       [
-        "https://foch.staticlbi.com/900xauto/images/biens/7/c7f39cd93b05418e46bdf36f13f1b8bc/photo_1c398e539df797108b5714fe87756b95.jpg",
-        "https://foch.staticlbi.com/900xauto/images/biens/7/c7f39cd93b05418e46bdf36f13f1b8bc/photo_ef676ac062deaa3a2f2770811bcaf718.jpg",
-        "https://foch.staticlbi.com/900xauto/images/biens/7/c7f39cd93b05418e46bdf36f13f1b8bc/photo_75f6f9c4a96166a77619848a52128e8a.jpg",
+        "photo_1c398e539df797108b5714fe87756b95.jpg",
+        "photo_ef676ac062deaa3a2f2770811bcaf718.jpg",
+        "photo_75f6f9c4a96166a77619848a52128e8a.jpg",
+        "photo_c95364728aed6cc96f9cadd6c0ba5c04.jpg",
+        "photo_cd1c44f6752804b562d01fbcea7e4c73.jpg",
       ],
       "Appartement location Gainneville",
     ),
@@ -252,12 +287,19 @@ export const properties: Property[] = [
     publishedAt: "2025-11-03T12:00:00.000Z",
     updatedAt: "2026-01-31T13:40:00.000Z",
     isFeatured: false,
-    images: buildImages(
+    images: buildLegacyImageSet(
       5075,
+      "1/e4f77616b7b74e3728fcb853728d1c58",
       [
-        "https://foch.staticlbi.com/900xauto/images/biens/1/e4f77616b7b74e3728fcb853728d1c58/photo_a53e082ad1629a3110fbbbc598d86426.jpg",
-        "https://foch.staticlbi.com/900xauto/images/biens/1/e4f77616b7b74e3728fcb853728d1c58/photo_6211381917d3dcfc53196df05a2208cf.jpg",
-        "https://foch.staticlbi.com/900xauto/images/biens/1/e4f77616b7b74e3728fcb853728d1c58/photo_5c87f005381782f4dde0cb2074898542.jpg",
+        "photo_a53e082ad1629a3110fbbbc598d86426.jpg",
+        "photo_6211381917d3dcfc53196df05a2208cf.jpg",
+        "photo_5c87f005381782f4dde0cb2074898542.jpg",
+        "photo_6e8c5a64754593e0664f942ac4b7fd13.jpg",
+        "photo_91a7b65a00e2f26a9a539329496faf75.jpg",
+        "photo_5e04fcc18e217273b2dd8e2339a673fa.jpg",
+        "photo_e09f72b876acd618f44e5745fc38d2a9.jpg",
+        "photo_663313a9bfbbb4c51db8e1725d25355c.jpg",
+        "photo_4741212471023e4f364dbadf208b16a2.jpg",
       ],
       "Maison Maneglise",
     ),
@@ -293,12 +335,17 @@ export const properties: Property[] = [
     publishedAt: "2025-12-19T10:00:00.000Z",
     updatedAt: "2026-02-12T16:15:00.000Z",
     isFeatured: false,
-    images: buildImages(
+    images: buildLegacyImageSet(
       5061,
+      "9/ae84a438e10b1197d56b8c675d2b1824",
       [
-        "https://foch.staticlbi.com/900xauto/images/biens/9/ae84a438e10b1197d56b8c675d2b1824/photo_5838720a448d2dc3c8fef11f6e0021e2_Inc_0.jpg",
-        "https://foch.staticlbi.com/900xauto/images/biens/9/ae84a438e10b1197d56b8c675d2b1824/photo_b68170c0bbd91f41ad2e8c8274fd4592_Inc_0.jpg",
-        "https://foch.staticlbi.com/900xauto/images/biens/9/ae84a438e10b1197d56b8c675d2b1824/photo_f39645179c0af52a3638e74a5361bb13_Inc_0.jpg",
+        "photo_5838720a448d2dc3c8fef11f6e0021e2_Inc_0.jpg",
+        "photo_b68170c0bbd91f41ad2e8c8274fd4592_Inc_0.jpg",
+        "photo_f39645179c0af52a3638e74a5361bb13_Inc_0.jpg",
+        "photo_ad66a7dd575bea12bcf7fa69fc9a98be_Inc_0.jpg",
+        "photo_911d921111f23f21a19bf369ad6e9126_Inc_0.jpg",
+        "photo_668e81be744f645bc7d53d355a34c82b_Inc_0.jpg",
+        "photo_e3a07aa609fd16048c1e343085bc4646.jpg",
       ],
       "Duplex Le Havre centre",
     ),
@@ -334,12 +381,16 @@ export const properties: Property[] = [
     publishedAt: "2026-01-18T08:30:00.000Z",
     updatedAt: "2026-02-11T09:20:00.000Z",
     isFeatured: false,
-    images: buildImages(
+    images: buildLegacyImageSet(
       5042,
+      "7/37a8f8e7c8eba0e8932afc0fd1c0b76d",
       [
-        "https://foch.staticlbi.com/900xauto/images/biens/7/37a8f8e7c8eba0e8932afc0fd1c0b76d/photo_aa4cf6391caefedb3e2ba94ed1ed787a.jpg",
-        "https://foch.staticlbi.com/900xauto/images/biens/7/37a8f8e7c8eba0e8932afc0fd1c0b76d/photo_2fdebf3be17587428e02f4a26355ae78.jpg",
-        "https://foch.staticlbi.com/900xauto/images/biens/7/37a8f8e7c8eba0e8932afc0fd1c0b76d/photo_e0bf724f8928c5320e54ab862458172f.jpg",
+        "photo_aa4cf6391caefedb3e2ba94ed1ed787a.jpg",
+        "photo_2fdebf3be17587428e02f4a26355ae78.jpg",
+        "photo_e0bf724f8928c5320e54ab862458172f.jpg",
+        "photo_b8e8fc35fd86dcfc61a75e4229b857ac.jpg",
+        "photo_2f61312089058a79f5caecb2d392af1a.jpg",
+        "photo_d5e6f6e710aaca66d4d2c93d94b9af0b.jpg",
       ],
       "Studio Le Havre",
     ),

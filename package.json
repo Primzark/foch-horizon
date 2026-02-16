@@ -9,6 +9,7 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
+    "gallery:extract": "node scripts/extract-legacy-gallery.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:edge": "RUN_EDGE_INTEGRATION=true vitest run src/test/edge-endpoints.integration.test.ts",
