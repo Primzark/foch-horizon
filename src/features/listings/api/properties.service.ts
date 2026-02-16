@@ -1,22 +1,13 @@
 import { cityById, cityBySlug } from "@/features/cities/data/cities";
 import { properties, propertyById, propertyBySlug } from "@/features/listings/data/properties";
 import { normalizeKeyword } from "@/features/listings/utils/formatting";
+import { apiJson, isEdgeApiEnabled } from "@/lib/api/client";
 import type { PropertySearchParams, PropertySearchResponse } from "@/types/api";
 import type { Property } from "@/types/domain";
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_PAGE_SIZE = 12;
 const apiDelay = (ms = 120) => new Promise((resolve) => setTimeout(resolve, ms));
-const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "");
-
-async function fetchJson<T>(path: string): Promise<T> {
-  const response = await fetch(`${API_BASE}${path}`);
-  if (!response.ok) {
-    throw new Error(`API request failed: ${response.status}`);
-  }
-
-  return (await response.json()) as T;
-}
 
 function applyFilters(items: Property[], params: PropertySearchParams): Property[] {
   let result = items.filter((property) => property.status !== "off_market");
@@ -122,7 +113,7 @@ function applySort(items: Property[], sort: PropertySearchParams["sort"]): Prope
 }
 
 export async function searchProperties(params: PropertySearchParams): Promise<PropertySearchResponse> {
-  if (API_BASE) {
+  if (isEdgeApiEnabled()) {
     const query = new URLSearchParams();
     if (params.transaction) query.set("transaction", params.transaction);
     if (params.type) query.set("type", params.type);
@@ -140,7 +131,7 @@ export async function searchProperties(params: PropertySearchParams): Promise<Pr
     if (params.pageSize) query.set("pageSize", String(params.pageSize));
     if (params.sort) query.set("sort", params.sort);
 
-    return fetchJson<PropertySearchResponse>(`/api/properties?${query.toString()}`);
+    return apiJson<PropertySearchResponse>(`/api/properties?${query.toString()}`);
   }
 
   await apiDelay();
@@ -187,9 +178,9 @@ export async function searchProperties(params: PropertySearchParams): Promise<Pr
 }
 
 export async function getPropertyById(id: number): Promise<Property | null> {
-  if (API_BASE) {
+  if (isEdgeApiEnabled()) {
     try {
-      return await fetchJson<Property>(`/api/properties/${id}`);
+      return await apiJson<Property>(`/api/properties/${id}`);
     } catch {
       return null;
     }
@@ -200,7 +191,7 @@ export async function getPropertyById(id: number): Promise<Property | null> {
 }
 
 export async function getPropertyBySlug(slug: string): Promise<Property | null> {
-  if (API_BASE) {
+  if (isEdgeApiEnabled()) {
     return null;
   }
 
@@ -250,6 +241,60 @@ export async function getFeaturedProperties(limit = 8): Promise<Property[]> {
 }
 
 export async function getPropertiesByCitySlug(citySlug: string): Promise<Property[]> {
+  if (isEdgeApiEnabled()) {
+    const result = await searchProperties({
+      city: citySlug,
+      page: 1,
+      pageSize: 48,
+      sort: "newest",
+    });
+
+    // City hub in edge mode currently consumes listing cards.
+    return result.items.map((item) => {
+      const city = cityBySlug.get(item.city.slug);
+      return {
+        id: item.id,
+        title: item.title,
+        slug: item.slug,
+        transactionType: item.transaction,
+        propertyType: item.type,
+        status: item.status,
+        priceAmount: item.priceAmount,
+        priceCurrency: item.currency,
+        surfaceM2: item.surfaceM2,
+        terrainM2: null,
+        rooms: null,
+        bedrooms: item.bedrooms,
+        bathrooms: item.bathrooms,
+        parkingCount: item.parking,
+        garageCount: item.garage,
+        dpeLabel: item.dpeLabel,
+        dpeValue: null,
+        gesLabel: null,
+        gesValue: null,
+        description: "",
+        cityId: city?.id ?? "",
+        postalCode: item.city.postalCode,
+        lat: null,
+        lng: null,
+        agentId: "",
+        publishedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        isFeatured: false,
+        images: [
+          {
+            id: `${item.id}-cover`,
+            propertyId: item.id,
+            sourceUrl: item.coverImageUrl,
+            sortOrder: 0,
+            altText: item.title,
+          },
+        ],
+        features: [],
+      };
+    });
+  }
+
   await apiDelay();
   const city = cityBySlug.get(citySlug);
   if (!city) {

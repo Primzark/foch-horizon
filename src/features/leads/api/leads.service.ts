@@ -1,11 +1,11 @@
 import { agentById, agents } from "@/features/listings/data/agents";
 import { propertyById } from "@/features/listings/data/properties";
 import { leadInputSchema } from "@/features/leads/types/lead.schema";
+import { apiJson, isEdgeApiEnabled } from "@/lib/api/client";
 import type { LeadInput, LeadRecord } from "@/types/domain";
 
 const STORAGE_KEY = "foch_leads";
 const apiDelay = (ms = 250) => new Promise((resolve) => setTimeout(resolve, ms));
-const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "");
 
 function readLeads(): LeadRecord[] {
   try {
@@ -46,20 +46,11 @@ function assignAgent(input: LeadInput): string | null {
 export async function submitLead(input: LeadInput): Promise<{ ok: true; leadId: string; assignedAgentId: string | null }> {
   const payload = leadInputSchema.parse(input);
 
-  if (API_BASE) {
-    const response = await fetch(`${API_BASE}/api/leads`, {
+  if (isEdgeApiEnabled()) {
+    return apiJson<{ ok: true; leadId: string; assignedAgentId: string | null }>("/api/leads", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-
-    if (!response.ok) {
-      const body = await response.json().catch(() => null);
-      throw new Error(body?.error ?? "Impossible de transmettre la demande.");
-    }
-
-    const body = (await response.json()) as { ok: true; leadId: string; assignedAgentId: string | null };
-    return body;
   }
 
   await apiDelay();

@@ -7,6 +7,7 @@ This folder contains Phase 1 backend scaffolding:
 - `functions/property-detail`: `GET /api/properties/:id` contract.
 - `functions/cities-list`: `GET /api/cities` contract.
 - `functions/city-detail`: `GET /api/cities/:slug` contract.
+- `functions/city-properties`: `GET /api/cities/:slug/properties` contract.
 - `functions/leads-create`: `POST /api/leads` contract.
 - `workers/provider-sync.ts`: scheduled feed sync scaffold.
 
