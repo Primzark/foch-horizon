@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { ExternalLink, Menu, Phone, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -15,7 +15,17 @@ const primaryLinks = [
 ];
 const legacyLogoUrl = "https://www.fochimmobilier.com/static/img/logo_unis.png";
 
-function LinkItem({ to, label, onClick }: { to: string; label: string; onClick?: () => void }) {
+function LinkItem({
+  to,
+  label,
+  onClick,
+  className,
+}: {
+  to: string;
+  label: string;
+  onClick?: () => void;
+  className?: string;
+}) {
   return (
     <NavLink
       to={to}
@@ -24,6 +34,7 @@ function LinkItem({ to, label, onClick }: { to: string; label: string; onClick?:
         cn(
           "group relative px-2 py-1 text-sm font-medium text-foreground/80 transition-colors hover:text-foreground",
           isActive && "text-foreground",
+          className,
         )
       }
     >
@@ -36,6 +47,7 @@ function LinkItem({ to, label, onClick }: { to: string; label: string; onClick?:
 export function AppHeader() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const location = useLocation();
   const setSearchDrawerOpen = useUiStore((state) => state.setSearchDrawerOpen);
 
   useEffect(() => {
@@ -94,15 +106,30 @@ export function AppHeader() {
     };
   }, [mobileOpen]);
 
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname, location.search]);
+
+  useEffect(() => {
+    const onResize = () => {
+      if (window.innerWidth >= 1024) {
+        setMobileOpen(false);
+      }
+    };
+
+    window.addEventListener("resize", onResize, { passive: true });
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
   const headerClass = useMemo(
     () =>
       cn(
         "sticky top-0 z-50 transition-all duration-200",
-        scrolled
+        scrolled || mobileOpen
           ? "border-b border-border/70 bg-background/85 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/70"
           : "border-b border-transparent bg-transparent py-3",
       ),
-    [scrolled],
+    [mobileOpen, scrolled],
   );
 
   return (
@@ -110,7 +137,10 @@ export function AppHeader() {
       <div className="container mx-auto flex items-center justify-between px-4">
         <button
           type="button"
-          className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background/90 lg:hidden"
+          className={cn(
+            "inline-flex h-10 w-10 items-center justify-center rounded-full border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent lg:hidden",
+            mobileOpen ? "border-foreground bg-foreground text-background" : "border-border bg-background text-foreground",
+          )}
           onClick={() => setMobileOpen((current) => !current)}
           aria-label={mobileOpen ? "Fermer le menu" : "Ouvrir le menu"}
           aria-expanded={mobileOpen}
@@ -181,15 +211,21 @@ export function AppHeader() {
       </div>
 
       {mobileOpen && (
-        <div className="fixed inset-0 top-[64px] z-40 bg-background/95 px-5 pb-8 pt-6 backdrop-blur lg:hidden">
-          <nav className="flex flex-col gap-2">
+        <div className="fixed inset-0 z-40 overflow-y-auto bg-background pt-[76px] lg:hidden">
+          <nav className="mx-auto flex w-full max-w-[720px] flex-col gap-2 px-5 pb-10">
             {primaryLinks.map((item) => (
-              <LinkItem key={item.to} to={item.to} label={item.label} onClick={() => setMobileOpen(false)} />
+              <LinkItem
+                key={item.to}
+                to={item.to}
+                label={item.label}
+                onClick={() => setMobileOpen(false)}
+                className="rounded-lg px-3 py-2 text-base font-semibold text-foreground hover:bg-muted"
+              />
             ))}
             <Link
               to="/estimation"
               onClick={() => setMobileOpen(false)}
-              className="rounded-lg border border-border px-3 py-2 text-sm font-medium"
+              className="rounded-lg border border-border px-3 py-2 text-base font-semibold text-foreground"
             >
               Estimer mon bien
             </Link>
@@ -197,7 +233,7 @@ export function AppHeader() {
               href="https://extranet2.ics.fr"
               target="_blank"
               rel="noreferrer noopener"
-              className="mt-1 inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm"
+              className="mt-1 inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-base text-foreground"
               title="Vous quittez le site"
               onClick={() => {
                 setMobileOpen(false);
@@ -207,12 +243,12 @@ export function AppHeader() {
               Extranet
               <ExternalLink className="h-4 w-4" />
             </a>
-            <div className="mt-4 border-t border-border pt-4 text-sm text-muted-foreground">
+            <div className="mt-4 border-t border-border pt-4 text-sm text-foreground/85">
               <p>109 Av. Foch, 76600 Le Havre</p>
-              <a href="tel:0235425176" className="block hover:text-foreground">
+              <a href="tel:0235425176" className="block text-foreground hover:underline">
                 02 35 42 51 76
               </a>
-              <a href="mailto:vendre@fochimmobilier.com" className="block hover:text-foreground">
+              <a href="mailto:vendre@fochimmobilier.com" className="block text-foreground hover:underline">
                 vendre@fochimmobilier.com
               </a>
             </div>
