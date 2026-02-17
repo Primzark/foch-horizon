@@ -179,8 +179,8 @@ export default function HomePage() {
         </div>
 
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {(featuredQuery.data ?? []).map((property) => (
-            <ListingCard key={property.id} item={toSearchItem(property)} />
+          {(featuredQuery.data ?? []).map((property, index) => (
+            <ListingCard key={property.id} item={toSearchItem(property)} revealIndex={index} />
           ))}
         </div>
       </section>

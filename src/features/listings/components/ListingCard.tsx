@@ -1,4 +1,5 @@
 import { Heart, MapPin, Maximize, BedDouble, Bath, Car } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
 import { Link } from "react-router-dom";
 import type { PropertySearchItem } from "@/types/api";
 import { cn } from "@/lib/utils";
@@ -14,19 +15,30 @@ import { useFavoritesStore } from "@/features/favorites/useFavoritesStore";
 interface ListingCardProps {
   item: PropertySearchItem;
   viewMode?: "grid" | "list";
+  revealIndex?: number;
 }
 
-export function ListingCard({ item, viewMode = "grid" }: ListingCardProps) {
+export function ListingCard({ item, viewMode = "grid", revealIndex = 0 }: ListingCardProps) {
   const toggleFavorite = useFavoritesStore((state) => state.toggle);
   const isFavorite = useFavoritesStore((state) => state.isFavorite(item.id));
+  const reducedMotion = useReducedMotion();
 
   const path = toCanonicalPropertyPath({ id: item.id, slug: item.slug });
   const status = getPropertyStatusLabel(item.status);
   const propertyTypeLabel = formatPropertyTypeLabel(item.type);
+  const revealDelay = Math.min(revealIndex * 0.05, 0.45);
+  const revealProps = reducedMotion
+    ? { initial: false as const }
+    : {
+        initial: { opacity: 0, y: 20 },
+        whileInView: { opacity: 1, y: 0 },
+        viewport: { once: true, amount: 0.2 },
+        transition: { duration: 0.22, delay: revealDelay, ease: [0.22, 1, 0.36, 1] as const },
+      };
 
   if (viewMode === "list") {
     return (
-      <article className="overflow-hidden rounded-2xl border border-border bg-card">
+      <motion.article {...revealProps} className="overflow-hidden rounded-2xl border border-border bg-card">
         <Link to={path} className="group grid gap-4 p-3 md:grid-cols-[280px_1fr] md:p-4">
           <div className="relative overflow-hidden rounded-xl">
             <img src={item.coverImageUrl} alt={item.title} className="aspect-[4/3] h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]" loading="lazy" />
@@ -78,12 +90,15 @@ export function ListingCard({ item, viewMode = "grid" }: ListingCardProps) {
             </div>
           </div>
         </Link>
-      </article>
+      </motion.article>
     );
   }
 
   return (
-    <article className="group overflow-hidden rounded-2xl border border-border bg-card transition-all duration-200 hover:-translate-y-0.5">
+    <motion.article
+      {...revealProps}
+      className="group overflow-hidden rounded-2xl border border-border bg-card transition-all duration-200 hover:-translate-y-0.5"
+    >
       <Link to={path} className="relative block overflow-hidden">
         <img src={item.coverImageUrl} alt={item.title} className="aspect-[4/3] w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]" loading="lazy" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-80" />
@@ -129,6 +144,6 @@ export function ListingCard({ item, viewMode = "grid" }: ListingCardProps) {
         </div>
         <p className="font-display text-2xl">{formatPrice(item.priceAmount, item.transaction)}</p>
       </div>
-    </article>
+    </motion.article>
   );
 }

@@ -92,8 +92,8 @@ export default function CityHubPage() {
           </div>
         ) : (
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {cityProperties.map((property) => (
-              <ListingCard key={property.id} item={toSearchItem(property)} />
+            {cityProperties.map((property, index) => (
+              <ListingCard key={property.id} item={toSearchItem(property)} revealIndex={index} />
             ))}
           </div>
         )}

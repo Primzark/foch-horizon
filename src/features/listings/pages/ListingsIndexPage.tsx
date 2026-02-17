@@ -118,8 +118,8 @@ export default function ListingsIndexPage() {
           ) : (
             <>
               <div className={viewMode === "grid" ? "mt-4 grid gap-5 md:grid-cols-2 xl:grid-cols-3" : "mt-4 space-y-4"}>
-                {query.data.items.map((item) => (
-                  <ListingCard key={item.id} item={item} viewMode={viewMode} />
+                {query.data.items.map((item, index) => (
+                  <ListingCard key={item.id} item={item} viewMode={viewMode} revealIndex={index} />
                 ))}
               </div>
 

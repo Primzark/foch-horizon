@@ -265,7 +265,9 @@ export default function ListingDetailPage() {
         <section className="mt-12">
           <h2 className="font-display text-3xl">Biens similaires</h2>
           <div className="mt-4 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {similarQuery.data?.map((item) => <ListingCard key={item.id} item={toSearchItem(item)} />)}
+            {similarQuery.data?.map((item, index) => (
+              <ListingCard key={item.id} item={toSearchItem(item)} revealIndex={index} />
+            ))}
           </div>
         </section>
       )}
