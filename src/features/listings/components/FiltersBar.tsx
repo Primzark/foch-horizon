@@ -1,4 +1,4 @@
-import { ArrowDownWideNarrow, ArrowUpNarrowWide, LayoutGrid, List, SlidersHorizontal } from "lucide-react";
+import { LayoutGrid, List, SlidersHorizontal } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -15,14 +15,6 @@ interface FiltersBarProps {
 
 export function FiltersBar({ sort, onSortChange, viewMode, onViewModeChange, onOpenDrawer, total }: FiltersBarProps) {
   const reducedMotion = useReducedMotion();
-  const sortHint =
-    sort === "price_asc"
-      ? { label: "Prix croissant", Icon: ArrowUpNarrowWide }
-      : sort === "price_desc"
-        ? { label: "Prix décroissant", Icon: ArrowDownWideNarrow }
-        : sort === "surface_desc"
-          ? { label: "Surface décroissante", Icon: ArrowDownWideNarrow }
-          : { label: "Plus récents", Icon: ArrowDownWideNarrow };
 
   return (
     <div className="sticky top-[74px] z-30 rounded-2xl border border-border bg-background/85 p-3 backdrop-blur supports-[backdrop-filter]:bg-background/70">
@@ -43,19 +35,6 @@ export function FiltersBar({ sort, onSortChange, viewMode, onViewModeChange, onO
             </AnimatePresence>{" "}
             bien{total > 1 ? "s" : ""} trouvé{total > 1 ? "s" : ""}
           </p>
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.p
-              key={sort}
-              initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -4 }}
-              transition={{ duration: 0.18, ease: "easeOut" }}
-              className="mt-1 inline-flex items-center gap-1.5 text-xs text-muted-foreground"
-            >
-              <sortHint.Icon className="h-3.5 w-3.5" />
-              {sortHint.label}
-            </motion.p>
-          </AnimatePresence>
         </div>
 
         <div className="flex items-center gap-2">
