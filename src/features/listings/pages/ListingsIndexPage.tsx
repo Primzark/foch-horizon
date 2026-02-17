@@ -37,12 +37,21 @@ export default function ListingsIndexPage() {
     queryFn: () => searchProperties(filters),
   });
 
+  const isPriceSort = filters.sort === "price_asc" || filters.sort === "price_desc";
+  const sortDirection = filters.sort === "price_asc" ? 1 : filters.sort === "price_desc" ? -1 : 0;
+
   const resultsMotion = reducedMotion
     ? { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 } }
-    : { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0, y: -8 } };
+    : isPriceSort
+      ? {
+          initial: { opacity: 0, y: sortDirection > 0 ? 16 : 10, scale: 0.992, filter: "blur(8px)" },
+          animate: { opacity: 1, y: 0, scale: 1, filter: "blur(0px)" },
+          exit: { opacity: 0, y: -8, scale: 0.994, filter: "blur(6px)" },
+        }
+      : { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0, y: -8 } };
 
   const resultsKey = query.data
-    ? `${viewMode}-${query.data.page}-${query.data.total}-${query.data.items.map((item) => item.id).join("-")}`
+    ? `${viewMode}-${filters.sort ?? "newest"}-${query.data.page}-${query.data.total}-${query.data.items.map((item) => item.id).join("-")}`
     : `${viewMode}-loading`;
 
   const updateFilters = (updates: Partial<PropertySearchParams>) => {
@@ -138,7 +147,24 @@ export default function ListingsIndexPage() {
               <>
                 <div className={viewMode === "grid" ? "mt-4 grid gap-5 md:grid-cols-2 xl:grid-cols-3" : "mt-4 space-y-4"}>
                   {query.data.items.map((item, index) => (
-                    <ListingCard key={item.id} item={item} viewMode={viewMode} revealIndex={index} />
+                    <motion.div
+                      key={item.id}
+                      initial={
+                        reducedMotion
+                          ? { opacity: 1 }
+                          : isPriceSort
+                            ? { opacity: 0, y: sortDirection > 0 ? 20 : 12, scale: 0.975, filter: "blur(10px)" }
+                            : { opacity: 0, y: 10 }
+                      }
+                      animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+                      transition={{
+                        duration: isPriceSort ? 0.36 : 0.2,
+                        delay: isPriceSort ? Math.min(index * 0.045, 0.26) : 0,
+                        ease: isPriceSort ? [0.22, 1, 0.36, 1] : "easeOut",
+                      }}
+                    >
+                      <ListingCard item={item} viewMode={viewMode} revealIndex={index} />
+                    </motion.div>
                   ))}
                 </div>
 
