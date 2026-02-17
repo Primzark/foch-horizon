@@ -1,7 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { searchProperties } from "@/features/listings/api/properties.service";
 import { ActiveFiltersChips } from "@/features/listings/components/ActiveFiltersChips";
@@ -23,9 +23,18 @@ const defaultParams: PropertySearchParams = {
 export default function ListingsIndexPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [sortDirection, setSortDirection] = useState<-1 | 0 | 1>(0);
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const previousSortRef = useRef<PropertySearchParams["sort"]>(defaultParams.sort);
   const reducedMotion = useReducedMotion();
   const setSearchDrawerOpen = useUiStore((state) => state.setSearchDrawerOpen);
   const favoriteIds = useFavoritesStore((state) => state.ids);
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start start", "end end"],
+  });
+  const primaryBlobShift = useTransform(scrollYProgress, [0, 1], [0, reducedMotion ? 0 : -70]);
+  const secondaryBlobShift = useTransform(scrollYProgress, [0, 1], [0, reducedMotion ? 0 : 80]);
 
   const filters = useMemo(() => {
     const parsed = parseSearchParams(searchParams);
@@ -37,12 +46,33 @@ export default function ListingsIndexPage() {
     queryFn: () => searchProperties(filters),
   });
 
+  useEffect(() => {
+    const currentSort = filters.sort ?? defaultParams.sort;
+    const previousSort = previousSortRef.current ?? defaultParams.sort;
+
+    if (currentSort !== previousSort) {
+      if (currentSort === "price_asc") {
+        setSortDirection(-1);
+      } else if (currentSort === "price_desc" || currentSort === "surface_desc") {
+        setSortDirection(1);
+      } else {
+        setSortDirection(0);
+      }
+      previousSortRef.current = currentSort;
+    }
+  }, [filters.sort]);
+
+  const directionalOffset = sortDirection === 0 ? 10 : sortDirection * 20;
   const resultsMotion = reducedMotion
     ? { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 } }
-    : { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0, y: -8 } };
+    : {
+        initial: { opacity: 0, y: directionalOffset, filter: "blur(2px)" },
+        animate: { opacity: 1, y: 0, filter: "blur(0px)" },
+        exit: { opacity: 0, y: -directionalOffset, filter: "blur(2px)" },
+      };
 
   const resultsKey = query.data
-    ? `${viewMode}-${query.data.page}-${query.data.total}-${query.data.items.map((item) => item.id).join("-")}`
+    ? `${viewMode}-${filters.sort ?? "newest"}-${query.data.page}-${query.data.total}-${query.data.items.map((item) => item.id).join("-")}`
     : `${viewMode}-loading`;
 
   const updateFilters = (updates: Partial<PropertySearchParams>) => {
@@ -67,7 +97,24 @@ export default function ListingsIndexPage() {
   });
 
   return (
-    <section className="container mx-auto px-4 py-8">
+    <section ref={sectionRef} className="relative container mx-auto overflow-hidden px-4 py-8">
+      <div className="pointer-events-none fixed inset-x-0 top-[74px] z-40 hidden h-px bg-border/60 lg:block">
+        <motion.span
+          className="block h-full origin-left bg-gradient-to-r from-accent via-accent/80 to-transparent"
+          style={{ scaleX: scrollYProgress }}
+        />
+      </div>
+      <motion.div
+        aria-hidden
+        className="pointer-events-none absolute -right-24 -top-20 h-64 w-64 rounded-full bg-accent/12 blur-3xl"
+        style={{ y: primaryBlobShift }}
+      />
+      <motion.div
+        aria-hidden
+        className="pointer-events-none absolute -bottom-24 -left-20 h-72 w-72 rounded-full bg-foreground/[0.04] blur-3xl"
+        style={{ y: secondaryBlobShift }}
+      />
+
       <header className="mb-6">
         <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Biens</p>
         <h1 className="mt-2 font-display text-4xl">Tous nos biens</h1>
@@ -138,7 +185,18 @@ export default function ListingsIndexPage() {
               <>
                 <div className={viewMode === "grid" ? "mt-4 grid gap-5 md:grid-cols-2 xl:grid-cols-3" : "mt-4 space-y-4"}>
                   {query.data.items.map((item, index) => (
-                    <ListingCard key={item.id} item={item} viewMode={viewMode} revealIndex={index} />
+                    <motion.div
+                      key={item.id}
+                      initial={reducedMotion ? { opacity: 1 } : { opacity: 0, y: directionalOffset * 0.55 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{
+                        duration: 0.22,
+                        delay: Math.min(index * 0.04, 0.24),
+                        ease: "easeOut",
+                      }}
+                    >
+                      <ListingCard item={item} viewMode={viewMode} revealIndex={index} />
+                    </motion.div>
                   ))}
                 </div>
 
