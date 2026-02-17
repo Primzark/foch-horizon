@@ -1,4 +1,5 @@
 import { LayoutGrid, List, SlidersHorizontal } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { sortOptions } from "@/features/listings/data/options";
@@ -13,11 +14,27 @@ interface FiltersBarProps {
 }
 
 export function FiltersBar({ sort, onSortChange, viewMode, onViewModeChange, onOpenDrawer, total }: FiltersBarProps) {
+  const reducedMotion = useReducedMotion();
+
   return (
     <div className="sticky top-[74px] z-30 rounded-2xl border border-border bg-background/85 p-3 backdrop-blur supports-[backdrop-filter]:bg-background/70">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-sm text-muted-foreground">{total} bien{total > 1 ? "s" : ""} trouvé{total > 1 ? "s" : ""}</p>
+          <p className="text-sm text-muted-foreground">
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.span
+                key={total}
+                initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -6 }}
+                transition={{ duration: 0.18, ease: "easeOut" }}
+                className="inline-block"
+              >
+                {total}
+              </motion.span>
+            </AnimatePresence>{" "}
+            bien{total > 1 ? "s" : ""} trouvé{total > 1 ? "s" : ""}
+          </p>
         </div>
 
         <div className="flex items-center gap-2">

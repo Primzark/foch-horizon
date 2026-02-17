@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { searchProperties } from "@/features/listings/api/properties.service";
 import { ActiveFiltersChips } from "@/features/listings/components/ActiveFiltersChips";
@@ -22,6 +23,7 @@ const defaultParams: PropertySearchParams = {
 export default function ListingsIndexPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const reducedMotion = useReducedMotion();
   const setSearchDrawerOpen = useUiStore((state) => state.setSearchDrawerOpen);
   const favoriteIds = useFavoritesStore((state) => state.ids);
 
@@ -34,6 +36,14 @@ export default function ListingsIndexPage() {
     queryKey: ["properties", filters],
     queryFn: () => searchProperties(filters),
   });
+
+  const resultsMotion = reducedMotion
+    ? { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 } }
+    : { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0, y: -8 } };
+
+  const resultsKey = query.data
+    ? `${viewMode}-${query.data.page}-${query.data.total}-${query.data.items.map((item) => item.id).join("-")}`
+    : `${viewMode}-loading`;
 
   const updateFilters = (updates: Partial<PropertySearchParams>) => {
     const next = { ...filters, ...updates };
@@ -106,32 +116,42 @@ export default function ListingsIndexPage() {
       )}
 
       {!query.isLoading && !query.isError && query.data && (
-        <>
-          {query.data.items.length === 0 ? (
-            <div className="mt-8 rounded-2xl border border-border bg-card p-8 text-center">
-              <p className="font-display text-2xl">Aucun bien ne correspond à ces critères.</p>
-              <p className="mt-2 text-sm text-muted-foreground">Essayez d'élargir la recherche ou contactez l'agence pour un accompagnement personnalisé.</p>
-              <Button className="mt-4" asChild>
-                <a href="/contact">Nous contacter</a>
-              </Button>
-            </div>
-          ) : (
-            <>
-              <div className={viewMode === "grid" ? "mt-4 grid gap-5 md:grid-cols-2 xl:grid-cols-3" : "mt-4 space-y-4"}>
-                {query.data.items.map((item, index) => (
-                  <ListingCard key={item.id} item={item} viewMode={viewMode} revealIndex={index} />
-                ))}
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={resultsKey}
+            initial={resultsMotion.initial}
+            animate={resultsMotion.animate}
+            exit={resultsMotion.exit}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+          >
+            {query.data.items.length === 0 ? (
+              <div className="mt-8 rounded-2xl border border-border bg-card p-8 text-center">
+                <p className="font-display text-2xl">Aucun bien ne correspond à ces critères.</p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Essayez d'élargir la recherche ou contactez l'agence pour un accompagnement personnalisé.
+                </p>
+                <Button className="mt-4" asChild>
+                  <a href="/contact">Nous contacter</a>
+                </Button>
               </div>
+            ) : (
+              <>
+                <div className={viewMode === "grid" ? "mt-4 grid gap-5 md:grid-cols-2 xl:grid-cols-3" : "mt-4 space-y-4"}>
+                  {query.data.items.map((item, index) => (
+                    <ListingCard key={item.id} item={item} viewMode={viewMode} revealIndex={index} />
+                  ))}
+                </div>
 
-              <PaginationBar
-                page={query.data.page}
-                pageSize={query.data.pageSize}
-                total={query.data.total}
-                onChange={(page) => updateFilters({ page })}
-              />
-            </>
-          )}
-        </>
+                <PaginationBar
+                  page={query.data.page}
+                  pageSize={query.data.pageSize}
+                  total={query.data.total}
+                  onChange={(page) => updateFilters({ page })}
+                />
+              </>
+            )}
+          </motion.div>
+        </AnimatePresence>
       )}
     </section>
   );

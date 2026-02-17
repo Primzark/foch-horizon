@@ -1,5 +1,7 @@
 import { Link, Navigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { motion, useReducedMotion, useScroll } from "framer-motion";
+import { useRef } from "react";
 import { Bath, BedDouble, Car, Copy, MapPin, Maximize, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cityById } from "@/features/cities/data/cities";
@@ -35,9 +37,15 @@ function parseRouteIdAndSlug(rawIdSlug?: string): { id: number; slug: string | n
 }
 
 export default function ListingDetailPage() {
+  const reducedMotion = useReducedMotion();
+  const contentRef = useRef<HTMLDivElement | null>(null);
   const params = useParams();
   const parsedRoute = parseRouteIdAndSlug(params.idSlug);
   const propertyId = parsedRoute?.id ?? null;
+  const { scrollYProgress } = useScroll({
+    target: contentRef,
+    offset: ["start start", "end end"],
+  });
 
   const propertyQuery = useQuery({
     queryKey: ["property", propertyId],
@@ -120,6 +128,15 @@ export default function ListingDetailPage() {
   const city = cityById.get(property.cityId);
   const agent = agentById.get(property.agentId);
   const propertyTypeLabel = formatPropertyTypeLabel(property.propertyType);
+  const sectionReveal = (delay = 0) =>
+    reducedMotion
+      ? { initial: { opacity: 1 }, whileInView: { opacity: 1 }, viewport: { once: true, amount: 0.2 } }
+      : {
+          initial: { opacity: 0, y: 18 },
+          whileInView: { opacity: 1, y: 0 },
+          viewport: { once: true, amount: 0.2 },
+          transition: { duration: 0.24, delay, ease: "easeOut" as const },
+        };
 
   const quickFacts = [
     { icon: Maximize, label: "Surface", value: `${property.surfaceM2} m²` },
@@ -130,6 +147,16 @@ export default function ListingDetailPage() {
 
   return (
     <section className="container mx-auto px-4 py-8">
+      <div className="pointer-events-none fixed right-5 top-1/2 z-20 hidden h-36 -translate-y-1/2 lg:block">
+        <div className="h-full w-1 rounded-full bg-border/70">
+          <motion.span
+            className="block h-full w-full origin-top rounded-full bg-accent"
+            style={{ scaleY: scrollYProgress }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
+          />
+        </div>
+      </div>
+
       <nav className="mb-4 text-sm text-muted-foreground">
         <Link to="/" className="hover:underline">
           Accueil
@@ -141,11 +168,13 @@ export default function ListingDetailPage() {
         / <span className="text-foreground">Réf {property.id}</span>
       </nav>
 
-      <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
+      <div ref={contentRef} className="grid gap-8 lg:grid-cols-[1fr_340px]">
         <div>
-          <ListingGallery images={property.images} title={property.title} />
+          <motion.div {...sectionReveal(0)}>
+            <ListingGallery images={property.images} title={property.title} />
+          </motion.div>
 
-          <div className="mt-6 flex flex-wrap items-start justify-between gap-4">
+          <motion.div {...sectionReveal(0.04)} className="mt-6 flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Réf du bien {property.id}</p>
               <h1 className="mt-1 font-display text-4xl">{property.title}</h1>
@@ -183,9 +212,12 @@ export default function ListingDetailPage() {
                 </Button>
               </div>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="mt-6 grid gap-3 rounded-2xl border border-border bg-card p-4 sm:grid-cols-4">
+          <motion.div
+            {...sectionReveal(0.08)}
+            className="mt-6 grid gap-3 rounded-2xl border border-border bg-card p-4 sm:grid-cols-4"
+          >
             {quickFacts.map((fact) => (
               <div key={fact.label} className="rounded-xl border border-border p-3 text-center">
                 <fact.icon className="mx-auto h-4 w-4" />
@@ -193,14 +225,14 @@ export default function ListingDetailPage() {
                 <p className="text-xs text-muted-foreground">{fact.label}</p>
               </div>
             ))}
-          </div>
+          </motion.div>
 
-          <article className="mt-8 rounded-2xl border border-border bg-card p-6">
+          <motion.article {...sectionReveal(0.12)} className="mt-8 rounded-2xl border border-border bg-card p-6">
             <h2 className="font-display text-2xl">Description</h2>
             <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">{property.description}</p>
-          </article>
+          </motion.article>
 
-          <article className="mt-6 rounded-2xl border border-border bg-card p-6">
+          <motion.article {...sectionReveal(0.16)} className="mt-6 rounded-2xl border border-border bg-card p-6">
             <h2 className="font-display text-2xl">Caractéristiques</h2>
             <ul className="mt-3 flex flex-wrap gap-2">
               {property.features.map((feature) => (
@@ -209,9 +241,9 @@ export default function ListingDetailPage() {
                 </li>
               ))}
             </ul>
-          </article>
+          </motion.article>
 
-          <article className="mt-6 rounded-2xl border border-border bg-card p-6">
+          <motion.article {...sectionReveal(0.2)} className="mt-6 rounded-2xl border border-border bg-card p-6">
             <h2 className="font-display text-2xl">Performance énergétique</h2>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <div className="rounded-xl border border-border p-4">
@@ -227,7 +259,7 @@ export default function ListingDetailPage() {
                 </p>
               </div>
             </div>
-          </article>
+          </motion.article>
         </div>
 
         <aside className="space-y-4 lg:sticky lg:top-24 lg:h-fit">
