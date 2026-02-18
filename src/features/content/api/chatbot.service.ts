@@ -33,19 +33,30 @@ export const chatbotExamplePrompts = [
   "Je ne trouve pas de bien adapte, pouvez-vous me rappeler ?",
 ];
 
+const processIntentPattern = /compromis|notaire|process|etape|signature|acte|financement/;
+const propertyIntentPattern = /appartement|maison|bien|acheter|achat|louer|vente|investissement|studio|t2|t3|quartier/;
+const serviceIntentPattern = /service|gestion|location|vendre|estimation|syndic|accompagnement/;
+
 function buildPropertySuggestions(question: string): ChatbotPropertySuggestion[] {
   const normalized = normalizeKeyword(question);
   const wantsRental = /location|louer|locatif|loyer/.test(normalized);
   const wantsSale = /vente|acheter|achat|acquerir/.test(normalized);
+  const bedroomsNeedle = normalized.match(/(\d+)\s*chambre/);
+  const bedroomsMin = bedroomsNeedle ? Number(bedroomsNeedle[1]) : null;
+  const budgetNeedle = normalized.match(/(\d[\d\s]{2,})\s*(e|euros|€)/);
+  const budgetMax = budgetNeedle ? Number(budgetNeedle[1].replace(/\s+/g, "")) : null;
 
   const districtNeedles = ["perret", "saint francois", "saint-vincent", "saint vincent", "sanvic", "graville", "eure"];
   const matchingDistrict = districtNeedles.find((needle) => normalized.includes(needle));
+  const requestSpecificity = Number(Boolean(matchingDistrict)) + Number(Boolean(bedroomsMin)) + Number(Boolean(budgetMax));
 
   const scored = properties
     .filter((property) => property.status === "active")
     .filter((property) => {
       if (wantsRental && property.transactionType !== "location") return false;
       if (wantsSale && property.transactionType !== "vente") return false;
+      if (bedroomsMin != null && (property.bedrooms ?? 0) < bedroomsMin) return false;
+      if (budgetMax != null && property.priceAmount > budgetMax) return false;
       return true;
     })
     .map((property) => {
@@ -57,11 +68,11 @@ function buildPropertySuggestions(question: string): ChatbotPropertySuggestion[]
         score += 3;
       }
 
-      if (normalized.includes("2 chambre") && (property.bedrooms ?? 0) >= 2) {
+      if (bedroomsMin != null && (property.bedrooms ?? 0) >= bedroomsMin) {
         score += 2;
       }
 
-      if (normalized.includes("3 chambre") && (property.bedrooms ?? 0) >= 3) {
+      if (budgetMax != null && property.priceAmount <= budgetMax) {
         score += 2;
       }
 
@@ -87,6 +98,7 @@ function buildPropertySuggestions(question: string): ChatbotPropertySuggestion[]
 
       return { property, score };
     })
+    .filter(({ score }) => score >= (requestSpecificity >= 2 ? 3 : 1))
     .sort((a, b) => {
       if (b.score === a.score) {
         return new Date(b.property.publishedAt).getTime() - new Date(a.property.publishedAt).getTime();
@@ -110,7 +122,7 @@ function buildDistrictAnswer(question: string): ChatbotReply | null {
 
   const district = leHavreDistrictHistory.find((item) => {
     const districtName = normalizeKeyword(item.name);
-    return normalized.includes(districtName) || district.keywordTags.some((tag) => normalized.includes(normalizeKeyword(tag)));
+    return normalized.includes(districtName) || item.keywordTags.some((tag) => normalized.includes(normalizeKeyword(tag)));
   });
 
   if (!district) {
@@ -130,7 +142,7 @@ function buildDistrictAnswer(question: string): ChatbotReply | null {
 
 function buildServiceAnswer(question: string): ChatbotReply | null {
   const normalized = normalizeKeyword(question);
-  if (!/service|gestion|location|vendre|estimation|syndic|accompagnement/.test(normalized)) {
+  if (!serviceIntentPattern.test(normalized)) {
     return null;
   }
 
@@ -148,7 +160,7 @@ function buildServiceAnswer(question: string): ChatbotReply | null {
 
 function buildProcessAnswer(question: string): ChatbotReply | null {
   const normalized = normalizeKeyword(question);
-  if (!/compromis|notaire|process|etape|signature|acte|financement/.test(normalized)) {
+  if (!processIntentPattern.test(normalized)) {
     return null;
   }
 
@@ -166,7 +178,7 @@ function buildProcessAnswer(question: string): ChatbotReply | null {
 
 function buildPropertyAnswer(question: string): ChatbotReply | null {
   const normalized = normalizeKeyword(question);
-  if (!/appartement|maison|bien|acheter|achat|louer|vente|investissement|studio|t2|t3|quartier/.test(normalized)) {
+  if (!propertyIntentPattern.test(normalized)) {
     return null;
   }
 
@@ -209,13 +221,21 @@ function buildFallbackReply(): ChatbotReply {
 }
 
 function buildLocalReply(question: string): ChatbotReply {
-  return (
-    buildDistrictAnswer(question) ??
-    buildServiceAnswer(question) ??
-    buildProcessAnswer(question) ??
-    buildPropertyAnswer(question) ??
-    buildFallbackReply()
-  );
+  const normalized = normalizeKeyword(question);
+
+  if (processIntentPattern.test(normalized)) {
+    return buildProcessAnswer(question) ?? buildFallbackReply();
+  }
+
+  if (propertyIntentPattern.test(normalized)) {
+    return buildPropertyAnswer(question) ?? buildDistrictAnswer(question) ?? buildFallbackReply();
+  }
+
+  if (serviceIntentPattern.test(normalized)) {
+    return buildServiceAnswer(question) ?? buildFallbackReply();
+  }
+
+  return buildDistrictAnswer(question) ?? buildFallbackReply();
 }
 
 export async function askAgencyChatbot(request: ChatbotRequest): Promise<ChatbotReply> {

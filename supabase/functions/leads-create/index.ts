@@ -25,6 +25,88 @@ function getClientIp(request: Request): string | null {
   return request.headers.get("x-real-ip");
 }
 
+function escapeHtml(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+async function sendWebhookNotification(payload: z.infer<typeof payloadSchema>, assignedAgentId: string | null): Promise<void> {
+  const webhookUrl = Deno.env.get("LEADS_NOTIFICATION_WEBHOOK_URL") ?? "";
+  if (!webhookUrl) {
+    return;
+  }
+
+  const response = await fetch(webhookUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      event: "lead_created",
+      assignedAgentId,
+      createdAt: new Date().toISOString(),
+      lead: payload,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Lead webhook failed (${response.status})`);
+  }
+}
+
+async function sendResendNotification(payload: z.infer<typeof payloadSchema>, assignedAgentId: string | null): Promise<void> {
+  const resendApiKey = Deno.env.get("RESEND_API_KEY") ?? "";
+  if (!resendApiKey) {
+    return;
+  }
+
+  const to = Deno.env.get("LEADS_NOTIFICATION_EMAIL") ?? "vendre@fochimmobilier.com";
+  const from = Deno.env.get("LEADS_FROM_EMAIL") ?? "Foch Immobilier <leads@foch-immobilier.fr>";
+  const subject = `[Lead ${payload.source}] ${payload.firstName} ${payload.lastName}`;
+
+  const safeMessage = escapeHtml(payload.message);
+  const html = `
+    <h2>Nouveau lead Foch Immobilier</h2>
+    <p><strong>Source:</strong> ${escapeHtml(payload.source)}</p>
+    <p><strong>Nom:</strong> ${escapeHtml(payload.firstName)} ${escapeHtml(payload.lastName)}</p>
+    <p><strong>Email:</strong> ${escapeHtml(payload.email)}</p>
+    <p><strong>Téléphone:</strong> ${escapeHtml(payload.phone ?? "non renseigné")}</p>
+    <p><strong>Ville:</strong> ${escapeHtml(payload.cityId ?? "non renseignée")}</p>
+    <p><strong>Bien:</strong> ${escapeHtml(payload.propertyId ? String(payload.propertyId) : "non renseigné")}</p>
+    <p><strong>Agent assigné:</strong> ${escapeHtml(assignedAgentId ?? "non assigné")}</p>
+    <p><strong>Message:</strong></p>
+    <pre>${safeMessage}</pre>
+  `;
+
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${resendApiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from,
+      to: [to],
+      subject,
+      html,
+      reply_to: payload.email,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Resend email failed (${response.status})`);
+  }
+}
+
+async function notifyLead(payload: z.infer<typeof payloadSchema>, assignedAgentId: string | null): Promise<void> {
+  await Promise.allSettled([
+    sendWebhookNotification(payload, assignedAgentId),
+    sendResendNotification(payload, assignedAgentId),
+  ]);
+}
+
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -80,6 +162,8 @@ Deno.serve(async (request) => {
       .single();
 
     if (error) throw error;
+
+    await notifyLead(payload, assignedAgentId);
 
     return jsonResponse({ ok: true, leadId: data.id, assignedAgentId });
   } catch (error) {
