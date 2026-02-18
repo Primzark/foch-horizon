@@ -2,5 +2,6 @@ User-agent: *
 Allow: /
 Disallow: /admin/
 Disallow: /api/
+Disallow: /my-selection
 
 Sitemap: https://www.foch-immobilier.fr/sitemap.xml

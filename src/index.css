@@ -11,6 +11,7 @@
     --color-text: 214 24% 11%;
     --color-muted: 210 13% 44%;
     --color-accent: 205 42% 20%;
+    --color-brand: 144 61% 47%;
     --color-gold: 38 57% 55%;
 
     --background: var(--color-bg);
@@ -34,12 +35,17 @@
     --accent: var(--color-accent);
     --accent-foreground: 0 0% 98%;
 
+    --brand: var(--color-brand);
+    --brand-soft: 146 52% 95%;
+    --brand-strong: 151 55% 23%;
+    --brand-border: 147 29% 74%;
+
     --destructive: 0 72% 52%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 214 15% 84%;
     --input: 214 15% 86%;
-    --ring: 205 42% 20%;
+    --ring: var(--color-brand);
 
     --radius: 0.85rem;
 
@@ -80,7 +86,7 @@
     font-size: 16px;
     line-height: 1.55;
     background-image: radial-gradient(circle at 16% 12%, hsl(44 50% 96%), transparent 40%),
-      radial-gradient(circle at 80% 0%, hsl(209 34% 94%), transparent 45%);
+      radial-gradient(circle at 86% 0%, hsl(145 42% 94%), transparent 46%);
   }
 
   h1,
@@ -161,5 +167,14 @@
 
   .shadow-gold {
     box-shadow: 0 8px 28px hsl(38 57% 55% / 0.25);
+  }
+
+  .accent-divider {
+    background-image: linear-gradient(
+      90deg,
+      hsl(var(--brand) / 0),
+      hsl(var(--brand) / 0.55) 45%,
+      hsl(var(--brand) / 0)
+    );
   }
 }

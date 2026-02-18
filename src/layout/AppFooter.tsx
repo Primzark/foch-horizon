@@ -14,6 +14,7 @@ const legalLinks = [
 const quickLinks = [
   { href: "/", label: "Accueil" },
   { href: "/biens", label: "Biens" },
+  { href: "/my-selection", label: "My Selection" },
   { href: "/vendre", label: "Vendre" },
   { href: "/services", label: "Services" },
   { href: "/apropos", label: "À propos" },
@@ -23,6 +24,7 @@ const quickLinks = [
 export function AppFooter() {
   return (
     <footer className="mt-16 border-t border-border bg-card">
+      <div className="h-px w-full accent-divider" />
       <div className="container mx-auto grid gap-10 px-4 py-12 md:grid-cols-2 lg:grid-cols-4">
         <div>
           <p className="font-display text-2xl">Foch Immobilier</p>

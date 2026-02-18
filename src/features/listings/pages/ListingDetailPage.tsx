@@ -17,7 +17,7 @@ import {
   sanitizePropertySlug,
   toCanonicalPropertyPath,
 } from "@/features/listings/utils/formatting";
-import { useSeo } from "@/lib/seo/useSeo";
+import { getSiteUrl, useSeo } from "@/lib/seo/useSeo";
 import { trackEvent } from "@/lib/analytics/events";
 
 function parseRouteIdAndSlug(rawIdSlug?: string): { id: number; slug: string | null } | null {
@@ -42,6 +42,7 @@ export default function ListingDetailPage() {
   const params = useParams();
   const parsedRoute = parseRouteIdAndSlug(params.idSlug);
   const propertyId = parsedRoute?.id ?? null;
+  const siteUrl = getSiteUrl();
   const { scrollYProgress } = useScroll({
     target: contentRef,
     offset: ["start start", "end end"],
@@ -72,11 +73,12 @@ export default function ListingDetailPage() {
           )} – Réf ${property.id}`,
           description: `${property.description.slice(0, 150)}…`,
           canonicalPath,
+          image: property.images[0]?.sourceUrl,
           jsonLd: {
             "@context": "https://schema.org",
             "@type": "RealEstateListing",
             name: property.title,
-            url: `https://www.fochimmobilier.com${canonicalPath}`,
+            url: `${siteUrl}${canonicalPath}`,
             identifier: String(property.id),
             offers: {
               "@type": "Offer",

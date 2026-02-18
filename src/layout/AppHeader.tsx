@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
-import { ExternalLink, Menu, Phone, Search } from "lucide-react";
+import { ExternalLink, Heart, Menu, Phone, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { useFavoritesStore } from "@/features/favorites/useFavoritesStore";
 import { cn } from "@/lib/utils";
 import { useUiStore } from "@/lib/state/useUiStore";
 import { trackEvent } from "@/lib/analytics/events";
@@ -34,13 +35,45 @@ function LinkItem({
       className={({ isActive }) =>
         cn(
           "group relative px-2 py-1 text-sm font-medium text-foreground/80 transition-colors hover:text-foreground",
-          isActive && "text-foreground",
+          isActive && "text-brand-strong",
           className,
         )
       }
     >
       {label}
-      <span className="absolute -bottom-0.5 left-2 h-px w-0 bg-foreground/80 transition-all duration-200 group-hover:w-[calc(100%-1rem)]" />
+      <span className="absolute -bottom-0.5 left-2 h-px w-0 bg-brand transition-all duration-200 group-hover:w-[calc(100%-1rem)]" />
+    </NavLink>
+  );
+}
+
+function SelectionLink({
+  count,
+  onClick,
+  className,
+}: {
+  count: number;
+  onClick?: () => void;
+  className?: string;
+}) {
+  return (
+    <NavLink
+      to="/my-selection"
+      onClick={onClick}
+      className={({ isActive }) =>
+        cn(
+          "inline-flex items-center gap-1.5 rounded-full border border-brand-border bg-brand-soft px-2.5 py-2 text-brand-strong shadow-[0_8px_24px_hsl(var(--brand)/0.16)] transition-colors hover:bg-brand-soft/70 sm:gap-2 sm:pr-3",
+          "focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/80 focus-visible:ring-offset-2",
+          isActive && "border-brand/60 bg-brand-soft/60",
+          className,
+        )
+      }
+      aria-label={`My Selection (${count})`}
+    >
+      <Heart className={cn("h-5 w-5 text-brand", count > 0 && "fill-brand")} />
+      <span className="text-[0.7rem] font-semibold tracking-[0.05em] sm:text-[0.78rem]">My Selection</span>
+      <span className="inline-flex min-w-6 items-center justify-center rounded-full bg-white px-1.5 py-0.5 text-[0.67rem] font-bold text-brand-strong">
+        {count > 99 ? "99+" : count}
+      </span>
     </NavLink>
   );
 }
@@ -50,6 +83,7 @@ export function AppHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const setSearchDrawerOpen = useUiStore((state) => state.setSearchDrawerOpen);
+  const favoriteIds = useFavoritesStore((state) => state.ids);
 
   useEffect(() => {
     const onScroll = () => {
@@ -128,9 +162,13 @@ export function AppHeader() {
           </nav>
 
           <div className="flex items-center gap-2">
+            <SelectionLink
+              count={favoriteIds.length}
+              onClick={() => trackEvent("favorites_opened", { source: "header" })}
+            />
             <button
               type="button"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background/90"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background/90 transition-colors hover:border-brand-border hover:bg-brand-soft/70"
               aria-label="Ouvrir la recherche"
               onClick={() => {
                 setSearchDrawerOpen(true);
@@ -141,7 +179,7 @@ export function AppHeader() {
             </button>
             <a
               href="tel:0235425176"
-              className="hidden h-10 w-10 items-center justify-center rounded-full border border-border bg-background/90 md:inline-flex"
+              className="hidden h-10 w-10 items-center justify-center rounded-full border border-border bg-background/90 transition-colors hover:border-brand-border hover:bg-brand-soft/70 md:inline-flex"
               aria-label="Appeler l'agence"
               onClick={() => trackEvent("phone_clicked", { source: "header" })}
             >
@@ -192,8 +230,8 @@ export function AppHeader() {
                     className={({ isActive }) =>
                       cn(
                         "rounded-lg border border-transparent px-3 py-3 text-[1rem] font-semibold text-foreground transition-colors",
-                        "hover:border-border hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-accent",
-                        isActive && "border-border bg-muted",
+                        "hover:border-brand-border hover:bg-brand-soft/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/80",
+                        isActive && "border-brand-border bg-brand-soft text-brand-strong",
                       )
                     }
                   >
@@ -201,6 +239,15 @@ export function AppHeader() {
                   </NavLink>
                 </SheetClose>
               ))}
+
+              <SelectionLink
+                count={favoriteIds.length}
+                className="mt-1 w-full justify-between rounded-lg border border-brand-border px-3 py-3 shadow-none"
+                onClick={() => {
+                  setMobileOpen(false);
+                  trackEvent("favorites_opened", { source: "mobile_menu" });
+                }}
+              />
 
               <SheetClose asChild>
                 <Link

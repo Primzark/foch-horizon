@@ -72,7 +72,7 @@ export default function ListingsIndexPage() {
     title: "Biens immobiliers | Foch Immobilier",
     description: "Tous nos biens à la vente et à la location dans la région du Havre.",
     canonicalPath: "/biens",
-    noIndex: Boolean(filters.features?.length),
+    noIndex: searchParams.toString().length > 0,
   });
 
   return (
@@ -99,10 +99,10 @@ export default function ListingsIndexPage() {
       />
 
       {favoriteIds.length >= 3 && (
-        <div className="mb-4 rounded-2xl border border-border bg-card p-4 text-sm">
+        <div className="mb-4 rounded-2xl border border-brand-border bg-brand-soft/60 p-4 text-sm text-brand-strong">
           <p>
             Vous avez sauvegardé {favoriteIds.length} biens. Besoin d'un avis personnalisé ?{" "}
-            <a href="/contact" className="underline underline-offset-4">
+            <a href="/contact" className="font-semibold underline underline-offset-4">
               Envoyer ma sélection à l'agence
             </a>
             .

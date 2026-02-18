@@ -10,7 +10,7 @@ import { agents } from "@/features/listings/data/agents";
 import { toSearchItem } from "@/features/listings/utils/mappers";
 import { cities } from "@/features/cities/data/cities";
 import { useUiStore } from "@/lib/state/useUiStore";
-import { useSeo } from "@/lib/seo/useSeo";
+import { getSiteUrl, useSeo } from "@/lib/seo/useSeo";
 
 const serviceCards = [
   {
@@ -39,6 +39,7 @@ export default function HomePage() {
   const setSearchDrawerOpen = useUiStore((state) => state.setSearchDrawerOpen);
   const featuredQuery = useQuery({ queryKey: ["featured-properties"], queryFn: () => getFeaturedProperties(6) });
   const reducedMotion = useReducedMotion();
+  const siteUrl = getSiteUrl();
   const heroSlides = useMemo(
     () =>
       (featuredQuery.data ?? [])
@@ -73,12 +74,13 @@ export default function HomePage() {
     description:
       "Foch Immobilier vous accompagne depuis 1972 pour vos projets de vente, location et administration de biens au Havre.",
     canonicalPath: "/",
+    image: heroSlides[0]?.imageUrl,
     jsonLd: [
       {
         "@context": "https://schema.org",
         "@type": "Organization",
         name: "Foch Immobilier",
-        url: "https://www.fochimmobilier.com",
+        url: siteUrl,
         address: {
           "@type": "PostalAddress",
           streetAddress: "109 Av. Foch",
@@ -92,7 +94,12 @@ export default function HomePage() {
         "@context": "https://schema.org",
         "@type": "WebSite",
         name: "Foch Immobilier",
-        url: "https://www.fochimmobilier.com",
+        url: siteUrl,
+        potentialAction: {
+          "@type": "SearchAction",
+          target: `${siteUrl}/biens?q={search_term_string}`,
+          "query-input": "required name=search_term_string",
+        },
       },
     ],
   });

@@ -78,13 +78,18 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0 }: Listin
               <p className="font-display text-2xl">{formatPrice(item.priceAmount, item.transaction)}</p>
               <button
                 type="button"
-                className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1 text-xs"
+                className={cn(
+                  "inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs transition-colors",
+                  isFavorite
+                    ? "border-brand-border bg-brand-soft text-brand-strong"
+                    : "border-border text-foreground hover:border-brand-border hover:bg-brand-soft/60",
+                )}
                 onClick={(event) => {
                   event.preventDefault();
                   toggleFavorite(item.id);
                 }}
               >
-                <Heart className={cn("h-4 w-4", isFavorite && "fill-current")} />
+                <Heart className={cn("h-4 w-4", isFavorite && "fill-brand text-brand")} />
                 Sauvegarder
               </button>
             </div>
@@ -105,14 +110,19 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0 }: Listin
         {status && <span className="absolute left-3 top-3 rounded-full bg-background/95 px-2 py-1 text-xs font-medium">{status}</span>}
         <button
           type="button"
-          className="absolute right-3 top-3 rounded-full bg-background/90 p-2"
+          className={cn(
+            "absolute right-3 top-3 rounded-full p-2 transition-colors",
+            isFavorite
+              ? "bg-brand-soft text-brand-strong shadow-[0_8px_22px_hsl(var(--brand)/0.18)]"
+              : "bg-background/90 text-foreground hover:bg-brand-soft/75",
+          )}
           onClick={(event) => {
             event.preventDefault();
             toggleFavorite(item.id);
           }}
           aria-label={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
         >
-          <Heart className={cn("h-4 w-4", isFavorite && "fill-current")} />
+          <Heart className={cn("h-4 w-4", isFavorite && "fill-brand text-brand")} />
         </button>
       </Link>
 

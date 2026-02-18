@@ -16,6 +16,7 @@ const EstimationPageV2 = lazy(() => import("@/features/content/pages/EstimationP
 const ServicesPage = lazy(() => import("@/features/content/pages/ServicesPage"));
 const LegalTextPage = lazy(() => import("@/features/content/pages/LegalTextPage"));
 const SiteMapPage = lazy(() => import("@/features/content/pages/SiteMapPage"));
+const SelectionPage = lazy(() => import("@/features/favorites/pages/SelectionPage"));
 const NotFoundPage = lazy(() => import("@/features/content/pages/NotFoundPage"));
 
 function LayoutShell() {
@@ -48,6 +49,7 @@ export function AppRouter() {
             <Route path="/estimation" element={<EstimationPageV2 />} />
             <Route path="/services" element={<ServicesPage />} />
             <Route path="/honoraires" element={<FeesPage />} />
+            <Route path="/my-selection" element={<SelectionPage />} />
 
             <Route path="/mentions-legales" element={<LegalTextPage page="mentions-legales" />} />
             <Route path="/confidentialite" element={<LegalTextPage page="confidentialite" />} />

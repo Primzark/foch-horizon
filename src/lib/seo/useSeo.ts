@@ -6,6 +6,37 @@ interface SeoOptions {
   canonicalPath?: string;
   noIndex?: boolean;
   jsonLd?: object | object[];
+  image?: string;
+  type?: "website" | "article";
+}
+
+const fallbackSiteUrl = "https://www.foch-immobilier.fr";
+const defaultOgImage =
+  "https://storage.googleapis.com/gpt-engineer-file-uploads/1c5Ul6EafQQxFKZpYyK1fNvJX4a2/social-images/social-1771265379992-fochimmobilier-agence-immobiliere-le-havre-76_2.webp";
+
+function normalizeSiteUrl(value: string): string {
+  return value.replace(/\/+$/, "");
+}
+
+function toAbsoluteUrl(value: string, siteUrl: string): string {
+  if (/^https?:\/\//i.test(value)) {
+    return value;
+  }
+
+  return `${siteUrl}${value.startsWith("/") ? value : `/${value}`}`;
+}
+
+export function getSiteUrl(): string {
+  const envSiteUrl = import.meta.env.VITE_PUBLIC_SITE_URL;
+  if (typeof envSiteUrl === "string" && envSiteUrl.trim().length > 0) {
+    return normalizeSiteUrl(envSiteUrl.trim());
+  }
+
+  if (typeof window !== "undefined" && window.location.origin) {
+    return normalizeSiteUrl(window.location.origin);
+  }
+
+  return fallbackSiteUrl;
 }
 
 function upsertMeta(name: string, content: string): void {
@@ -46,7 +77,9 @@ function upsertCanonical(href: string): void {
 }
 
 function upsertRobots(noIndex: boolean): void {
-  const value = noIndex ? "noindex,follow" : "index,follow";
+  const value = noIndex
+    ? "noindex,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1"
+    : "index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1";
   upsertMeta("robots", value);
 }
 
@@ -69,20 +102,29 @@ function upsertJsonLd(jsonLd: object | object[]): void {
 
 export function useSeo(options: SeoOptions): void {
   useEffect(() => {
+    const siteUrl = getSiteUrl();
+    const canonicalPath =
+      options.canonicalPath ?? (typeof window !== "undefined" ? window.location.pathname : "/");
+    const canonicalUrl = toAbsoluteUrl(canonicalPath, siteUrl);
+    const imageUrl = toAbsoluteUrl(options.image ?? defaultOgImage, siteUrl);
+
     document.title = options.title;
 
     upsertMeta("description", options.description);
+    upsertMeta("author", "Foch Immobilier");
+    upsertMeta("theme-color", "#2eca6a");
     upsertPropertyMeta("og:title", options.title);
     upsertPropertyMeta("og:description", options.description);
+    upsertPropertyMeta("og:type", options.type ?? "website");
+    upsertPropertyMeta("og:site_name", "Foch Immobilier");
+    upsertPropertyMeta("og:locale", "fr_FR");
+    upsertPropertyMeta("og:image", imageUrl);
+    upsertMeta("twitter:card", "summary_large_image");
     upsertMeta("twitter:title", options.title);
     upsertMeta("twitter:description", options.description);
-
-    if (options.canonicalPath) {
-      const baseUrl = import.meta.env.VITE_PUBLIC_SITE_URL || "https://www.fochimmobilier.com";
-      const canonicalUrl = `${baseUrl}${options.canonicalPath}`;
-      upsertCanonical(canonicalUrl);
-      upsertPropertyMeta("og:url", canonicalUrl);
-    }
+    upsertMeta("twitter:image", imageUrl);
+    upsertCanonical(canonicalUrl);
+    upsertPropertyMeta("og:url", canonicalUrl);
 
     upsertRobots(Boolean(options.noIndex));
 
