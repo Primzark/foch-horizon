@@ -61,7 +61,7 @@ function SelectionLink({
       onClick={onClick}
       className={({ isActive }) =>
         cn(
-          "inline-flex items-center gap-1.5 rounded-full border border-brand-border bg-brand-soft px-2.5 py-2 text-brand-strong shadow-[0_8px_24px_hsl(var(--brand)/0.16)] transition-colors hover:bg-brand-soft/70 sm:gap-2 sm:pr-3",
+          "inline-flex h-11 w-11 items-center justify-center rounded-full border border-brand-border bg-brand-soft text-brand-strong shadow-[0_8px_24px_hsl(var(--brand)/0.16)] transition-colors hover:bg-brand-soft/70",
           "focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/80 focus-visible:ring-offset-2",
           isActive && "border-brand/60 bg-brand-soft/60",
           className,
@@ -70,10 +70,6 @@ function SelectionLink({
       aria-label={`My Selection (${count})`}
     >
       <Heart className={cn("h-5 w-5 text-brand", count > 0 && "fill-brand")} />
-      <span className="text-[0.7rem] font-semibold tracking-[0.05em] sm:text-[0.78rem]">My Selection</span>
-      <span className="inline-flex min-w-6 items-center justify-center rounded-full bg-white px-1.5 py-0.5 text-[0.67rem] font-bold text-brand-strong">
-        {count > 99 ? "99+" : count}
-      </span>
     </NavLink>
   );
 }
@@ -242,7 +238,7 @@ export function AppHeader() {
 
               <SelectionLink
                 count={favoriteIds.length}
-                className="mt-1 w-full justify-between rounded-lg border border-brand-border px-3 py-3 shadow-none"
+                className="mt-1 h-12 w-12 rounded-full shadow-none"
                 onClick={() => {
                   setMobileOpen(false);
                   trackEvent("favorites_opened", { source: "mobile_menu" });
