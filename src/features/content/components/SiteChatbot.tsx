@@ -33,7 +33,147 @@ const initialMessage: ChatMessage = {
   suggestedPrompts: chatbotExamplePrompts,
 };
 
+const CHATBOT_STORAGE_KEY = "foch_chatbot_messages_v1";
+const CHATBOT_STORAGE_VERSION = 1;
 const CHATBOT_REQUEST_TIMEOUT_MS = 18000;
+const CHATBOT_HARD_UNLOCK_MS = 32000;
+const CHATBOT_MEMORY_LIMIT = 44;
+const CHATBOT_HISTORY_LIMIT = 16;
+const CHATBOT_MIN_REPLY_DELAY_MS = 900;
+const CHATBOT_MAX_REPLY_DELAY_MS = 2600;
+
+function createMessageId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+
+  return `chat-${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
+}
+
+function clampNumber(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+function computeReplyDelayMs(question: string): number {
+  const normalizedLength = clampNumber(question.trim().length, 12, 260);
+  const dynamicDelay = 520 + normalizedLength * 8;
+  return clampNumber(dynamicDelay, CHATBOT_MIN_REPLY_DELAY_MS, CHATBOT_MAX_REPLY_DELAY_MS);
+}
+
+function trimMessages(messages: ChatMessage[]): ChatMessage[] {
+  return messages.slice(-CHATBOT_MEMORY_LIMIT);
+}
+
+function sanitizePromptList(raw: unknown): string[] | undefined {
+  if (!Array.isArray(raw)) return undefined;
+
+  const prompts = raw
+    .filter((value): value is string => typeof value === "string")
+    .map((prompt) => prompt.trim())
+    .filter((prompt) => prompt.length > 0)
+    .slice(0, 6);
+
+  return prompts.length > 0 ? prompts : undefined;
+}
+
+function sanitizePropertySuggestions(raw: unknown): ChatbotPropertySuggestion[] | undefined {
+  if (!Array.isArray(raw)) return undefined;
+
+  const suggestions = raw
+    .filter((value): value is ChatbotPropertySuggestion => {
+      if (!value || typeof value !== "object") return false;
+
+      const candidate = value as Partial<ChatbotPropertySuggestion>;
+      return (
+        typeof candidate.id === "number" &&
+        typeof candidate.title === "string" &&
+        typeof candidate.city === "string" &&
+        typeof candidate.price === "string" &&
+        typeof candidate.path === "string"
+      );
+    })
+    .slice(0, 3);
+
+  return suggestions.length > 0 ? suggestions : undefined;
+}
+
+function sanitizeStoredMessages(raw: unknown): ChatMessage[] {
+  if (!Array.isArray(raw)) {
+    return [initialMessage];
+  }
+
+  const sanitized: ChatMessage[] = [];
+
+  for (const item of raw) {
+    if (!item || typeof item !== "object") continue;
+
+    const candidate = item as {
+      id?: unknown;
+      role?: unknown;
+      content?: unknown;
+      propertySuggestions?: unknown;
+      suggestedPrompts?: unknown;
+    };
+
+    if (candidate.role !== "assistant" && candidate.role !== "user") continue;
+    if (typeof candidate.content !== "string") continue;
+
+    const content = candidate.content.trim();
+    if (content.length === 0) continue;
+
+    sanitized.push({
+      id: typeof candidate.id === "string" && candidate.id.trim().length > 0 ? candidate.id : createMessageId(),
+      role: candidate.role,
+      content: content.slice(0, 3200),
+      propertySuggestions: sanitizePropertySuggestions(candidate.propertySuggestions),
+      suggestedPrompts: sanitizePromptList(candidate.suggestedPrompts),
+    });
+
+    if (sanitized.length >= CHATBOT_MEMORY_LIMIT) {
+      break;
+    }
+  }
+
+  if (sanitized.length === 0) {
+    return [initialMessage];
+  }
+
+  if (!sanitized.some((message) => message.role === "assistant")) {
+    sanitized.unshift(initialMessage);
+  }
+
+  return trimMessages(sanitized);
+}
+
+function readStoredMessages(): ChatMessage[] {
+  if (typeof window === "undefined") {
+    return [initialMessage];
+  }
+
+  try {
+    const raw = window.localStorage.getItem(CHATBOT_STORAGE_KEY);
+    if (!raw) {
+      return [initialMessage];
+    }
+
+    const parsed = JSON.parse(raw) as unknown;
+
+    if (Array.isArray(parsed)) {
+      return sanitizeStoredMessages(parsed);
+    }
+
+    if (parsed && typeof parsed === "object") {
+      const payload = parsed as { version?: unknown; messages?: unknown };
+      if (payload.version === CHATBOT_STORAGE_VERSION || Array.isArray(payload.messages)) {
+        return sanitizeStoredMessages(payload.messages);
+      }
+    }
+
+    return [initialMessage];
+  } catch {
+    return [initialMessage];
+  }
+}
 
 export function SiteChatbot() {
   const location = useLocation();
@@ -41,7 +181,7 @@ export function SiteChatbot() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [input, setInput] = useState("");
-  const [messages, setMessages] = useState<ChatMessage[]>([initialMessage]);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => readStoredMessages());
   const [showLeadCapture, setShowLeadCapture] = useState(false);
   const [leadLoading, setLeadLoading] = useState(false);
   const [leadForm, setLeadForm] = useState({
@@ -60,6 +200,10 @@ export function SiteChatbot() {
     [messages],
   );
 
+  const appendMessage = useCallback((message: ChatMessage) => {
+    setMessages((current) => trimMessages([...current, message]));
+  }, []);
+
   const cancelPendingRequest = useCallback(() => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -67,14 +211,18 @@ export function SiteChatbot() {
     }
   }, []);
 
-  const closeChat = useCallback(() => {
+  const unlockRequestState = useCallback(() => {
     cancelPendingRequest();
     requestSequenceRef.current += 1;
     setLoading(false);
+  }, [cancelPendingRequest]);
+
+  const closeChat = useCallback(() => {
+    unlockRequestState();
     setLeadLoading(false);
     setShowLeadCapture(false);
     setOpen(false);
-  }, [cancelPendingRequest]);
+  }, [unlockRequestState]);
 
   useEffect(() => {
     if (!scrollRef.current) return;
@@ -82,9 +230,7 @@ export function SiteChatbot() {
   }, [messages, open, showLeadCapture]);
 
   useEffect(() => {
-    cancelPendingRequest();
-    requestSequenceRef.current += 1;
-    setLoading(false);
+    unlockRequestState();
     setLeadLoading(false);
 
     if (routeChangeFromChatRef.current) {
@@ -92,7 +238,7 @@ export function SiteChatbot() {
       setShowLeadCapture(false);
       routeChangeFromChatRef.current = false;
     }
-  }, [location.pathname, location.search, cancelPendingRequest]);
+  }, [location.pathname, location.search, unlockRequestState]);
 
   useEffect(() => {
     return () => {
@@ -100,48 +246,92 @@ export function SiteChatbot() {
     };
   }, [cancelPendingRequest]);
 
-  const pushAssistantReply = (reply: ChatbotReply) => {
-    setMessages((current) => [
-      ...current,
-      {
-        id: crypto.randomUUID(),
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    try {
+      window.localStorage.setItem(
+        CHATBOT_STORAGE_KEY,
+        JSON.stringify({
+          version: CHATBOT_STORAGE_VERSION,
+          messages: trimMessages(messages),
+        }),
+      );
+    } catch {
+      // Ignore storage write failures (private mode, quota exceeded, etc.)
+    }
+  }, [messages]);
+
+  const pushAssistantReply = useCallback(
+    (reply: ChatbotReply) => {
+      appendMessage({
+        id: createMessageId(),
         role: "assistant",
         content: reply.answer,
         propertySuggestions: reply.propertySuggestions,
         suggestedPrompts: reply.suggestedPrompts,
-      },
-    ]);
+      });
 
-    if (reply.needsLeadCapture) {
-      setShowLeadCapture(true);
-    }
-  };
+      if (reply.needsLeadCapture) {
+        setShowLeadCapture(true);
+      }
+    },
+    [appendMessage],
+  );
 
   const sendMessage = async (value: string) => {
     const text = value.trim();
-    if (!text) return;
+    if (!text || loading) return;
 
     cancelPendingRequest();
+
     const controller = new AbortController();
     abortControllerRef.current = controller;
+
     const nextRequestId = requestSequenceRef.current + 1;
     requestSequenceRef.current = nextRequestId;
-    const chatHistory = [...conversation.slice(-7), { role: "user" as const, content: text }];
-    const timeoutId = window.setTimeout(() => {
-      controller.abort();
-    }, CHATBOT_REQUEST_TIMEOUT_MS);
 
-    setMessages((current) => [...current, { id: crypto.randomUUID(), role: "user", content: text }]);
+    const chatHistory = [...conversation.slice(-CHATBOT_HISTORY_LIMIT), { role: "user" as const, content: text }];
+
+    appendMessage({ id: createMessageId(), role: "user", content: text });
     setInput("");
     setShowLeadCapture(false);
     setLoading(true);
 
+    const requestStartedAt = performance.now();
+    let timeoutId: number | undefined;
+    let hardUnlockId: number | undefined;
+
     try {
-      const reply = await askAgencyChatbot({
-        question: text,
-        chatHistory,
-        signal: controller.signal,
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        timeoutId = window.setTimeout(() => {
+          controller.abort();
+          reject(new DOMException("Request timeout", "AbortError"));
+        }, CHATBOT_REQUEST_TIMEOUT_MS);
       });
+
+      hardUnlockId = window.setTimeout(() => {
+        if (requestSequenceRef.current !== nextRequestId) return;
+
+        unlockRequestState();
+        toast.error("Le chatbot met trop de temps a repondre. Vous pouvez relancer votre question.");
+      }, CHATBOT_HARD_UNLOCK_MS);
+
+      const reply = await Promise.race([
+        askAgencyChatbot({
+          question: text,
+          chatHistory,
+          signal: controller.signal,
+        }),
+        timeoutPromise,
+      ]);
+
+      const elapsedMs = performance.now() - requestStartedAt;
+      const minDelayMs = computeReplyDelayMs(text);
+
+      if (elapsedMs < minDelayMs) {
+        await new Promise((resolve) => window.setTimeout(resolve, minDelayMs - elapsedMs));
+      }
 
       if (requestSequenceRef.current !== nextRequestId) {
         return;
@@ -154,13 +344,28 @@ export function SiteChatbot() {
       }
 
       const aborted = error instanceof DOMException && error.name === "AbortError";
+
       toast.error(
         aborted
           ? "Le chatbot a pris trop de temps a repondre. Reessayez votre question."
           : "Le chatbot est momentanement indisponible.",
       );
+
+      appendMessage({
+        id: createMessageId(),
+        role: "assistant",
+        content:
+          "Je reste disponible pour vous aider. Reformulez votre demande et je vous reponds sur les biens, quartiers, services et etapes de votre projet au Havre.",
+        suggestedPrompts: chatbotExamplePrompts,
+      });
     } finally {
-      window.clearTimeout(timeoutId);
+      if (typeof timeoutId === "number") {
+        window.clearTimeout(timeoutId);
+      }
+
+      if (typeof hardUnlockId === "number") {
+        window.clearTimeout(hardUnlockId);
+      }
 
       if (abortControllerRef.current === controller) {
         abortControllerRef.current = null;
@@ -179,6 +384,10 @@ export function SiteChatbot() {
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     void sendMessage(input);
+  };
+
+  const handleCancelLoading = () => {
+    unlockRequestState();
   };
 
   const handleLeadSubmit = async (event: FormEvent) => {
@@ -201,15 +410,12 @@ export function SiteChatbot() {
         consent: true,
       });
 
-      setMessages((current) => [
-        ...current,
-        {
-          id: crypto.randomUUID(),
-          role: "assistant",
-          content:
-            "Votre demande a ete transmise a l'agence. Un conseiller vous enverra une selection de biens adaptes par email.",
-        },
-      ]);
+      appendMessage({
+        id: createMessageId(),
+        role: "assistant",
+        content:
+          "Votre demande a ete transmise a l'agence. Un conseiller vous enverra une selection de biens adaptes par email.",
+      });
 
       setLeadForm({ firstName: "", lastName: "", email: "", criteria: "" });
       setShowLeadCapture(false);
@@ -294,7 +500,8 @@ export function SiteChatbot() {
                           key={`${message.id}-${prompt}`}
                           type="button"
                           onClick={() => handlePromptClick(prompt)}
-                          className="rounded-full border border-border bg-background px-2.5 py-1 text-[11px] text-foreground/90 hover:bg-muted"
+                          disabled={loading}
+                          className="rounded-full border border-border bg-background px-2.5 py-1 text-[11px] text-foreground/90 hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           {prompt}
                         </button>
@@ -305,8 +512,11 @@ export function SiteChatbot() {
               ))}
 
               {loading && (
-                <div className="max-w-[70%] rounded-xl bg-muted px-3 py-2 text-sm text-muted-foreground">
-                  Analyse de votre demande...
+                <div className="max-w-[78%] rounded-xl bg-muted px-3 py-2 text-sm text-muted-foreground">
+                  <p>Analyse de votre demande...</p>
+                  <button type="button" onClick={handleCancelLoading} className="mt-1 text-xs underline underline-offset-2">
+                    Annuler et reprendre la saisie
+                  </button>
                 </div>
               )}
             </div>

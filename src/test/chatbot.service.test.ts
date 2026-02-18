@@ -63,4 +63,56 @@ describe("chatbot service", () => {
 
     expect(reply.answer).toMatch(/Saint-Francois|Eure|Perret/i);
   });
+
+  it("keeps context on short follow-up questions", async () => {
+    const firstQuestion = "Je cherche un appartement 2 chambres a Perret avec un budget de 260000 euros";
+    const firstReply = await askAgencyChatbot({ question: firstQuestion });
+
+    const followUpReply = await askAgencyChatbot({
+      question: "Et en location ?",
+      chatHistory: [
+        { role: "user", content: firstQuestion },
+        { role: "assistant", content: firstReply.answer },
+        { role: "user", content: "Et en location ?" },
+      ],
+    });
+
+    expect(followUpReply.answer.toLowerCase()).toContain("location");
+    expect(followUpReply.suggestedPrompts.length).toBeGreaterThan(0);
+  });
+
+  it("answers prompts suggested by property replies", async () => {
+    const seedReply = await askAgencyChatbot({ question: "Je cherche un appartement a vendre au Havre" });
+
+    for (const prompt of seedReply.suggestedPrompts.slice(0, 3)) {
+      const reply = await askAgencyChatbot({ question: prompt });
+      expect(reply.answer.trim().length).toBeGreaterThan(20);
+      expect(reply.suggestedPrompts.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("answers first-level prompts generated from example prompts", async () => {
+    const generatedPrompts = new Set<string>();
+
+    for (const prompt of chatbotExamplePrompts) {
+      const reply = await askAgencyChatbot({ question: prompt });
+      for (const generatedPrompt of reply.suggestedPrompts) {
+        generatedPrompts.add(generatedPrompt);
+      }
+    }
+
+    for (const prompt of generatedPrompts) {
+      const reply = await askAgencyChatbot({ question: prompt });
+      expect(reply.answer.trim().length).toBeGreaterThan(20);
+      expect(reply.suggestedPrompts.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("handles greetings with a valid local answer", async () => {
+    const reply = await askAgencyChatbot({ question: "Bonjour" });
+
+    expect(reply.source).toBe("local");
+    expect(reply.answer.toLowerCase()).toContain("je peux vous guider");
+    expect(reply.suggestedPrompts.length).toBeGreaterThan(0);
+  });
 });
