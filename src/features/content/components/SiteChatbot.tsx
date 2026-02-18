@@ -1,6 +1,6 @@
 import { FormEvent, Fragment, MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { BotMessageSquare, Mail, RotateCcw, Send, Sparkles, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -600,16 +600,14 @@ export function SiteChatbot() {
   };
 
   return (
-    <div className="pointer-events-auto fixed bottom-4 right-4 z-[130]">
-      <AnimatePresence>
-        {open && (
-          <motion.section
-            initial={{ opacity: 0, y: 18, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 12, scale: 0.98 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-            className="pointer-events-auto mb-3 w-[min(94vw,420px)] rounded-2xl border border-border bg-card shadow-card"
-          >
+    <div className="pointer-events-auto fixed bottom-4 right-4 z-[160]">
+      {open && (
+        <motion.section
+          initial={{ opacity: 0, y: 18, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
+          className="pointer-events-auto mb-3 w-[min(94vw,420px)] rounded-2xl border border-border bg-card shadow-card"
+        >
             <header className="flex items-center justify-between border-b border-border px-4 py-3">
               <div>
                 <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Assistant IA</p>
@@ -756,9 +754,8 @@ export function SiteChatbot() {
                 <Send className="h-4 w-4" />
               </Button>
             </form>
-          </motion.section>
-        )}
-      </AnimatePresence>
+        </motion.section>
+      )}
 
       <Button type="button" className="h-12 rounded-full px-4 shadow-card" onClick={openChatWithGreeting}>
         {open ? <X className="mr-1 h-4 w-4" /> : <BotMessageSquare className="mr-1 h-4 w-4" />}
