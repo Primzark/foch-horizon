@@ -14,6 +14,8 @@ const legalLinks = [
 const quickLinks = [
   { href: "/", label: "Accueil" },
   { href: "/biens", label: "Biens" },
+  { href: "/histoire-immobilier-le-havre", label: "Histoire Le Havre" },
+  { href: "/avis", label: "Avis clients" },
   { href: "/my-selection", label: "My Selection" },
   { href: "/vendre", label: "Vendre" },
   { href: "/services", label: "Services" },
@@ -26,7 +28,9 @@ export function AppFooter() {
     <footer className="mt-16 border-t border-border bg-card">
       <div className="h-px w-full accent-divider" />
       <div className="container mx-auto grid gap-10 px-4 py-12 md:grid-cols-2 lg:grid-cols-4">
-        <div>
+        <div className="h-card" itemScope itemType="https://schema.org/RealEstateAgent">
+          <meta itemProp="name" content="Foch Immobilier" />
+          <meta itemProp="url" content="https://www.foch-immobilier.fr" />
           <p className="font-display text-2xl">Foch Immobilier</p>
           <p className="mt-1 text-xs uppercase tracking-[0.24em] text-muted-foreground">Depuis 1972 · Réseau UNIS</p>
           <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
@@ -61,23 +65,31 @@ export function AppFooter() {
         <div>
           <p className="mb-4 text-sm uppercase tracking-[0.18em] text-muted-foreground">Coordonnées</p>
           <ul className="space-y-3 text-sm text-muted-foreground">
-            <li className="flex items-start gap-2">
+            <li className="flex items-start gap-2 p-adr h-adr">
               <MapPin className="mt-0.5 h-4 w-4" />
               <span>
-                109 Av. Foch
+                <span className="p-street-address" itemProp="streetAddress">109 Av. Foch</span>
                 <br />
-                76600 Le Havre
+                <span className="p-postal-code" itemProp="postalCode">76600</span>{" "}
+                <span className="p-locality" itemProp="addressLocality">Le Havre</span>
               </span>
             </li>
             <li className="flex items-center gap-2">
               <Phone className="h-4 w-4" />
-              <a href="tel:0235425176" onClick={() => trackEvent("phone_clicked", { source: "footer" })}>
+              <a
+                href="tel:0235425176"
+                className="p-tel"
+                itemProp="telephone"
+                onClick={() => trackEvent("phone_clicked", { source: "footer" })}
+              >
                 02 35 42 51 76
               </a>
             </li>
             <li className="flex items-center gap-2">
               <Mail className="h-4 w-4" />
-              <a href="mailto:vendre@fochimmobilier.com">vendre@fochimmobilier.com</a>
+              <a href="mailto:vendre@fochimmobilier.com" className="u-email" itemProp="email">
+                vendre@fochimmobilier.com
+              </a>
             </li>
             <li className="flex items-start gap-2">
               <Clock className="mt-0.5 h-4 w-4" />

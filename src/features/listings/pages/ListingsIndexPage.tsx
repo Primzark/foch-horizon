@@ -12,7 +12,8 @@ import { buildSearchParams, parseSearchParams } from "@/features/listings/utils/
 import type { PropertySearchParams } from "@/types/api";
 import { useFavoritesStore } from "@/features/favorites/useFavoritesStore";
 import { useUiStore } from "@/lib/state/useUiStore";
-import { useSeo } from "@/lib/seo/useSeo";
+import { getSiteUrl, useSeo } from "@/lib/seo/useSeo";
+import { toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
 
 const defaultParams: PropertySearchParams = {
   page: 1,
@@ -26,6 +27,7 @@ export default function ListingsIndexPage() {
   const reducedMotion = useReducedMotion();
   const setSearchDrawerOpen = useUiStore((state) => state.setSearchDrawerOpen);
   const favoriteIds = useFavoritesStore((state) => state.ids);
+  const siteUrl = getSiteUrl();
 
   const filters = useMemo(() => {
     const parsed = parseSearchParams(searchParams);
@@ -73,6 +75,20 @@ export default function ListingsIndexPage() {
     description: "Tous nos biens à la vente et à la location dans la région du Havre.",
     canonicalPath: "/biens",
     noIndex: searchParams.toString().length > 0,
+    jsonLd: query.data
+      ? {
+          "@context": "https://schema.org",
+          "@type": "ItemList",
+          name: "Annonces immobilieres Le Havre",
+          numberOfItems: query.data.total,
+          itemListElement: query.data.items.slice(0, 24).map((item, index) => ({
+            "@type": "ListItem",
+            position: index + 1,
+            url: `${siteUrl}${toCanonicalPropertyPath({ id: item.id, slug: item.slug })}`,
+            name: item.title,
+          })),
+        }
+      : undefined,
   });
 
   return (

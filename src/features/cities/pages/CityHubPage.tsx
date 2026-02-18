@@ -6,7 +6,7 @@ import { getCityBySlug } from "@/features/cities/api/cities.service";
 import { getPropertiesByCitySlug } from "@/features/listings/api/properties.service";
 import { ListingCard } from "@/features/listings/components/ListingCard";
 import { toSearchItem } from "@/features/listings/utils/mappers";
-import { useSeo } from "@/lib/seo/useSeo";
+import { getSiteUrl, useSeo } from "@/lib/seo/useSeo";
 
 export default function CityHubPage() {
   const { ville } = useParams();
@@ -25,6 +25,7 @@ export default function CityHubPage() {
   });
 
   const city = cityQuery.data;
+  const siteUrl = getSiteUrl();
 
   useSeo(
     city
@@ -32,6 +33,25 @@ export default function CityHubPage() {
           title: `Immobilier ${city.name} | Foch Immobilier`,
           description: `Découvrez les biens à ${city.name} et les services d'accompagnement de Foch Immobilier.`,
           canonicalPath: `/immobilier/${city.slug}`,
+          jsonLd: [
+            {
+              "@context": "https://schema.org",
+              "@type": "Place",
+              name: city.name,
+              address: {
+                "@type": "PostalAddress",
+                postalCode: city.postalCodes[0] ?? "",
+                addressLocality: city.name,
+                addressCountry: "FR",
+              },
+            },
+            {
+              "@context": "https://schema.org",
+              "@type": "CollectionPage",
+              name: `Immobilier ${city.name}`,
+              url: `${siteUrl}/immobilier/${city.slug}`,
+            },
+          ],
         }
       : {
           title: "Ville introuvable | Foch Immobilier",

@@ -12,6 +12,8 @@ const primaryLinks = [
   { to: "/biens", label: "Biens" },
   { to: "/vendre", label: "Vendre" },
   { to: "/biens?transaction=location", label: "Louer" },
+  { to: "/histoire-immobilier-le-havre", label: "Histoire" },
+  { to: "/avis", label: "Avis" },
   { to: "/apropos", label: "L'agence" },
   { to: "/contact", label: "Contact" },
 ];

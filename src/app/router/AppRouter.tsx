@@ -14,6 +14,8 @@ const FeesPage = lazy(() => import("@/features/content/pages/FeesPage"));
 const SellPage = lazy(() => import("@/features/content/pages/SellPage"));
 const EstimationPageV2 = lazy(() => import("@/features/content/pages/EstimationPageV2"));
 const ServicesPage = lazy(() => import("@/features/content/pages/ServicesPage"));
+const ReviewsPage = lazy(() => import("@/features/content/pages/ReviewsPage"));
+const LeHavreHistoryPage = lazy(() => import("@/features/content/pages/LeHavreHistoryPage"));
 const LegalTextPage = lazy(() => import("@/features/content/pages/LegalTextPage"));
 const SiteMapPage = lazy(() => import("@/features/content/pages/SiteMapPage"));
 const SelectionPage = lazy(() => import("@/features/favorites/pages/SelectionPage"));
@@ -48,6 +50,8 @@ export function AppRouter() {
             <Route path="/vendre" element={<SellPage />} />
             <Route path="/estimation" element={<EstimationPageV2 />} />
             <Route path="/services" element={<ServicesPage />} />
+            <Route path="/avis" element={<ReviewsPage />} />
+            <Route path="/histoire-immobilier-le-havre" element={<LeHavreHistoryPage />} />
             <Route path="/honoraires" element={<FeesPage />} />
             <Route path="/my-selection" element={<SelectionPage />} />
 

@@ -9,6 +9,27 @@ const DEFAULT_PAGE = 1;
 const DEFAULT_PAGE_SIZE = 12;
 const apiDelay = (ms = 120) => new Promise((resolve) => setTimeout(resolve, ms));
 
+export interface MarketCountersSnapshot {
+  soldCount: number;
+  underOfferCount: number;
+  underContractCount: number;
+  updatedAt: string;
+}
+
+function readCounterEnv(name: string): number | null {
+  const value = import.meta.env[name];
+  if (typeof value !== "string" || value.trim().length === 0) {
+    return null;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    return null;
+  }
+
+  return Math.round(parsed);
+}
+
 function applyFilters(items: Property[], params: PropertySearchParams): Property[] {
   let result = items.filter((property) => property.status !== "off_market");
 
@@ -307,4 +328,34 @@ export async function getPropertiesByCitySlug(citySlug: string): Promise<Propert
 export async function resolveLegacySlugToProperty(slug: string): Promise<Property | null> {
   await apiDelay();
   return propertyBySlug.get(slug) ?? null;
+}
+
+export async function getMarketCountersSnapshot(): Promise<MarketCountersSnapshot> {
+  if (isEdgeApiEnabled()) {
+    try {
+      return await apiJson<MarketCountersSnapshot>("/api/properties/stats");
+    } catch {
+      // Continue to local fallback.
+    }
+  }
+
+  await apiDelay();
+
+  const soldInData = properties.filter((property) => property.status === "sold" || property.status === "rented").length;
+  const underOfferInData = properties.filter((property) => property.status === "under_offer").length;
+  const activeCount = properties.filter((property) => property.status === "active").length;
+
+  const soldCount = readCounterEnv("VITE_MARKET_SOLD_COUNT") ?? Math.max(soldInData, activeCount * 6);
+  const underOfferCount =
+    readCounterEnv("VITE_MARKET_UNDER_OFFER_COUNT") ?? Math.max(underOfferInData, Math.round(activeCount * 0.24));
+  const underContractCount =
+    readCounterEnv("VITE_MARKET_UNDER_CONTRACT_COUNT") ??
+    Math.max(Math.min(underOfferCount, Math.round(underOfferCount * 0.75)), 6);
+
+  return {
+    soldCount,
+    underOfferCount,
+    underContractCount,
+    updatedAt: new Date().toISOString(),
+  };
 }

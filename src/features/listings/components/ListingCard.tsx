@@ -38,10 +38,21 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0 }: Listin
 
   if (viewMode === "list") {
     return (
-      <motion.article {...revealProps} className="overflow-hidden rounded-2xl border border-border bg-card">
-        <Link to={path} className="group grid gap-4 p-3 md:grid-cols-[280px_1fr] md:p-4">
+      <motion.article
+        {...revealProps}
+        className="overflow-hidden rounded-2xl border border-border bg-card"
+        itemScope
+        itemType="https://schema.org/RealEstateListing"
+      >
+        <Link to={path} className="group grid gap-4 p-3 md:grid-cols-[280px_1fr] md:p-4" itemProp="url">
           <div className="relative overflow-hidden rounded-xl">
-            <img src={item.coverImageUrl} alt={item.title} className="aspect-[4/3] h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]" loading="lazy" />
+            <img
+              src={item.coverImageUrl}
+              alt={item.title}
+              className="aspect-[4/3] h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+              loading="lazy"
+              itemProp="image"
+            />
             {status && <span className="absolute left-2 top-2 rounded-full bg-background/95 px-2 py-1 text-xs font-medium">{status}</span>}
           </div>
 
@@ -52,10 +63,14 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0 }: Listin
                 {propertyTypeLabel}
               </span>
             </div>
-            <h3 className="mt-1 font-display text-xl">{item.title}</h3>
+            <h3 className="mt-1 font-display text-xl" itemProp="name">
+              {item.title}
+            </h3>
             <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
               <MapPin className="h-4 w-4" />
-              {item.city.name} ({item.city.postalCode})
+              <span itemProp="address" itemScope itemType="https://schema.org/PostalAddress">
+                <span itemProp="addressLocality">{item.city.name}</span> (<span itemProp="postalCode">{item.city.postalCode}</span>)
+              </span>
             </p>
 
             <div className="mt-3 flex flex-wrap gap-3 text-sm text-muted-foreground">
@@ -95,6 +110,13 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0 }: Listin
             </div>
           </div>
         </Link>
+        <meta itemProp="identifier" content={String(item.id)} />
+        <meta itemProp="floorSize" content={String(item.surfaceM2)} />
+        <div itemProp="offers" itemScope itemType="https://schema.org/Offer">
+          <meta itemProp="priceCurrency" content={item.currency} />
+          <meta itemProp="price" content={String(item.priceAmount)} />
+          <meta itemProp="availability" content={item.status === "active" ? "https://schema.org/InStock" : "https://schema.org/LimitedAvailability"} />
+        </div>
       </motion.article>
     );
   }
@@ -103,9 +125,17 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0 }: Listin
     <motion.article
       {...revealProps}
       className="group overflow-hidden rounded-2xl border border-border bg-card transition-all duration-200 hover:-translate-y-0.5"
+      itemScope
+      itemType="https://schema.org/RealEstateListing"
     >
-      <Link to={path} className="relative block overflow-hidden">
-        <img src={item.coverImageUrl} alt={item.title} className="aspect-[4/3] w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]" loading="lazy" />
+      <Link to={path} className="relative block overflow-hidden" itemProp="url">
+        <img
+          src={item.coverImageUrl}
+          alt={item.title}
+          className="aspect-[4/3] w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+          loading="lazy"
+          itemProp="image"
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-80" />
         {status && <span className="absolute left-3 top-3 rounded-full bg-background/95 px-2 py-1 text-xs font-medium">{status}</span>}
         <button
@@ -134,10 +164,14 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0 }: Listin
           </span>
         </div>
         <div>
-          <h3 className="font-display text-xl">{item.title}</h3>
+          <h3 className="font-display text-xl" itemProp="name">
+            {item.title}
+          </h3>
           <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
             <MapPin className="h-4 w-4" />
-            {item.city.name}
+            <span itemProp="address" itemScope itemType="https://schema.org/PostalAddress">
+              <span itemProp="addressLocality">{item.city.name}</span>
+            </span>
           </p>
         </div>
         <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
@@ -153,6 +187,13 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0 }: Listin
           {item.dpeLabel && <DpeBadge label={item.dpeLabel} size="sm" />}
         </div>
         <p className="font-display text-2xl">{formatPrice(item.priceAmount, item.transaction)}</p>
+        <meta itemProp="identifier" content={String(item.id)} />
+        <meta itemProp="floorSize" content={String(item.surfaceM2)} />
+        <div itemProp="offers" itemScope itemType="https://schema.org/Offer">
+          <meta itemProp="priceCurrency" content={item.currency} />
+          <meta itemProp="price" content={String(item.priceAmount)} />
+          <meta itemProp="availability" content={item.status === "active" ? "https://schema.org/InStock" : "https://schema.org/LimitedAvailability"} />
+        </div>
       </div>
     </motion.article>
   );

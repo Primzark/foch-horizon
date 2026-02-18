@@ -80,6 +80,22 @@ export default function ListingDetailPage() {
             name: property.title,
             url: `${siteUrl}${canonicalPath}`,
             identifier: String(property.id),
+            image: property.images.map((image) => image.sourceUrl),
+            description: property.description,
+            datePosted: property.publishedAt,
+            floorSize: {
+              "@type": "QuantitativeValue",
+              value: property.surfaceM2,
+              unitCode: "MTK",
+            },
+            numberOfRooms: property.rooms ?? undefined,
+            numberOfBedrooms: property.bedrooms ?? undefined,
+            address: {
+              "@type": "PostalAddress",
+              addressLocality: cityById.get(property.cityId)?.name ?? "Le Havre",
+              postalCode: property.postalCode,
+              addressCountry: "FR",
+            },
             offers: {
               "@type": "Offer",
               priceCurrency: "EUR",

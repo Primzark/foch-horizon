@@ -11,6 +11,8 @@ import { toSearchItem } from "@/features/listings/utils/mappers";
 import { cities } from "@/features/cities/data/cities";
 import { useUiStore } from "@/lib/state/useUiStore";
 import { getSiteUrl, useSeo } from "@/lib/seo/useSeo";
+import { MarketCounters } from "@/features/content/components/MarketCounters";
+import { getAgencyReviews } from "@/features/content/api/googleReviews.service";
 
 const serviceCards = [
   {
@@ -38,6 +40,7 @@ const HERO_ROTATE_MS = 6500;
 export default function HomePage() {
   const setSearchDrawerOpen = useUiStore((state) => state.setSearchDrawerOpen);
   const featuredQuery = useQuery({ queryKey: ["featured-properties"], queryFn: () => getFeaturedProperties(6) });
+  const reviewsQuery = useQuery({ queryKey: ["agency-google-reviews-home"], queryFn: getAgencyReviews });
   const reducedMotion = useReducedMotion();
   const siteUrl = getSiteUrl();
   const heroSlides = useMemo(
@@ -89,6 +92,14 @@ export default function HomePage() {
           addressCountry: "FR",
         },
         telephone: "+33235425176",
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "RealEstateAgent",
+        name: "Foch Immobilier",
+        url: siteUrl,
+        areaServed: ["Le Havre", "Sainte-Adresse", "Montivilliers"],
+        serviceType: ["Achat immobilier", "Vente immobiliere", "Location", "Gestion locative", "Estimation immobiliere"],
       },
       {
         "@context": "https://schema.org",
@@ -173,6 +184,10 @@ export default function HomePage() {
         </div>
       </section>
 
+      <section className="py-12">
+        <MarketCounters />
+      </section>
+
       <section className="container mx-auto px-4 py-16">
         <div className="mb-6 flex items-end justify-between gap-4">
           <div>
@@ -208,6 +223,14 @@ export default function HomePage() {
             </Link>
           ))}
         </div>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Link to="/histoire-immobilier-le-havre" className="rounded-full border border-border px-4 py-2 text-sm hover:bg-card">
+            Histoire de l'immobilier au Havre
+          </Link>
+          <Link to="/avis" className="rounded-full border border-border px-4 py-2 text-sm hover:bg-card">
+            Lire les avis clients Google
+          </Link>
+        </div>
       </section>
 
       <section className="border-y border-border bg-muted/30">
@@ -221,6 +244,32 @@ export default function HomePage() {
           ))}
         </div>
       </section>
+
+      {reviewsQuery.data && (
+        <section className="container mx-auto px-4 py-16">
+          <div className="mb-6 flex items-end justify-between gap-4">
+            <div>
+              <h2 className="font-display text-3xl">Avis Google</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Note moyenne {reviewsQuery.data.rating.toFixed(1)} / 5 ({reviewsQuery.data.userRatingCount} avis).
+              </p>
+            </div>
+            <Link to="/avis" className="inline-flex items-center gap-1 text-sm hover:underline">
+              Voir tous les avis
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            {reviewsQuery.data.reviews.slice(0, 3).map((review) => (
+              <article key={review.id} className="rounded-2xl border border-border bg-card p-5">
+                <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">{review.authorName}</p>
+                <p className="mt-2 text-sm text-muted-foreground">{review.text}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="container mx-auto px-4 py-16">
         <h2 className="font-display text-3xl">L'équipe</h2>

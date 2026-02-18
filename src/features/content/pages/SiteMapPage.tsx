@@ -8,6 +8,8 @@ const pages = [
   { href: "/vendre", label: "Vendre" },
   { href: "/estimation", label: "Estimation" },
   { href: "/services", label: "Services" },
+  { href: "/histoire-immobilier-le-havre", label: "Histoire immobilier Le Havre" },
+  { href: "/avis", label: "Avis clients" },
   { href: "/apropos", label: "À propos" },
   { href: "/contact", label: "Contact" },
   { href: "/honoraires", label: "Honoraires" },

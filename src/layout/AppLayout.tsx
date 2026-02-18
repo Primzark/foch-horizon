@@ -5,6 +5,7 @@ import { AppFooter } from "@/layout/AppFooter";
 import { AppHeader } from "@/layout/AppHeader";
 import { SearchDrawer } from "@/features/listings/components/SearchDrawer";
 import { RouteLoadingScreen } from "@/components/ui/RouteLoadingScreen";
+import { SiteChatbot } from "@/features/content/components/SiteChatbot";
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const location = useLocation();
@@ -30,6 +31,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
       <main>{children}</main>
       <AppFooter />
       <SearchDrawer />
+      <SiteChatbot />
     </div>
   );
 }

@@ -1,13 +1,30 @@
 import { MapPin, Clock, Phone, Mail } from "lucide-react";
 import { LeadForm } from "@/features/leads/components/LeadForm";
-import { useSeo } from "@/lib/seo/useSeo";
+import { getSiteUrl, useSeo } from "@/lib/seo/useSeo";
 import { trackEvent } from "@/lib/analytics/events";
 
 export default function ContactPageV2() {
+  const siteUrl = getSiteUrl();
+
   useSeo({
     title: "Contact | Foch Immobilier",
     description: "Contactez Foch Immobilier au 109 Av. Foch, 76600 Le Havre.",
     canonicalPath: "/contact",
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "RealEstateAgent",
+      name: "Foch Immobilier",
+      url: `${siteUrl}/contact`,
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: "109 Av. Foch",
+        postalCode: "76600",
+        addressLocality: "Le Havre",
+        addressCountry: "FR",
+      },
+      telephone: "+33235425176",
+      email: "vendre@fochimmobilier.com",
+    },
   });
 
   return (
@@ -21,25 +38,35 @@ export default function ContactPageV2() {
       </header>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
-        <section className="rounded-2xl border border-border bg-card p-6">
+        <section className="rounded-2xl border border-border bg-card p-6 h-card" itemScope itemType="https://schema.org/RealEstateAgent">
+          <meta itemProp="name" content="Foch Immobilier" />
+          <meta itemProp="url" content="https://www.foch-immobilier.fr" />
           <h2 className="font-display text-2xl">Coordonnées agence</h2>
           <ul className="mt-4 space-y-4 text-sm text-muted-foreground">
-            <li className="flex items-start gap-2">
+            <li className="flex items-start gap-2 p-adr h-adr" itemProp="address" itemScope itemType="https://schema.org/PostalAddress">
               <MapPin className="mt-0.5 h-4 w-4" />
               <span>
-                109 Av. Foch<br />
-                76600 Le Havre
+                <span className="p-street-address" itemProp="streetAddress">109 Av. Foch</span><br />
+                <span className="p-postal-code" itemProp="postalCode">76600</span>{" "}
+                <span className="p-locality" itemProp="addressLocality">Le Havre</span>
               </span>
             </li>
             <li className="flex items-center gap-2">
               <Phone className="h-4 w-4" />
-              <a href="tel:0235425176" onClick={() => trackEvent("phone_clicked", { source: "contact_page" })}>
+              <a
+                href="tel:0235425176"
+                className="p-tel"
+                itemProp="telephone"
+                onClick={() => trackEvent("phone_clicked", { source: "contact_page" })}
+              >
                 02 35 42 51 76
               </a>
             </li>
             <li className="flex items-center gap-2">
               <Mail className="h-4 w-4" />
-              <a href="mailto:vendre@fochimmobilier.com">vendre@fochimmobilier.com</a>
+              <a href="mailto:vendre@fochimmobilier.com" className="u-email" itemProp="email">
+                vendre@fochimmobilier.com
+              </a>
             </li>
             <li className="flex items-start gap-2">
               <Clock className="mt-0.5 h-4 w-4" />
