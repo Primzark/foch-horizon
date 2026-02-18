@@ -26,7 +26,7 @@ export default function SelectionPage() {
   const unavailableVerb = unavailableCount > 1 ? "ne sont plus disponibles" : "n'est plus disponible";
 
   useSeo({
-    title: "My Selection | Foch Immobilier",
+    title: "Biens sauvegardés | Foch Immobilier",
     description: "Retrouvez vos biens sauvegardés et reprenez votre recherche immobilière.",
     canonicalPath: "/my-selection",
     noIndex: true,
@@ -36,9 +36,11 @@ export default function SelectionPage() {
     <section className="container mx-auto px-4 py-10">
       <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="inline-flex items-center gap-2 rounded-full border border-brand-border bg-brand-soft px-3 py-1 text-xs font-semibold tracking-[0.05em] text-brand-strong">
+          <p
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-brand-border bg-brand-soft text-brand-strong"
+            aria-label="Sélection"
+          >
             <Heart className="h-4 w-4 fill-brand text-brand" />
-            My Selection
           </p>
           <h1 className="mt-3 font-display text-4xl">Biens sauvegardés</h1>
           <p className="mt-2 text-sm text-muted-foreground">
