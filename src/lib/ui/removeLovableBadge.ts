@@ -17,7 +17,15 @@ function findFixedAncestor(node: Element): Element | null {
 }
 
 function removeBadgeNode(node: Element): void {
-  node.remove();
+  // Guard: only remove if the node is still attached and its parent still owns it.
+  if (!node.isConnected || !node.parentNode) {
+    return;
+  }
+  try {
+    node.parentNode.removeChild(node);
+  } catch {
+    // Node was already removed (e.g. by React's reconciler) — safe to ignore.
+  }
 }
 
 function stripLovableBadges(): void {
