@@ -5,8 +5,7 @@ export type AnalyticsEventName =
   | "gallery_opened"
   | "lead_submitted"
   | "phone_clicked"
-  | "extranet_clicked"
-  | "favorites_opened";
+  | "extranet_clicked";
 
 export function trackEvent(name: AnalyticsEventName, payload?: Record<string, unknown>): void {
   if (typeof window === "undefined") {
@@ -15,8 +14,8 @@ export function trackEvent(name: AnalyticsEventName, payload?: Record<string, un
 
   const data = { event: name, ...payload };
 
-  if (Array.isArray((window as unknown as { dataLayer?: unknown[] }).dataLayer)) {
-    (window as unknown as { dataLayer: unknown[] }).dataLayer.push(data);
+  if (Array.isArray((window as { dataLayer?: unknown[] }).dataLayer)) {
+    (window as { dataLayer: unknown[] }).dataLayer.push(data);
   }
 
   if (import.meta.env.DEV) {

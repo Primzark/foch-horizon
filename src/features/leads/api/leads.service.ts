@@ -25,7 +25,7 @@ function writeLeads(records: LeadRecord[]): void {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
 }
 
-function assignAgent(input: Pick<LeadInput, "propertyId" | "cityId">): string | null {
+function assignAgent(input: LeadInput): string | null {
   if (input.propertyId) {
     const property = propertyById.get(input.propertyId);
     if (property && agentById.has(property.agentId)) {
@@ -44,7 +44,7 @@ function assignAgent(input: Pick<LeadInput, "propertyId" | "cityId">): string | 
 }
 
 export async function submitLead(input: LeadInput): Promise<{ ok: true; leadId: string; assignedAgentId: string | null }> {
-  const payload = leadInputSchema.parse(input) as unknown as LeadInput;
+  const payload = leadInputSchema.parse(input);
 
   if (isEdgeApiEnabled()) {
     return apiJson<{ ok: true; leadId: string; assignedAgentId: string | null }>("/api/leads", {
