@@ -23,6 +23,7 @@ export interface ChatbotReply {
 export interface ChatbotRequest {
   question: string;
   chatHistory?: Array<{ role: "user" | "assistant"; content: string }>;
+  signal?: AbortSignal;
 }
 
 export const chatbotExamplePrompts = [
@@ -239,15 +240,18 @@ function buildLocalReply(question: string): ChatbotReply {
 }
 
 export async function askAgencyChatbot(request: ChatbotRequest): Promise<ChatbotReply> {
+  const { signal, ...requestPayload } = request;
+
   if (isEdgeApiEnabled()) {
     try {
-      const payload = await apiJson<ChatbotReply>("/api/chatbot-assistant", {
+      const responsePayload = await apiJson<ChatbotReply>("/api/chatbot-assistant", {
         method: "POST",
-        body: JSON.stringify(request),
+        body: JSON.stringify(requestPayload),
+        signal,
       });
 
       return {
-        ...payload,
+        ...responsePayload,
         source: "edge",
       };
     } catch {

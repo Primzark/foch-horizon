@@ -1,5 +1,5 @@
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { FormEvent, MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { BotMessageSquare, Mail, Send, Sparkles, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -33,7 +33,11 @@ const initialMessage: ChatMessage = {
   suggestedPrompts: chatbotExamplePrompts,
 };
 
+const CHATBOT_REQUEST_TIMEOUT_MS = 18000;
+
 export function SiteChatbot() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [input, setInput] = useState("");
@@ -47,16 +51,54 @@ export function SiteChatbot() {
     criteria: "",
   });
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const requestSequenceRef = useRef(0);
+  const routeChangeFromChatRef = useRef(false);
 
   const conversation = useMemo(
     () => messages.map((message) => ({ role: message.role, content: message.content })),
     [messages],
   );
 
+  const cancelPendingRequest = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+  }, []);
+
+  const closeChat = useCallback(() => {
+    cancelPendingRequest();
+    requestSequenceRef.current += 1;
+    setLoading(false);
+    setLeadLoading(false);
+    setShowLeadCapture(false);
+    setOpen(false);
+  }, [cancelPendingRequest]);
+
   useEffect(() => {
     if (!scrollRef.current) return;
     scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages, open, showLeadCapture]);
+
+  useEffect(() => {
+    cancelPendingRequest();
+    requestSequenceRef.current += 1;
+    setLoading(false);
+    setLeadLoading(false);
+
+    if (routeChangeFromChatRef.current) {
+      setOpen(false);
+      setShowLeadCapture(false);
+      routeChangeFromChatRef.current = false;
+    }
+  }, [location.pathname, location.search, cancelPendingRequest]);
+
+  useEffect(() => {
+    return () => {
+      cancelPendingRequest();
+    };
+  }, [cancelPendingRequest]);
 
   const pushAssistantReply = (reply: ChatbotReply) => {
     setMessages((current) => [
@@ -79,18 +121,54 @@ export function SiteChatbot() {
     const text = value.trim();
     if (!text) return;
 
+    cancelPendingRequest();
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+    const nextRequestId = requestSequenceRef.current + 1;
+    requestSequenceRef.current = nextRequestId;
+    const chatHistory = [...conversation.slice(-7), { role: "user" as const, content: text }];
+    const timeoutId = window.setTimeout(() => {
+      controller.abort();
+    }, CHATBOT_REQUEST_TIMEOUT_MS);
+
     setMessages((current) => [...current, { id: crypto.randomUUID(), role: "user", content: text }]);
     setInput("");
     setShowLeadCapture(false);
     setLoading(true);
 
     try {
-      const reply = await askAgencyChatbot({ question: text, chatHistory: conversation.slice(-8) });
+      const reply = await askAgencyChatbot({
+        question: text,
+        chatHistory,
+        signal: controller.signal,
+      });
+
+      if (requestSequenceRef.current !== nextRequestId) {
+        return;
+      }
+
       pushAssistantReply(reply);
-    } catch {
-      toast.error("Le chatbot est momentanement indisponible.");
+    } catch (error) {
+      if (requestSequenceRef.current !== nextRequestId) {
+        return;
+      }
+
+      const aborted = error instanceof DOMException && error.name === "AbortError";
+      toast.error(
+        aborted
+          ? "Le chatbot a pris trop de temps a repondre. Reessayez votre question."
+          : "Le chatbot est momentanement indisponible.",
+      );
     } finally {
-      setLoading(false);
+      window.clearTimeout(timeoutId);
+
+      if (abortControllerRef.current === controller) {
+        abortControllerRef.current = null;
+      }
+
+      if (requestSequenceRef.current === nextRequestId) {
+        setLoading(false);
+      }
     }
   };
 
@@ -144,8 +222,15 @@ export function SiteChatbot() {
     }
   };
 
+  const handlePropertySuggestionClick = (event: MouseEvent<HTMLAnchorElement>, path: string) => {
+    event.preventDefault();
+    routeChangeFromChatRef.current = true;
+    closeChat();
+    navigate(path);
+  };
+
   return (
-    <div className="fixed bottom-4 right-4 z-[90]">
+    <div className="pointer-events-auto fixed bottom-4 right-4 z-[130]">
       <AnimatePresence>
         {open && (
           <motion.section
@@ -153,7 +238,7 @@ export function SiteChatbot() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 12, scale: 0.98 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="mb-3 w-[min(94vw,420px)] rounded-2xl border border-border bg-card shadow-card"
+            className="pointer-events-auto mb-3 w-[min(94vw,420px)] rounded-2xl border border-border bg-card shadow-card"
           >
             <header className="flex items-center justify-between border-b border-border px-4 py-3">
               <div>
@@ -164,7 +249,7 @@ export function SiteChatbot() {
                 type="button"
                 aria-label="Fermer le chatbot"
                 className="rounded-full border border-border p-1.5"
-                onClick={() => setOpen(false)}
+                onClick={closeChat}
               >
                 <X className="h-4 w-4" />
               </button>
@@ -190,7 +275,7 @@ export function SiteChatbot() {
                           key={property.id}
                           to={property.path}
                           className="block rounded-lg border border-border bg-card/90 px-3 py-2 text-xs text-foreground hover:bg-muted"
-                          onClick={() => setOpen(false)}
+                          onClick={(event) => handlePropertySuggestionClick(event, property.path)}
                         >
                           <span className="font-medium">{property.title}</span>
                           <br />
@@ -291,7 +376,14 @@ export function SiteChatbot() {
       <Button
         type="button"
         className="h-12 rounded-full px-4 shadow-card"
-        onClick={() => setOpen((current) => !current)}
+        onClick={() => {
+          if (open) {
+            closeChat();
+            return;
+          }
+
+          setOpen(true);
+        }}
       >
         {open ? <X className="mr-1 h-4 w-4" /> : <BotMessageSquare className="mr-1 h-4 w-4" />}
         {open ? "Fermer" : "Chat immobilier IA"}
