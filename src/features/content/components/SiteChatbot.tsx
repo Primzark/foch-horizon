@@ -1,7 +1,7 @@
-import { FormEvent, MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, Fragment, MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { BotMessageSquare, Mail, Send, Sparkles, X } from "lucide-react";
+import { BotMessageSquare, Mail, RotateCcw, Send, Sparkles, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,13 +25,66 @@ interface ChatMessage {
   suggestedPrompts?: string[];
 }
 
+interface OpeningGreetingVariant {
+  content: string;
+  prompts: string[];
+}
+
 const initialMessage: ChatMessage = {
   id: "init-assistant",
   role: "assistant",
   content:
-    "Bonjour, je suis l'assistant immobilier Foch. Je peux vous aider sur les biens, quartiers du Havre, services et etapes de vente/achat.",
+    "Bonjour 👋 Je suis l'assistant immobilier Foch. Je peux vous aider sur les biens, quartiers du Havre, services et etapes de vente/achat.",
   suggestedPrompts: chatbotExamplePrompts,
 };
+
+const openingGreetingVariants: OpeningGreetingVariant[] = [
+  {
+    content: "Bonjour 👋 Sur quoi avancez-vous aujourd'hui: achat, vente, location ou estimation ?",
+    prompts: [
+      "Je cherche un appartement a vendre au Havre",
+      "Je veux vendre mon bien",
+      "Montrez-moi les avis clients",
+      "Je veux une estimation",
+    ],
+  },
+  {
+    content: "Ravi de vous revoir 😊 Quel est votre objectif immobilier du moment ?",
+    prompts: [
+      "Je cherche une maison familiale a Sanvic",
+      "Quels services proposez-vous ?",
+      "Comment se passe un compromis de vente ?",
+      "Je veux contacter l'agence",
+    ],
+  },
+  {
+    content: "Bonjour ✨ Dites-moi votre projet et je vous guide vers la bonne page du site.",
+    prompts: [
+      "Ouvrir /biens",
+      "Ouvrir /histoire-immobilier-le-havre",
+      "Ouvrir /avis",
+      "Ouvrir /contact",
+    ],
+  },
+  {
+    content: "Hello 🙂 Vous cherchez plutot un bien, une info quartier ou une aide process ?",
+    prompts: [
+      "Quel quartier du Havre est le plus adapte pour un investissement locatif ?",
+      "Je cherche un T3 avec balcon",
+      "Ou trouver les honoraires ?",
+      "Je ne trouve pas de bien adapte",
+    ],
+  },
+  {
+    content: "Bonjour 🤝 Je peux vous orienter rapidement: annonces, avis, histoire locale, estimation, contact.",
+    prompts: [
+      "Voir toutes les annonces",
+      "Resumer les avis clients",
+      "Je veux estimer mon bien",
+      "Je veux parler a un conseiller",
+    ],
+  },
+];
 
 const CHATBOT_STORAGE_KEY = "foch_chatbot_messages_v1";
 const CHATBOT_STORAGE_VERSION = 1;
@@ -42,12 +95,32 @@ const CHATBOT_HISTORY_LIMIT = 16;
 const CHATBOT_MIN_REPLY_DELAY_MS = 900;
 const CHATBOT_MAX_REPLY_DELAY_MS = 2600;
 
+const internalPathSplitPattern = /(\/[a-z0-9-]+(?:\/[a-z0-9-]+)*(?:\?[a-z0-9=&_-]+)?)/gi;
+const internalPathMatchPattern = /^\/[a-z0-9-]+(?:\/[a-z0-9-]+)*(?:\?[a-z0-9=&_-]+)?$/i;
+
 function createMessageId(): string {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
     return crypto.randomUUID();
   }
 
   return `chat-${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
+}
+
+function normalizePromptList(prompts: string[]): string[] {
+  return prompts.map((prompt) => prompt.trim()).filter((prompt) => prompt.length > 0).slice(0, 6);
+}
+
+function buildOpeningGreetingMessage(index: number): ChatMessage {
+  const variant = openingGreetingVariants[(index - 1) % openingGreetingVariants.length];
+  const offset = (index - 1) % variant.prompts.length;
+  const rotatedPrompts = [...variant.prompts.slice(offset), ...variant.prompts.slice(0, offset)];
+
+  return {
+    id: createMessageId(),
+    role: "assistant",
+    content: variant.content,
+    suggestedPrompts: normalizePromptList(rotatedPrompts),
+  };
 }
 
 function clampNumber(value: number, min: number, max: number): number {
@@ -193,6 +266,7 @@ export function SiteChatbot() {
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const requestSequenceRef = useRef(0);
+  const openingSequenceRef = useRef(0);
   const routeChangeFromChatRef = useRef(false);
 
   const conversation = useMemo(
@@ -202,6 +276,11 @@ export function SiteChatbot() {
 
   const appendMessage = useCallback((message: ChatMessage) => {
     setMessages((current) => trimMessages([...current, message]));
+  }, []);
+
+  const nextOpeningGreetingMessage = useCallback(() => {
+    openingSequenceRef.current += 1;
+    return buildOpeningGreetingMessage(openingSequenceRef.current);
   }, []);
 
   const cancelPendingRequest = useCallback(() => {
@@ -224,6 +303,16 @@ export function SiteChatbot() {
     setOpen(false);
   }, [unlockRequestState]);
 
+  const resetConversation = useCallback(() => {
+    unlockRequestState();
+    setShowLeadCapture(false);
+    setLeadLoading(false);
+    setInput("");
+    setLeadForm({ firstName: "", lastName: "", email: "", criteria: "" });
+    setMessages([nextOpeningGreetingMessage()]);
+    toast.success("Nouvelle conversation initialisee.");
+  }, [nextOpeningGreetingMessage, unlockRequestState]);
+
   useEffect(() => {
     if (!scrollRef.current) return;
     scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -245,6 +334,19 @@ export function SiteChatbot() {
       cancelPendingRequest();
     };
   }, [cancelPendingRequest]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      closeChat();
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [open, closeChat]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -428,11 +530,65 @@ export function SiteChatbot() {
     }
   };
 
-  const handlePropertySuggestionClick = (event: MouseEvent<HTMLAnchorElement>, path: string) => {
-    event.preventDefault();
-    routeChangeFromChatRef.current = true;
-    closeChat();
-    navigate(path);
+  const navigateFromChat = useCallback(
+    (path: string) => {
+      routeChangeFromChatRef.current = true;
+      closeChat();
+      navigate(path);
+    },
+    [closeChat, navigate],
+  );
+
+  const handlePropertySuggestionClick = useCallback(
+    (event: MouseEvent<HTMLAnchorElement>, path: string) => {
+      event.preventDefault();
+      navigateFromChat(path);
+    },
+    [navigateFromChat],
+  );
+
+  const handleInternalPathClick = useCallback(
+    (event: MouseEvent<HTMLAnchorElement>, path: string) => {
+      event.preventDefault();
+      navigateFromChat(path);
+    },
+    [navigateFromChat],
+  );
+
+  const renderMessageContent = useCallback(
+    (content: string) => {
+      const segments = content.split(internalPathSplitPattern);
+
+      return segments.map((segment, index) => {
+        const trimmed = segment.trim();
+
+        if (internalPathMatchPattern.test(trimmed)) {
+          return (
+            <Link
+              key={`path-${trimmed}-${index}`}
+              to={trimmed}
+              onClick={(event) => handleInternalPathClick(event, trimmed)}
+              className="underline underline-offset-2 hover:text-foreground"
+            >
+              {trimmed}
+            </Link>
+          );
+        }
+
+        return <Fragment key={`text-${index}`}>{segment}</Fragment>;
+      });
+    },
+    [handleInternalPathClick],
+  );
+
+  const openChatWithGreeting = () => {
+    if (open) {
+      closeChat();
+      return;
+    }
+
+    setOpen(true);
+    appendMessage(nextOpeningGreetingMessage());
   };
 
   return (
@@ -451,14 +607,27 @@ export function SiteChatbot() {
                 <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Assistant IA</p>
                 <h2 className="font-display text-2xl">Chatbot immobilier Le Havre</h2>
               </div>
-              <button
-                type="button"
-                aria-label="Fermer le chatbot"
-                className="rounded-full border border-border p-1.5"
-                onClick={closeChat}
-              >
-                <X className="h-4 w-4" />
-              </button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  aria-label="Reinitialiser la conversation"
+                  title="Nouvelle conversation"
+                  className="rounded-full border border-border p-1.5"
+                  onClick={resetConversation}
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </button>
+
+                <button
+                  type="button"
+                  aria-label="Fermer le chatbot"
+                  className="rounded-full border border-border p-1.5"
+                  onClick={closeChat}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
             </header>
 
             <div ref={scrollRef} className="max-h-[56vh] space-y-3 overflow-y-auto px-4 py-4">
@@ -472,7 +641,7 @@ export function SiteChatbot() {
                       : "ml-auto bg-primary text-primary-foreground",
                   )}
                 >
-                  <p>{message.content}</p>
+                  <p>{renderMessageContent(message.content)}</p>
 
                   {message.propertySuggestions && message.propertySuggestions.length > 0 && (
                     <div className="mt-3 space-y-2">
@@ -583,18 +752,7 @@ export function SiteChatbot() {
         )}
       </AnimatePresence>
 
-      <Button
-        type="button"
-        className="h-12 rounded-full px-4 shadow-card"
-        onClick={() => {
-          if (open) {
-            closeChat();
-            return;
-          }
-
-          setOpen(true);
-        }}
-      >
+      <Button type="button" className="h-12 rounded-full px-4 shadow-card" onClick={openChatWithGreeting}>
         {open ? <X className="mr-1 h-4 w-4" /> : <BotMessageSquare className="mr-1 h-4 w-4" />}
         {open ? "Fermer" : "Chat immobilier IA"}
         <Sparkles className="ml-1 h-3.5 w-3.5" />

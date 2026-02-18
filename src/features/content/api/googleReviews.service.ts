@@ -47,7 +47,7 @@ interface GooglePlaceDetailsResponse {
   reviews?: GooglePlaceReview[];
 }
 
-const fallbackPayload: AgencyReviewsResponse = {
+export const agencyReviewsFallbackSnapshot: AgencyReviewsResponse = {
   source: "fallback",
   live: false,
   placeName: "Foch Immobilier Le Havre",
@@ -148,7 +148,7 @@ export async function getAgencyReviews(): Promise<AgencyReviewsResponse> {
   }
 
   return {
-    ...fallbackPayload,
+    ...agencyReviewsFallbackSnapshot,
     fetchedAt: new Date().toISOString(),
   };
 }

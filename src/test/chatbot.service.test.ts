@@ -45,6 +45,7 @@ describe("chatbot service", () => {
     const feesReply = await askAgencyChatbot({ question: "Ou trouver les honoraires ?" });
 
     expect(reviewsReply.answer).toContain("/avis");
+    expect(reviewsReply.answer).toMatch(/Extraits|note Google|avis/i);
     expect(feesReply.answer).toContain("/honoraires");
   });
 
@@ -114,5 +115,25 @@ describe("chatbot service", () => {
     expect(reply.source).toBe("local");
     expect(reply.answer.toLowerCase()).toContain("je peux vous guider");
     expect(reply.suggestedPrompts.length).toBeGreaterThan(0);
+  });
+
+  it("routes legal questions to legal pages", async () => {
+    const reply = await askAgencyChatbot({ question: "Ou puis-je lire votre politique de confidentialite ?" });
+
+    expect(reply.answer).toContain("/confidentialite");
+    expect(reply.suggestedPrompts.some((prompt) => prompt.includes("/confidentialite"))).toBe(true);
+  });
+
+  it("routes city market questions to city hub pages", async () => {
+    const reply = await askAgencyChatbot({ question: "Je veux des infos immobilier a Montivilliers" });
+
+    expect(reply.answer).toContain("/immobilier/montivilliers");
+  });
+
+  it("routes broad listing navigation to the listings page", async () => {
+    const reply = await askAgencyChatbot({ question: "Ou voir toutes les annonces disponibles ?" });
+
+    expect(reply.answer).toContain("/biens");
+    expect(reply.propertySuggestions).toBeUndefined();
   });
 });

@@ -1,5 +1,6 @@
-import { cityById } from "@/features/cities/data/cities";
+import { cities, cityById } from "@/features/cities/data/cities";
 import { leHavreDistrictHistory, leHavreFaq } from "@/features/content/data/leHavreHistoryContent";
+import { agencyReviewsFallbackSnapshot } from "@/features/content/api/googleReviews.service";
 import { properties } from "@/features/listings/data/properties";
 import { formatPrice, normalizeKeyword, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
 import { apiJson, isEdgeApiEnabled } from "@/lib/api/client";
@@ -45,6 +46,12 @@ interface DistrictDescriptor {
   aliases: string[];
 }
 
+interface CityRouteDescriptor {
+  slug: string;
+  name: string;
+  aliases: string[];
+}
+
 interface ConversationContext {
   normalizedQuestion: string;
   normalizedHistory: string;
@@ -55,6 +62,7 @@ interface ConversationContext {
   propertyType: "appartement" | "maison_villa" | null;
   transactionPreference: "vente" | "location" | null;
   district: DistrictDescriptor | null;
+  cityRoute: CityRouteDescriptor | null;
 }
 
 export const chatbotExamplePrompts = [
@@ -66,20 +74,26 @@ export const chatbotExamplePrompts = [
 ];
 
 const processIntentPattern = /compromis|notaire|process|etape|signature|acte|financement|offre acceptee/;
-const propertyIntentPattern = /appartement|maison|bien|acheter|achat|louer|vente|investissement|studio|t2|t3|t4|chambre|budget|m2|surface|quartier/;
+const propertyIntentPattern = /appartement|maison|bien|acheter|achat|louer|vente|investissement|studio|t2|t3|t4|chambre|budget|m2|surface|quartier|annonce/;
 const serviceIntentPattern = /service|gestion|location|vendre|estimation|syndic|accompagnement|mandat|mise en vente/;
 const contactIntentPattern = /contact|telephone|tel|appeler|email|mail|adresse|horaire|ouvert|ouverture|rdv|rendez vous|rappel/;
 const reviewsIntentPattern = /avis|review|google|note|reputation|temoignage/;
 const feesIntentPattern = /honoraire|bareme|frais|commission|pdf/;
 const historyIntentPattern = /histoire|historique|fondation|unesco|perret|saint francois|saint-vincent|saint vincent|sanvic|graville|docks vauban|eure/;
 const aboutIntentPattern = /agence|equipe|apropos|a propos|depuis 1972|unis/;
-const siteNavigationIntentPattern = /site|page|rubrique|navigation|plan du site|ou trouver|ou puis je|ou puis-je|lien/;
+const siteNavigationIntentPattern = /site|page|rubrique|navigation|plan du site|sitemap|ou trouver|ou puis je|ou puis-je|lien/;
 const directLeadCapturePattern = /ne trouve pas|introuvable|aucun bien|pas de bien|pas adapte|rappeler|etre contacte|etre rappele|laisser mon email|alerte email/;
 const shortFollowUpPattern = /^(et|sinon|plutot|du coup|ok|daccord|avec|sans|plus|moins|meme budget|dans ce cas)/;
 const districtComparisonPattern = /(quel quartier|quels quartiers|meilleur quartier|meilleurs quartiers).*(investissement|locatif|rendement)|investissement locatif/;
 const greetingPattern = /^(bonjour|salut|hello|bonsoir|coucou)\b/;
 const thanksPattern = /\bmerci\b|^\s*top\b|^\s*parfait\b/;
 const capabilityPattern = /qui es tu|qui etes vous|que peux tu|que pouvez vous|aide moi|help/;
+const listingsPagePattern = /toutes les annonces|voir les annonces|catalogue|liste des biens|biens disponibles|parcourir les biens|tous les biens/;
+const sellPagePattern = /vendre|mise en vente|mettre en vente|mandat|vente de mon bien/;
+const estimationPagePattern = /estimer|estimation|avis de valeur|combien vaut|valeur de mon bien/;
+const legalIntentPattern = /mentions legales|confidentialite|rgpd|donnees personnelles|cookies|accessibilite|privacy|legal/;
+const selectionIntentPattern = /ma selection|my selection|favoris|wishlist|selection sauvegardee/;
+const cityPageIntentPattern = /immobilier|prix|marche|quartier|investissement|annonce|bien|achat|vente|location|estimation/;
 
 const districtVocabulary: DistrictDescriptor[] = [
   { id: "perret", label: "Quartier Perret", aliases: ["perret", "hotel de ville", "saint-joseph"] },
@@ -90,12 +104,27 @@ const districtVocabulary: DistrictDescriptor[] = [
   { id: "eure-docks", label: "Eure - Docks Vauban", aliases: ["eure", "docks vauban", "vauban"] },
 ];
 
+const cityRouteVocabulary: CityRouteDescriptor[] = cities.map((city) => {
+  const normalizedName = normalizeKeyword(city.name);
+  const normalizedSlugSpaced = city.slug.replace(/-/g, " ");
+
+  return {
+    slug: city.slug,
+    name: city.name,
+    aliases: [normalizedName, normalizedSlugSpaced, city.slug],
+  };
+});
+
 function normalizePromptList(prompts: string[]): string[] {
   return prompts.map((prompt) => prompt.trim()).filter((prompt) => prompt.length > 0).slice(0, 6);
 }
 
 function detectDistrict(text: string): DistrictDescriptor | null {
   return districtVocabulary.find((district) => district.aliases.some((alias) => text.includes(alias))) ?? null;
+}
+
+function detectCityRoute(text: string): CityRouteDescriptor | null {
+  return cityRouteVocabulary.find((city) => city.aliases.some((alias) => text.includes(alias))) ?? null;
 }
 
 function extractBudget(text: string): number | null {
@@ -177,6 +206,7 @@ function buildConversationContext(question: string, chatHistory: ChatbotRequest[
   const propertyType = detectPropertyType(normalizedQuestion) ?? detectPropertyType(normalizedHistory);
   const transactionPreference = detectTransactionPreference(normalizedQuestion) ?? detectTransactionPreference(normalizedHistory);
   const district = detectDistrict(normalizedQuestion) ?? detectDistrict(normalizedHistory);
+  const cityRoute = detectCityRoute(normalizedQuestion) ?? detectCityRoute(normalizedHistory);
 
   return {
     normalizedQuestion,
@@ -188,6 +218,7 @@ function buildConversationContext(question: string, chatHistory: ChatbotRequest[
     propertyType,
     transactionPreference,
     district,
+    cityRoute,
   };
 }
 
@@ -201,6 +232,7 @@ function formatCriteriaSummary(context: ConversationContext): string {
   if (context.bedroomsMin != null) parts.push(`${context.bedroomsMin}+ chambres`);
   if (context.budgetMax != null) parts.push(`budget max ${new Intl.NumberFormat("fr-FR").format(context.budgetMax)} EUR`);
   if (context.district) parts.push(`secteur ${context.district.label}`);
+  if (context.cityRoute) parts.push(`ville ${context.cityRoute.name}`);
 
   return parts.join(", ");
 }
@@ -213,12 +245,14 @@ function buildPropertySuggestions(question: string, context: ConversationContext
   const budgetMax = extractBudget(normalized) ?? context.budgetMax;
   const propertyType = detectPropertyType(normalized) ?? context.propertyType;
   const district = detectDistrict(normalized) ?? context.district;
+  const requestedCity = detectCityRoute(normalized) ?? context.cityRoute;
 
   const requestSpecificity =
     Number(Boolean(district)) +
     Number(Boolean(bedroomsMin)) +
     Number(Boolean(budgetMax)) +
     Number(Boolean(propertyType)) +
+    Number(Boolean(requestedCity)) +
     Number(Boolean(wantsRental || wantsSale));
 
   return properties
@@ -229,14 +263,22 @@ function buildPropertySuggestions(question: string, context: ConversationContext
       if (bedroomsMin != null && (property.bedrooms ?? 0) < bedroomsMin) return false;
       if (budgetMax != null && property.priceAmount > budgetMax) return false;
       if (propertyType && property.propertyType !== propertyType) return false;
+
+      if (requestedCity) {
+        const citySlug = cityById.get(property.cityId)?.slug;
+        if (citySlug !== requestedCity.slug) return false;
+      }
+
       return true;
     })
     .map((property) => {
       const city = cityById.get(property.cityId)?.name ?? "Le Havre";
+      const citySlug = cityById.get(property.cityId)?.slug ?? "";
       const haystack = normalizeKeyword(`${property.title} ${property.description} ${city}`);
       let score = 0;
 
       if (district && district.aliases.some((alias) => haystack.includes(alias))) score += 4;
+      if (requestedCity && citySlug === requestedCity.slug) score += 4;
       if (bedroomsMin != null && (property.bedrooms ?? 0) >= bedroomsMin) score += 2;
       if (budgetMax != null && property.priceAmount <= budgetMax) score += 2;
       if (propertyType && property.propertyType === propertyType) score += 2;
@@ -246,7 +288,7 @@ function buildPropertySuggestions(question: string, context: ConversationContext
 
       return { property, score };
     })
-    .filter(({ score }) => score >= (requestSpecificity >= 3 ? 4 : 1))
+    .filter(({ score }) => score >= (requestSpecificity >= 4 ? 4 : 1))
     .sort((a, b) => {
       if (b.score === a.score) {
         return new Date(b.property.publishedAt).getTime() - new Date(a.property.publishedAt).getTime();
@@ -270,12 +312,13 @@ function buildLeadCaptureAnswer(context: ConversationContext): ChatbotReply {
     source: "local",
     answer:
       criteriaSummary.length > 0
-        ? `Je vous accompagne avec plaisir. Je n'ai pas encore de bien parfaitement aligne sur vos criteres (${criteriaSummary}). Laissez votre email et je transmets votre demande a l'agence pour un suivi personnalise.`
-        : "Je vous accompagne avec plaisir. Si vous ne trouvez pas le bon bien, laissez votre email, votre budget et le secteur souhaite: je transmets directement votre demande a l'agence.",
+        ? `Je vous accompagne avec plaisir. Je n'ai pas encore de bien parfaitement aligne sur vos criteres (${criteriaSummary}). Laissez votre email ici dans le chat ou via /contact et je transmets votre demande a l'agence.`
+        : "Je vous accompagne avec plaisir. Si vous ne trouvez pas le bon bien, laissez votre email, votre budget et le secteur souhaite: je transmets directement votre demande a l'agence via /contact.",
     suggestedPrompts: normalizePromptList([
       "Je veux laisser mon email pour etre rappelle",
       "Je cherche un T3 a Perret avec balcon",
       "Je cherche une maison familiale a Sanvic",
+      "Ouvrir /contact",
     ]),
     needsLeadCapture: true,
   };
@@ -285,11 +328,12 @@ function buildProcessAnswer(): ChatbotReply {
   return {
     source: "local",
     answer:
-      "Bien sur. Processus type: 1) offre acceptee, 2) verification financement et pieces, 3) compromis de vente, 4) delai legal + conditions suspensives, 5) acte authentique chez le notaire. L'agence coordonne chaque etape pour securiser le dossier.",
+      "Bien sur. Processus type: 1) offre acceptee, 2) verification financement et pieces, 3) compromis de vente, 4) delai legal + conditions suspensives, 5) acte authentique chez le notaire. L'agence coordonne chaque etape pour securiser le dossier. Pour un accompagnement direct: /vendre puis /contact.",
     suggestedPrompts: normalizePromptList([
       "Quel delai moyen entre compromis et acte ?",
       "Quels documents faut-il pour vendre ?",
       "Pouvez-vous m'accompagner sur un achat avec pret ?",
+      "Ouvrir /vendre",
     ]),
   };
 }
@@ -298,24 +342,33 @@ function buildContactAnswer(): ChatbotReply {
   return {
     source: "local",
     answer:
-      "Avec plaisir. Coordonnees agence: 109 Av. Foch, 76600 Le Havre, tel 02 35 42 51 76, email vendre@fochimmobilier.com. Horaires: lundi-vendredi 09:30-12:00 et 14:00-18:30, samedi sur rendez-vous. Retrouvez tout sur /contact.",
+      "Avec plaisir. Coordonnees agence: 109 Av. Foch, 76600 Le Havre, tel 02 35 42 51 76, email vendre@fochimmobilier.com. Horaires: lundi-vendredi 09:30-12:00 et 14:00-18:30, samedi sur rendez-vous. Page complete: /contact.",
     suggestedPrompts: normalizePromptList([
       "Pouvez-vous me rappeler demain matin ?",
       "Je veux envoyer une demande d'estimation",
       "Ou est situee l'agence exactement ?",
+      "Ouvrir /contact",
     ]),
   };
 }
 
 function buildReviewsAnswer(): ChatbotReply {
+  const rating = `${agencyReviewsFallbackSnapshot.rating.toFixed(1)} / 5`;
+  const count = `${agencyReviewsFallbackSnapshot.userRatingCount} avis`;
+  const highlights = agencyReviewsFallbackSnapshot.reviews
+    .slice(0, 2)
+    .map((review) => `${review.authorName}: ${review.text}`)
+    .join(" | ");
+
   return {
     source: "local",
     answer:
-      "Oui. Les avis clients sont visibles sur /avis avec la note Google, le volume d'avis et les retours recents sur la transaction, la location et la gestion locative.",
+      `Oui. La page /avis affiche la note Google (${rating}, ${count}) et les retours clients. Extraits: ${highlights}. Pour lire tous les avis et la mise a jour, ouvrez /avis.`,
     suggestedPrompts: normalizePromptList([
-      "Montrez-moi les derniers avis clients",
+      "Ouvrir /avis",
       "Quelle est la note Google actuelle ?",
-      "Je veux parler a un conseiller apres lecture des avis",
+      "Je veux contacter un conseiller apres lecture des avis",
+      "Quels services sont cites dans les avis ?",
     ]),
   };
 }
@@ -324,9 +377,9 @@ function buildFeesAnswer(): ChatbotReply {
   return {
     source: "local",
     answer:
-      "Bien note. Les honoraires sont detailles sur /honoraires avec acces direct au PDF officiel et une synthese des tranches tarifaires TTC.",
+      "Bien note. Les honoraires sont detailles sur /honoraires avec acces au PDF officiel et une synthese des tranches tarifaires TTC. Vous pouvez verifier la grille complete directement sur /honoraires.",
     suggestedPrompts: normalizePromptList([
-      "Je veux ouvrir la page honoraires",
+      "Ouvrir /honoraires",
       "Comment sont calcules les frais de vente ?",
       "Pouvez-vous m'expliquer le bareme TTC ?",
     ]),
@@ -342,11 +395,11 @@ function buildHistoryAnswer(context: ConversationContext): ChatbotReply {
   if (faqMatch) {
     return {
       source: "local",
-      answer: `Bonne question. ${faqMatch.answer}`,
+      answer: `Bonne question. ${faqMatch.answer} Pour le dossier complet, ouvrez /histoire-immobilier-le-havre.`,
       suggestedPrompts: normalizePromptList([
         "Quels quartiers suivre pour investir au Havre ?",
         "Resumez-moi Perret, Saint-Francois et Saint-Vincent",
-        "Ou trouver la page historique complete ?",
+        "Ouvrir /histoire-immobilier-le-havre",
       ]),
     };
   }
@@ -358,7 +411,7 @@ function buildHistoryAnswer(context: ConversationContext): ChatbotReply {
     suggestedPrompts: normalizePromptList([
       "Quels sont les atouts du quartier Perret ?",
       "Quel secteur viser pour un investissement locatif ?",
-      "Je veux une estimation dans un quartier historique",
+      "Ouvrir /histoire-immobilier-le-havre",
     ]),
   };
 }
@@ -367,10 +420,11 @@ function buildAboutAnswer(): ChatbotReply {
   return {
     source: "local",
     answer:
-      "Foch Immobilier est une agence du Havre active depuis 1972 (reseau UNIS). L'equipe accompagne la transaction, la location et l'administration de biens. Vous pouvez consulter la presentation complete sur /apropos.",
+      "Foch Immobilier est une agence du Havre active depuis 1972 (reseau UNIS). L'equipe accompagne la transaction, la location et l'administration de biens. Presentation complete sur /apropos.",
     suggestedPrompts: normalizePromptList([
       "Quels services propose l'agence ?",
       "Comment contacter un conseiller ?",
+      "Ouvrir /apropos",
       "Je veux voir les biens disponibles",
     ]),
   };
@@ -390,11 +444,12 @@ function buildDistrictComparisonAnswer(): ChatbotReply | null {
   return {
     source: "local",
     answer:
-      `Pour un investissement locatif au Havre, trois secteurs ressortent souvent: ${rankedDistricts[0].name} (demande locative active), ${rankedDistricts[1].name} (renouvellement urbain et petites surfaces) et ${rankedDistricts[2].name} (liquidite patrimoniale forte).`,
+      `Pour un investissement locatif au Havre, trois secteurs ressortent souvent: ${rankedDistricts[0].name} (demande locative active), ${rankedDistricts[1].name} (renouvellement urbain et petites surfaces) et ${rankedDistricts[2].name} (liquidite patrimoniale forte). Vous pouvez approfondir sur /histoire-immobilier-le-havre puis filtrer les annonces sur /biens.`,
     suggestedPrompts: normalizePromptList([
       "Quels biens avez-vous dans ces quartiers ?",
       "Je veux un comparatif rendement / budget",
-      "Pouvez-vous transmettre ma recherche a un conseiller ?",
+      "Ouvrir /biens",
+      "Ouvrir /histoire-immobilier-le-havre",
     ]),
   };
 }
@@ -427,11 +482,102 @@ function buildDistrictAnswer(context: ConversationContext): ChatbotReply | null 
 
   return {
     source: "local",
-    answer: `${districtData.name}: ${districtData.summary} ${districtData.investmentAngle}`,
+    answer: `${districtData.name}: ${districtData.summary} ${districtData.investmentAngle} Detail historique: /histoire-immobilier-le-havre.`,
     suggestedPrompts: normalizePromptList([
       `Quels biens avez-vous actuellement dans ${districtData.name} ?`,
       `Quelle strategie de vente recommandez-vous dans ${districtData.name} ?`,
-      "Pouvez-vous me proposer une estimation dans ce quartier ?",
+      "Ouvrir /histoire-immobilier-le-havre",
+      "Ouvrir /biens",
+    ]),
+  };
+}
+
+function buildSellPageAnswer(): ChatbotReply {
+  return {
+    source: "local",
+    answer:
+      "Pour vendre, la page la plus adaptee est /vendre. Vous y trouverez la methode (mise en valeur, qualification acheteurs, suivi jusqu'a l'acte), puis vous pouvez lancer une estimation sur /estimation.",
+    suggestedPrompts: normalizePromptList([
+      "Ouvrir /vendre",
+      "Ouvrir /estimation",
+      "Je veux etre rappele pour vendre",
+    ]),
+  };
+}
+
+function buildEstimationPageAnswer(): ChatbotReply {
+  return {
+    source: "local",
+    answer:
+      "Pour estimer votre bien, utilisez /estimation. Le parcours couvre les caracteristiques du bien, les comparables et la strategie de commercialisation. Contact direct possible sur /contact.",
+    suggestedPrompts: normalizePromptList([
+      "Ouvrir /estimation",
+      "Quels documents preparer pour une estimation ?",
+      "Ouvrir /contact",
+    ]),
+  };
+}
+
+function buildListingsPageAnswer(context: ConversationContext): ChatbotReply {
+  const cityHint = context.cityRoute ? ` et la page ville /immobilier/${context.cityRoute.slug}` : "";
+
+  return {
+    source: "local",
+    answer: `Pour consulter toutes les annonces, ouvrez /biens${cityHint}. Vous pourrez ensuite filtrer par budget, typologie, transaction et secteur.`,
+    suggestedPrompts: normalizePromptList([
+      "Ouvrir /biens",
+      context.cityRoute ? `Ouvrir /immobilier/${context.cityRoute.slug}` : "Je veux filtrer les biens a la vente",
+      "Je veux des biens avec vue mer",
+      "Je cherche un T3 avec 2 chambres",
+    ]),
+  };
+}
+
+function buildCityPageAnswer(context: ConversationContext): ChatbotReply | null {
+  if (!context.cityRoute) return null;
+
+  return {
+    source: "local",
+    answer:
+      `Pour ${context.cityRoute.name}, la page dediee est /immobilier/${context.cityRoute.slug}. Vous y trouverez le contexte local puis les annonces liees a la ville.`,
+    suggestedPrompts: normalizePromptList([
+      `Ouvrir /immobilier/${context.cityRoute.slug}`,
+      "Ouvrir /biens",
+      "Je veux des biens a vendre dans cette ville",
+    ]),
+  };
+}
+
+function buildSelectionAnswer(): ChatbotReply {
+  return {
+    source: "local",
+    answer:
+      "Votre selection sauvegardee est accessible sur /my-selection. Vous pouvez y retrouver les biens favoris puis partager la selection.",
+    suggestedPrompts: normalizePromptList([
+      "Ouvrir /my-selection",
+      "Je veux ajouter des biens a ma selection",
+      "Ouvrir /biens",
+    ]),
+  };
+}
+
+function buildLegalAnswer(context: ConversationContext): ChatbotReply {
+  const targetPath = /cookie/.test(context.normalizedQuestion)
+    ? "/cookies"
+    : /accessibilite/.test(context.normalizedQuestion)
+      ? "/accessibilite"
+      : /confidentialite|rgpd|donnees/.test(context.normalizedQuestion)
+        ? "/confidentialite"
+        : "/mentions-legales";
+
+  return {
+    source: "local",
+    answer:
+      `Pour ce sujet legal, la page adaptee est ${targetPath}. Vous pouvez aussi retrouver toutes les pages legales depuis /plan-du-site.`,
+    suggestedPrompts: normalizePromptList([
+      `Ouvrir ${targetPath}`,
+      "Ouvrir /plan-du-site",
+      "Ouvrir /contact",
     ]),
   };
 }
@@ -440,11 +586,12 @@ function buildServiceAnswer(): ChatbotReply {
   return {
     source: "local",
     answer:
-      "Nos services couvrent la transaction (achat/vente), la location, la gestion locative et l'estimation. Vous pouvez utiliser /vendre, /services, /estimation et /contact selon votre objectif.",
+      "Nos services couvrent la transaction (achat/vente), la location, la gestion locative et l'estimation. Selon votre besoin: /vendre, /services, /estimation et /contact.",
     suggestedPrompts: normalizePromptList([
-      "Comment se deroule une estimation ?",
+      "Ouvrir /services",
       "Je veux vendre mon bien au Havre",
       "Pouvez-vous gerer mon bien en location ?",
+      "Ouvrir /estimation",
     ]),
   };
 }
@@ -461,9 +608,10 @@ function buildPropertyAnswer(question: string, context: ConversationContext): Ch
     source: "local",
     answer:
       criteriaSummary.length > 0
-        ? `Parfait, j'ai une premiere selection coherente avec vos criteres (${criteriaSummary}).`
-        : "Parfait, voici une premiere selection de biens qui correspondent a votre demande.",
+        ? `Parfait, j'ai une premiere selection coherente avec vos criteres (${criteriaSummary}). Vous pouvez aussi ouvrir /biens pour tout le catalogue.`
+        : "Parfait, voici une premiere selection de biens qui correspondent a votre demande. Vous pouvez aussi ouvrir /biens pour tout le catalogue.",
     suggestedPrompts: normalizePromptList([
+      "Ouvrir /biens",
       "Affinez sur un budget precis",
       "Je veux prioriser les quartiers proches mer",
       "Je ne trouve pas le bon bien, je veux etre rappelle",
@@ -478,7 +626,8 @@ function hasPropertyContext(context: ConversationContext): boolean {
     context.transactionPreference !== null ||
     context.bedroomsMin !== null ||
     context.budgetMax !== null ||
-    context.district !== null
+    context.district !== null ||
+    context.cityRoute !== null
   );
 }
 
@@ -486,11 +635,12 @@ function buildSiteNavigationAnswer(): ChatbotReply {
   return {
     source: "local",
     answer:
-      "Vous pouvez naviguer rapidement vers: /biens (annonces), /vendre, /estimation, /services, /histoire-immobilier-le-havre, /avis, /honoraires et /contact.",
+      "Vous pouvez naviguer rapidement vers: /biens, /vendre, /estimation, /services, /histoire-immobilier-le-havre, /avis, /honoraires, /contact et /plan-du-site.",
     suggestedPrompts: normalizePromptList([
-      "Je veux voir les biens a vendre",
-      "Je veux consulter les avis clients",
-      "Je veux contacter l'agence",
+      "Ouvrir /biens",
+      "Ouvrir /avis",
+      "Ouvrir /contact",
+      "Ouvrir /plan-du-site",
     ]),
   };
 }
@@ -499,7 +649,7 @@ function buildGreetingAnswer(): ChatbotReply {
   return {
     source: "local",
     answer:
-      "Bonjour, avec plaisir. Je peux vous guider sur les biens disponibles, les quartiers du Havre, les services de l'agence et les etapes de vente, achat ou location.",
+      "Bonjour, avec plaisir. Je peux vous guider sur les biens, quartiers du Havre, services agence, avis clients et etapes de vente/achat. Dites-moi votre objectif et je vous redirige vers la bonne page.",
     suggestedPrompts: normalizePromptList(chatbotExamplePrompts),
   };
 }
@@ -508,9 +658,9 @@ function buildThanksAnswer(): ChatbotReply {
   return {
     source: "local",
     answer:
-      "Avec plaisir. Si vous voulez, je peux maintenant affiner votre recherche par budget, quartier, type de bien et nombre de chambres.",
+      "Avec plaisir. Je peux maintenant affiner votre recherche par budget, quartier, type de bien et ville, puis vous rediriger vers la page la plus utile.",
     suggestedPrompts: normalizePromptList([
-      "Je cherche un appartement a vendre au Havre",
+      "Ouvrir /biens",
       "Je veux comparer Perret et Saint-Francois",
       "Je ne trouve pas de bien adapte, pouvez-vous me rappeler ?",
     ]),
@@ -521,8 +671,13 @@ function buildCapabilitiesAnswer(): ChatbotReply {
   return {
     source: "local",
     answer:
-      "Je suis l'assistant immobilier du site. Je reponds sur les annonces, les quartiers (Perret, Saint-Francois, Saint-Vincent, Sanvic, Graville, Eure-Docks), les services, les honoraires, les avis clients, le processus de vente/achat et les contacts agence.",
-    suggestedPrompts: normalizePromptList(chatbotExamplePrompts),
+      "Je suis l'assistant immobilier du site. Je reponds sur les annonces, quartiers (Perret, Saint-Francois, Saint-Vincent, Sanvic, Graville, Eure-Docks), villes, services, honoraires, avis clients, process de vente/achat et contacts.",
+    suggestedPrompts: normalizePromptList([
+      "Ouvrir /biens",
+      "Ouvrir /avis",
+      "Ouvrir /histoire-immobilier-le-havre",
+      "Ouvrir /contact",
+    ]),
   };
 }
 
@@ -530,8 +685,13 @@ function buildFallbackReply(): ChatbotReply {
   return {
     source: "local",
     answer:
-      "Je suis la pour vous guider. Je peux vous aider sur les biens disponibles, les quartiers du Havre, les services de l'agence, les etapes de vente/achat, les avis clients et les informations de contact.",
-    suggestedPrompts: normalizePromptList(chatbotExamplePrompts),
+      "Je suis la pour vous guider. Je peux vous aider sur les biens disponibles, les quartiers du Havre, les services de l'agence, les avis clients, les etapes de vente/achat et les pages du site. Navigation rapide: /plan-du-site.",
+    suggestedPrompts: normalizePromptList([
+      "Ouvrir /plan-du-site",
+      "Ouvrir /biens",
+      "Ouvrir /avis",
+      "Ouvrir /contact",
+    ]),
   };
 }
 
@@ -541,15 +701,24 @@ function buildLocalReply(question: string, context: ConversationContext): Chatbo
   if (context.inferredIntent === "contact") return buildContactAnswer();
   if (context.inferredIntent === "reviews") return buildReviewsAnswer();
   if (context.inferredIntent === "fees") return buildFeesAnswer();
+  if (legalIntentPattern.test(context.normalizedQuestion)) return buildLegalAnswer(context);
+  if (selectionIntentPattern.test(context.normalizedQuestion)) return buildSelectionAnswer();
 
   if (context.inferredIntent === "property") {
+    if (listingsPagePattern.test(context.normalizedQuestion)) return buildListingsPageAnswer(context);
+
     return (
       (districtComparisonPattern.test(context.normalizedQuestion) ? buildDistrictComparisonAnswer() : null) ??
       buildPropertyAnswer(question, context)
     );
   }
 
-  if (context.inferredIntent === "service") return buildServiceAnswer();
+  if (context.inferredIntent === "service") {
+    if (sellPagePattern.test(context.normalizedQuestion)) return buildSellPageAnswer();
+    if (estimationPagePattern.test(context.normalizedQuestion)) return buildEstimationPageAnswer();
+    return buildServiceAnswer();
+  }
+
   if (context.inferredIntent === "history") return buildHistoryAnswer(context);
   if (context.inferredIntent === "about") return buildAboutAnswer();
   if (context.inferredIntent === "navigation") return buildSiteNavigationAnswer();
@@ -557,6 +726,17 @@ function buildLocalReply(question: string, context: ConversationContext): Chatbo
   if (greetingPattern.test(context.normalizedQuestion)) return buildGreetingAnswer();
   if (thanksPattern.test(context.normalizedQuestion)) return buildThanksAnswer();
   if (capabilityPattern.test(context.normalizedQuestion)) return buildCapabilitiesAnswer();
+
+  if (legalIntentPattern.test(context.normalizedQuestion)) return buildLegalAnswer(context);
+  if (selectionIntentPattern.test(context.normalizedQuestion)) return buildSelectionAnswer();
+  if (sellPagePattern.test(context.normalizedQuestion)) return buildSellPageAnswer();
+  if (estimationPagePattern.test(context.normalizedQuestion)) return buildEstimationPageAnswer();
+  if (listingsPagePattern.test(context.normalizedQuestion)) return buildListingsPageAnswer(context);
+
+  if (context.cityRoute && cityPageIntentPattern.test(context.normalizedQuestion)) {
+    return buildCityPageAnswer(context) ?? buildListingsPageAnswer(context);
+  }
+
   if (hasPropertyContext(context)) return buildPropertyAnswer(question, context);
 
   return buildDistrictAnswer(context) ?? buildFallbackReply();
@@ -568,6 +748,12 @@ function isWebsiteContentQuestion(context: ConversationContext): boolean {
     greetingPattern.test(context.normalizedQuestion) ||
     thanksPattern.test(context.normalizedQuestion) ||
     capabilityPattern.test(context.normalizedQuestion) ||
+    legalIntentPattern.test(context.normalizedQuestion) ||
+    selectionIntentPattern.test(context.normalizedQuestion) ||
+    sellPagePattern.test(context.normalizedQuestion) ||
+    estimationPagePattern.test(context.normalizedQuestion) ||
+    listingsPagePattern.test(context.normalizedQuestion) ||
+    Boolean(context.cityRoute && cityPageIntentPattern.test(context.normalizedQuestion)) ||
     hasPropertyContext(context)
   );
 }
