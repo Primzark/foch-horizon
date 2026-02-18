@@ -136,4 +136,11 @@ describe("chatbot service", () => {
     expect(reply.answer).toContain("/biens");
     expect(reply.propertySuggestions).toBeUndefined();
   });
+
+  it("supports explicit internal path requests", async () => {
+    const reply = await askAgencyChatbot({ question: "Ouvrir /plan-du-site" });
+
+    expect(reply.answer).toContain("/plan-du-site");
+    expect(reply.suggestedPrompts.some((prompt) => prompt.includes("/plan-du-site"))).toBe(true);
+  });
 });

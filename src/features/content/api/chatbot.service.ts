@@ -55,6 +55,7 @@ interface CityRouteDescriptor {
 interface ConversationContext {
   normalizedQuestion: string;
   normalizedHistory: string;
+  normalizedFullHistory: string;
   normalizedCorpus: string;
   inferredIntent: ChatbotIntent;
   budgetMax: number | null;
@@ -63,6 +64,7 @@ interface ConversationContext {
   transactionPreference: "vente" | "location" | null;
   district: DistrictDescriptor | null;
   cityRoute: CityRouteDescriptor | null;
+  requestedPath: string | null;
 }
 
 export const chatbotExamplePrompts = [
@@ -94,6 +96,29 @@ const estimationPagePattern = /estimer|estimation|avis de valeur|combien vaut|va
 const legalIntentPattern = /mentions legales|confidentialite|rgpd|donnees personnelles|cookies|accessibilite|privacy|legal/;
 const selectionIntentPattern = /ma selection|my selection|favoris|wishlist|selection sauvegardee/;
 const cityPageIntentPattern = /immobilier|prix|marche|quartier|investissement|annonce|bien|achat|vente|location|estimation/;
+const followPathRequestPattern = /ouvre|ouvrir|aller|go|cette page|ce lien|redirige/;
+const internalPathPattern = /(\/[a-z0-9-]+(?:\/[a-z0-9-]+)*(?:\?[a-z0-9=&_-]+)?)/i;
+
+const knownInternalPaths = [
+  "/",
+  "/biens",
+  "/apropos",
+  "/contact",
+  "/vendre",
+  "/estimation",
+  "/services",
+  "/avis",
+  "/histoire-immobilier-le-havre",
+  "/honoraires",
+  "/my-selection",
+  "/mentions-legales",
+  "/confidentialite",
+  "/cookies",
+  "/accessibilite",
+  "/plan-du-site",
+];
+
+const knownInternalPathPrefixes = ["/biens", "/immobilier/"];
 
 const districtVocabulary: DistrictDescriptor[] = [
   { id: "perret", label: "Quartier Perret", aliases: ["perret", "hotel de ville", "saint-joseph"] },
@@ -125,6 +150,25 @@ function detectDistrict(text: string): DistrictDescriptor | null {
 
 function detectCityRoute(text: string): CityRouteDescriptor | null {
   return cityRouteVocabulary.find((city) => city.aliases.some((alias) => text.includes(alias))) ?? null;
+}
+
+function normalizeInternalPath(path: string): string {
+  const [rawBasePath, rawQuery = ""] = path.trim().split("?");
+  const basePath = rawBasePath.replace(/\/+$/, "") || "/";
+  return rawQuery.length > 0 ? `${basePath}?${rawQuery}` : basePath;
+}
+
+function isKnownInternalPath(path: string): boolean {
+  if (knownInternalPaths.includes(path)) return true;
+  return knownInternalPathPrefixes.some((prefix) => path === prefix || path.startsWith(prefix));
+}
+
+function extractRequestedPath(text: string): string | null {
+  const match = text.match(internalPathPattern);
+  if (!match) return null;
+
+  const normalizedPath = normalizeInternalPath(match[1]);
+  return isKnownInternalPath(normalizedPath) ? normalizedPath : null;
 }
 
 function extractBudget(text: string): number | null {
@@ -179,6 +223,7 @@ function detectIntent(text: string): ChatbotIntent {
 
 function buildConversationContext(question: string, chatHistory: ChatbotRequest["chatHistory"]): ConversationContext {
   const normalizedQuestion = normalizeKeyword(question);
+  const historyMessages = (chatHistory ?? []).map((message) => message.content.trim()).filter((content) => content.length > 0);
   const historyUserMessages = (chatHistory ?? [])
     .filter((message) => message.role === "user")
     .map((message) => message.content.trim())
@@ -190,6 +235,7 @@ function buildConversationContext(question: string, chatHistory: ChatbotRequest[
       ? historyUserMessages.slice(0, Math.max(0, historyUserMessages.length - 1))
       : historyUserMessages;
   const normalizedHistory = normalizeKeyword(historyWithoutCurrent.join(" "));
+  const normalizedFullHistory = normalizeKeyword(historyMessages.join(" "));
   const normalizedCorpus = normalizeKeyword(`${historyWithoutCurrent.join(" ")} ${question}`.trim());
 
   const explicitIntent = detectIntent(normalizedQuestion);
@@ -199,7 +245,9 @@ function buildConversationContext(question: string, chatHistory: ChatbotRequest[
       ? explicitIntent
       : shortFollowUpPattern.test(normalizedQuestion) && historicalIntent !== "unknown"
         ? historicalIntent
-        : detectIntent(normalizedCorpus);
+        : detectIntent(normalizedCorpus) !== "unknown"
+          ? detectIntent(normalizedCorpus)
+          : detectIntent(normalizedFullHistory);
 
   const budgetMax = extractBudget(normalizedQuestion) ?? extractBudget(normalizedHistory);
   const bedroomsMin = extractBedrooms(normalizedQuestion) ?? extractBedrooms(normalizedHistory);
@@ -207,10 +255,15 @@ function buildConversationContext(question: string, chatHistory: ChatbotRequest[
   const transactionPreference = detectTransactionPreference(normalizedQuestion) ?? detectTransactionPreference(normalizedHistory);
   const district = detectDistrict(normalizedQuestion) ?? detectDistrict(normalizedHistory);
   const cityRoute = detectCityRoute(normalizedQuestion) ?? detectCityRoute(normalizedHistory);
+  const explicitRequestedPath = extractRequestedPath(normalizedQuestion);
+  const requestedPath =
+    explicitRequestedPath ??
+    (followPathRequestPattern.test(normalizedQuestion) ? extractRequestedPath(normalizedFullHistory) : null);
 
   return {
     normalizedQuestion,
     normalizedHistory,
+    normalizedFullHistory,
     normalizedCorpus,
     inferredIntent,
     budgetMax,
@@ -219,6 +272,7 @@ function buildConversationContext(question: string, chatHistory: ChatbotRequest[
     transactionPreference,
     district,
     cityRoute,
+    requestedPath,
   };
 }
 
@@ -561,6 +615,18 @@ function buildSelectionAnswer(): ChatbotReply {
   };
 }
 
+function buildDirectPathAnswer(path: string): ChatbotReply {
+  return {
+    source: "local",
+    answer: `Parfait, la page demandee est ${path}. Cliquez sur ce lien pour y acceder directement depuis le chat.`,
+    suggestedPrompts: normalizePromptList([
+      `Ouvrir ${path}`,
+      "Je veux un resume de cette page",
+      "Je veux contacter un conseiller",
+    ]),
+  };
+}
+
 function buildLegalAnswer(context: ConversationContext): ChatbotReply {
   const targetPath = /cookie/.test(context.normalizedQuestion)
     ? "/cookies"
@@ -696,6 +762,7 @@ function buildFallbackReply(): ChatbotReply {
 }
 
 function buildLocalReply(question: string, context: ConversationContext): ChatbotReply {
+  if (context.requestedPath) return buildDirectPathAnswer(context.requestedPath);
   if (context.inferredIntent === "lead_capture") return buildLeadCaptureAnswer(context);
   if (context.inferredIntent === "process") return buildProcessAnswer();
   if (context.inferredIntent === "contact") return buildContactAnswer();
@@ -744,6 +811,7 @@ function buildLocalReply(question: string, context: ConversationContext): Chatbo
 
 function isWebsiteContentQuestion(context: ConversationContext): boolean {
   return (
+    context.requestedPath !== null ||
     context.inferredIntent !== "unknown" ||
     greetingPattern.test(context.normalizedQuestion) ||
     thanksPattern.test(context.normalizedQuestion) ||

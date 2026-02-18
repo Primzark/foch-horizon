@@ -267,7 +267,6 @@ export function SiteChatbot() {
   const abortControllerRef = useRef<AbortController | null>(null);
   const requestSequenceRef = useRef(0);
   const openingSequenceRef = useRef(0);
-  const routeChangeFromChatRef = useRef(false);
 
   const conversation = useMemo(
     () => messages.map((message) => ({ role: message.role, content: message.content })),
@@ -321,12 +320,8 @@ export function SiteChatbot() {
   useEffect(() => {
     unlockRequestState();
     setLeadLoading(false);
-
-    if (routeChangeFromChatRef.current) {
-      setOpen(false);
-      setShowLeadCapture(false);
-      routeChangeFromChatRef.current = false;
-    }
+    setShowLeadCapture(false);
+    setOpen(false);
   }, [location.pathname, location.search, unlockRequestState]);
 
   useEffect(() => {
@@ -532,7 +527,6 @@ export function SiteChatbot() {
 
   const navigateFromChat = useCallback(
     (path: string) => {
-      routeChangeFromChatRef.current = true;
       closeChat();
       navigate(path);
     },
@@ -542,6 +536,7 @@ export function SiteChatbot() {
   const handlePropertySuggestionClick = useCallback(
     (event: MouseEvent<HTMLAnchorElement>, path: string) => {
       event.preventDefault();
+      event.stopPropagation();
       navigateFromChat(path);
     },
     [navigateFromChat],
@@ -550,10 +545,23 @@ export function SiteChatbot() {
   const handleInternalPathClick = useCallback(
     (event: MouseEvent<HTMLAnchorElement>, path: string) => {
       event.preventDefault();
+      event.stopPropagation();
       navigateFromChat(path);
     },
     [navigateFromChat],
   );
+
+  const handleResetButtonClick = (event: MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    resetConversation();
+  };
+
+  const handleCloseButtonClick = (event: MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    closeChat();
+  };
 
   const renderMessageContent = useCallback(
     (content: string) => {
@@ -614,7 +622,7 @@ export function SiteChatbot() {
                   aria-label="Reinitialiser la conversation"
                   title="Nouvelle conversation"
                   className="rounded-full border border-border p-1.5"
-                  onClick={resetConversation}
+                  onClick={handleResetButtonClick}
                 >
                   <RotateCcw className="h-4 w-4" />
                 </button>
@@ -623,7 +631,7 @@ export function SiteChatbot() {
                   type="button"
                   aria-label="Fermer le chatbot"
                   className="rounded-full border border-border p-1.5"
-                  onClick={closeChat}
+                  onClick={handleCloseButtonClick}
                 >
                   <X className="h-4 w-4" />
                 </button>
