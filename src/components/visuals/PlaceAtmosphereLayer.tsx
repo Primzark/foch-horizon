@@ -12,7 +12,7 @@ interface PlaceAtmosphereLayerProps {
 const loopEase = { ease: "easeInOut" as const, repeat: Number.POSITIVE_INFINITY };
 
 function CoastalAtmosphere({ animated, neutralTone }: { animated: boolean; neutralTone: boolean }) {
-  const seaLine = neutralTone ? "rgba(255,255,255,0.42)" : "rgba(125,211,252,0.32)";
+  const seaLine = neutralTone ? "rgba(255,255,255,0.42)" : "rgba(255,255,255,0.34)";
 
   return (
     <>
@@ -48,7 +48,7 @@ function CoastalAtmosphere({ animated, neutralTone }: { animated: boolean; neutr
       />
       {!neutralTone && (
         <motion.div
-          className="absolute -top-[22%] left-[-12%] h-[54%] w-[54%] rounded-full bg-sky-100/18 blur-3xl"
+          className="absolute -top-[22%] left-[-12%] h-[54%] w-[54%] rounded-full bg-white/18 blur-3xl"
           animate={animated ? { x: [0, 30, -12, 0], y: [0, -10, 8, 0], opacity: [0.14, 0.22, 0.14] } : { opacity: 0.14 }}
           transition={animated ? { duration: 14, ...loopEase } : { duration: 0 }}
         />
@@ -119,7 +119,7 @@ function UrbanAtmosphere({ animated, neutralTone }: { animated: boolean; neutral
       <motion.div
         className={cn(
           "absolute -left-[24%] -top-[18%] h-[62%] w-[62%] rounded-full blur-3xl",
-          neutralTone ? "bg-white/11" : "bg-slate-100/14",
+          neutralTone ? "bg-white/11" : "bg-zinc-100/14",
         )}
         animate={animated ? { x: [0, 16, -8, 0], y: [0, -7, 3, 0], opacity: [0.1, 0.2, 0.12, 0.1] } : { opacity: 0.1 }}
         transition={animated ? { duration: 13, ...loopEase } : { duration: 0 }}
