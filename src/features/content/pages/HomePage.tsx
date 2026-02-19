@@ -42,7 +42,7 @@ const serviceCards = [
 ];
 
 const HERO_ROTATE_MS = 6500;
-const HERO_KEN_BURNS_DURATION_S = 8.8;
+const HERO_KEN_BURNS_DURATION_S = HERO_ROTATE_MS / 1000 + 0.45;
 
 type HeroSlide = {
   id: number;
@@ -56,10 +56,10 @@ type KenBurnsPreset = {
 };
 
 const kenBurnsPresets: KenBurnsPreset[] = [
-  { from: { scale: 1.14, x: -18, y: -10 }, to: { scale: 1.04, x: 8, y: 6 } },
-  { from: { scale: 1.12, x: 16, y: -9 }, to: { scale: 1.03, x: -9, y: 5 } },
-  { from: { scale: 1.11, x: -12, y: 11 }, to: { scale: 1.02, x: 11, y: -6 } },
-  { from: { scale: 1.13, x: 13, y: 10 }, to: { scale: 1.03, x: -12, y: -7 } },
+  { from: { scale: 1.2, x: -30, y: -16 }, to: { scale: 1.03, x: 13, y: 9 } },
+  { from: { scale: 1.18, x: 26, y: -14 }, to: { scale: 1.03, x: -12, y: 8 } },
+  { from: { scale: 1.18, x: -22, y: 16 }, to: { scale: 1.02, x: 15, y: -10 } },
+  { from: { scale: 1.19, x: 22, y: 14 }, to: { scale: 1.03, x: -15, y: -10 } },
 ];
 
 function createSeededRng(seed: number) {
@@ -119,6 +119,7 @@ export default function HomePage() {
   const { reducedMotion } = useMotionPreference();
   const siteUrl = getSiteUrl();
   const [heroSeed] = useState(() => Math.floor(Math.random() * 0x7fffffff));
+  const heroRng = useMemo(() => createSeededRng(heroSeed ^ 0x243f6a88), [heroSeed]);
   const heroSlides = useMemo(() => buildHeroSlides(featuredQuery.data ?? [], heroSeed), [featuredQuery.data, heroSeed]);
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
 
@@ -138,11 +139,26 @@ export default function HomePage() {
     }
 
     const timer = window.setInterval(() => {
-      setActiveHeroIndex((current) => (current + 1) % heroSlides.length);
+      setActiveHeroIndex((current) => {
+        if (heroSlides.length <= 1) {
+          return current;
+        }
+
+        let next = current;
+        for (let attempt = 0; attempt < 5 && next === current; attempt += 1) {
+          next = Math.floor(heroRng() * heroSlides.length);
+        }
+
+        if (next === current) {
+          next = (current + 1) % heroSlides.length;
+        }
+
+        return next;
+      });
     }, HERO_ROTATE_MS);
 
     return () => window.clearInterval(timer);
-  }, [heroSlides.length]);
+  }, [heroRng, heroSlides.length]);
 
   const activeHeroSlide = heroSlides[activeHeroIndex];
   const heroMood = inferPlaceImageMood(activeHeroSlide?.title, "Le Havre");
@@ -234,6 +250,7 @@ export default function HomePage() {
                   fallbackImageUrl="/images/le-havre-history/panorama-le-havre.jpg"
                   reducedMotion={reducedMotion}
                   qualityTier={reducedMotion ? undefined : "high"}
+                  qualityBoost={!reducedMotion}
                   className="h-full w-full"
                 />
               </motion.div>

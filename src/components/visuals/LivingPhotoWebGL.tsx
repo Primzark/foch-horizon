@@ -15,6 +15,7 @@ interface LivingPhotoWebGLProps {
   fallbackImageUrl?: string;
   reducedMotion?: boolean;
   qualityTier?: MotionQualityTier;
+  qualityBoost?: boolean;
   source?: string;
   className?: string;
 }
@@ -263,27 +264,6 @@ function bindTextureUnit(
   }
 }
 
-async function loadImageWithFallback(
-  primary: string,
-  fallback?: string,
-): Promise<{ image: HTMLImageElement; source: string }> {
-  try {
-    return {
-      image: await loadImage(primary),
-      source: primary,
-    };
-  } catch {
-    if (fallback && fallback !== primary) {
-      return {
-        image: await loadImage(fallback),
-        source: fallback,
-      };
-    }
-
-    throw new Error(`Failed to load base image: ${primary}`);
-  }
-}
-
 interface TelemetryState {
   frames: number;
   droppedFrames: number;
@@ -302,6 +282,7 @@ export function LivingPhotoWebGL({
   fallbackImageUrl,
   reducedMotion = false,
   qualityTier,
+  qualityBoost = false,
   source = "home_hero",
   className,
 }: LivingPhotoWebGLProps) {
@@ -321,7 +302,18 @@ export function LivingPhotoWebGL({
   const parallaxPreset = useMemo(() => getPlaceParallaxPreset(mood), [mood]);
   const motionDirector = useMemo(() => getMotionDirectorProfile(mood), [mood]);
   const activeQualityTier = useMemo(() => qualityTier ?? detectMotionQualityTier(), [qualityTier]);
-  const qualityConfig = useMemo(() => getMotionQualityConfig(activeQualityTier), [activeQualityTier]);
+  const baseQualityConfig = useMemo(() => getMotionQualityConfig(activeQualityTier), [activeQualityTier]);
+  const qualityConfig = useMemo(() => {
+    if (!qualityBoost || activeQualityTier === "low") {
+      return baseQualityConfig;
+    }
+
+    return {
+      ...baseQualityConfig,
+      dprCap: Math.min(baseQualityConfig.dprCap + (activeQualityTier === "high" ? 0.55 : 0.35), 2.6),
+      renderScale: Math.min(baseQualityConfig.renderScale + (activeQualityTier === "high" ? 0.18 : 0.12), 1.2),
+    };
+  }, [activeQualityTier, baseQualityConfig, qualityBoost]);
 
   const resolvedAssetCandidate = useMemo(() => resolveLivingPhotoAssetCandidate(imageUrl), [imageUrl]);
   const effectiveDepthUrl = depthMapUrl ?? resolvedAssetCandidate.depthMapUrl;
@@ -414,18 +406,15 @@ export function LivingPhotoWebGL({
         gl.enableVertexAttribArray(positionAttribute);
         gl.vertexAttribPointer(positionAttribute, 2, gl.FLOAT, false, 0, 0);
 
-        const { image: baseImage, source: loadedBaseSource } = await loadImageWithFallback(
-          baseTextureSource,
-          effectiveFallbackUrl,
-        );
+        const baseImage = await loadImage(baseTextureSource);
         const imageAspect =
           (baseImage.naturalWidth || baseImage.width || 1) / Math.max(baseImage.naturalHeight || baseImage.height || 1, 1);
         const imageTexture = await createTextureFromImage(gl, baseImage);
 
-        let generatedMaps = generatedMapCache.get(`${loadedBaseSource}|${mood}|${activeQualityTier}`);
+        let generatedMaps = generatedMapCache.get(`${baseTextureSource}|${mood}|${activeQualityTier}`);
         if (!generatedMaps && (!effectiveDepthUrl || !effectiveMaskUrl)) {
           generatedMaps = generateLivingPhotoMapsFromImage(baseImage, mood, activeQualityTier);
-          generatedMapCache.set(`${loadedBaseSource}|${mood}|${activeQualityTier}`, generatedMaps);
+          generatedMapCache.set(`${baseTextureSource}|${mood}|${activeQualityTier}`, generatedMaps);
         }
 
         let depthTexture: WebGLTexture | null = null;
@@ -558,7 +547,6 @@ export function LivingPhotoWebGL({
     activeQualityTier,
     baseTextureSource,
     effectiveDepthUrl,
-    effectiveFallbackUrl,
     effectiveMaskUrl,
     mood,
     motionDirector.webglRippleStrength,
@@ -568,6 +556,7 @@ export function LivingPhotoWebGL({
     qualityConfig.pointerLerp,
     qualityConfig.renderScale,
     qualityConfig.telemetrySampleFrames,
+    qualityBoost,
     reducedMotion,
     source,
   ]);

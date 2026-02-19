@@ -258,7 +258,19 @@ export async function getSimilarProperties(property: Property, limit = 3): Promi
 
 export async function getFeaturedProperties(limit = 8): Promise<Property[]> {
   await apiDelay();
-  return properties.filter((property) => property.isFeatured && property.status === "active").slice(0, limit);
+  const activeProperties = properties.filter((property) => property.status === "active");
+  const featured = activeProperties.filter((property) => property.isFeatured);
+
+  if (featured.length >= limit) {
+    return featured.slice(0, limit);
+  }
+
+  const featuredIds = new Set(featured.map((property) => property.id));
+  const newestRemaining = [...activeProperties]
+    .filter((property) => !featuredIds.has(property.id))
+    .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+
+  return [...featured, ...newestRemaining].slice(0, limit);
 }
 
 export async function getPropertiesByCitySlug(citySlug: string): Promise<Property[]> {
