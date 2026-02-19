@@ -57,21 +57,24 @@ function SelectionLink({
   onClick?: () => void;
   className?: string;
 }) {
+  const itemLabel = count > 1 ? "biens" : "bien";
+
   return (
     <NavLink
       to="/biens-sauvegardes"
       onClick={onClick}
       className={({ isActive }) =>
         cn(
-          "inline-flex h-11 w-11 items-center justify-center rounded-full border border-brand-border bg-brand-soft text-brand-strong shadow-[0_8px_24px_hsl(var(--brand)/0.16)] transition-colors hover:bg-brand-soft/70",
+          "inline-flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-full border border-brand-border bg-brand-soft px-3 text-brand-strong shadow-[0_8px_24px_hsl(var(--brand)/0.16)] transition-colors hover:bg-brand-soft/70",
           "focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/80 focus-visible:ring-offset-2",
           isActive && "border-brand/60 bg-brand-soft/60",
           className,
         )
       }
-      aria-label={`Biens sauvegardés (${count})`}
+      aria-label={`Biens sauvegardés (${count} ${itemLabel})`}
     >
       <Heart className={cn("h-5 w-5 text-brand", count > 0 && "fill-brand")} />
+      <span className="text-xs font-semibold leading-none tabular-nums">{count}</span>
     </NavLink>
   );
 }
@@ -240,7 +243,7 @@ export function AppHeader() {
 
               <SelectionLink
                 count={favoriteIds.length}
-                className="mt-1 h-12 w-12 rounded-full shadow-none"
+                className="mt-1 h-12 rounded-full px-4 shadow-none"
                 onClick={() => {
                   setMobileOpen(false);
                   trackEvent("favorites_opened", { source: "mobile_menu" });
