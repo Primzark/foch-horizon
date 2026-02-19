@@ -68,7 +68,7 @@ type CrossKenBurnsPreset = {
 
 type HeroTransitionEffectsProps = {
   active: boolean;
-  transitionStep: number;
+  transitionKey: string;
 };
 
 const kenBurnsPresets: KenBurnsPreset[] = [
@@ -187,7 +187,7 @@ function collectReadyIndices(slides: HeroSlide[], readyUrls: Set<string>): numbe
   }, []);
 }
 
-function HeroTransitionEffects({ active, transitionStep }: HeroTransitionEffectsProps) {
+function HeroTransitionEffects({ active, transitionKey }: HeroTransitionEffectsProps) {
   if (!active) {
     return null;
   }
@@ -196,7 +196,7 @@ function HeroTransitionEffects({ active, transitionStep }: HeroTransitionEffects
     <>
       <AnimatePresence initial={false} mode="sync">
         <motion.div
-          key={`hero-ripple-${transitionStep}`}
+          key={`hero-ripple-${transitionKey}`}
           className="pointer-events-none absolute inset-0 z-[4]"
           style={{
             background:
@@ -206,13 +206,13 @@ function HeroTransitionEffects({ active, transitionStep }: HeroTransitionEffects
           initial={{ opacity: 0, scale: 0.82 }}
           animate={{ opacity: [0, 0.6, 0], scale: [0.82, 1.04, 1.22] }}
           exit={{ opacity: 0 }}
-          transition={{ duration: HERO_CROSS_FADE_DURATION_S + 0.45, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: HERO_CROSS_FADE_DURATION_S, ease: [0.22, 1, 0.36, 1] }}
         />
       </AnimatePresence>
 
       <AnimatePresence initial={false} mode="sync">
         <motion.div
-          key={`hero-liquid-wipe-${transitionStep}`}
+          key={`hero-liquid-wipe-${transitionKey}`}
           className="pointer-events-none absolute inset-y-0 left-[-42%] z-[4] w-[84%]"
           style={{
             background:
@@ -226,7 +226,7 @@ function HeroTransitionEffects({ active, transitionStep }: HeroTransitionEffects
           initial={{ x: "-18%", opacity: 0, rotate: -1.2 }}
           animate={{ x: ["-18%", "112%"], opacity: [0, 0.72, 0], rotate: [-1.2, 0.9] }}
           exit={{ opacity: 0 }}
-          transition={{ duration: HERO_CROSS_FADE_DURATION_S + 0.28, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: HERO_CROSS_FADE_DURATION_S, ease: [0.22, 1, 0.36, 1] }}
         />
       </AnimatePresence>
 
@@ -445,6 +445,7 @@ export default function HomePage() {
 
   const activeHeroSlide = heroSlides[safeHeroIndex];
   const isActiveHeroReady = Boolean(activeHeroSlide && readyHeroUrls.has(activeHeroSlide.imageUrl));
+  const activeHeroTransitionKey = activeHeroSlide ? `${activeHeroSlide.id}-${safeHeroIndex}` : `hero-${safeHeroIndex}`;
   const heroMood = inferPlaceImageMood(activeHeroSlide?.title, "Le Havre");
   const heroMotionDirector = useMemo(() => getMotionDirectorProfile(heroMood), [heroMood]);
   const crossKenBurnsPreset = useMemo(
@@ -564,7 +565,7 @@ export default function HomePage() {
         </AnimatePresence>
         {heroSlides.length > 0 && <PlaceAtmosphereLayer mood={heroMood} animated={!reducedMotion} className="z-[2]" />}
         <div className="absolute inset-0 z-[3] bg-gradient-to-br from-black/55 via-black/35 to-black/55" />
-        <HeroTransitionEffects active={!reducedMotion && heroSlides.length > 1} transitionStep={heroMotionStep} />
+        <HeroTransitionEffects active={!reducedMotion && heroSlides.length > 1} transitionKey={activeHeroTransitionKey} />
         <div className="container relative z-[5] mx-auto flex min-h-[68vh] flex-col justify-center px-4 py-16">
           <motion.h1
             initial={{ opacity: 0, y: 12 }}
