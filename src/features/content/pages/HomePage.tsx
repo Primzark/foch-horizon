@@ -48,6 +48,7 @@ const HERO_CROSS_FADE_DURATION_S = 1.35;
 const HERO_PRELOAD_PRIORITY_COUNT = 3;
 const HERO_FALLBACK_IMAGE_URL = "/images/le-havre-history/panorama-le-havre.jpg";
 const HERO_SLIDE_BLEED_CLASS = "absolute -inset-[20vw] sm:-inset-14 md:-inset-10 z-[1]";
+const HERO_MIN_DWELL_BEFORE_OVERRIDE_MS = HERO_ROTATE_MS - 600;
 
 type HeroSlide = {
   id: number;
@@ -284,7 +285,13 @@ function preloadHeroImage(url: string, priority: "high" | "low" = "low"): Promis
 
 export default function HomePage() {
   const setSearchDrawerOpen = useUiStore((state) => state.setSearchDrawerOpen);
-  const featuredQuery = useQuery({ queryKey: ["featured-properties"], queryFn: () => getFeaturedProperties(24) });
+  const featuredQuery = useQuery({
+    queryKey: ["featured-properties"],
+    queryFn: () => getFeaturedProperties(24),
+    staleTime: 1000 * 60 * 20,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
   const reviewsQuery = useQuery({ queryKey: ["agency-google-reviews-home"], queryFn: getAgencyReviews });
   const { reducedMotion } = useMotionPreference();
   const siteUrl = getSiteUrl();
@@ -300,6 +307,8 @@ export default function HomePage() {
   const previousActiveHeroSlideRef = useRef<HeroSlideIdentity>(null);
   const heroSlidesRef = useRef<HeroSlide[]>(heroSlides);
   const readyHeroUrlsRef = useRef<Set<string>>(readyHeroUrls);
+  const activeHeroIndexRef = useRef<number>(activeHeroIndex);
+  const heroLastChangeAtRef = useRef<number>(Date.now());
 
   useEffect(() => {
     if (heroImageUrls.length === 0) {
@@ -349,6 +358,10 @@ export default function HomePage() {
   }, [readyHeroUrls]);
 
   useEffect(() => {
+    activeHeroIndexRef.current = activeHeroIndex;
+  }, [activeHeroIndex]);
+
+  useEffect(() => {
     if (heroSlides.length === 0) {
       setActiveHeroIndex(0);
       setHeroMotionStep(0);
@@ -376,12 +389,28 @@ export default function HomePage() {
     }
 
     if (preservedIndex >= 0) {
+      const currentIndex = normalizeIndex(activeHeroIndexRef.current, heroSlides.length);
+      const currentSlide = heroSlides[currentIndex];
+      const currentReady = Boolean(currentSlide && readyHeroUrlsRef.current.has(currentSlide.imageUrl));
+      const preservedSlide = heroSlides[preservedIndex];
+      const preservedReady = Boolean(preservedSlide && readyHeroUrlsRef.current.has(preservedSlide.imageUrl));
+      const elapsedSinceLastChange = Date.now() - heroLastChangeAtRef.current;
+
+      if (!preservedReady && currentReady) {
+        return;
+      }
+
+      if (currentReady && currentIndex !== preservedIndex && elapsedSinceLastChange < HERO_MIN_DWELL_BEFORE_OVERRIDE_MS) {
+        return;
+      }
+
       setActiveHeroIndex(preservedIndex);
       previousActiveHeroIndexRef.current = preservedIndex;
     } else {
       setActiveHeroIndex(0);
       previousActiveHeroIndexRef.current = 0;
       setHeroMotionStep(0);
+      heroLastChangeAtRef.current = Date.now();
     }
 
     heroQueueRef.current = [];
@@ -402,6 +431,7 @@ export default function HomePage() {
     if (normalizedActive !== previousActiveHeroIndexRef.current) {
       setHeroMotionStep((step) => step + 1);
       previousActiveHeroIndexRef.current = normalizedActive;
+      heroLastChangeAtRef.current = Date.now();
     }
   }, [activeHeroIndex, heroSlides.length]);
 
