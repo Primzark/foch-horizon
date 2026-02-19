@@ -2,7 +2,7 @@ import { Link, Navigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion, useReducedMotion, useScroll } from "framer-motion";
 import { useRef } from "react";
-import { Bath, BedDouble, Car, Copy, MapPin, Maximize, Phone } from "lucide-react";
+import { Bath, BedDouble, Car, Copy, Heart, MapPin, Maximize, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cityById } from "@/features/cities/data/cities";
 import { getPropertyById, getSimilarProperties } from "@/features/listings/api/properties.service";
@@ -17,6 +17,7 @@ import {
   sanitizePropertySlug,
   toCanonicalPropertyPath,
 } from "@/features/listings/utils/formatting";
+import { useFavoritesStore } from "@/features/favorites/useFavoritesStore";
 import { getSiteUrl, useSeo } from "@/lib/seo/useSeo";
 import { trackEvent } from "@/lib/analytics/events";
 
@@ -40,6 +41,8 @@ export default function ListingDetailPage() {
   const reducedMotion = useReducedMotion();
   const contentRef = useRef<HTMLDivElement | null>(null);
   const params = useParams();
+  const favoriteIds = useFavoritesStore((state) => state.ids);
+  const toggleFavorite = useFavoritesStore((state) => state.toggle);
   const parsedRoute = parseRouteIdAndSlug(params.idSlug);
   const propertyId = parsedRoute?.id ?? null;
   const siteUrl = getSiteUrl();
@@ -61,6 +64,7 @@ export default function ListingDetailPage() {
   });
 
   const property = propertyQuery.data;
+  const isFavorite = property ? favoriteIds.includes(property.id) : false;
 
   const canonicalPath = property ? toCanonicalPropertyPath({ id: property.id, slug: property.slug }) : null;
 
@@ -208,6 +212,24 @@ export default function ListingDetailPage() {
             <div className="text-right">
               <p className="font-display text-4xl">{formatPrice(property.priceAmount, property.transactionType)}</p>
               <div className="mt-2 flex items-center justify-end gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={
+                    isFavorite
+                      ? "border-brand-border bg-brand-soft text-brand-strong hover:bg-brand-soft/70 hover:text-brand-strong"
+                      : undefined
+                  }
+                  onClick={() => {
+                    const action = isFavorite ? "favorite_removed" : "favorite_added";
+                    toggleFavorite(property.id);
+                    trackEvent("listing_viewed", { propertyId: property.id, action });
+                  }}
+                  aria-label={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+                >
+                  <Heart className={isFavorite ? "fill-brand text-brand" : undefined} />
+                  {isFavorite ? "Sauvegardé" : "Sauvegarder"}
+                </Button>
                 <Button
                   variant="outline"
                   size="sm"
