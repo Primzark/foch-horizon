@@ -610,7 +610,7 @@ export function SiteChatbot() {
         />
       )}
 
-      <div className="pointer-events-auto fixed z-[160] bottom-[max(0.75rem,env(safe-area-inset-bottom))] right-[max(0.75rem,env(safe-area-inset-right))] max-sm:left-[max(0.75rem,env(safe-area-inset-left))]">
+      <div className="pointer-events-auto fixed z-[160] bottom-[max(0.75rem,env(safe-area-inset-bottom))] right-[max(0.75rem,env(safe-area-inset-right))] max-w-[calc(100vw-env(safe-area-inset-left)-env(safe-area-inset-right)-1.5rem)]">
       {open && (
         <motion.section
           initial={{ opacity: 0, y: 18, scale: 0.96 }}
@@ -769,11 +769,12 @@ export function SiteChatbot() {
 
       <Button
         type="button"
-        className="h-12 rounded-full px-4 shadow-card max-sm:w-full max-sm:justify-center"
+        className="h-10 max-w-[13.5rem] rounded-full px-3 text-xs shadow-card sm:h-12 sm:max-w-none sm:px-4 sm:text-sm"
         onClick={openChatWithGreeting}
       >
         {open ? <X className="mr-1 h-4 w-4" /> : <BotMessageSquare className="mr-1 h-4 w-4" />}
-        {open ? "Fermer" : "Chat immobilier IA"}
+        <span className="sm:hidden">{open ? "Fermer" : "Chat IA"}</span>
+        <span className="hidden sm:inline">{open ? "Fermer" : "Chat immobilier IA"}</span>
         <Sparkles className="ml-1 h-3.5 w-3.5" />
       </Button>
       </div>
