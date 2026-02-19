@@ -298,6 +298,7 @@ export function LivingPhotoWebGL({
   });
 
   const [fallbackMode, setFallbackMode] = useState(false);
+  const [surfaceReady, setSurfaceReady] = useState(reducedMotion);
 
   const parallaxPreset = useMemo(() => getPlaceParallaxPreset(mood), [mood]);
   const motionDirector = useMemo(() => getMotionDirectorProfile(mood), [mood]);
@@ -322,20 +323,27 @@ export function LivingPhotoWebGL({
   const baseTextureSource = imageUrl;
 
   useEffect(() => {
+    setSurfaceReady(reducedMotion);
+  }, [baseTextureSource, reducedMotion]);
+
+  useEffect(() => {
     if (reducedMotion) {
       setFallbackMode(true);
+      setSurfaceReady(true);
       return;
     }
 
     const canvas = canvasRef.current;
     if (!canvas) {
       setFallbackMode(true);
+      setSurfaceReady(true);
       return;
     }
 
     const gl = canvas.getContext("webgl", { alpha: true, antialias: true, premultipliedAlpha: true });
     if (!gl) {
       setFallbackMode(true);
+      setSurfaceReady(true);
       return;
     }
 
@@ -344,6 +352,7 @@ export function LivingPhotoWebGL({
     let observer: ResizeObserver | null = null;
     const cleanupFns: Array<() => void> = [];
     const pointerCurrent = { x: 0, y: 0 };
+    let hasRenderedFirstFrame = false;
 
     telemetryRef.current = {
       frames: 0,
@@ -513,6 +522,10 @@ export function LivingPhotoWebGL({
           gl.uniform1f(uniforms.time, timestamp * 0.001);
           gl.uniform2f(uniforms.pointer, pointerCurrent.x, pointerCurrent.y);
           gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+          if (!hasRenderedFirstFrame && !isDisposed) {
+            hasRenderedFirstFrame = true;
+            setSurfaceReady(true);
+          }
 
           animationFrameId = window.requestAnimationFrame(render);
         };
@@ -531,6 +544,7 @@ export function LivingPhotoWebGL({
       } catch {
         if (!isDisposed) {
           setFallbackMode(true);
+          setSurfaceReady(true);
         }
       }
     };
@@ -586,6 +600,8 @@ export function LivingPhotoWebGL({
         src={baseTextureSource}
         alt={alt}
         className={cn("h-full w-full object-cover", className)}
+        loading="eager"
+        decoding="async"
         onError={(event) => {
           if (effectiveFallbackUrl && event.currentTarget.src !== new URL(effectiveFallbackUrl, window.location.href).href) {
             event.currentTarget.src = effectiveFallbackUrl;
@@ -597,14 +613,29 @@ export function LivingPhotoWebGL({
 
   return (
     <div
-      className={cn("h-full w-full", className)}
+      className={cn("relative h-full w-full overflow-hidden", className)}
       role="img"
       aria-label={alt}
       onPointerMove={onPointerMove}
       onPointerLeave={resetPointer}
       onPointerCancel={resetPointer}
     >
-      <canvas ref={canvasRef} className="h-full w-full" />
+      {!surfaceReady && (
+        <img
+          src={baseTextureSource}
+          alt=""
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+          loading="eager"
+          decoding="async"
+          onError={(event) => {
+            if (effectiveFallbackUrl && event.currentTarget.src !== new URL(effectiveFallbackUrl, window.location.href).href) {
+              event.currentTarget.src = effectiveFallbackUrl;
+            }
+          }}
+        />
+      )}
+      <canvas ref={canvasRef} className={cn("h-full w-full transition-opacity duration-500", surfaceReady ? "opacity-100" : "opacity-0")} />
     </div>
   );
 }

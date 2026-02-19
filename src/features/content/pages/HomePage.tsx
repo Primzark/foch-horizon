@@ -44,6 +44,8 @@ const serviceCards = [
 const HERO_ROTATE_MS = 6500;
 const HERO_KEN_BURNS_DURATION_S = HERO_ROTATE_MS / 1000 + 0.45;
 const HERO_CROSS_FADE_DURATION_S = 1.35;
+const HERO_PRELOAD_PRIORITY_COUNT = 3;
+const HERO_FALLBACK_IMAGE_URL = "/images/le-havre-history/panorama-le-havre.jpg";
 
 type HeroSlide = {
   id: number;
@@ -157,6 +159,36 @@ function toCrossKenBurnsPreset(preset: KenBurnsPreset): CrossKenBurnsPreset {
   };
 }
 
+const heroImagePreloadCache = new Map<string, Promise<void>>();
+
+function preloadHeroImage(url: string, priority: "high" | "low" = "low"): Promise<void> {
+  if (!url) {
+    return Promise.resolve();
+  }
+
+  const cached = heroImagePreloadCache.get(url);
+  if (cached) {
+    return cached;
+  }
+
+  const loadingPromise = new Promise<void>((resolve, reject) => {
+    const image = new Image();
+    image.decoding = "async";
+    image.loading = "eager";
+    (image as HTMLImageElement & { fetchPriority?: "high" | "low" | "auto" }).fetchPriority = priority;
+    if (/^https?:\/\//.test(url)) {
+      image.crossOrigin = "anonymous";
+    }
+
+    image.onload = () => resolve();
+    image.onerror = () => reject(new Error(`Failed to preload hero image: ${url}`));
+    image.src = url;
+  });
+
+  heroImagePreloadCache.set(url, loadingPromise);
+  return loadingPromise;
+}
+
 export default function HomePage() {
   const setSearchDrawerOpen = useUiStore((state) => state.setSearchDrawerOpen);
   const featuredQuery = useQuery({ queryKey: ["featured-properties"], queryFn: () => getFeaturedProperties(24) });
@@ -168,6 +200,48 @@ export default function HomePage() {
   const heroSlides = useMemo(() => buildHeroSlides(featuredQuery.data ?? [], heroSeed), [featuredQuery.data, heroSeed]);
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
   const [heroMotionStep, setHeroMotionStep] = useState(0);
+  const [readyHeroUrls, setReadyHeroUrls] = useState<Set<string>>(() => new Set([HERO_FALLBACK_IMAGE_URL]));
+
+  useEffect(() => {
+    if (heroSlides.length === 0) {
+      setReadyHeroUrls(new Set([HERO_FALLBACK_IMAGE_URL]));
+      return;
+    }
+
+    let cancelled = false;
+    setReadyHeroUrls((current) => {
+      const next = new Set<string>([HERO_FALLBACK_IMAGE_URL]);
+      heroSlides.forEach((slide) => {
+        if (current.has(slide.imageUrl)) {
+          next.add(slide.imageUrl);
+        }
+      });
+      return next;
+    });
+
+    const preloadOrder = heroSlides.map((slide) => slide.imageUrl);
+
+    preloadOrder.forEach((url, index) => {
+      void preloadHeroImage(url, index < HERO_PRELOAD_PRIORITY_COUNT ? "high" : "low")
+        .then(() => {
+          if (cancelled) return;
+
+          setReadyHeroUrls((current) => {
+            if (current.has(url)) return current;
+            const next = new Set(current);
+            next.add(url);
+            return next;
+          });
+        })
+        .catch(() => {
+          if (cancelled) return;
+        });
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [heroSlides]);
 
   useEffect(() => {
     if (heroSlides.length === 0) {
@@ -187,19 +261,39 @@ export default function HomePage() {
     }
 
     const timer = window.setInterval(() => {
+      const readyIndices = heroSlides.reduce<number[]>((accumulator, slide, index) => {
+        if (readyHeroUrls.has(slide.imageUrl)) {
+          accumulator.push(index);
+        }
+        return accumulator;
+      }, []);
+
+      if (readyIndices.length <= 1) {
+        return;
+      }
+
       setHeroMotionStep((step) => step + 1);
       setActiveHeroIndex((current) => {
-        if (heroSlides.length <= 1) {
+        if (heroSlides.length <= 1 || readyIndices.length <= 1) {
           return current;
+        }
+
+        if (!readyHeroUrls.has(heroSlides[current]?.imageUrl)) {
+          return readyIndices[0];
         }
 
         let next = current;
         for (let attempt = 0; attempt < 5 && next === current; attempt += 1) {
-          next = Math.floor(heroRng() * heroSlides.length);
+          next = readyIndices[Math.floor(heroRng() * readyIndices.length)];
         }
 
         if (next === current) {
-          next = (current + 1) % heroSlides.length;
+          const currentPosition = readyIndices.indexOf(current);
+          if (currentPosition >= 0) {
+            next = readyIndices[(currentPosition + 1) % readyIndices.length];
+          } else {
+            next = readyIndices[0];
+          }
         }
 
         return next;
@@ -207,9 +301,25 @@ export default function HomePage() {
     }, HERO_ROTATE_MS);
 
     return () => window.clearInterval(timer);
-  }, [heroRng, heroSlides.length]);
+  }, [heroRng, heroSlides, readyHeroUrls]);
 
-  const activeHeroSlide = heroSlides[activeHeroIndex];
+  const safeHeroIndex = useMemo(() => {
+    if (heroSlides.length === 0) {
+      return 0;
+    }
+
+    const normalizedActiveIndex =
+      activeHeroIndex >= 0 ? activeHeroIndex % heroSlides.length : (activeHeroIndex + heroSlides.length) % heroSlides.length;
+    const activeSlide = heroSlides[normalizedActiveIndex];
+    if (activeSlide && readyHeroUrls.has(activeSlide.imageUrl)) {
+      return normalizedActiveIndex;
+    }
+
+    const firstReadyIndex = heroSlides.findIndex((slide) => readyHeroUrls.has(slide.imageUrl));
+    return firstReadyIndex >= 0 ? firstReadyIndex : normalizedActiveIndex;
+  }, [activeHeroIndex, heroSlides, readyHeroUrls]);
+
+  const activeHeroSlide = heroSlides[safeHeroIndex];
   const heroMood = inferPlaceImageMood(activeHeroSlide?.title, "Le Havre");
   const heroMotionDirector = useMemo(() => getMotionDirectorProfile(heroMood), [heroMood]);
   const crossKenBurnsPreset = useMemo(
@@ -270,11 +380,19 @@ export default function HomePage() {
   return (
     <>
       <section className="relative min-h-[68vh] overflow-hidden">
+        <img
+          src={HERO_FALLBACK_IMAGE_URL}
+          alt="Panorama du Havre"
+          className="absolute inset-0 z-0 h-full w-full object-cover"
+          loading="eager"
+          decoding="async"
+          fetchPriority="high"
+        />
         <AnimatePresence initial={false} mode="sync">
           {heroSlides.length > 0 && (
             <motion.div
-              key={`${heroSlides[activeHeroIndex].id}-${activeHeroIndex}`}
-              className="absolute inset-0 z-0"
+              key={`${heroSlides[safeHeroIndex].id}-${safeHeroIndex}`}
+              className="absolute inset-0 z-[1]"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -304,8 +422,8 @@ export default function HomePage() {
                 style={{ transformOrigin: "center center" }}
               >
                 <LivingPhotoWebGL
-                  imageUrl={heroSlides[activeHeroIndex].imageUrl}
-                  alt={heroSlides[activeHeroIndex].title}
+                  imageUrl={heroSlides[safeHeroIndex].imageUrl}
+                  alt={heroSlides[safeHeroIndex].title}
                   mood={heroMood}
                   depthMapUrl="/images/motion/hero-depth-map.svg"
                   maskUrl="/images/motion/sea-mask.svg"
