@@ -273,9 +273,6 @@ function preloadHeroImage(url: string, priority: "high" | "low" = "low"): Promis
     image.decoding = "async";
     image.loading = "eager";
     (image as HTMLImageElement & { fetchPriority?: "high" | "low" | "auto" }).fetchPriority = priority;
-    if (/^https?:\/\//.test(url)) {
-      image.crossOrigin = "anonymous";
-    }
 
     image.onload = () => resolve();
     image.onerror = () => reject(new Error(`Failed to preload hero image: ${url}`));
@@ -346,6 +343,13 @@ export default function HomePage() {
         })
         .catch(() => {
           if (cancelled) return;
+          // Prevent a preload/network edge-case from freezing hero rotation on fallback media.
+          setReadyHeroUrls((current) => {
+            if (current.has(imageUrl)) return current;
+            const next = new Set(current);
+            next.add(imageUrl);
+            return next;
+          });
         });
     });
 
