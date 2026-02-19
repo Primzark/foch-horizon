@@ -21,6 +21,8 @@ function CoastalAtmosphere({ animated, neutralTone }: { animated: boolean; neutr
         style={{
           backgroundImage: `repeating-linear-gradient(106deg, rgba(255,255,255,0) 0px, rgba(255,255,255,0) 22px, ${seaLine} 34px, rgba(255,255,255,0) 56px)`,
           clipPath: "ellipse(76% 56% at 50% 88%)",
+          WebkitMaskImage: "radial-gradient(80% 64% at 50% 100%, rgba(0,0,0,1), rgba(0,0,0,0) 72%)",
+          maskImage: "radial-gradient(80% 64% at 50% 100%, rgba(0,0,0,1), rgba(0,0,0,0) 72%)",
         }}
         animate={animated ? { x: [-64, 52, -38, -64], y: [0, -3, 2, 0], opacity: [0.22, 0.42, 0.28, 0.22] } : { opacity: 0.26 }}
         transition={animated ? { duration: 10.6, ...loopEase } : { duration: 0 }}
@@ -137,6 +139,32 @@ function UrbanAtmosphere({ animated, neutralTone }: { animated: boolean; neutral
   );
 }
 
+function AtmosphereParticles({ animated }: { animated: boolean }) {
+  if (!animated) {
+    return null;
+  }
+
+  return (
+    <>
+      {Array.from({ length: 5 }).map((_, index) => {
+        const offsetX = 18 + index * 15;
+        const duration = 11 + index * 1.8;
+        const delay = index * 0.75;
+
+        return (
+          <motion.span
+            key={`particle-${index}`}
+            className="absolute h-1 w-1 rounded-full bg-white/22 blur-[0.3px]"
+            style={{ left: `${offsetX}%`, bottom: "-8%" }}
+            animate={{ y: [-2, -66, -110], x: [0, index % 2 === 0 ? 8 : -7, 0], opacity: [0, 0.42, 0] }}
+            transition={{ duration, delay, ease: "easeInOut", repeat: Number.POSITIVE_INFINITY }}
+          />
+        );
+      })}
+    </>
+  );
+}
+
 export function PlaceAtmosphereLayer({ mood, animated = true, className, variant = "default" }: PlaceAtmosphereLayerProps) {
   const neutralTone = variant === "gallery";
 
@@ -146,6 +174,7 @@ export function PlaceAtmosphereLayer({ mood, animated = true, className, variant
       {mood === "residential" && <ResidentialAtmosphere animated={animated} neutralTone={neutralTone} />}
       {mood === "heritage" && <HeritageAtmosphere animated={animated} neutralTone={neutralTone} />}
       {mood === "urban" && <UrbanAtmosphere animated={animated} neutralTone={neutralTone} />}
+      {variant === "default" && <AtmosphereParticles animated={animated} />}
     </div>
   );
 }

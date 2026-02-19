@@ -138,8 +138,50 @@
     }
   }
 
+  @keyframes glass-sweep {
+    0% {
+      transform: translateX(-175%) skewX(-18deg);
+      opacity: 0;
+    }
+
+    22% {
+      opacity: 0.38;
+    }
+
+    46% {
+      opacity: 0;
+      transform: translateX(210%) skewX(-18deg);
+    }
+
+    100% {
+      opacity: 0;
+      transform: translateX(210%) skewX(-18deg);
+    }
+  }
+
   .luxury-shimmer {
     animation: luxury-shimmer 2.1s ease-in-out infinite;
+  }
+
+  .glass-sweep {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .glass-sweep::after {
+    content: "";
+    position: absolute;
+    inset: -35% -55%;
+    background: linear-gradient(
+      115deg,
+      rgba(255, 255, 255, 0) 18%,
+      rgba(255, 255, 255, 0.38) 48%,
+      rgba(255, 255, 255, 0) 82%
+    );
+    pointer-events: none;
+    mix-blend-mode: screen;
+    animation: glass-sweep 5.8s ease-in-out infinite;
   }
 
   .font-display {

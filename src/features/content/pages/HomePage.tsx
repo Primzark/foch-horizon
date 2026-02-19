@@ -16,6 +16,8 @@ import { getAgencyReviews } from "@/features/content/api/googleReviews.service";
 import { inferPlaceImageMood } from "@/lib/visuals/placeImageMotion";
 import { PlaceAtmosphereLayer } from "@/components/visuals/PlaceAtmosphereLayer";
 import { ContextAwareParallax } from "@/components/visuals/ContextAwareParallax";
+import { ScrollReveal } from "@/components/visuals/ScrollReveal";
+import { HeroCinemagraph } from "@/components/visuals/HeroCinemagraph";
 
 const serviceCards = [
   {
@@ -148,8 +150,9 @@ export default function HomePage() {
           )}
         </AnimatePresence>
         {heroSlides.length > 0 && <PlaceAtmosphereLayer mood={heroMood} animated={!reducedMotion} className="z-[1]" />}
-        <div className="absolute inset-0 z-[2] bg-gradient-to-br from-black/55 via-black/35 to-black/55" />
-        <div className="container relative z-[3] mx-auto flex min-h-[68vh] flex-col justify-center px-4 py-16">
+        {heroSlides.length > 0 && <HeroCinemagraph mood={heroMood} animated={!reducedMotion} className="z-[2]" />}
+        <div className="absolute inset-0 z-[3] bg-gradient-to-br from-black/55 via-black/35 to-black/55" />
+        <div className="container relative z-[4] mx-auto flex min-h-[68vh] flex-col justify-center px-4 py-16">
           <motion.h1
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -173,10 +176,10 @@ export default function HomePage() {
             transition={{ duration: 0.35, delay: 0.2 }}
             className="mt-8 flex flex-wrap gap-3"
           >
-            <Button size="lg" asChild>
+            <Button size="lg" className="glass-sweep" asChild>
               <Link to="/biens">Explorer les biens</Link>
             </Button>
-            <Button size="lg" variant="outline" asChild>
+            <Button size="lg" variant="outline" className="glass-sweep" asChild>
               <Link to="/estimation">Estimer mon bien</Link>
             </Button>
             <Button
@@ -194,105 +197,130 @@ export default function HomePage() {
       </section>
 
       <section className="py-12">
-        <MarketCounters />
+        <ScrollReveal>
+          <MarketCounters />
+        </ScrollReveal>
       </section>
 
       <section className="container mx-auto px-4 py-16">
-        <div className="mb-6 flex items-end justify-between gap-4">
-          <div>
-            <h2 className="font-display text-3xl">Sélection du moment</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Une sélection de biens actifs à la vente et à la location.</p>
+        <ScrollReveal>
+          <div className="mb-6 flex items-end justify-between gap-4">
+            <div>
+              <h2 className="font-display text-3xl">Sélection du moment</h2>
+              <p className="mt-1 text-sm text-muted-foreground">Une sélection de biens actifs à la vente et à la location.</p>
+            </div>
+            <Link to="/biens" className="inline-flex items-center gap-1 text-sm hover:underline">
+              Voir tout
+              <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
-          <Link to="/biens" className="inline-flex items-center gap-1 text-sm hover:underline">
-            Voir tout
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
+        </ScrollReveal>
 
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {(featuredQuery.data ?? []).map((property, index) => (
-            <ListingCard key={property.id} item={toSearchItem(property)} revealIndex={index} />
-          ))}
-        </div>
+        <ScrollReveal delay={0.06}>
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {(featuredQuery.data ?? []).map((property, index) => (
+              <ListingCard key={property.id} item={toSearchItem(property)} revealIndex={index} />
+            ))}
+          </div>
+        </ScrollReveal>
       </section>
 
       <section className="container mx-auto px-4 pb-14">
-        <h2 className="font-display text-3xl">Explorer par ville</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Pages locales dédiées pour faciliter votre recherche immobilière par secteur.
-        </p>
-        <div className="mt-5 flex flex-wrap gap-2">
-          {cities.map((city) => (
-            <Link
-              key={city.id}
-              to={`/immobilier/${city.slug}`}
-              className="rounded-full border border-border px-4 py-2 text-sm transition hover:bg-card"
-            >
-              Immobilier {city.name}
+        <ScrollReveal>
+          <h2 className="font-display text-3xl">Explorer par ville</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Pages locales dédiées pour faciliter votre recherche immobilière par secteur.
+          </p>
+          <div className="mt-5 flex flex-wrap gap-2">
+            {cities.map((city) => (
+              <Link
+                key={city.id}
+                to={`/immobilier/${city.slug}`}
+                className="rounded-full border border-border px-4 py-2 text-sm transition hover:bg-card"
+              >
+                Immobilier {city.name}
+              </Link>
+            ))}
+          </div>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link to="/histoire-immobilier-le-havre" className="rounded-full border border-border px-4 py-2 text-sm hover:bg-card">
+              Histoire de l'immobilier au Havre
             </Link>
-          ))}
-        </div>
-        <div className="mt-6 flex flex-wrap gap-3">
-          <Link to="/histoire-immobilier-le-havre" className="rounded-full border border-border px-4 py-2 text-sm hover:bg-card">
-            Histoire de l'immobilier au Havre
-          </Link>
-          <Link to="/avis" className="rounded-full border border-border px-4 py-2 text-sm hover:bg-card">
-            Lire les avis clients Google
-          </Link>
-        </div>
+            <Link to="/avis" className="rounded-full border border-border px-4 py-2 text-sm hover:bg-card">
+              Lire les avis clients Google
+            </Link>
+          </div>
+        </ScrollReveal>
       </section>
 
       <section className="border-y border-border bg-muted/30">
         <div className="container mx-auto grid gap-6 px-4 py-14 md:grid-cols-3">
-          {serviceCards.map((card) => (
-            <Link key={card.title} to={card.href} className="rounded-2xl border border-border bg-card p-6 transition hover:-translate-y-0.5">
-              <card.icon className="h-5 w-5" />
-              <h3 className="mt-4 font-display text-2xl">{card.title}</h3>
-              <p className="mt-2 text-sm text-muted-foreground">{card.description}</p>
-            </Link>
+          {serviceCards.map((card, index) => (
+            <ScrollReveal key={card.title} delay={index * 0.04}>
+              <Link
+                to={card.href}
+                className="group rounded-2xl border border-border bg-card p-6 transition-all duration-300 hover:-translate-y-1 hover:border-brand-border hover:shadow-[0_18px_44px_-30px_hsl(var(--brand)/0.35)]"
+              >
+                <card.icon className="h-5 w-5 transition-transform duration-300 group-hover:scale-110 group-hover:text-brand-strong" />
+                <h3 className="mt-4 font-display text-2xl">{card.title}</h3>
+                <p className="mt-2 text-sm text-muted-foreground">{card.description}</p>
+              </Link>
+            </ScrollReveal>
           ))}
         </div>
       </section>
 
       {reviewsQuery.data && (
         <section className="container mx-auto px-4 py-16">
-          <div className="mb-6 flex items-end justify-between gap-4">
-            <div>
-              <h2 className="font-display text-3xl">Avis Google</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Note moyenne {reviewsQuery.data.rating.toFixed(1)} / 5 ({reviewsQuery.data.userRatingCount} avis).
-              </p>
+          <ScrollReveal>
+            <div className="mb-6 flex items-end justify-between gap-4">
+              <div>
+                <h2 className="font-display text-3xl">Avis Google</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Note moyenne {reviewsQuery.data.rating.toFixed(1)} / 5 ({reviewsQuery.data.userRatingCount} avis).
+                </p>
+              </div>
+              <Link to="/avis" className="inline-flex items-center gap-1 text-sm hover:underline">
+                Voir tous les avis
+                <ArrowRight className="h-4 w-4" />
+              </Link>
             </div>
-            <Link to="/avis" className="inline-flex items-center gap-1 text-sm hover:underline">
-              Voir tous les avis
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
+          </ScrollReveal>
 
           <div className="grid gap-4 md:grid-cols-3">
-            {reviewsQuery.data.reviews.slice(0, 3).map((review) => (
-              <article key={review.id} className="rounded-2xl border border-border bg-card p-5">
-                <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">{review.authorName}</p>
-                <p className="mt-2 text-sm text-muted-foreground">{review.text}</p>
-              </article>
+            {reviewsQuery.data.reviews.slice(0, 3).map((review, index) => (
+              <ScrollReveal key={review.id} delay={index * 0.04}>
+                <article className="rounded-2xl border border-border bg-card p-5 transition-all duration-300 hover:-translate-y-1 hover:border-brand-border hover:shadow-[0_18px_40px_-34px_hsl(var(--brand)/0.3)]">
+                  <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">{review.authorName}</p>
+                  <p className="mt-2 text-sm text-muted-foreground">{review.text}</p>
+                </article>
+              </ScrollReveal>
             ))}
           </div>
         </section>
       )}
 
       <section className="container mx-auto px-4 py-16">
-        <h2 className="font-display text-3xl">L'équipe</h2>
-        <p className="mt-1 text-sm text-muted-foreground">Des interlocuteurs identifiés pour chaque projet.</p>
+        <ScrollReveal>
+          <h2 className="font-display text-3xl">L'équipe</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Des interlocuteurs identifiés pour chaque projet.</p>
+        </ScrollReveal>
         <div className="mt-6 grid gap-5 md:grid-cols-3">
-          {agents.map((agent) => (
-            <article key={agent.id} className="rounded-2xl border border-border p-5">
-              <img src={agent.portraitUrl} alt={agent.fullName} className="h-16 w-16 rounded-full object-cover" />
-              <h3 className="mt-3 font-display text-xl">{agent.fullName}</h3>
-              <p className="text-sm text-muted-foreground">{agent.role}</p>
-              <a className="mt-2 block text-sm hover:underline" href={`tel:${agent.phone.replace(/\s+/g, "")}`}>
-                {agent.phone}
-              </a>
-            </article>
+          {agents.map((agent, index) => (
+            <ScrollReveal key={agent.id} delay={index * 0.05}>
+              <article className="group rounded-2xl border border-border p-5 transition-all duration-300 hover:-translate-y-1 hover:border-brand-border hover:shadow-[0_18px_40px_-34px_hsl(var(--brand)/0.3)]">
+                <img
+                  src={agent.portraitUrl}
+                  alt={agent.fullName}
+                  className="h-16 w-16 rounded-full object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+                <h3 className="mt-3 font-display text-xl">{agent.fullName}</h3>
+                <p className="text-sm text-muted-foreground">{agent.role}</p>
+                <a className="mt-2 block text-sm hover:underline" href={`tel:${agent.phone.replace(/\s+/g, "")}`}>
+                  {agent.phone}
+                </a>
+              </article>
+            </ScrollReveal>
           ))}
         </div>
       </section>
