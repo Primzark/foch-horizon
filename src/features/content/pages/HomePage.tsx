@@ -15,9 +15,8 @@ import { MarketCounters } from "@/features/content/components/MarketCounters";
 import { getAgencyReviews } from "@/features/content/api/googleReviews.service";
 import { inferPlaceImageMood } from "@/lib/visuals/placeImageMotion";
 import { PlaceAtmosphereLayer } from "@/components/visuals/PlaceAtmosphereLayer";
-import { ContextAwareParallax } from "@/components/visuals/ContextAwareParallax";
 import { ScrollReveal } from "@/components/visuals/ScrollReveal";
-import { HeroCinemagraph } from "@/components/visuals/HeroCinemagraph";
+import { LivingPhotoWebGL } from "@/components/visuals/LivingPhotoWebGL";
 
 const serviceCards = [
   {
@@ -128,31 +127,30 @@ export default function HomePage() {
       <section className="relative min-h-[68vh] overflow-hidden">
         <AnimatePresence initial={false}>
           {heroSlides.length > 0 && (
-            <ContextAwareParallax mood={heroMood} reducedMotion={reducedMotion} intensity="immersive" scrollReactive className="absolute inset-0 z-0">
-              <motion.img
-                key={`${heroSlides[activeHeroIndex].id}-${activeHeroIndex}`}
-                src={heroSlides[activeHeroIndex].imageUrl}
+            <motion.div
+              key={`${heroSlides[activeHeroIndex].id}-${activeHeroIndex}`}
+              className="absolute inset-0 z-0"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={reducedMotion ? { duration: 0.4, ease: "easeOut" } : { duration: 1.1, ease: "easeInOut" }}
+            >
+              <LivingPhotoWebGL
+                imageUrl={heroSlides[activeHeroIndex].imageUrl}
                 alt={heroSlides[activeHeroIndex].title}
-                className="absolute inset-0 h-full w-full object-cover"
-                initial={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 1.03 }}
-                animate={reducedMotion ? { opacity: 1 } : { opacity: 1, scale: 1.09 }}
-                exit={{ opacity: 0 }}
-                transition={
-                  reducedMotion
-                    ? { duration: 0.4, ease: "easeOut" }
-                    : {
-                        opacity: { duration: 1.1, ease: "easeInOut" },
-                        scale: { duration: HERO_ROTATE_MS / 1000 + 0.8, ease: "linear" },
-                      }
-                }
+                mood={heroMood}
+                depthMapUrl="/images/motion/hero-depth-map.svg"
+                maskUrl="/images/motion/sea-mask.svg"
+                fallbackImageUrl="/images/le-havre-history/panorama-le-havre.jpg"
+                reducedMotion={reducedMotion}
+                className="h-full w-full"
               />
-            </ContextAwareParallax>
+            </motion.div>
           )}
         </AnimatePresence>
         {heroSlides.length > 0 && <PlaceAtmosphereLayer mood={heroMood} animated={!reducedMotion} className="z-[1]" />}
-        {heroSlides.length > 0 && <HeroCinemagraph mood={heroMood} animated={!reducedMotion} className="z-[2]" />}
-        <div className="absolute inset-0 z-[3] bg-gradient-to-br from-black/55 via-black/35 to-black/55" />
-        <div className="container relative z-[4] mx-auto flex min-h-[68vh] flex-col justify-center px-4 py-16">
+        <div className="absolute inset-0 z-[2] bg-gradient-to-br from-black/55 via-black/35 to-black/55" />
+        <div className="container relative z-[3] mx-auto flex min-h-[68vh] flex-col justify-center px-4 py-16">
           <motion.h1
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}

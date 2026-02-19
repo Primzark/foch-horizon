@@ -1,0 +1,23 @@
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="depth-base" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#343434" />
+      <stop offset="40%" stop-color="#4d4d4d" />
+      <stop offset="78%" stop-color="#808080" />
+      <stop offset="100%" stop-color="#b8b8b8" />
+    </linearGradient>
+    <radialGradient id="depth-center" cx="55%" cy="62%" r="56%">
+      <stop offset="0%" stop-color="#8a8a8a" stop-opacity="0.86" />
+      <stop offset="58%" stop-color="#707070" stop-opacity="0.6" />
+      <stop offset="100%" stop-color="#4a4a4a" stop-opacity="0.2" />
+    </radialGradient>
+    <linearGradient id="depth-foreground" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#9f9f9f" stop-opacity="0" />
+      <stop offset="100%" stop-color="#d8d8d8" stop-opacity="0.9" />
+    </linearGradient>
+  </defs>
+  <rect width="1920" height="1080" fill="url(#depth-base)" />
+  <ellipse cx="1040" cy="640" rx="820" ry="380" fill="url(#depth-center)" />
+  <rect y="640" width="1920" height="440" fill="url(#depth-foreground)" />
+  <path d="M0 760 C260 690 470 810 700 770 C880 740 1010 800 1170 780 C1380 754 1550 828 1920 760 L1920 1080 L0 1080 Z" fill="#d4d4d4" fill-opacity="0.28" />
+</svg>
