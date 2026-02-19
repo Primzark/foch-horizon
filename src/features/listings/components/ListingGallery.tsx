@@ -55,16 +55,8 @@ export function ListingGallery({ images, title }: { images: PropertyImage[]; tit
                 }
           }
         />
-        <PlaceAtmosphereLayer mood={imageMood} animated={!reducedMotion} className="z-[1]" />
-        <motion.div
-          className={cn("pointer-events-none absolute inset-0 z-[2] bg-gradient-to-br", imageMotionPreset.overlayClassName)}
-          animate={reducedMotion ? { opacity: 0.32 } : { opacity: [0.28, 0.45, 0.28] }}
-          transition={{
-            duration: imageMotionPreset.floatDuration - 2,
-            repeat: Number.POSITIVE_INFINITY,
-            ease: "easeInOut",
-          }}
-        />
+        <PlaceAtmosphereLayer mood={imageMood} animated={!reducedMotion} variant="gallery" className="z-[1]" />
+        <div className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-t from-black/22 via-black/8 to-transparent" />
 
         <div className="absolute left-3 top-3 z-[3] rounded-full bg-background/90 px-2 py-1 text-xs">
           <Images className="mr-1 inline h-3.5 w-3.5" />
