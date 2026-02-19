@@ -115,8 +115,9 @@ function shuffleWithRng<T>(items: T[], random: () => number): T[] {
 
 function buildHeroSlides(properties: Awaited<ReturnType<typeof getFeaturedProperties>>, seed: number): HeroSlide[] {
   const random = createSeededRng(seed ^ 0xa5a5a5a5);
+  const orderedProperties = [...properties].sort((left, right) => left.id - right.id);
 
-  const slides = properties
+  const slides = orderedProperties
     .map((property) => {
       if (!property.images.length) {
         return null;
@@ -305,12 +306,14 @@ export default function HomePage() {
   const [heroMotionStep, setHeroMotionStep] = useState(0);
   const [readyHeroUrls, setReadyHeroUrls] = useState<Set<string>>(() => new Set([HERO_FALLBACK_IMAGE_URL]));
   const heroQueueRef = useRef<number[]>([]);
-  const previousActiveHeroIndexRef = useRef<number | null>(null);
   const previousActiveHeroSlideRef = useRef<HeroSlideIdentity>(null);
   const heroSlidesRef = useRef<HeroSlide[]>(heroSlides);
   const readyHeroUrlsRef = useRef<Set<string>>(readyHeroUrls);
   const activeHeroIndexRef = useRef<number>(activeHeroIndex);
   const heroLastChangeAtRef = useRef<number>(Date.now());
+  const heroSlideStartAtRef = useRef<number>(Date.now());
+  const activeHeroIdentityRef = useRef<string | null>(null);
+  const heroTimerIdentityRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (heroImageUrls.length === 0) {
@@ -368,8 +371,12 @@ export default function HomePage() {
       setActiveHeroIndex(0);
       setHeroMotionStep(0);
       heroQueueRef.current = [];
-      previousActiveHeroIndexRef.current = null;
       previousActiveHeroSlideRef.current = null;
+      activeHeroIdentityRef.current = null;
+      heroTimerIdentityRef.current = null;
+      const now = Date.now();
+      heroLastChangeAtRef.current = now;
+      heroSlideStartAtRef.current = now;
       return;
     }
 
@@ -406,38 +413,21 @@ export default function HomePage() {
         return;
       }
 
-      setActiveHeroIndex(preservedIndex);
-      previousActiveHeroIndexRef.current = preservedIndex;
+      if (currentIndex !== preservedIndex) {
+        setActiveHeroIndex(preservedIndex);
+      }
     } else {
       setActiveHeroIndex(0);
-      previousActiveHeroIndexRef.current = 0;
       setHeroMotionStep(0);
-      heroLastChangeAtRef.current = Date.now();
-      heroSlideStartAtRef.current = Date.now();
+      const now = Date.now();
+      heroLastChangeAtRef.current = now;
+      heroSlideStartAtRef.current = now;
+      activeHeroIdentityRef.current = null;
+      heroTimerIdentityRef.current = null;
     }
 
     heroQueueRef.current = [];
   }, [heroSlides]);
-
-  useEffect(() => {
-    if (heroSlides.length <= 1) {
-      return;
-    }
-
-    const normalizedActive = normalizeIndex(activeHeroIndex, heroSlides.length);
-
-    if (previousActiveHeroIndexRef.current == null) {
-      previousActiveHeroIndexRef.current = normalizedActive;
-      return;
-    }
-
-    if (normalizedActive !== previousActiveHeroIndexRef.current) {
-      setHeroMotionStep((step) => step + 1);
-      previousActiveHeroIndexRef.current = normalizedActive;
-      heroLastChangeAtRef.current = Date.now();
-      heroSlideStartAtRef.current = Date.now();
-    }
-  }, [activeHeroIndex, heroSlides.length]);
 
   useEffect(() => {
     if (heroSlides.length === 0) {
@@ -470,7 +460,34 @@ export default function HomePage() {
 
   const activeHeroSlide = heroSlides[safeHeroIndex];
   const isActiveHeroReady = Boolean(activeHeroSlide && readyHeroUrls.has(activeHeroSlide.imageUrl));
-  const activeHeroTransitionKey = activeHeroSlide ? `${activeHeroSlide.id}-${safeHeroIndex}` : `hero-${safeHeroIndex}`;
+  const activeHeroIdentityKey = activeHeroSlide ? `${activeHeroSlide.id}:${activeHeroSlide.imageUrl}` : null;
+  const activeHeroTransitionKey = activeHeroSlide
+    ? `${activeHeroSlide.id}-${safeHeroIndex}-${activeHeroSlide.imageUrl}`
+    : `hero-${safeHeroIndex}`;
+
+  useEffect(() => {
+    if (!activeHeroIdentityKey) {
+      activeHeroIdentityRef.current = null;
+      return;
+    }
+
+    if (activeHeroIdentityRef.current === null) {
+      activeHeroIdentityRef.current = activeHeroIdentityKey;
+      const now = Date.now();
+      heroLastChangeAtRef.current = now;
+      heroSlideStartAtRef.current = now;
+      return;
+    }
+
+    if (activeHeroIdentityRef.current !== activeHeroIdentityKey) {
+      activeHeroIdentityRef.current = activeHeroIdentityKey;
+      const now = Date.now();
+      heroLastChangeAtRef.current = now;
+      heroSlideStartAtRef.current = now;
+      heroTimerIdentityRef.current = null;
+      setHeroMotionStep((step) => step + 1);
+    }
+  }, [activeHeroIdentityKey]);
 
   useEffect(() => {
     previousActiveHeroSlideRef.current = activeHeroSlide
@@ -478,18 +495,25 @@ export default function HomePage() {
       : null;
   }, [activeHeroSlide]);
 
-  // Track when the current slide became the active slide (not when it became ready)
-  const heroSlideStartAtRef = useRef<number>(Date.now());
-
   useEffect(() => {
-    if (heroSlides.length <= 1 || !isActiveHeroReady) {
-      if (heroSlides.length <= 1) {
-        heroQueueRef.current = [];
-      }
+    if (heroSlides.length <= 1) {
+      heroQueueRef.current = [];
+      heroTimerIdentityRef.current = null;
       return;
     }
 
-    // Compute how long this slide has already been active so we honour the full dwell
+    if (!activeHeroIdentityKey || !isActiveHeroReady) {
+      heroTimerIdentityRef.current = null;
+      return;
+    }
+
+    // When a new slide becomes ready, start a fresh dwell window for that visible slide.
+    if (heroTimerIdentityRef.current !== activeHeroIdentityKey) {
+      heroTimerIdentityRef.current = activeHeroIdentityKey;
+      heroSlideStartAtRef.current = Date.now();
+    }
+
+    // Honour the full dwell time even if this effect reruns mid-cycle.
     const elapsed = Date.now() - heroSlideStartAtRef.current;
     const remaining = Math.max(HERO_ROTATE_MS - elapsed, 600);
 
@@ -528,7 +552,7 @@ export default function HomePage() {
     }, remaining);
 
     return () => window.clearTimeout(timeoutId);
-  }, [activeHeroTransitionKey, heroRng, heroSlides.length, isActiveHeroReady]);
+  }, [activeHeroIdentityKey, activeHeroTransitionKey, heroRng, heroSlides.length, isActiveHeroReady]);
 
   const heroMood = inferPlaceImageMood(activeHeroSlide?.title, "Le Havre");
   const heroMotionDirector = useMemo(() => getMotionDirectorProfile(heroMood), [heroMood]);
@@ -601,7 +625,7 @@ export default function HomePage() {
         <AnimatePresence initial={false} mode="sync">
           {heroSlides.length > 0 && isActiveHeroReady && (
             <motion.div
-              key={`${heroSlides[safeHeroIndex].id}-${safeHeroIndex}`}
+              key={activeHeroTransitionKey}
               className={HERO_SLIDE_BLEED_CLASS}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
