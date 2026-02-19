@@ -1,5 +1,6 @@
 import { Link, Navigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { motion, useReducedMotion } from "framer-motion";
 import { MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getCityBySlug } from "@/features/cities/api/cities.service";
@@ -7,10 +8,13 @@ import { getPropertiesByCitySlug } from "@/features/listings/api/properties.serv
 import { ListingCard } from "@/features/listings/components/ListingCard";
 import { toSearchItem } from "@/features/listings/utils/mappers";
 import { getSiteUrl, useSeo } from "@/lib/seo/useSeo";
+import { cn } from "@/lib/utils";
+import { getPlaceImageMotionPreset, inferPlaceImageMood } from "@/lib/visuals/placeImageMotion";
 
 export default function CityHubPage() {
   const { ville } = useParams();
   const citySlug = ville ?? "";
+  const reducedMotion = useReducedMotion();
 
   const cityQuery = useQuery({
     queryKey: ["city", citySlug],
@@ -78,12 +82,41 @@ export default function CityHubPage() {
   }
 
   const cityProperties = propertiesQuery.data ?? [];
+  const heroMood = inferPlaceImageMood(city.name, city.slug);
+  const heroMotionPreset = getPlaceImageMotionPreset(heroMood);
 
   return (
     <section className="container mx-auto px-4 py-10">
       <header className="relative overflow-hidden rounded-2xl border border-border">
-        <img src={city.heroImageUrl} alt={`Immobilier à ${city.name}`} className="h-64 w-full object-cover md:h-80" />
-        <div className="absolute inset-0 bg-gradient-to-br from-black/45 to-black/55" />
+        <motion.img
+          src={city.heroImageUrl}
+          alt={`Immobilier à ${city.name}`}
+          className="h-64 w-full object-cover md:h-80"
+          initial={reducedMotion ? { opacity: 0.9 } : { opacity: 0, scale: heroMotionPreset.enterScale, y: heroMotionPreset.enterY }}
+          animate={
+            reducedMotion
+              ? { opacity: 1 }
+              : { opacity: 1, scale: [1, heroMotionPreset.hoverScale - 0.01, 1], y: [0, heroMotionPreset.hoverY, 0] }
+          }
+          transition={
+            reducedMotion
+              ? { duration: 0.34, ease: "easeOut" }
+              : {
+                  opacity: { duration: 0.56, ease: [0.22, 1, 0.36, 1] },
+                  scale: { duration: heroMotionPreset.floatDuration, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" },
+                  y: { duration: heroMotionPreset.floatDuration, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" },
+                }
+          }
+        />
+        <motion.div
+          className={cn("absolute inset-0 bg-gradient-to-br", heroMotionPreset.overlayClassName)}
+          animate={reducedMotion ? { opacity: 0.66 } : { opacity: [0.6, 0.74, 0.6] }}
+          transition={{
+            duration: heroMotionPreset.floatDuration - 2,
+            repeat: Number.POSITIVE_INFINITY,
+            ease: "easeInOut",
+          }}
+        />
         <div className="absolute inset-0 flex flex-col justify-end p-6 text-white md:p-8">
           <p className="inline-flex items-center gap-1 text-xs uppercase tracking-[0.2em] text-white/85">
             <MapPin className="h-3.5 w-3.5" /> Ville

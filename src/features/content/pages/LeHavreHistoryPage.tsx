@@ -1,6 +1,9 @@
 import { Link } from "react-router-dom";
+import { motion, useReducedMotion } from "framer-motion";
 import { MapPin, Building2, Landmark, Anchor } from "lucide-react";
 import { getSiteUrl, useSeo } from "@/lib/seo/useSeo";
+import { cn } from "@/lib/utils";
+import { getPlaceImageMotionPreset, inferPlaceImageMood } from "@/lib/visuals/placeImageMotion";
 import {
   competitiveKeywordSignals,
   leHavreDistrictHistory,
@@ -14,6 +17,7 @@ const photosById = new Map(leHavreHistoryPhotos.map((photo) => [photo.id, photo]
 
 export default function LeHavreHistoryPage() {
   const siteUrl = getSiteUrl();
+  const reducedMotion = useReducedMotion();
 
   useSeo({
     title: "Histoire de l'immobilier au Havre | Quartiers, prix et dynamiques",
@@ -133,6 +137,8 @@ export default function LeHavreHistoryPage() {
       <section className="mt-10 space-y-7">
         {leHavreDistrictHistory.map((district) => {
           const districtPhotos = district.photoIds.map((photoId) => photosById.get(photoId)).filter(Boolean);
+          const districtMood = inferPlaceImageMood(district.name, district.id, district.headline);
+          const districtMotionPreset = getPlaceImageMotionPreset(districtMood);
 
           return (
             <article
@@ -188,15 +194,38 @@ export default function LeHavreHistoryPage() {
               </div>
 
               <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {districtPhotos.map((photo) => (
-                  <figure key={`${district.id}-${photo?.id}`} className="overflow-hidden rounded-xl border border-border">
-                    <img
-                      src={photo?.src}
-                      alt={photo?.alt}
-                      loading="lazy"
-                      className="aspect-[4/3] w-full object-cover"
-                      itemProp="image"
-                    />
+                {districtPhotos.map((photo, photoIndex) => (
+                  <figure key={`${district.id}-${photo?.id}`} className="group overflow-hidden rounded-xl border border-border">
+                    <div className="relative overflow-hidden">
+                      <motion.img
+                        src={photo?.src}
+                        alt={photo?.alt}
+                        loading="lazy"
+                        className={cn(
+                          "aspect-[4/3] w-full object-cover transition-transform",
+                          districtMotionPreset.hoverClassName,
+                        )}
+                        itemProp="image"
+                        initial={
+                          reducedMotion
+                            ? { opacity: 1 }
+                            : { opacity: 0, scale: districtMotionPreset.enterScale, y: districtMotionPreset.enterY }
+                        }
+                        whileInView={reducedMotion ? { opacity: 1 } : { opacity: 1, scale: 1, y: 0 }}
+                        viewport={{ once: true, amount: 0.24 }}
+                        transition={{
+                          duration: 0.42,
+                          delay: Math.min(photoIndex * 0.05, 0.2),
+                          ease: [0.22, 1, 0.36, 1],
+                        }}
+                      />
+                      <div
+                        className={cn(
+                          "pointer-events-none absolute inset-0 bg-gradient-to-tr opacity-0 transition-opacity duration-500 group-hover:opacity-95",
+                          districtMotionPreset.overlayClassName,
+                        )}
+                      />
+                    </div>
                     <figcaption className="space-y-2 p-3 text-xs text-muted-foreground">
                       <p>{photo?.caption}</p>
                       <p>

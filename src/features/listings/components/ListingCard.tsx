@@ -11,6 +11,7 @@ import {
   toCanonicalPropertyPath,
 } from "@/features/listings/utils/formatting";
 import { useFavoritesStore } from "@/features/favorites/useFavoritesStore";
+import { getPlaceImageMotionPreset, inferPlaceImageMood } from "@/lib/visuals/placeImageMotion";
 
 interface ListingCardProps {
   item: PropertySearchItem;
@@ -26,6 +27,8 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0 }: Listin
   const path = toCanonicalPropertyPath({ id: item.id, slug: item.slug });
   const status = getPropertyStatusLabel(item.status);
   const propertyTypeLabel = formatPropertyTypeLabel(item.type);
+  const imageMood = inferPlaceImageMood(item.city.name, item.title, propertyTypeLabel);
+  const imageMotionPreset = getPlaceImageMotionPreset(imageMood);
   const revealDelay = Math.min(revealIndex * 0.05, 0.45);
   const revealProps = reducedMotion
     ? { initial: false as const }
@@ -49,9 +52,18 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0 }: Listin
             <img
               src={item.coverImageUrl}
               alt={item.title}
-              className="aspect-[4/3] h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+              className={cn(
+                "aspect-[4/3] h-full w-full object-cover transition-transform",
+                imageMotionPreset.hoverClassName,
+              )}
               loading="lazy"
               itemProp="image"
+            />
+            <div
+              className={cn(
+                "pointer-events-none absolute inset-0 bg-gradient-to-tr opacity-0 transition-opacity duration-500 group-hover:opacity-100",
+                imageMotionPreset.overlayClassName,
+              )}
             />
             {status && <span className="absolute left-2 top-2 rounded-full bg-background/95 px-2 py-1 text-xs font-medium">{status}</span>}
           </div>
@@ -132,11 +144,19 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0 }: Listin
         <img
           src={item.coverImageUrl}
           alt={item.title}
-          className="aspect-[4/3] w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+          className={cn(
+            "aspect-[4/3] w-full object-cover transition-transform",
+            imageMotionPreset.hoverClassName,
+          )}
           loading="lazy"
           itemProp="image"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-80" />
+        <div
+          className={cn(
+            "pointer-events-none absolute inset-0 bg-gradient-to-t opacity-80 transition-opacity duration-500 group-hover:opacity-95",
+            imageMotionPreset.overlayClassName,
+          )}
+        />
         {status && <span className="absolute left-3 top-3 rounded-full bg-background/95 px-2 py-1 text-xs font-medium">{status}</span>}
         <button
           type="button"
