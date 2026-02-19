@@ -47,6 +47,7 @@ const HERO_KEN_BURNS_DURATION_S = HERO_ROTATE_MS / 1000 + 0.45;
 const HERO_CROSS_FADE_DURATION_S = 1.35;
 const HERO_PRELOAD_PRIORITY_COUNT = 3;
 const HERO_FALLBACK_IMAGE_URL = "/images/le-havre-history/panorama-le-havre.jpg";
+const HERO_EXCLUDED_IMAGE_PATTERN = /panorama-le-havre|foch\.staticlbi\.com\/original\/images\/header\/1\.jpg/i;
 const HERO_SLIDE_BLEED_CLASS = "absolute -inset-[20vw] sm:-inset-14 md:-inset-10 z-[1]";
 const HERO_MIN_DWELL_BEFORE_OVERRIDE_MS = HERO_ROTATE_MS - 600;
 
@@ -113,19 +114,24 @@ function shuffleWithRng<T>(items: T[], random: () => number): T[] {
   return shuffled;
 }
 
+function isExcludedHeroImage(url: string): boolean {
+  return HERO_EXCLUDED_IMAGE_PATTERN.test(url);
+}
+
 function buildHeroSlides(properties: Awaited<ReturnType<typeof getFeaturedProperties>>, seed: number): HeroSlide[] {
   const random = createSeededRng(seed ^ 0xa5a5a5a5);
   const orderedProperties = [...properties].sort((left, right) => left.id - right.id);
 
   const slides = orderedProperties
     .map((property) => {
-      if (!property.images.length) {
+      const availableImages = property.images.filter((image) => image.sourceUrl && !isExcludedHeroImage(image.sourceUrl));
+      if (!availableImages.length) {
         return null;
       }
 
-      const selectableCount = Math.min(property.images.length, 4);
+      const selectableCount = Math.min(availableImages.length, 4);
       const imageIndex = Math.floor(random() * selectableCount);
-      const selectedImage = property.images[imageIndex] ?? property.images[0];
+      const selectedImage = availableImages[imageIndex] ?? availableImages[0];
 
       return {
         id: property.id,
@@ -135,7 +141,8 @@ function buildHeroSlides(properties: Awaited<ReturnType<typeof getFeaturedProper
     })
     .filter((slide): slide is HeroSlide => Boolean(slide?.imageUrl));
 
-  const deduplicated = Array.from(new Map(slides.map((slide) => [slide.id, slide])).values());
+  const deduplicatedById = Array.from(new Map(slides.map((slide) => [slide.id, slide])).values());
+  const deduplicated = Array.from(new Map(deduplicatedById.map((slide) => [slide.imageUrl, slide])).values());
   const shuffled = shuffleWithSeed(deduplicated, seed ^ 0x9e3779b9);
   const desiredCount = shuffled.length <= 6 ? shuffled.length : Math.min(shuffled.length, 10);
   return shuffled.slice(0, desiredCount);
@@ -301,6 +308,7 @@ export default function HomePage() {
   const heroImageUrls = useMemo(() => heroSlides.map((slide) => slide.imageUrl), [heroSlides]);
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
   const [heroMotionStep, setHeroMotionStep] = useState(0);
+  const [hasDisplayedHeroSlide, setHasDisplayedHeroSlide] = useState(false);
   const [readyHeroUrls, setReadyHeroUrls] = useState<Set<string>>(() => new Set([HERO_FALLBACK_IMAGE_URL]));
   const heroQueueRef = useRef<number[]>([]);
   const previousActiveHeroSlideRef = useRef<HeroSlideIdentity>(null);
@@ -464,10 +472,22 @@ export default function HomePage() {
 
   const activeHeroSlide = heroSlides[safeHeroIndex];
   const isActiveHeroReady = Boolean(activeHeroSlide && readyHeroUrls.has(activeHeroSlide.imageUrl));
+  const shouldShowHeroFallback = heroSlides.length === 0 || (!hasDisplayedHeroSlide && !isActiveHeroReady);
   const activeHeroIdentityKey = activeHeroSlide ? `${activeHeroSlide.id}:${activeHeroSlide.imageUrl}` : null;
   const activeHeroTransitionKey = activeHeroSlide
     ? `${activeHeroSlide.id}-${safeHeroIndex}-${activeHeroSlide.imageUrl}`
     : `hero-${safeHeroIndex}`;
+
+  useEffect(() => {
+    if (heroSlides.length === 0) {
+      setHasDisplayedHeroSlide(false);
+      return;
+    }
+
+    if (isActiveHeroReady) {
+      setHasDisplayedHeroSlide(true);
+    }
+  }, [heroSlides.length, isActiveHeroReady]);
 
   useEffect(() => {
     if (!activeHeroIdentityKey) {
@@ -618,14 +638,16 @@ export default function HomePage() {
   return (
     <>
       <section className="relative min-h-[68vh] overflow-hidden">
-        <img
-          src={HERO_FALLBACK_IMAGE_URL}
-          alt="Panorama du Havre"
-          className="absolute inset-0 z-0 h-full w-full object-cover"
-          loading="eager"
-          decoding="async"
-          fetchPriority="high"
-        />
+        {shouldShowHeroFallback && (
+          <img
+            src={HERO_FALLBACK_IMAGE_URL}
+            alt="Panorama du Havre"
+            className="absolute inset-0 z-0 h-full w-full object-cover"
+            loading="eager"
+            decoding="async"
+            fetchPriority="high"
+          />
+        )}
         <AnimatePresence initial={false} mode="sync">
           {heroSlides.length > 0 && isActiveHeroReady && (
             <motion.div
@@ -666,7 +688,6 @@ export default function HomePage() {
                     mood={heroMood}
                     depthMapUrl="/images/motion/hero-depth-map.svg"
                     maskUrl="/images/motion/sea-mask.svg"
-                    fallbackImageUrl="/images/le-havre-history/panorama-le-havre.jpg"
                     reducedMotion={reducedMotion}
                     qualityTier={reducedMotion ? undefined : "high"}
                     qualityBoost={!reducedMotion}
