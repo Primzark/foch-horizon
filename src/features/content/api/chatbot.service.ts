@@ -94,7 +94,7 @@ const listingsPagePattern = /toutes les annonces|voir les annonces|catalogue|lis
 const sellPagePattern = /vendre|mise en vente|mettre en vente|mandat|vente de mon bien/;
 const estimationPagePattern = /estimer|estimation|avis de valeur|combien vaut|valeur de mon bien/;
 const legalIntentPattern = /mentions legales|confidentialite|rgpd|donnees personnelles|cookies|accessibilite|privacy|legal/;
-const selectionIntentPattern = /ma selection|my selection|favoris|wishlist|selection sauvegardee/;
+const selectionIntentPattern = /ma selection|my selection|favoris|wishlist|selection sauvegardee|biens sauvegardes/;
 const cityPageIntentPattern = /immobilier|prix|marche|quartier|investissement|annonce|bien|achat|vente|location|estimation/;
 const followPathRequestPattern = /ouvre|ouvrir|aller|go|cette page|ce lien|redirige/;
 const internalPathPattern = /(\/[a-z0-9-]+(?:\/[a-z0-9-]+)*(?:\?[a-z0-9=&_-]+)?)/i;
@@ -110,6 +110,7 @@ const knownInternalPaths = [
   "/avis",
   "/histoire-immobilier-le-havre",
   "/honoraires",
+  "/biens-sauvegardes",
   "/my-selection",
   "/mentions-legales",
   "/confidentialite",
@@ -606,9 +607,9 @@ function buildSelectionAnswer(): ChatbotReply {
   return {
     source: "local",
     answer:
-      "Votre selection sauvegardee est accessible sur /my-selection. Vous pouvez y retrouver les biens favoris puis partager la selection.",
+      "Votre selection sauvegardee est accessible sur /biens-sauvegardes. Vous pouvez y retrouver les biens favoris puis partager la selection.",
     suggestedPrompts: normalizePromptList([
-      "Ouvrir /my-selection",
+      "Ouvrir /biens-sauvegardes",
       "Je veux ajouter des biens a ma selection",
       "Ouvrir /biens",
     ]),

@@ -59,7 +59,7 @@ function SelectionLink({
 }) {
   return (
     <NavLink
-      to="/my-selection"
+      to="/biens-sauvegardes"
       onClick={onClick}
       className={({ isActive }) =>
         cn(
@@ -69,7 +69,7 @@ function SelectionLink({
           className,
         )
       }
-      aria-label={`My Selection (${count})`}
+      aria-label={`Biens sauvegardés (${count})`}
     >
       <Heart className={cn("h-5 w-5 text-brand", count > 0 && "fill-brand")} />
     </NavLink>

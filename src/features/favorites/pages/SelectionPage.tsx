@@ -28,7 +28,7 @@ export default function SelectionPage() {
   useSeo({
     title: "Biens sauvegardés | Foch Immobilier",
     description: "Retrouvez vos biens sauvegardés et reprenez votre recherche immobilière.",
-    canonicalPath: "/my-selection",
+    canonicalPath: "/biens-sauvegardes",
     noIndex: true,
   });
 

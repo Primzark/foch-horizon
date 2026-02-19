@@ -16,7 +16,7 @@ const quickLinks = [
   { href: "/biens", label: "Biens" },
   { href: "/histoire-immobilier-le-havre", label: "Histoire Le Havre" },
   { href: "/avis", label: "Avis clients" },
-  { href: "/my-selection", label: "My Selection" },
+  { href: "/biens-sauvegardes", label: "Biens sauvegardés" },
   { href: "/vendre", label: "Vendre" },
   { href: "/services", label: "Services" },
   { href: "/apropos", label: "À propos" },

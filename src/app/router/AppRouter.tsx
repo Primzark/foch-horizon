@@ -53,7 +53,8 @@ export function AppRouter() {
             <Route path="/avis" element={<ReviewsPage />} />
             <Route path="/histoire-immobilier-le-havre" element={<LeHavreHistoryPage />} />
             <Route path="/honoraires" element={<FeesPage />} />
-            <Route path="/my-selection" element={<SelectionPage />} />
+            <Route path="/biens-sauvegardes" element={<SelectionPage />} />
+            <Route path="/my-selection" element={<Navigate to="/biens-sauvegardes" replace />} />
 
             <Route path="/mentions-legales" element={<LegalTextPage page="mentions-legales" />} />
             <Route path="/confidentialite" element={<LegalTextPage page="confidentialite" />} />
