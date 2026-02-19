@@ -1,16 +1,30 @@
 import type { ReactNode } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
+import { getMotionDirectorProfile } from "@/lib/visuals/motionDirector";
+import type { PlaceImageMood } from "@/lib/visuals/placeImageMotion";
 
 interface ScrollRevealProps {
   children: ReactNode;
   className?: string;
   delay?: number;
   y?: number;
+  duration?: number;
+  mood?: PlaceImageMood;
 }
 
-export function ScrollReveal({ children, className, delay = 0, y = 18 }: ScrollRevealProps) {
-  const reducedMotion = useReducedMotion();
+export function ScrollReveal({
+  children,
+  className,
+  delay = 0,
+  y = 18,
+  duration,
+  mood = "urban",
+}: ScrollRevealProps) {
+  const { reducedMotion } = useMotionPreference();
+  const motionDirector = getMotionDirectorProfile(mood);
+  const resolvedDuration = duration ?? motionDirector.revealDuration;
 
   if (reducedMotion) {
     return <div className={className}>{children}</div>;
@@ -22,7 +36,7 @@ export function ScrollReveal({ children, className, delay = 0, y = 18 }: ScrollR
       initial={{ opacity: 0, y }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.2 }}
-      transition={{ duration: 0.34, delay, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: resolvedDuration, delay, ease: [0.22, 1, 0.36, 1] }}
     >
       {children}
     </motion.div>

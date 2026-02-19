@@ -1,5 +1,5 @@
 import { Heart, MapPin, Maximize, BedDouble, Bath, Car } from "lucide-react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import type { PropertySearchItem } from "@/types/api";
 import { cn } from "@/lib/utils";
@@ -14,6 +14,8 @@ import { useFavoritesStore } from "@/features/favorites/useFavoritesStore";
 import { getPlaceImageMotionPreset, inferPlaceImageMood } from "@/lib/visuals/placeImageMotion";
 import { PlaceAtmosphereLayer } from "@/components/visuals/PlaceAtmosphereLayer";
 import { ContextAwareParallax } from "@/components/visuals/ContextAwareParallax";
+import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
+import { getMotionDirectorProfile } from "@/lib/visuals/motionDirector";
 
 interface ListingCardProps {
   item: PropertySearchItem;
@@ -24,28 +26,31 @@ interface ListingCardProps {
 export function ListingCard({ item, viewMode = "grid", revealIndex = 0 }: ListingCardProps) {
   const toggleFavorite = useFavoritesStore((state) => state.toggle);
   const isFavorite = useFavoritesStore((state) => state.isFavorite(item.id));
-  const reducedMotion = useReducedMotion();
+  const { reducedMotion } = useMotionPreference();
 
   const path = toCanonicalPropertyPath({ id: item.id, slug: item.slug });
   const status = getPropertyStatusLabel(item.status);
   const propertyTypeLabel = formatPropertyTypeLabel(item.type);
   const imageMood = inferPlaceImageMood(item.city.name, item.title, propertyTypeLabel);
   const imageMotionPreset = getPlaceImageMotionPreset(imageMood);
+  const motionDirector = getMotionDirectorProfile(imageMood);
   const enableAmbientAnimation = !reducedMotion && revealIndex < 4;
-  const revealDelay = Math.min(revealIndex * 0.05, 0.45);
+  const revealDelay = Math.min(revealIndex * motionDirector.revealStagger, 0.45);
   const revealProps = reducedMotion
     ? { initial: false as const }
     : {
         initial: { opacity: 0, y: 20 },
         whileInView: { opacity: 1, y: 0 },
         viewport: { once: true, amount: 0.2 },
-        transition: { duration: 0.22, delay: revealDelay, ease: [0.22, 1, 0.36, 1] as const },
+        transition: { duration: motionDirector.revealDuration * 0.65, delay: revealDelay, ease: [0.22, 1, 0.36, 1] as const },
       };
+  const cardHoverMotion = reducedMotion ? undefined : { y: motionDirector.cardHoverLift, scale: motionDirector.cardHoverScale };
 
   if (viewMode === "list") {
     return (
       <motion.article
         {...revealProps}
+        whileHover={cardHoverMotion}
         className="overflow-hidden rounded-2xl border border-border bg-card"
         itemScope
         itemType="https://schema.org/RealEstateListing"
@@ -142,7 +147,8 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0 }: Listin
   return (
     <motion.article
       {...revealProps}
-      className="group overflow-hidden rounded-2xl border border-border bg-card transition-all duration-200 hover:-translate-y-0.5"
+      whileHover={cardHoverMotion}
+      className="group overflow-hidden rounded-2xl border border-border bg-card transition-all duration-200"
       itemScope
       itemType="https://schema.org/RealEstateListing"
     >

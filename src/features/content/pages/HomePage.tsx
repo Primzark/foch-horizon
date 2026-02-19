@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Building2, Compass, Handshake, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,8 @@ import { inferPlaceImageMood } from "@/lib/visuals/placeImageMotion";
 import { PlaceAtmosphereLayer } from "@/components/visuals/PlaceAtmosphereLayer";
 import { ScrollReveal } from "@/components/visuals/ScrollReveal";
 import { LivingPhotoWebGL } from "@/components/visuals/LivingPhotoWebGL";
+import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
+import { getMotionDirectorProfile } from "@/lib/visuals/motionDirector";
 
 const serviceCards = [
   {
@@ -45,7 +47,7 @@ export default function HomePage() {
   const setSearchDrawerOpen = useUiStore((state) => state.setSearchDrawerOpen);
   const featuredQuery = useQuery({ queryKey: ["featured-properties"], queryFn: () => getFeaturedProperties(6) });
   const reviewsQuery = useQuery({ queryKey: ["agency-google-reviews-home"], queryFn: getAgencyReviews });
-  const reducedMotion = useReducedMotion();
+  const { reducedMotion } = useMotionPreference();
   const siteUrl = getSiteUrl();
   const heroSlides = useMemo(
     () =>
@@ -78,6 +80,11 @@ export default function HomePage() {
 
   const activeHeroSlide = heroSlides[activeHeroIndex];
   const heroMood = inferPlaceImageMood(activeHeroSlide?.title, "Le Havre");
+  const heroMotionDirector = useMemo(() => getMotionDirectorProfile(heroMood), [heroMood]);
+  const ctaSweepStyle = useMemo(
+    () => ({ "--glass-sweep-duration": `${heroMotionDirector.ctaSweepDuration}s` }) as CSSProperties,
+    [heroMotionDirector.ctaSweepDuration],
+  );
 
   useSeo({
     title: "Foch Immobilier | Immobilier d'exception au Havre",
@@ -154,7 +161,7 @@ export default function HomePage() {
           <motion.h1
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35 }}
+            transition={{ duration: reducedMotion ? 0.3 : heroMotionDirector.revealDuration }}
             className="max-w-4xl font-display text-4xl text-white md:text-6xl"
           >
             Immobilier d'exception au Havre et sur la côte
@@ -162,7 +169,7 @@ export default function HomePage() {
           <motion.p
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, delay: 0.1 }}
+            transition={{ duration: reducedMotion ? 0.3 : heroMotionDirector.revealDuration, delay: reducedMotion ? 0.08 : heroMotionDirector.revealStagger * 2 }}
             className="mt-4 max-w-2xl text-base text-white/85 md:text-lg"
           >
             Depuis 1972, notre équipe accompagne les vendeurs, acquéreurs, bailleurs et locataires avec une approche sur-mesure.
@@ -171,8 +178,9 @@ export default function HomePage() {
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, delay: 0.2 }}
+            transition={{ duration: reducedMotion ? 0.3 : heroMotionDirector.revealDuration, delay: reducedMotion ? 0.12 : heroMotionDirector.revealStagger * 3 }}
             className="mt-8 flex flex-wrap gap-3"
+            style={ctaSweepStyle}
           >
             <Button size="lg" className="glass-sweep" asChild>
               <Link to="/biens">Explorer les biens</Link>
@@ -195,13 +203,13 @@ export default function HomePage() {
       </section>
 
       <section className="py-12">
-        <ScrollReveal>
+        <ScrollReveal mood={heroMood}>
           <MarketCounters />
         </ScrollReveal>
       </section>
 
       <section className="container mx-auto px-4 py-16">
-        <ScrollReveal>
+        <ScrollReveal mood={heroMood}>
           <div className="mb-6 flex items-end justify-between gap-4">
             <div>
               <h2 className="font-display text-3xl">Sélection du moment</h2>
@@ -214,7 +222,7 @@ export default function HomePage() {
           </div>
         </ScrollReveal>
 
-        <ScrollReveal delay={0.06}>
+        <ScrollReveal mood={heroMood} delay={heroMotionDirector.revealStagger + 0.02}>
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {(featuredQuery.data ?? []).map((property, index) => (
               <ListingCard key={property.id} item={toSearchItem(property)} revealIndex={index} />
@@ -224,7 +232,7 @@ export default function HomePage() {
       </section>
 
       <section className="container mx-auto px-4 pb-14">
-        <ScrollReveal>
+        <ScrollReveal mood={heroMood}>
           <h2 className="font-display text-3xl">Explorer par ville</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Pages locales dédiées pour faciliter votre recherche immobilière par secteur.
@@ -254,7 +262,7 @@ export default function HomePage() {
       <section className="border-y border-border bg-muted/30">
         <div className="container mx-auto grid gap-6 px-4 py-14 md:grid-cols-3">
           {serviceCards.map((card, index) => (
-            <ScrollReveal key={card.title} delay={index * 0.04}>
+            <ScrollReveal key={card.title} mood={heroMood} delay={Math.min(index * heroMotionDirector.revealStagger, 0.24)}>
               <Link
                 to={card.href}
                 className="group rounded-2xl border border-border bg-card p-6 transition-all duration-300 hover:-translate-y-1 hover:border-brand-border hover:shadow-[0_18px_44px_-30px_hsl(var(--brand)/0.35)]"
@@ -270,7 +278,7 @@ export default function HomePage() {
 
       {reviewsQuery.data && (
         <section className="container mx-auto px-4 py-16">
-          <ScrollReveal>
+          <ScrollReveal mood={heroMood}>
             <div className="mb-6 flex items-end justify-between gap-4">
               <div>
                 <h2 className="font-display text-3xl">Avis Google</h2>
@@ -287,7 +295,7 @@ export default function HomePage() {
 
           <div className="grid gap-4 md:grid-cols-3">
             {reviewsQuery.data.reviews.slice(0, 3).map((review, index) => (
-              <ScrollReveal key={review.id} delay={index * 0.04}>
+              <ScrollReveal key={review.id} mood={heroMood} delay={Math.min(index * heroMotionDirector.revealStagger, 0.24)}>
                 <article className="rounded-2xl border border-border bg-card p-5 transition-all duration-300 hover:-translate-y-1 hover:border-brand-border hover:shadow-[0_18px_40px_-34px_hsl(var(--brand)/0.3)]">
                   <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">{review.authorName}</p>
                   <p className="mt-2 text-sm text-muted-foreground">{review.text}</p>
@@ -299,13 +307,13 @@ export default function HomePage() {
       )}
 
       <section className="container mx-auto px-4 py-16">
-        <ScrollReveal>
+        <ScrollReveal mood={heroMood}>
           <h2 className="font-display text-3xl">L'équipe</h2>
           <p className="mt-1 text-sm text-muted-foreground">Des interlocuteurs identifiés pour chaque projet.</p>
         </ScrollReveal>
         <div className="mt-6 grid gap-5 md:grid-cols-3">
           {agents.map((agent, index) => (
-            <ScrollReveal key={agent.id} delay={index * 0.05}>
+            <ScrollReveal key={agent.id} mood={heroMood} delay={Math.min(index * heroMotionDirector.revealStagger, 0.25)}>
               <article className="group rounded-2xl border border-border p-5 transition-all duration-300 hover:-translate-y-1 hover:border-brand-border hover:shadow-[0_18px_40px_-34px_hsl(var(--brand)/0.3)]">
                 <img
                   src={agent.portraitUrl}

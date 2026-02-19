@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 import { cn } from "@/lib/utils";
 import { getPlaceParallaxPreset, type PlaceImageMood } from "@/lib/visuals/placeImageMotion";
+import { getMotionDirectorProfile } from "@/lib/visuals/motionDirector";
+import { detectMotionQualityTier, getMotionQualityConfig, type MotionQualityTier } from "@/lib/visuals/motionQuality";
+import { generateLivingPhotoMapsFromImage, resolveLivingPhotoAssetCandidate } from "@/lib/visuals/livingPhotoAssets";
+import { trackMotionTelemetry } from "@/lib/analytics/motionTelemetry";
 
 interface LivingPhotoWebGLProps {
   imageUrl: string;
@@ -10,6 +14,8 @@ interface LivingPhotoWebGLProps {
   maskUrl?: string;
   fallbackImageUrl?: string;
   reducedMotion?: boolean;
+  qualityTier?: MotionQualityTier;
+  source?: string;
   className?: string;
 }
 
@@ -53,8 +59,8 @@ void main() {
   float depthCentered = depth - 0.5;
 
   vec2 parallaxOffset = vec2(
-    uPointer.x * (0.75 + depthCentered * 0.55),
-    uPointer.y * (0.62 + depthCentered * 0.42)
+    uPointer.x * (0.74 + depthCentered * 0.58),
+    uPointer.y * (0.6 + depthCentered * 0.45)
   ) * uParallaxStrength;
 
   float maskSample = texture2D(uMask, uv).r;
@@ -71,7 +77,7 @@ void main() {
   vec2 sampledUv = clamp(uv + parallaxOffset + cinematicOffset, vec2(0.001), vec2(0.999));
   vec4 color = texture2D(uImage, sampledUv);
 
-  float glint = smoothstep(0.0, 1.0, sin((uv.x * 10.0) + uTime * 0.21)) * motionMask * 0.035;
+  float glint = smoothstep(0.0, 1.0, sin((uv.x * 10.0) + uTime * 0.21)) * motionMask * 0.03;
   color.rgb += vec3(glint);
 
   gl_FragColor = color;
@@ -90,6 +96,9 @@ interface GlUniforms {
   useDepth: WebGLUniformLocation | null;
   useMask: WebGLUniformLocation | null;
 }
+
+const imageCache = new Map<string, Promise<HTMLImageElement>>();
+const generatedMapCache = new Map<string, { depthCanvas: HTMLCanvasElement; maskCanvas: HTMLCanvasElement }>();
 
 function compileShader(gl: WebGLRenderingContext, type: number, source: string): WebGLShader {
   const shader = gl.createShader(type);
@@ -162,8 +171,13 @@ function createSolidTexture(gl: WebGLRenderingContext, rgba: [number, number, nu
   return texture;
 }
 
-async function loadImage(url: string): Promise<HTMLImageElement> {
-  return await new Promise((resolve, reject) => {
+function loadImage(url: string): Promise<HTMLImageElement> {
+  const cached = imageCache.get(url);
+  if (cached) {
+    return cached;
+  }
+
+  const loadingPromise = new Promise<HTMLImageElement>((resolve, reject) => {
     const img = new Image();
     img.decoding = "async";
     if (/^https?:\/\//.test(url)) {
@@ -174,10 +188,12 @@ async function loadImage(url: string): Promise<HTMLImageElement> {
     img.onerror = () => reject(new Error(`Failed to load image: ${url}`));
     img.src = url;
   });
+
+  imageCache.set(url, loadingPromise);
+  return loadingPromise;
 }
 
-async function loadTexture(gl: WebGLRenderingContext, url: string): Promise<WebGLTexture> {
-  const image = await loadImage(url);
+async function createTextureFromImage(gl: WebGLRenderingContext, image: HTMLImageElement): Promise<WebGLTexture> {
   const texture = gl.createTexture();
   if (!texture) {
     throw new Error("Unable to create texture.");
@@ -190,6 +206,28 @@ async function loadTexture(gl: WebGLRenderingContext, url: string): Promise<WebG
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+
+  return texture;
+}
+
+async function loadTexture(gl: WebGLRenderingContext, url: string): Promise<WebGLTexture> {
+  const image = await loadImage(url);
+  return await createTextureFromImage(gl, image);
+}
+
+function createTextureFromCanvas(gl: WebGLRenderingContext, canvas: HTMLCanvasElement): WebGLTexture {
+  const texture = gl.createTexture();
+  if (!texture) {
+    throw new Error("Unable to create texture.");
+  }
+
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, canvas);
 
   return texture;
 }
@@ -224,6 +262,15 @@ function resolveTextureSource(primary: string, fallback?: string): string {
   return primary;
 }
 
+interface TelemetryState {
+  frames: number;
+  droppedFrames: number;
+  fpsSum: number;
+  pointerLagAccum: number;
+  lastTimestamp: number;
+  sent: boolean;
+}
+
 export function LivingPhotoWebGL({
   imageUrl,
   alt,
@@ -232,16 +279,36 @@ export function LivingPhotoWebGL({
   maskUrl,
   fallbackImageUrl,
   reducedMotion = false,
+  qualityTier,
+  source = "home_hero",
   className,
 }: LivingPhotoWebGLProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const pointerTargetRef = useRef({ x: 0, y: 0 });
+  const telemetryRef = useRef<TelemetryState>({
+    frames: 0,
+    droppedFrames: 0,
+    fpsSum: 0,
+    pointerLagAccum: 0,
+    lastTimestamp: 0,
+    sent: false,
+  });
+
   const [fallbackMode, setFallbackMode] = useState(false);
+
   const parallaxPreset = useMemo(() => getPlaceParallaxPreset(mood), [mood]);
+  const motionDirector = useMemo(() => getMotionDirectorProfile(mood), [mood]);
+  const activeQualityTier = useMemo(() => qualityTier ?? detectMotionQualityTier(), [qualityTier]);
+  const qualityConfig = useMemo(() => getMotionQualityConfig(activeQualityTier), [activeQualityTier]);
+
+  const resolvedAssetCandidate = useMemo(() => resolveLivingPhotoAssetCandidate(imageUrl), [imageUrl]);
+  const effectiveDepthUrl = depthMapUrl ?? resolvedAssetCandidate.depthMapUrl;
+  const effectiveMaskUrl = maskUrl ?? resolvedAssetCandidate.maskUrl;
+  const effectiveFallbackUrl = fallbackImageUrl ?? resolvedAssetCandidate.fallbackImageUrl;
 
   const baseTextureSource = useMemo(
-    () => resolveTextureSource(imageUrl, fallbackImageUrl),
-    [fallbackImageUrl, imageUrl],
+    () => resolveTextureSource(imageUrl, effectiveFallbackUrl),
+    [effectiveFallbackUrl, imageUrl],
   );
 
   useEffect(() => {
@@ -266,8 +333,37 @@ export function LivingPhotoWebGL({
     let animationFrameId = 0;
     let observer: ResizeObserver | null = null;
     const cleanupFns: Array<() => void> = [];
-
     const pointerCurrent = { x: 0, y: 0 };
+
+    telemetryRef.current = {
+      frames: 0,
+      droppedFrames: 0,
+      fpsSum: 0,
+      pointerLagAccum: 0,
+      lastTimestamp: 0,
+      sent: false,
+    };
+
+    const publishTelemetry = (force = false) => {
+      const telemetry = telemetryRef.current;
+      if (telemetry.sent || telemetry.frames < (force ? 60 : qualityConfig.telemetrySampleFrames)) {
+        return;
+      }
+
+      telemetry.sent = true;
+      const averageFps = telemetry.fpsSum / Math.max(1, telemetry.frames);
+      const droppedFrameRatio = telemetry.droppedFrames / Math.max(1, telemetry.frames);
+      const pointerLagMs = (telemetry.pointerLagAccum / Math.max(1, telemetry.frames)) * 16.67;
+
+      trackMotionTelemetry({
+        source,
+        mood,
+        qualityTier: activeQualityTier,
+        averageFps,
+        droppedFrameRatio,
+        pointerLagMs,
+      });
+    };
 
     const setup = async () => {
       try {
@@ -294,33 +390,66 @@ export function LivingPhotoWebGL({
         }
 
         gl.bindBuffer(gl.ARRAY_BUFFER, quadBuffer);
-        gl.bufferData(
-          gl.ARRAY_BUFFER,
-          new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]),
-          gl.STATIC_DRAW,
-        );
-
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
         gl.enableVertexAttribArray(positionAttribute);
         gl.vertexAttribPointer(positionAttribute, 2, gl.FLOAT, false, 0, 0);
 
-        const imageTexture = await loadTexture(gl, baseTextureSource);
-        const depthTexture = depthMapUrl ? await loadTexture(gl, depthMapUrl) : createSolidTexture(gl, [128, 128, 128, 255]);
-        const maskTexture = maskUrl ? await loadTexture(gl, maskUrl) : createSolidTexture(gl, [255, 255, 255, 255]);
+        const baseImage = await loadImage(baseTextureSource);
+        const imageTexture = await createTextureFromImage(gl, baseImage);
+
+        let generatedMaps = generatedMapCache.get(`${baseTextureSource}|${mood}|${activeQualityTier}`);
+        if (!generatedMaps && (!effectiveDepthUrl || !effectiveMaskUrl)) {
+          generatedMaps = generateLivingPhotoMapsFromImage(baseImage, mood, activeQualityTier);
+          generatedMapCache.set(`${baseTextureSource}|${mood}|${activeQualityTier}`, generatedMaps);
+        }
+
+        let depthTexture: WebGLTexture | null = null;
+        let maskTexture: WebGLTexture | null = null;
+
+        if (effectiveDepthUrl) {
+          try {
+            depthTexture = await loadTexture(gl, effectiveDepthUrl);
+          } catch {
+            depthTexture = null;
+          }
+        }
+
+        if (effectiveMaskUrl) {
+          try {
+            maskTexture = await loadTexture(gl, effectiveMaskUrl);
+          } catch {
+            maskTexture = null;
+          }
+        }
+
+        if (!depthTexture && generatedMaps) {
+          depthTexture = createTextureFromCanvas(gl, generatedMaps.depthCanvas);
+        }
+
+        if (!maskTexture && generatedMaps) {
+          maskTexture = createTextureFromCanvas(gl, generatedMaps.maskCanvas);
+        }
+
+        const hasDepthMap = Boolean(depthTexture);
+        const hasMaskMap = Boolean(maskTexture);
+
+        depthTexture ??= createSolidTexture(gl, [128, 128, 128, 255]);
+        maskTexture ??= createSolidTexture(gl, [255, 255, 255, 255]);
 
         bindTextureUnit(gl, imageTexture, 0, uniforms.image);
         bindTextureUnit(gl, depthTexture, 1, uniforms.depth);
         bindTextureUnit(gl, maskTexture, 2, uniforms.mask);
 
-        gl.uniform1f(uniforms.useDepth, depthMapUrl ? 1 : 0);
-        gl.uniform1f(uniforms.useMask, maskUrl ? 1 : 0);
-        gl.uniform1f(uniforms.parallaxStrength, parallaxPreset.pointerX * 0.00084);
-        gl.uniform1f(uniforms.rippleStrength, mood === "coastal" ? 1 : 0.38);
-        gl.uniform1f(uniforms.windStrength, mood === "coastal" ? 1 : 0.42);
+        gl.uniform1f(uniforms.useDepth, hasDepthMap ? 1 : 0);
+        gl.uniform1f(uniforms.useMask, hasMaskMap ? 1 : 0);
+        gl.uniform1f(uniforms.parallaxStrength, parallaxPreset.pointerX * 0.00084 * (activeQualityTier === "low" ? 0.86 : 1));
+        gl.uniform1f(uniforms.rippleStrength, motionDirector.webglRippleStrength * (activeQualityTier === "low" ? 0.8 : 1));
+        gl.uniform1f(uniforms.windStrength, motionDirector.webglWindStrength * (activeQualityTier === "low" ? 0.8 : 1));
 
         const resize = () => {
-          const dpr = Math.min(window.devicePixelRatio || 1, 2);
-          const width = Math.max(1, Math.floor(canvas.clientWidth * dpr));
-          const height = Math.max(1, Math.floor(canvas.clientHeight * dpr));
+          const dpr = Math.min(window.devicePixelRatio || 1, qualityConfig.dprCap);
+          const width = Math.max(1, Math.floor(canvas.clientWidth * dpr * qualityConfig.renderScale));
+          const height = Math.max(1, Math.floor(canvas.clientHeight * dpr * qualityConfig.renderScale));
           if (canvas.width !== width || canvas.height !== height) {
             canvas.width = width;
             canvas.height = height;
@@ -342,13 +471,33 @@ export function LivingPhotoWebGL({
             return;
           }
 
-          pointerCurrent.x += (pointerTargetRef.current.x - pointerCurrent.x) * 0.07;
-          pointerCurrent.y += (pointerTargetRef.current.y - pointerCurrent.y) * 0.07;
+          pointerCurrent.x += (pointerTargetRef.current.x - pointerCurrent.x) * qualityConfig.pointerLerp;
+          pointerCurrent.y += (pointerTargetRef.current.y - pointerCurrent.y) * qualityConfig.pointerLerp;
+
+          const telemetry = telemetryRef.current;
+          if (telemetry.lastTimestamp > 0) {
+            const delta = timestamp - telemetry.lastTimestamp;
+            if (delta > 0) {
+              telemetry.frames += 1;
+              telemetry.fpsSum += 1000 / delta;
+              if (delta > 34) {
+                telemetry.droppedFrames += 1;
+              }
+
+              telemetry.pointerLagAccum += Math.hypot(
+                pointerTargetRef.current.x - pointerCurrent.x,
+                pointerTargetRef.current.y - pointerCurrent.y,
+              );
+
+              publishTelemetry();
+            }
+          }
+          telemetry.lastTimestamp = timestamp;
 
           gl.uniform1f(uniforms.time, timestamp * 0.001);
           gl.uniform2f(uniforms.pointer, pointerCurrent.x, pointerCurrent.y);
-
           gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
           animationFrameId = window.requestAnimationFrame(render);
         };
 
@@ -356,6 +505,7 @@ export function LivingPhotoWebGL({
         animationFrameId = window.requestAnimationFrame(render);
 
         cleanupFns.push(() => {
+          publishTelemetry(true);
           gl.deleteTexture(imageTexture);
           gl.deleteTexture(depthTexture);
           gl.deleteTexture(maskTexture);
@@ -377,7 +527,22 @@ export function LivingPhotoWebGL({
       observer?.disconnect();
       cleanupFns.forEach((cleanup) => cleanup());
     };
-  }, [baseTextureSource, depthMapUrl, fallbackImageUrl, maskUrl, mood, parallaxPreset.pointerX, reducedMotion]);
+  }, [
+    activeQualityTier,
+    baseTextureSource,
+    effectiveDepthUrl,
+    effectiveMaskUrl,
+    mood,
+    motionDirector.webglRippleStrength,
+    motionDirector.webglWindStrength,
+    parallaxPreset.pointerX,
+    qualityConfig.dprCap,
+    qualityConfig.pointerLerp,
+    qualityConfig.renderScale,
+    qualityConfig.telemetrySampleFrames,
+    reducedMotion,
+    source,
+  ]);
 
   const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
     if (reducedMotion || fallbackMode || event.pointerType === "touch") {
@@ -399,13 +564,7 @@ export function LivingPhotoWebGL({
   };
 
   if (fallbackMode || reducedMotion) {
-    return (
-      <img
-        src={baseTextureSource}
-        alt={alt}
-        className={cn("h-full w-full object-cover", className)}
-      />
-    );
+    return <img src={baseTextureSource} alt={alt} className={cn("h-full w-full object-cover", className)} />;
   }
 
   return (

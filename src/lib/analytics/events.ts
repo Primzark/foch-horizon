@@ -5,7 +5,9 @@ export type AnalyticsEventName =
   | "gallery_opened"
   | "lead_submitted"
   | "phone_clicked"
-  | "extranet_clicked";
+  | "extranet_clicked"
+  | "motion_performance"
+  | "motion_pref_changed";
 
 export function trackEvent(name: AnalyticsEventName, payload?: Record<string, unknown>): void {
   if (typeof window === "undefined") {

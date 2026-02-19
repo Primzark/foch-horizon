@@ -181,7 +181,7 @@
     );
     pointer-events: none;
     mix-blend-mode: screen;
-    animation: glass-sweep 5.8s ease-in-out infinite;
+    animation: glass-sweep var(--glass-sweep-duration, 5.8s) ease-in-out infinite;
   }
 
   .font-display {

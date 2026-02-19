@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { searchProperties } from "@/features/listings/api/properties.service";
 import { ActiveFiltersChips } from "@/features/listings/components/ActiveFiltersChips";
@@ -14,6 +14,7 @@ import { useFavoritesStore } from "@/features/favorites/useFavoritesStore";
 import { useUiStore } from "@/lib/state/useUiStore";
 import { getSiteUrl, useSeo } from "@/lib/seo/useSeo";
 import { toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
+import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
 
 const defaultParams: PropertySearchParams = {
   page: 1,
@@ -24,7 +25,7 @@ const defaultParams: PropertySearchParams = {
 export default function ListingsIndexPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const reducedMotion = useReducedMotion();
+  const { reducedMotion } = useMotionPreference();
   const setSearchDrawerOpen = useUiStore((state) => state.setSearchDrawerOpen);
   const favoriteIds = useFavoritesStore((state) => state.ids);
   const siteUrl = getSiteUrl();

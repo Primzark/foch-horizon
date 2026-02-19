@@ -1,6 +1,6 @@
 import { Link, Navigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getCityBySlug } from "@/features/cities/api/cities.service";
@@ -12,11 +12,13 @@ import { cn } from "@/lib/utils";
 import { getPlaceImageMotionPreset, inferPlaceImageMood } from "@/lib/visuals/placeImageMotion";
 import { PlaceAtmosphereLayer } from "@/components/visuals/PlaceAtmosphereLayer";
 import { ContextAwareParallax } from "@/components/visuals/ContextAwareParallax";
+import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
+import { getMotionDirectorProfile } from "@/lib/visuals/motionDirector";
 
 export default function CityHubPage() {
   const { ville } = useParams();
   const citySlug = ville ?? "";
-  const reducedMotion = useReducedMotion();
+  const { reducedMotion } = useMotionPreference();
 
   const cityQuery = useQuery({
     queryKey: ["city", citySlug],
@@ -86,6 +88,7 @@ export default function CityHubPage() {
   const cityProperties = propertiesQuery.data ?? [];
   const heroMood = inferPlaceImageMood(city.name, city.slug);
   const heroMotionPreset = getPlaceImageMotionPreset(heroMood);
+  const motionDirector = getMotionDirectorProfile(heroMood);
 
   return (
     <section className="container mx-auto px-4 py-10">
@@ -105,7 +108,7 @@ export default function CityHubPage() {
               reducedMotion
                 ? { duration: 0.34, ease: "easeOut" }
                 : {
-                    opacity: { duration: 0.56, ease: [0.22, 1, 0.36, 1] },
+                    opacity: { duration: motionDirector.revealDuration + 0.16, ease: [0.22, 1, 0.36, 1] },
                     scale: { duration: heroMotionPreset.floatDuration, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" },
                     y: { duration: heroMotionPreset.floatDuration, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" },
                   }
@@ -117,7 +120,7 @@ export default function CityHubPage() {
           className={cn("absolute inset-0 z-[2] bg-gradient-to-br", heroMotionPreset.overlayClassName)}
           animate={reducedMotion ? { opacity: 0.66 } : { opacity: [0.6, 0.74, 0.6] }}
           transition={{
-            duration: heroMotionPreset.floatDuration - 2,
+            duration: Math.max(heroMotionPreset.floatDuration - 2, motionDirector.revealDuration + 8),
             repeat: Number.POSITIVE_INFINITY,
             ease: "easeInOut",
           }}

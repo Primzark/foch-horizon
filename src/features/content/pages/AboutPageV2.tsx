@@ -1,9 +1,10 @@
 import { Link } from "react-router-dom";
-import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { Download, ExternalLink, Facebook } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { agents } from "@/features/listings/data/agents";
 import { useSeo } from "@/lib/seo/useSeo";
+import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
 
 const aboutImageOne = "https://www.fochimmobilier.com/static/img/fochimmobilier-agence-immobiliere-le-havre-76_1.jpg";
 const aboutImageTwo = "https://www.fochimmobilier.com/static/img/fochimmobilier-agence-immobiliere-le-havre-76_2.jpg";
@@ -17,7 +18,7 @@ const fadeUp = {
 };
 
 export default function AboutPageV2() {
-  const reducedMotion = useReducedMotion();
+  const { reducedMotion } = useMotionPreference();
   const { scrollYProgress } = useScroll();
   const imageShift = useTransform(scrollYProgress, [0, 1], [0, reducedMotion ? 0 : -22]);
 

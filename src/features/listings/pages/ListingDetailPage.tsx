@@ -1,6 +1,6 @@
 import { Link, Navigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { motion, useReducedMotion, useScroll } from "framer-motion";
+import { motion, useScroll } from "framer-motion";
 import { useRef } from "react";
 import { Bath, BedDouble, Car, Copy, Heart, MapPin, Maximize, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ import {
 import { useFavoritesStore } from "@/features/favorites/useFavoritesStore";
 import { getSiteUrl, useSeo } from "@/lib/seo/useSeo";
 import { trackEvent } from "@/lib/analytics/events";
+import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
 
 function parseRouteIdAndSlug(rawIdSlug?: string): { id: number; slug: string | null } | null {
   if (!rawIdSlug) {
@@ -38,7 +39,7 @@ function parseRouteIdAndSlug(rawIdSlug?: string): { id: number; slug: string | n
 }
 
 export default function ListingDetailPage() {
-  const reducedMotion = useReducedMotion();
+  const { reducedMotion } = useMotionPreference();
   const contentRef = useRef<HTMLDivElement | null>(null);
   const params = useParams();
   const favoriteIds = useFavoritesStore((state) => state.ids);

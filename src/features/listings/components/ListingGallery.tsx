@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Expand, Images } from "lucide-react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Dialog,
   DialogContent,
@@ -15,10 +15,12 @@ import { cn } from "@/lib/utils";
 import { getPlaceImageMotionPreset, inferPlaceImageMood } from "@/lib/visuals/placeImageMotion";
 import { PlaceAtmosphereLayer } from "@/components/visuals/PlaceAtmosphereLayer";
 import { ContextAwareParallax } from "@/components/visuals/ContextAwareParallax";
+import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
+import { getMotionDirectorProfile } from "@/lib/visuals/motionDirector";
 
 export function ListingGallery({ images, title }: { images: PropertyImage[]; title: string }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const reducedMotion = useReducedMotion();
+  const { reducedMotion } = useMotionPreference();
 
   if (images.length === 0) {
     return (
@@ -31,6 +33,7 @@ export function ListingGallery({ images, title }: { images: PropertyImage[]; tit
   const activeImage = images[selectedIndex];
   const imageMood = inferPlaceImageMood(title, activeImage.altText);
   const imageMotionPreset = getPlaceImageMotionPreset(imageMood);
+  const motionDirector = getMotionDirectorProfile(imageMood);
 
   return (
     <div>
@@ -51,7 +54,7 @@ export function ListingGallery({ images, title }: { images: PropertyImage[]; tit
               reducedMotion
                 ? { duration: 0.28, ease: "easeOut" }
                 : {
-                    opacity: { duration: 0.42, ease: [0.22, 1, 0.36, 1] },
+                    opacity: { duration: motionDirector.revealDuration + 0.06, ease: [0.22, 1, 0.36, 1] },
                     scale: { duration: imageMotionPreset.floatDuration, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" },
                     y: { duration: imageMotionPreset.floatDuration, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" },
                   }
@@ -92,7 +95,11 @@ export function ListingGallery({ images, title }: { images: PropertyImage[]; tit
                   initial={reducedMotion ? { opacity: 1 } : { opacity: 0, y: 16 }}
                   whileInView={reducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.24 }}
-                  transition={{ duration: 0.28, delay: Math.min(index * 0.03, 0.2), ease: "easeOut" }}
+                  transition={{
+                    duration: motionDirector.revealDuration * 0.78,
+                    delay: Math.min(index * motionDirector.revealStagger, 0.2),
+                    ease: "easeOut",
+                  }}
                 />
               ))}
             </div>

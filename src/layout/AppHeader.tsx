@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
-import { ExternalLink, Heart, Menu, Phone, Search } from "lucide-react";
+import { ExternalLink, Heart, Menu, Phone, Search, Wind } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useFavoritesStore } from "@/features/favorites/useFavoritesStore";
@@ -84,7 +84,10 @@ export function AppHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const setSearchDrawerOpen = useUiStore((state) => state.setSearchDrawerOpen);
+  const motionPreference = useUiStore((state) => state.motionPreference);
+  const setMotionPreference = useUiStore((state) => state.setMotionPreference);
   const favoriteIds = useFavoritesStore((state) => state.ids);
+  const reducedMotionEnabled = motionPreference === "reduced";
 
   useEffect(() => {
     const onScroll = () => {
@@ -178,6 +181,23 @@ export function AppHeader() {
             >
               <Search className="h-4 w-4" />
             </button>
+            <button
+              type="button"
+              className={cn(
+                "inline-flex h-10 w-10 items-center justify-center rounded-full border bg-background/90 transition-colors",
+                reducedMotionEnabled
+                  ? "border-brand-border bg-brand-soft text-brand-strong"
+                  : "border-border hover:border-brand-border hover:bg-brand-soft/70",
+              )}
+              aria-label={reducedMotionEnabled ? "Réactiver les animations" : "Réduire les animations"}
+              onClick={() => {
+                const nextPreference = reducedMotionEnabled ? "system" : "reduced";
+                setMotionPreference(nextPreference);
+                trackEvent("motion_pref_changed", { preference: nextPreference, source: "header" });
+              }}
+            >
+              <Wind className="h-4 w-4" />
+            </button>
             <a
               href="tel:0235425176"
               className="hidden h-10 w-10 items-center justify-center rounded-full border border-border bg-background/90 transition-colors hover:border-brand-border hover:bg-brand-soft/70 md:inline-flex"
@@ -258,6 +278,24 @@ export function AppHeader() {
                   Estimer mon bien
                 </Link>
               </SheetClose>
+
+              <button
+                type="button"
+                className={cn(
+                  "mt-1 inline-flex items-center gap-2 rounded-lg border px-3 py-3 text-[1rem] font-medium transition-colors",
+                  reducedMotionEnabled
+                    ? "border-brand-border bg-brand-soft text-brand-strong"
+                    : "border-border text-foreground hover:bg-muted",
+                )}
+                onClick={() => {
+                  const nextPreference = reducedMotionEnabled ? "system" : "reduced";
+                  setMotionPreference(nextPreference);
+                  trackEvent("motion_pref_changed", { preference: nextPreference, source: "mobile_menu" });
+                }}
+              >
+                <Wind className="h-4 w-4" />
+                {reducedMotionEnabled ? "Animations réduites" : "Réduire les animations"}
+              </button>
 
               <SheetClose asChild>
                 <a

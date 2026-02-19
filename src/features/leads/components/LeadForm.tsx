@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { submitLead } from "@/features/leads/api/leads.service";
 import type { LeadSource } from "@/types/domain";
 import { trackEvent } from "@/lib/analytics/events";
+import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
 
 interface LeadFormProps {
   source: LeadSource;
@@ -33,7 +34,7 @@ export function LeadForm({
 }: LeadFormProps) {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const reducedMotion = useReducedMotion();
+  const { reducedMotion } = useMotionPreference();
   const [formState, setFormState] = useState({
     firstName: "",
     lastName: "",

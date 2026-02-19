@@ -1,7 +1,9 @@
-import { useEffect, type PointerEvent, type ReactNode } from "react";
+import { useEffect, useMemo, type PointerEvent, type ReactNode } from "react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { getPlaceParallaxPreset, type PlaceImageMood } from "@/lib/visuals/placeImageMotion";
+import { getMotionDirectorProfile } from "@/lib/visuals/motionDirector";
+import { detectMotionQualityTier, getMotionQualityConfig } from "@/lib/visuals/motionQuality";
 
 interface ContextAwareParallaxProps {
   mood: PlaceImageMood;
@@ -27,7 +29,15 @@ export function ContextAwareParallax({
   intensity = "balanced",
 }: ContextAwareParallaxProps) {
   const parallaxPreset = getPlaceParallaxPreset(mood);
-  const intensityFactor = intensityMap[intensity];
+  const motionDirector = getMotionDirectorProfile(mood);
+  const qualityTier = useMemo(() => detectMotionQualityTier(), []);
+  const qualityConfig = useMemo(() => getMotionQualityConfig(qualityTier), [qualityTier]);
+  const qualityIntensityFactor = qualityTier === "low" ? 0.72 : qualityTier === "medium" ? 0.88 : 1;
+  const moodIntensityFactor = 0.92 + motionDirector.particleDensity * 0.08;
+  const intensityFactor = intensityMap[intensity] * qualityIntensityFactor * moodIntensityFactor;
+  const pointerScale = Math.min(1, qualityConfig.renderScale + 0.22);
+  const springStiffness = parallaxPreset.springStiffness * (qualityTier === "low" ? 0.88 : qualityTier === "medium" ? 0.94 : 1);
+  const springDamping = parallaxPreset.springDamping + (qualityTier === "low" ? 3 : qualityTier === "medium" ? 2 : 0);
 
   const pointerX = useMotionValue(0);
   const pointerY = useMotionValue(0);
@@ -38,18 +48,18 @@ export function ContextAwareParallax({
   const composedY = useTransform(() => pointerY.get() + scrollY.get());
 
   const x = useSpring(composedX, {
-    stiffness: parallaxPreset.springStiffness,
-    damping: parallaxPreset.springDamping,
+    stiffness: springStiffness,
+    damping: springDamping,
     mass: 0.32,
   });
   const y = useSpring(composedY, {
-    stiffness: parallaxPreset.springStiffness,
-    damping: parallaxPreset.springDamping,
+    stiffness: springStiffness,
+    damping: springDamping,
     mass: 0.34,
   });
   const rotate = useSpring(rotateZ, {
-    stiffness: parallaxPreset.springStiffness,
-    damping: parallaxPreset.springDamping + 2,
+    stiffness: springStiffness,
+    damping: springDamping + 2,
     mass: 0.4,
   });
 
@@ -94,9 +104,9 @@ export function ContextAwareParallax({
     const normalizedX = ((event.clientX - bounds.left) / bounds.width - 0.5) * 2;
     const normalizedY = ((event.clientY - bounds.top) / bounds.height - 0.5) * 2;
 
-    pointerX.set(normalizedX * parallaxPreset.pointerX * intensityFactor);
-    pointerY.set(normalizedY * parallaxPreset.pointerY * intensityFactor);
-    rotateZ.set(normalizedX * parallaxPreset.rotate * intensityFactor);
+    pointerX.set(normalizedX * parallaxPreset.pointerX * intensityFactor * pointerScale);
+    pointerY.set(normalizedY * parallaxPreset.pointerY * intensityFactor * pointerScale);
+    rotateZ.set(normalizedX * parallaxPreset.rotate * intensityFactor * pointerScale);
   };
 
   const resetPointer = () => {

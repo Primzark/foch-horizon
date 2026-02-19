@@ -1,8 +1,9 @@
 import { LayoutGrid, List, SlidersHorizontal } from "lucide-react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { sortOptions } from "@/features/listings/data/options";
+import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
 
 interface FiltersBarProps {
   sort: string;
@@ -14,7 +15,7 @@ interface FiltersBarProps {
 }
 
 export function FiltersBar({ sort, onSortChange, viewMode, onViewModeChange, onOpenDrawer, total }: FiltersBarProps) {
-  const reducedMotion = useReducedMotion();
+  const { reducedMotion } = useMotionPreference();
 
   return (
     <div className="sticky top-[74px] z-30 rounded-2xl border border-border bg-background/85 p-3 backdrop-blur supports-[backdrop-filter]:bg-background/70">
