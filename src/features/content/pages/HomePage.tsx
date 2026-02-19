@@ -116,13 +116,30 @@ function buildHeroSlides(properties: Awaited<ReturnType<typeof getFeaturedProper
   return shuffled.slice(0, desiredCount);
 }
 
-function getKenBurnsPreset(slideId: number, index: number, seed: number): KenBurnsPreset {
-  const presetIndex = (Math.abs(slideId * 31 + index * 17 + seed) % kenBurnsPresets.length) >>> 0;
-  return kenBurnsPresets[presetIndex];
-}
-
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
+}
+
+function getAlternatingKenBurnsPreset(slideId: number, motionStep: number, seed: number): KenBurnsPreset {
+  const presetIndex = (Math.abs(slideId * 31 + motionStep * 13 + seed) % kenBurnsPresets.length) >>> 0;
+  const basePreset = kenBurnsPresets[presetIndex];
+
+  if (motionStep % 2 === 0) {
+    return basePreset;
+  }
+
+  return {
+    from: {
+      scale: clamp(basePreset.to.scale + 0.03, 1.03, 1.09),
+      x: clamp(-basePreset.to.x * 0.88, -32, 32),
+      y: clamp(-basePreset.to.y * 0.88, -20, 20),
+    },
+    to: {
+      scale: clamp(basePreset.from.scale - 0.02, 1.12, 1.24),
+      x: clamp(-basePreset.from.x * 0.72, -40, 40),
+      y: clamp(-basePreset.from.y * 0.72, -24, 24),
+    },
+  };
 }
 
 function toCrossKenBurnsPreset(preset: KenBurnsPreset): CrossKenBurnsPreset {
@@ -150,15 +167,18 @@ export default function HomePage() {
   const heroRng = useMemo(() => createSeededRng(heroSeed ^ 0x243f6a88), [heroSeed]);
   const heroSlides = useMemo(() => buildHeroSlides(featuredQuery.data ?? [], heroSeed), [featuredQuery.data, heroSeed]);
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
+  const [heroMotionStep, setHeroMotionStep] = useState(0);
 
   useEffect(() => {
     if (heroSlides.length === 0) {
       setActiveHeroIndex(0);
+      setHeroMotionStep(0);
       return;
     }
 
     const random = createSeededRng(heroSeed ^ 0x3c6ef372);
     setActiveHeroIndex(Math.floor(random() * heroSlides.length));
+    setHeroMotionStep(0);
   }, [heroSeed, heroSlides]);
 
   useEffect(() => {
@@ -167,6 +187,7 @@ export default function HomePage() {
     }
 
     const timer = window.setInterval(() => {
+      setHeroMotionStep((step) => step + 1);
       setActiveHeroIndex((current) => {
         if (heroSlides.length <= 1) {
           return current;
@@ -194,9 +215,9 @@ export default function HomePage() {
   const crossKenBurnsPreset = useMemo(
     () =>
       activeHeroSlide
-        ? toCrossKenBurnsPreset(getKenBurnsPreset(activeHeroSlide.id, activeHeroIndex, heroSeed))
+        ? toCrossKenBurnsPreset(getAlternatingKenBurnsPreset(activeHeroSlide.id, heroMotionStep, heroSeed))
         : toCrossKenBurnsPreset({ from: { scale: 1.1, x: -10, y: -6 }, to: { scale: 1.02, x: 6, y: 4 } }),
-    [activeHeroIndex, activeHeroSlide, heroSeed],
+    [activeHeroSlide, heroMotionStep, heroSeed],
   );
   const ctaSweepStyle = useMemo(
     () => ({ "--glass-sweep-duration": `${heroMotionDirector.ctaSweepDuration}s` }) as CSSProperties,
