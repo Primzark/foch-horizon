@@ -44,13 +44,29 @@ uniform float uRippleStrength;
 uniform float uWindStrength;
 uniform float uUseDepth;
 uniform float uUseMask;
+uniform float uImageAspect;
+uniform float uViewportAspect;
 
 float luminance(vec3 c) {
   return dot(c, vec3(0.299, 0.587, 0.114));
 }
 
+vec2 toCoverUv(vec2 uv, float imageAspect, float viewportAspect) {
+  vec2 coverUv = uv;
+
+  if (viewportAspect > imageAspect) {
+    float scaleY = imageAspect / viewportAspect;
+    coverUv.y = (uv.y - 0.5) * scaleY + 0.5;
+  } else {
+    float scaleX = viewportAspect / imageAspect;
+    coverUv.x = (uv.x - 0.5) * scaleX + 0.5;
+  }
+
+  return coverUv;
+}
+
 void main() {
-  vec2 uv = vUv;
+  vec2 uv = toCoverUv(vUv, max(uImageAspect, 0.001), max(uViewportAspect, 0.001));
   vec3 imageSample = texture2D(uImage, uv).rgb;
 
   float fallbackDepth = luminance(imageSample);
@@ -95,6 +111,8 @@ interface GlUniforms {
   windStrength: WebGLUniformLocation | null;
   useDepth: WebGLUniformLocation | null;
   useMask: WebGLUniformLocation | null;
+  imageAspect: WebGLUniformLocation | null;
+  viewportAspect: WebGLUniformLocation | null;
 }
 
 const imageCache = new Map<string, Promise<HTMLImageElement>>();
@@ -382,6 +400,8 @@ export function LivingPhotoWebGL({
           windStrength: gl.getUniformLocation(program, "uWindStrength"),
           useDepth: gl.getUniformLocation(program, "uUseDepth"),
           useMask: gl.getUniformLocation(program, "uUseMask"),
+          imageAspect: gl.getUniformLocation(program, "uImageAspect"),
+          viewportAspect: gl.getUniformLocation(program, "uViewportAspect"),
         };
 
         const quadBuffer = gl.createBuffer();
@@ -398,6 +418,8 @@ export function LivingPhotoWebGL({
           baseTextureSource,
           effectiveFallbackUrl,
         );
+        const imageAspect =
+          (baseImage.naturalWidth || baseImage.width || 1) / Math.max(baseImage.naturalHeight || baseImage.height || 1, 1);
         const imageTexture = await createTextureFromImage(gl, baseImage);
 
         let generatedMaps = generatedMapCache.get(`${loadedBaseSource}|${mood}|${activeQualityTier}`);
@@ -445,6 +467,7 @@ export function LivingPhotoWebGL({
 
         gl.uniform1f(uniforms.useDepth, hasDepthMap ? 1 : 0);
         gl.uniform1f(uniforms.useMask, hasMaskMap ? 1 : 0);
+        gl.uniform1f(uniforms.imageAspect, imageAspect);
         gl.uniform1f(uniforms.parallaxStrength, parallaxPreset.pointerX * 0.00084 * (activeQualityTier === "low" ? 0.86 : 1));
         gl.uniform1f(uniforms.rippleStrength, motionDirector.webglRippleStrength * (activeQualityTier === "low" ? 0.8 : 1));
         gl.uniform1f(uniforms.windStrength, motionDirector.webglWindStrength * (activeQualityTier === "low" ? 0.8 : 1));
@@ -458,6 +481,7 @@ export function LivingPhotoWebGL({
             canvas.height = height;
           }
           gl.viewport(0, 0, canvas.width, canvas.height);
+          gl.uniform1f(uniforms.viewportAspect, canvas.width / Math.max(canvas.height, 1));
         };
 
         resize();
