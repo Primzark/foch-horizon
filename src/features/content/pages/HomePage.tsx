@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
@@ -84,6 +84,15 @@ function createSeededRng(seed: number) {
 function shuffleWithSeed<T>(items: T[], seed: number): T[] {
   const shuffled = [...items];
   const random = createSeededRng(seed);
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(random() * (index + 1));
+    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+  }
+  return shuffled;
+}
+
+function shuffleWithRng<T>(items: T[], random: () => number): T[] {
+  const shuffled = [...items];
   for (let index = shuffled.length - 1; index > 0; index -= 1) {
     const swapIndex = Math.floor(random() * (index + 1));
     [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
@@ -201,6 +210,7 @@ export default function HomePage() {
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
   const [heroMotionStep, setHeroMotionStep] = useState(0);
   const [readyHeroUrls, setReadyHeroUrls] = useState<Set<string>>(() => new Set([HERO_FALLBACK_IMAGE_URL]));
+  const heroQueueRef = useRef<number[]>([]);
 
   useEffect(() => {
     if (heroSlides.length === 0) {
@@ -247,16 +257,41 @@ export default function HomePage() {
     if (heroSlides.length === 0) {
       setActiveHeroIndex(0);
       setHeroMotionStep(0);
+      heroQueueRef.current = [];
       return;
     }
 
     const random = createSeededRng(heroSeed ^ 0x3c6ef372);
     setActiveHeroIndex(Math.floor(random() * heroSlides.length));
     setHeroMotionStep(0);
+    heroQueueRef.current = [];
   }, [heroSeed, heroSlides]);
 
   useEffect(() => {
+    if (heroSlides.length === 0) {
+      heroQueueRef.current = [];
+      return;
+    }
+
+    const normalizedIndex =
+      activeHeroIndex >= 0 ? activeHeroIndex % heroSlides.length : (activeHeroIndex + heroSlides.length) % heroSlides.length;
+    const currentSlide = heroSlides[normalizedIndex];
+    const currentReady = Boolean(currentSlide && readyHeroUrls.has(currentSlide.imageUrl));
+
+    if (currentReady) {
+      return;
+    }
+
+    const firstReadyIndex = heroSlides.findIndex((slide) => readyHeroUrls.has(slide.imageUrl));
+    if (firstReadyIndex >= 0 && firstReadyIndex !== normalizedIndex) {
+      heroQueueRef.current = [];
+      setActiveHeroIndex(firstReadyIndex);
+    }
+  }, [activeHeroIndex, heroSlides, readyHeroUrls]);
+
+  useEffect(() => {
     if (heroSlides.length <= 1) {
+      heroQueueRef.current = [];
       return;
     }
 
@@ -269,34 +304,38 @@ export default function HomePage() {
       }, []);
 
       if (readyIndices.length <= 1) {
+        heroQueueRef.current = [];
         return;
       }
 
       setHeroMotionStep((step) => step + 1);
       setActiveHeroIndex((current) => {
         if (heroSlides.length <= 1 || readyIndices.length <= 1) {
+          heroQueueRef.current = [];
           return current;
         }
 
-        if (!readyHeroUrls.has(heroSlides[current]?.imageUrl)) {
-          return readyIndices[0];
+        const normalizedCurrent =
+          current >= 0 ? current % heroSlides.length : (current + heroSlides.length) % heroSlides.length;
+        const currentReadyIndex = readyIndices.includes(normalizedCurrent) ? normalizedCurrent : readyIndices[0];
+
+        heroQueueRef.current = heroQueueRef.current.filter(
+          (index) => readyIndices.includes(index) && index !== currentReadyIndex,
+        );
+
+        if (heroQueueRef.current.length === 0) {
+          heroQueueRef.current = shuffleWithRng(
+            readyIndices.filter((index) => index !== currentReadyIndex),
+            heroRng,
+          );
         }
 
-        let next = current;
-        for (let attempt = 0; attempt < 5 && next === current; attempt += 1) {
-          next = readyIndices[Math.floor(heroRng() * readyIndices.length)];
+        const next = heroQueueRef.current.shift();
+        if (typeof next === "number") {
+          return next;
         }
 
-        if (next === current) {
-          const currentPosition = readyIndices.indexOf(current);
-          if (currentPosition >= 0) {
-            next = readyIndices[(currentPosition + 1) % readyIndices.length];
-          } else {
-            next = readyIndices[0];
-          }
-        }
-
-        return next;
+        return currentReadyIndex;
       });
     }, HERO_ROTATE_MS);
 
@@ -308,18 +347,13 @@ export default function HomePage() {
       return 0;
     }
 
-    const normalizedActiveIndex =
-      activeHeroIndex >= 0 ? activeHeroIndex % heroSlides.length : (activeHeroIndex + heroSlides.length) % heroSlides.length;
-    const activeSlide = heroSlides[normalizedActiveIndex];
-    if (activeSlide && readyHeroUrls.has(activeSlide.imageUrl)) {
-      return normalizedActiveIndex;
-    }
-
-    const firstReadyIndex = heroSlides.findIndex((slide) => readyHeroUrls.has(slide.imageUrl));
-    return firstReadyIndex >= 0 ? firstReadyIndex : normalizedActiveIndex;
-  }, [activeHeroIndex, heroSlides, readyHeroUrls]);
+    return activeHeroIndex >= 0
+      ? activeHeroIndex % heroSlides.length
+      : (activeHeroIndex + heroSlides.length) % heroSlides.length;
+  }, [activeHeroIndex, heroSlides]);
 
   const activeHeroSlide = heroSlides[safeHeroIndex];
+  const isActiveHeroReady = Boolean(activeHeroSlide && readyHeroUrls.has(activeHeroSlide.imageUrl));
   const heroMood = inferPlaceImageMood(activeHeroSlide?.title, "Le Havre");
   const heroMotionDirector = useMemo(() => getMotionDirectorProfile(heroMood), [heroMood]);
   const crossKenBurnsPreset = useMemo(
@@ -389,7 +423,7 @@ export default function HomePage() {
           fetchPriority="high"
         />
         <AnimatePresence initial={false} mode="sync">
-          {heroSlides.length > 0 && (
+          {heroSlides.length > 0 && isActiveHeroReady && (
             <motion.div
               key={`${heroSlides[safeHeroIndex].id}-${safeHeroIndex}`}
               className="absolute inset-0 z-[1]"
@@ -437,9 +471,62 @@ export default function HomePage() {
             </motion.div>
           )}
         </AnimatePresence>
-        {heroSlides.length > 0 && <PlaceAtmosphereLayer mood={heroMood} animated={!reducedMotion} className="z-[1]" />}
-        <div className="absolute inset-0 z-[2] bg-gradient-to-br from-black/55 via-black/35 to-black/55" />
-        <div className="container relative z-[3] mx-auto flex min-h-[68vh] flex-col justify-center px-4 py-16">
+        {heroSlides.length > 0 && <PlaceAtmosphereLayer mood={heroMood} animated={!reducedMotion} className="z-[2]" />}
+
+        {!reducedMotion && heroSlides.length > 1 && (
+          <AnimatePresence initial={false} mode="sync">
+            <motion.div
+              key={`hero-ripple-${heroMotionStep}`}
+              className="pointer-events-none absolute inset-0 z-[3]"
+              style={{
+                background:
+                  "radial-gradient(circle at 48% 58%, rgba(198,233,255,0.4) 0%, rgba(136,194,233,0.3) 22%, rgba(72,133,191,0.16) 44%, rgba(11,35,66,0) 68%)",
+                mixBlendMode: "screen",
+              }}
+              initial={{ opacity: 0, scale: 0.84 }}
+              animate={{ opacity: [0, 0.46, 0], scale: [0.84, 1.06, 1.24] }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: HERO_CROSS_FADE_DURATION_S + 0.35, ease: [0.22, 1, 0.36, 1] }}
+            />
+          </AnimatePresence>
+        )}
+
+        {!reducedMotion && heroSlides.length > 1 && (
+          <AnimatePresence initial={false} mode="sync">
+            <motion.div
+              key={`hero-liquid-wipe-${heroMotionStep}`}
+              className="pointer-events-none absolute inset-y-0 left-[-42%] z-[3] w-[84%]"
+              style={{
+                background:
+                  "linear-gradient(105deg, rgba(140,202,244,0) 0%, rgba(193,232,255,0.58) 34%, rgba(255,255,255,0.46) 50%, rgba(74,154,214,0.28) 66%, rgba(26,67,116,0) 100%)",
+                mixBlendMode: "screen",
+                filter: "blur(12px)",
+                borderRadius: "999px",
+                maskImage:
+                  "radial-gradient(120% 85% at 35% 50%, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.8) 36%, rgba(255,255,255,0.48) 60%, rgba(255,255,255,0.14) 80%, transparent 100%)",
+              }}
+              initial={{ x: "-18%", opacity: 0, rotate: -1.2 }}
+              animate={{ x: ["-18%", "112%"], opacity: [0, 0.68, 0], rotate: [-1.2, 0.9] }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: HERO_CROSS_FADE_DURATION_S + 0.24, ease: [0.22, 1, 0.36, 1] }}
+            />
+          </AnimatePresence>
+        )}
+
+        <motion.div
+          className="pointer-events-none absolute inset-0 z-[3]"
+          style={{
+            background:
+              "linear-gradient(110deg, rgba(255,255,255,0) 20%, rgba(196,234,255,0.15) 36%, rgba(255,255,255,0.28) 48%, rgba(166,214,247,0.14) 62%, rgba(255,255,255,0) 78%)",
+            mixBlendMode: "screen",
+            maskImage: "linear-gradient(to bottom, transparent 28%, rgba(255,255,255,0.96) 100%)",
+          }}
+          animate={reducedMotion ? { x: "0%" } : { x: ["-32%", "22%", "-26%"] }}
+          transition={reducedMotion ? { duration: 0.3 } : { duration: 14.5, ease: "easeInOut", repeat: Number.POSITIVE_INFINITY }}
+        />
+
+        <div className="absolute inset-0 z-[4] bg-gradient-to-br from-black/55 via-black/35 to-black/55" />
+        <div className="container relative z-[5] mx-auto flex min-h-[68vh] flex-col justify-center px-4 py-16">
           <motion.h1
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
