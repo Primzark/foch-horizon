@@ -66,6 +66,11 @@ type CrossKenBurnsPreset = {
   exit: KenBurnsPoint;
 };
 
+type HeroTransitionEffectsProps = {
+  active: boolean;
+  transitionStep: number;
+};
+
 const kenBurnsPresets: KenBurnsPreset[] = [
   { from: { scale: 1.2, x: -30, y: -16 }, to: { scale: 1.03, x: 13, y: 9 } },
   { from: { scale: 1.18, x: 26, y: -14 }, to: { scale: 1.03, x: -12, y: 8 } },
@@ -168,6 +173,78 @@ function toCrossKenBurnsPreset(preset: KenBurnsPreset): CrossKenBurnsPreset {
   };
 }
 
+function normalizeIndex(index: number, length: number): number {
+  if (length <= 0) return 0;
+  return index >= 0 ? index % length : (index + length) % length;
+}
+
+function collectReadyIndices(slides: HeroSlide[], readyUrls: Set<string>): number[] {
+  return slides.reduce<number[]>((accumulator, slide, index) => {
+    if (readyUrls.has(slide.imageUrl)) {
+      accumulator.push(index);
+    }
+    return accumulator;
+  }, []);
+}
+
+function HeroTransitionEffects({ active, transitionStep }: HeroTransitionEffectsProps) {
+  if (!active) {
+    return null;
+  }
+
+  return (
+    <>
+      <AnimatePresence initial={false} mode="sync">
+        <motion.div
+          key={`hero-ripple-${transitionStep}`}
+          className="pointer-events-none absolute inset-0 z-[4]"
+          style={{
+            background:
+              "radial-gradient(circle at 48% 58%, rgba(208,240,255,0.46) 0%, rgba(158,216,250,0.35) 20%, rgba(90,154,217,0.2) 40%, rgba(26,73,125,0.04) 60%, rgba(11,35,66,0) 74%)",
+            mixBlendMode: "screen",
+          }}
+          initial={{ opacity: 0, scale: 0.82 }}
+          animate={{ opacity: [0, 0.6, 0], scale: [0.82, 1.04, 1.22] }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: HERO_CROSS_FADE_DURATION_S + 0.45, ease: [0.22, 1, 0.36, 1] }}
+        />
+      </AnimatePresence>
+
+      <AnimatePresence initial={false} mode="sync">
+        <motion.div
+          key={`hero-liquid-wipe-${transitionStep}`}
+          className="pointer-events-none absolute inset-y-0 left-[-42%] z-[4] w-[84%]"
+          style={{
+            background:
+              "linear-gradient(105deg, rgba(140,202,244,0) 0%, rgba(193,232,255,0.62) 34%, rgba(255,255,255,0.5) 50%, rgba(74,154,214,0.34) 66%, rgba(26,67,116,0) 100%)",
+            mixBlendMode: "screen",
+            filter: "blur(10px)",
+            borderRadius: "999px",
+            maskImage:
+              "radial-gradient(120% 85% at 35% 50%, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.8) 36%, rgba(255,255,255,0.48) 60%, rgba(255,255,255,0.14) 80%, transparent 100%)",
+          }}
+          initial={{ x: "-18%", opacity: 0, rotate: -1.2 }}
+          animate={{ x: ["-18%", "112%"], opacity: [0, 0.72, 0], rotate: [-1.2, 0.9] }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: HERO_CROSS_FADE_DURATION_S + 0.28, ease: [0.22, 1, 0.36, 1] }}
+        />
+      </AnimatePresence>
+
+      <motion.div
+        className="pointer-events-none absolute inset-0 z-[4]"
+        style={{
+          background:
+            "linear-gradient(110deg, rgba(255,255,255,0) 20%, rgba(196,234,255,0.16) 36%, rgba(255,255,255,0.3) 48%, rgba(166,214,247,0.16) 62%, rgba(255,255,255,0) 78%)",
+          mixBlendMode: "screen",
+          maskImage: "linear-gradient(to bottom, transparent 26%, rgba(255,255,255,0.96) 100%)",
+        }}
+        animate={{ x: ["-34%", "24%", "-28%"] }}
+        transition={{ duration: 14.5, ease: "easeInOut", repeat: Number.POSITIVE_INFINITY }}
+      />
+    </>
+  );
+}
+
 const heroImagePreloadCache = new Map<string, Promise<void>>();
 
 function preloadHeroImage(url: string, priority: "high" | "low" = "low"): Promise<void> {
@@ -207,13 +284,19 @@ export default function HomePage() {
   const [heroSeed] = useState(() => Math.floor(Math.random() * 0x7fffffff));
   const heroRng = useMemo(() => createSeededRng(heroSeed ^ 0x243f6a88), [heroSeed]);
   const heroSlides = useMemo(() => buildHeroSlides(featuredQuery.data ?? [], heroSeed), [featuredQuery.data, heroSeed]);
+  const heroSlidesSignature = useMemo(
+    () => heroSlides.map((slide) => `${slide.id}:${slide.imageUrl}`).join("|"),
+    [heroSlides],
+  );
+  const heroImageUrls = useMemo(() => heroSlides.map((slide) => slide.imageUrl), [heroSlides]);
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
   const [heroMotionStep, setHeroMotionStep] = useState(0);
   const [readyHeroUrls, setReadyHeroUrls] = useState<Set<string>>(() => new Set([HERO_FALLBACK_IMAGE_URL]));
   const heroQueueRef = useRef<number[]>([]);
+  const previousActiveHeroIndexRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (heroSlides.length === 0) {
+    if (heroImageUrls.length === 0) {
       setReadyHeroUrls(new Set([HERO_FALLBACK_IMAGE_URL]));
       return;
     }
@@ -221,25 +304,23 @@ export default function HomePage() {
     let cancelled = false;
     setReadyHeroUrls((current) => {
       const next = new Set<string>([HERO_FALLBACK_IMAGE_URL]);
-      heroSlides.forEach((slide) => {
-        if (current.has(slide.imageUrl)) {
-          next.add(slide.imageUrl);
+      heroImageUrls.forEach((imageUrl) => {
+        if (current.has(imageUrl)) {
+          next.add(imageUrl);
         }
       });
       return next;
     });
 
-    const preloadOrder = heroSlides.map((slide) => slide.imageUrl);
-
-    preloadOrder.forEach((url, index) => {
-      void preloadHeroImage(url, index < HERO_PRELOAD_PRIORITY_COUNT ? "high" : "low")
+    heroImageUrls.forEach((imageUrl, index) => {
+      void preloadHeroImage(imageUrl, index < HERO_PRELOAD_PRIORITY_COUNT ? "high" : "low")
         .then(() => {
           if (cancelled) return;
 
           setReadyHeroUrls((current) => {
-            if (current.has(url)) return current;
+            if (current.has(imageUrl)) return current;
             const next = new Set(current);
-            next.add(url);
+            next.add(imageUrl);
             return next;
           });
         })
@@ -251,13 +332,14 @@ export default function HomePage() {
     return () => {
       cancelled = true;
     };
-  }, [heroSlides]);
+  }, [heroImageUrls]);
 
   useEffect(() => {
     if (heroSlides.length === 0) {
       setActiveHeroIndex(0);
       setHeroMotionStep(0);
       heroQueueRef.current = [];
+      previousActiveHeroIndexRef.current = null;
       return;
     }
 
@@ -265,7 +347,26 @@ export default function HomePage() {
     setActiveHeroIndex(Math.floor(random() * heroSlides.length));
     setHeroMotionStep(0);
     heroQueueRef.current = [];
-  }, [heroSeed, heroSlides]);
+    previousActiveHeroIndexRef.current = null;
+  }, [heroSeed, heroSlides.length, heroSlidesSignature]);
+
+  useEffect(() => {
+    if (heroSlides.length <= 1) {
+      return;
+    }
+
+    const normalizedActive = normalizeIndex(activeHeroIndex, heroSlides.length);
+
+    if (previousActiveHeroIndexRef.current == null) {
+      previousActiveHeroIndexRef.current = normalizedActive;
+      return;
+    }
+
+    if (normalizedActive !== previousActiveHeroIndexRef.current) {
+      setHeroMotionStep((step) => step + 1);
+      previousActiveHeroIndexRef.current = normalizedActive;
+    }
+  }, [activeHeroIndex, heroSlides.length]);
 
   useEffect(() => {
     if (heroSlides.length === 0) {
@@ -273,8 +374,7 @@ export default function HomePage() {
       return;
     }
 
-    const normalizedIndex =
-      activeHeroIndex >= 0 ? activeHeroIndex % heroSlides.length : (activeHeroIndex + heroSlides.length) % heroSlides.length;
+    const normalizedIndex = normalizeIndex(activeHeroIndex, heroSlides.length);
     const currentSlide = heroSlides[normalizedIndex];
     const currentReady = Boolean(currentSlide && readyHeroUrls.has(currentSlide.imageUrl));
 
@@ -296,27 +396,20 @@ export default function HomePage() {
     }
 
     const timer = window.setInterval(() => {
-      const readyIndices = heroSlides.reduce<number[]>((accumulator, slide, index) => {
-        if (readyHeroUrls.has(slide.imageUrl)) {
-          accumulator.push(index);
-        }
-        return accumulator;
-      }, []);
+      const readyIndices = collectReadyIndices(heroSlides, readyHeroUrls);
 
       if (readyIndices.length <= 1) {
         heroQueueRef.current = [];
         return;
       }
 
-      setHeroMotionStep((step) => step + 1);
       setActiveHeroIndex((current) => {
         if (heroSlides.length <= 1 || readyIndices.length <= 1) {
           heroQueueRef.current = [];
           return current;
         }
 
-        const normalizedCurrent =
-          current >= 0 ? current % heroSlides.length : (current + heroSlides.length) % heroSlides.length;
+        const normalizedCurrent = normalizeIndex(current, heroSlides.length);
         const currentReadyIndex = readyIndices.includes(normalizedCurrent) ? normalizedCurrent : readyIndices[0];
 
         heroQueueRef.current = heroQueueRef.current.filter(
@@ -347,9 +440,7 @@ export default function HomePage() {
       return 0;
     }
 
-    return activeHeroIndex >= 0
-      ? activeHeroIndex % heroSlides.length
-      : (activeHeroIndex + heroSlides.length) % heroSlides.length;
+    return normalizeIndex(activeHeroIndex, heroSlides.length);
   }, [activeHeroIndex, heroSlides]);
 
   const activeHeroSlide = heroSlides[safeHeroIndex];
@@ -472,60 +563,8 @@ export default function HomePage() {
           )}
         </AnimatePresence>
         {heroSlides.length > 0 && <PlaceAtmosphereLayer mood={heroMood} animated={!reducedMotion} className="z-[2]" />}
-
-        {!reducedMotion && heroSlides.length > 1 && (
-          <AnimatePresence initial={false} mode="sync">
-            <motion.div
-              key={`hero-ripple-${heroMotionStep}`}
-              className="pointer-events-none absolute inset-0 z-[3]"
-              style={{
-                background:
-                  "radial-gradient(circle at 48% 58%, rgba(198,233,255,0.4) 0%, rgba(136,194,233,0.3) 22%, rgba(72,133,191,0.16) 44%, rgba(11,35,66,0) 68%)",
-                mixBlendMode: "screen",
-              }}
-              initial={{ opacity: 0, scale: 0.84 }}
-              animate={{ opacity: [0, 0.46, 0], scale: [0.84, 1.06, 1.24] }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: HERO_CROSS_FADE_DURATION_S + 0.35, ease: [0.22, 1, 0.36, 1] }}
-            />
-          </AnimatePresence>
-        )}
-
-        {!reducedMotion && heroSlides.length > 1 && (
-          <AnimatePresence initial={false} mode="sync">
-            <motion.div
-              key={`hero-liquid-wipe-${heroMotionStep}`}
-              className="pointer-events-none absolute inset-y-0 left-[-42%] z-[3] w-[84%]"
-              style={{
-                background:
-                  "linear-gradient(105deg, rgba(140,202,244,0) 0%, rgba(193,232,255,0.58) 34%, rgba(255,255,255,0.46) 50%, rgba(74,154,214,0.28) 66%, rgba(26,67,116,0) 100%)",
-                mixBlendMode: "screen",
-                filter: "blur(12px)",
-                borderRadius: "999px",
-                maskImage:
-                  "radial-gradient(120% 85% at 35% 50%, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.8) 36%, rgba(255,255,255,0.48) 60%, rgba(255,255,255,0.14) 80%, transparent 100%)",
-              }}
-              initial={{ x: "-18%", opacity: 0, rotate: -1.2 }}
-              animate={{ x: ["-18%", "112%"], opacity: [0, 0.68, 0], rotate: [-1.2, 0.9] }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: HERO_CROSS_FADE_DURATION_S + 0.24, ease: [0.22, 1, 0.36, 1] }}
-            />
-          </AnimatePresence>
-        )}
-
-        <motion.div
-          className="pointer-events-none absolute inset-0 z-[3]"
-          style={{
-            background:
-              "linear-gradient(110deg, rgba(255,255,255,0) 20%, rgba(196,234,255,0.15) 36%, rgba(255,255,255,0.28) 48%, rgba(166,214,247,0.14) 62%, rgba(255,255,255,0) 78%)",
-            mixBlendMode: "screen",
-            maskImage: "linear-gradient(to bottom, transparent 28%, rgba(255,255,255,0.96) 100%)",
-          }}
-          animate={reducedMotion ? { x: "0%" } : { x: ["-32%", "22%", "-26%"] }}
-          transition={reducedMotion ? { duration: 0.3 } : { duration: 14.5, ease: "easeInOut", repeat: Number.POSITIVE_INFINITY }}
-        />
-
-        <div className="absolute inset-0 z-[4] bg-gradient-to-br from-black/55 via-black/35 to-black/55" />
+        <div className="absolute inset-0 z-[3] bg-gradient-to-br from-black/55 via-black/35 to-black/55" />
+        <HeroTransitionEffects active={!reducedMotion && heroSlides.length > 1} transitionStep={heroMotionStep} />
         <div className="container relative z-[5] mx-auto flex min-h-[68vh] flex-col justify-center px-4 py-16">
           <motion.h1
             initial={{ opacity: 0, y: 12 }}
