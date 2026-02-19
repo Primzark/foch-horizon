@@ -1,4 +1,4 @@
-import { FormEvent, Fragment, MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, Fragment, MouseEvent, useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { BotMessageSquare, Mail, RotateCcw, Send, Sparkles, X } from "lucide-react";
@@ -91,7 +91,10 @@ const CHATBOT_STORAGE_VERSION = 1;
 const CHATBOT_REQUEST_TIMEOUT_MS = 18000;
 const CHATBOT_HARD_UNLOCK_MS = 32000;
 const CHATBOT_MEMORY_LIMIT = 44;
-const CHATBOT_HISTORY_LIMIT = 16;
+const CHATBOT_HISTORY_LIMIT = 24;
+const CHATBOT_HISTORY_CHAR_LIMIT = 12000;
+const CHATBOT_HISTORY_MIN_KEEP = 8;
+const CHATBOT_HISTORY_MESSAGE_LIMIT = 1400;
 const CHATBOT_MIN_REPLY_DELAY_MS = 900;
 const CHATBOT_MAX_REPLY_DELAY_MS = 2600;
 
@@ -108,6 +111,53 @@ function createMessageId(): string {
 
 function normalizePromptList(prompts: string[]): string[] {
   return prompts.map((prompt) => prompt.trim()).filter((prompt) => prompt.length > 0).slice(0, 6);
+}
+
+function normalizeForHistory(content: string): string {
+  return content
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+const openingGreetingSignatures = new Set<string>([
+  normalizeForHistory(initialMessage.content),
+  ...openingGreetingVariants.map((variant) => normalizeForHistory(variant.content)),
+]);
+
+function isOpeningGreetingMessage(message: ChatMessage): boolean {
+  if (message.role !== "assistant") return false;
+  return openingGreetingSignatures.has(normalizeForHistory(message.content));
+}
+
+function compactMessageContent(content: string): string {
+  return content.replace(/\s+/g, " ").trim().slice(0, CHATBOT_HISTORY_MESSAGE_LIMIT);
+}
+
+function buildChatHistoryPayload(
+  messages: ChatMessage[],
+  userInput: string,
+): Array<{ role: "assistant" | "user"; content: string }> {
+  const history = messages
+    .filter((message) => !isOpeningGreetingMessage(message))
+    .map((message) => ({
+      role: message.role,
+      content: compactMessageContent(message.content),
+    }))
+    .filter((message) => message.content.length > 0)
+    .slice(-CHATBOT_HISTORY_LIMIT);
+
+  const payload = [...history, { role: "user" as const, content: compactMessageContent(userInput) }];
+  let totalCharacters = payload.reduce((total, message) => total + message.content.length, 0);
+
+  while (totalCharacters > CHATBOT_HISTORY_CHAR_LIMIT && payload.length > CHATBOT_HISTORY_MIN_KEEP) {
+    const removed = payload.shift();
+    totalCharacters -= removed?.content.length ?? 0;
+  }
+
+  return payload.slice(-CHATBOT_HISTORY_LIMIT);
 }
 
 function buildOpeningGreetingMessage(index: number): ChatMessage {
@@ -268,11 +318,6 @@ export function SiteChatbot() {
   const requestSequenceRef = useRef(0);
   const openingSequenceRef = useRef(0);
 
-  const conversation = useMemo(
-    () => messages.map((message) => ({ role: message.role, content: message.content })),
-    [messages],
-  );
-
   const appendMessage = useCallback((message: ChatMessage) => {
     setMessages((current) => trimMessages([...current, message]));
   }, []);
@@ -388,7 +433,7 @@ export function SiteChatbot() {
     const nextRequestId = requestSequenceRef.current + 1;
     requestSequenceRef.current = nextRequestId;
 
-    const chatHistory = [...conversation.slice(-CHATBOT_HISTORY_LIMIT), { role: "user" as const, content: text }];
+    const chatHistory = buildChatHistoryPayload(messages, text);
 
     appendMessage({ id: createMessageId(), role: "user", content: text });
     setInput("");
@@ -596,7 +641,23 @@ export function SiteChatbot() {
     }
 
     setOpen(true);
-    appendMessage(nextOpeningGreetingMessage());
+    setMessages((current) => {
+      if (current.length === 0) {
+        return [nextOpeningGreetingMessage()];
+      }
+
+      const lastMessage = current[current.length - 1];
+      if (lastMessage && isOpeningGreetingMessage(lastMessage)) {
+        return current;
+      }
+
+      const hasUserMessages = current.some((message) => message.role === "user");
+      if (hasUserMessages) {
+        return current;
+      }
+
+      return trimMessages([...current, nextOpeningGreetingMessage()]);
+    });
   };
 
   return (

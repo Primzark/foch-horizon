@@ -143,4 +143,46 @@ describe("chatbot service", () => {
     expect(reply.answer).toContain("/plan-du-site");
     expect(reply.suggestedPrompts.some((prompt) => prompt.includes("/plan-du-site"))).toBe(true);
   });
+
+  it("summarizes page content when a route is provided", async () => {
+    const reply = await askAgencyChatbot({ question: "Peux-tu resumer la page /services ?" });
+
+    expect(reply.answer).toContain("/services");
+    expect(reply.answer.toLowerCase()).toContain("services");
+    expect(reply.suggestedPrompts.length).toBeGreaterThan(0);
+  });
+
+  it("uses the most recent referenced path for follow-up navigation", async () => {
+    const reply = await askAgencyChatbot({
+      question: "Ouvre cette page",
+      chatHistory: [
+        { role: "assistant", content: "Pour vendre votre bien, utilisez /vendre." },
+        { role: "assistant", content: "Pour lancer l'avis de valeur, la page dediee est /estimation." },
+        { role: "user", content: "Ouvre cette page" },
+      ],
+    });
+
+    expect(reply.answer).toContain("/estimation");
+  });
+
+  it("summarizes the latest referenced page on contextual follow-up", async () => {
+    const reply = await askAgencyChatbot({
+      question: "Peux-tu me resumer cette page ?",
+      chatHistory: [
+        { role: "assistant", content: "Les frais sont detailles ici: /honoraires" },
+        { role: "user", content: "Peux-tu me resumer cette page ?" },
+      ],
+    });
+
+    expect(reply.answer).toContain("/honoraires");
+    expect(reply.answer.toLowerCase()).toContain("bareme");
+  });
+
+  it("answers city page content questions with dedicated city hubs", async () => {
+    const reply = await askAgencyChatbot({
+      question: "Que trouve-t-on sur la page immobilier montivilliers ?",
+    });
+
+    expect(reply.answer).toContain("/immobilier/montivilliers");
+  });
 });
