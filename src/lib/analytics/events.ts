@@ -6,6 +6,7 @@ export type AnalyticsEventName =
   | "lead_submitted"
   | "phone_clicked"
   | "extranet_clicked"
+  | "favorites_opened"
   | "motion_performance"
   | "motion_pref_changed";
 
@@ -16,8 +17,9 @@ export function trackEvent(name: AnalyticsEventName, payload?: Record<string, un
 
   const data = { event: name, ...payload };
 
-  if (Array.isArray((window as { dataLayer?: unknown[] }).dataLayer)) {
-    (window as { dataLayer: unknown[] }).dataLayer.push(data);
+  const win = window as unknown as { dataLayer?: unknown[] };
+  if (Array.isArray(win.dataLayer)) {
+    win.dataLayer.push(data);
   }
 
   if (import.meta.env.DEV) {

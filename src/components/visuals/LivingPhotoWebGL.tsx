@@ -86,10 +86,10 @@ void main() {
 
   float rippleA = sin((uv.x * 48.0) + (uTime * 0.58));
   float rippleB = sin((uv.y * 36.0) - (uTime * 0.37));
-  float ripple = rippleA * rippleB * 0.0028 * uRippleStrength;
+  float ripple = rippleA * rippleB * 0.006 * uRippleStrength;
 
-  float wind = sin((uv.y * 30.0) + (uTime * 0.44) + (uv.x * 8.0)) * 0.0016 * uWindStrength;
-  vec2 cinematicOffset = vec2((ripple + wind) * motionMask, ripple * 0.4 * motionMask);
+  float wind = sin((uv.y * 30.0) + (uTime * 0.44) + (uv.x * 8.0)) * 0.0036 * uWindStrength;
+  vec2 cinematicOffset = vec2((ripple + wind) * motionMask, ripple * 0.5 * motionMask);
 
   vec2 sampledUv = clamp(uv + parallaxOffset + cinematicOffset, vec2(0.001), vec2(0.999));
   vec4 color = texture2D(uImage, sampledUv);
@@ -467,8 +467,9 @@ export function LivingPhotoWebGL({
         gl.uniform1f(uniforms.useMask, hasMaskMap ? 1 : 0);
         gl.uniform1f(uniforms.imageAspect, imageAspect);
         gl.uniform1f(uniforms.parallaxStrength, parallaxPreset.pointerX * 0.00084 * (activeQualityTier === "low" ? 0.86 : 1));
-        gl.uniform1f(uniforms.rippleStrength, motionDirector.webglRippleStrength * (activeQualityTier === "low" ? 0.8 : 1));
-        gl.uniform1f(uniforms.windStrength, motionDirector.webglWindStrength * (activeQualityTier === "low" ? 0.8 : 1));
+        // Boost ripple/wind so the living-photo effect is perceptible at normal viewing distance
+        gl.uniform1f(uniforms.rippleStrength, motionDirector.webglRippleStrength * (activeQualityTier === "low" ? 1.2 : 1.8));
+        gl.uniform1f(uniforms.windStrength, motionDirector.webglWindStrength * (activeQualityTier === "low" ? 1.1 : 1.6));
 
         const resize = () => {
           const dpr = Math.min(window.devicePixelRatio || 1, qualityConfig.dprCap);
