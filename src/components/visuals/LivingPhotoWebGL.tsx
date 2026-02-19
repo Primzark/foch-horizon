@@ -245,21 +245,25 @@ function bindTextureUnit(
   }
 }
 
-function resolveTextureSource(primary: string, fallback?: string): string {
-  if (!fallback || typeof window === "undefined") {
-    return primary;
-  }
-
+async function loadImageWithFallback(
+  primary: string,
+  fallback?: string,
+): Promise<{ image: HTMLImageElement; source: string }> {
   try {
-    const primaryUrl = new URL(primary, window.location.href);
-    if (primaryUrl.origin !== window.location.origin) {
-      return fallback;
-    }
+    return {
+      image: await loadImage(primary),
+      source: primary,
+    };
   } catch {
-    return primary;
-  }
+    if (fallback && fallback !== primary) {
+      return {
+        image: await loadImage(fallback),
+        source: fallback,
+      };
+    }
 
-  return primary;
+    throw new Error(`Failed to load base image: ${primary}`);
+  }
 }
 
 interface TelemetryState {
@@ -305,11 +309,7 @@ export function LivingPhotoWebGL({
   const effectiveDepthUrl = depthMapUrl ?? resolvedAssetCandidate.depthMapUrl;
   const effectiveMaskUrl = maskUrl ?? resolvedAssetCandidate.maskUrl;
   const effectiveFallbackUrl = fallbackImageUrl ?? resolvedAssetCandidate.fallbackImageUrl;
-
-  const baseTextureSource = useMemo(
-    () => resolveTextureSource(imageUrl, effectiveFallbackUrl),
-    [effectiveFallbackUrl, imageUrl],
-  );
+  const baseTextureSource = imageUrl;
 
   useEffect(() => {
     if (reducedMotion) {
@@ -394,13 +394,16 @@ export function LivingPhotoWebGL({
         gl.enableVertexAttribArray(positionAttribute);
         gl.vertexAttribPointer(positionAttribute, 2, gl.FLOAT, false, 0, 0);
 
-        const baseImage = await loadImage(baseTextureSource);
+        const { image: baseImage, source: loadedBaseSource } = await loadImageWithFallback(
+          baseTextureSource,
+          effectiveFallbackUrl,
+        );
         const imageTexture = await createTextureFromImage(gl, baseImage);
 
-        let generatedMaps = generatedMapCache.get(`${baseTextureSource}|${mood}|${activeQualityTier}`);
+        let generatedMaps = generatedMapCache.get(`${loadedBaseSource}|${mood}|${activeQualityTier}`);
         if (!generatedMaps && (!effectiveDepthUrl || !effectiveMaskUrl)) {
           generatedMaps = generateLivingPhotoMapsFromImage(baseImage, mood, activeQualityTier);
-          generatedMapCache.set(`${baseTextureSource}|${mood}|${activeQualityTier}`, generatedMaps);
+          generatedMapCache.set(`${loadedBaseSource}|${mood}|${activeQualityTier}`, generatedMaps);
         }
 
         let depthTexture: WebGLTexture | null = null;
@@ -531,6 +534,7 @@ export function LivingPhotoWebGL({
     activeQualityTier,
     baseTextureSource,
     effectiveDepthUrl,
+    effectiveFallbackUrl,
     effectiveMaskUrl,
     mood,
     motionDirector.webglRippleStrength,
@@ -564,7 +568,18 @@ export function LivingPhotoWebGL({
   };
 
   if (fallbackMode || reducedMotion) {
-    return <img src={baseTextureSource} alt={alt} className={cn("h-full w-full object-cover", className)} />;
+    return (
+      <img
+        src={baseTextureSource}
+        alt={alt}
+        className={cn("h-full w-full object-cover", className)}
+        onError={(event) => {
+          if (effectiveFallbackUrl && event.currentTarget.src !== new URL(effectiveFallbackUrl, window.location.href).href) {
+            event.currentTarget.src = effectiveFallbackUrl;
+          }
+        }}
+      />
+    );
   }
 
   return (
