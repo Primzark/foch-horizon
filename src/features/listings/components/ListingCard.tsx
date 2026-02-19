@@ -12,6 +12,7 @@ import {
 } from "@/features/listings/utils/formatting";
 import { useFavoritesStore } from "@/features/favorites/useFavoritesStore";
 import { getPlaceImageMotionPreset, inferPlaceImageMood } from "@/lib/visuals/placeImageMotion";
+import { PlaceAtmosphereLayer } from "@/components/visuals/PlaceAtmosphereLayer";
 
 interface ListingCardProps {
   item: PropertySearchItem;
@@ -29,6 +30,7 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0 }: Listin
   const propertyTypeLabel = formatPropertyTypeLabel(item.type);
   const imageMood = inferPlaceImageMood(item.city.name, item.title, propertyTypeLabel);
   const imageMotionPreset = getPlaceImageMotionPreset(imageMood);
+  const enableAmbientAnimation = !reducedMotion && revealIndex < 4;
   const revealDelay = Math.min(revealIndex * 0.05, 0.45);
   const revealProps = reducedMotion
     ? { initial: false as const }
@@ -59,13 +61,14 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0 }: Listin
               loading="lazy"
               itemProp="image"
             />
+            <PlaceAtmosphereLayer mood={imageMood} animated={enableAmbientAnimation} className="z-[1]" />
             <div
               className={cn(
-                "pointer-events-none absolute inset-0 bg-gradient-to-tr opacity-0 transition-opacity duration-500 group-hover:opacity-100",
+                "pointer-events-none absolute inset-0 z-[2] bg-gradient-to-tr opacity-0 transition-opacity duration-500 group-hover:opacity-100",
                 imageMotionPreset.overlayClassName,
               )}
             />
-            {status && <span className="absolute left-2 top-2 rounded-full bg-background/95 px-2 py-1 text-xs font-medium">{status}</span>}
+            {status && <span className="absolute left-2 top-2 z-[3] rounded-full bg-background/95 px-2 py-1 text-xs font-medium">{status}</span>}
           </div>
 
           <div>
@@ -151,17 +154,18 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0 }: Listin
           loading="lazy"
           itemProp="image"
         />
+        <PlaceAtmosphereLayer mood={imageMood} animated={enableAmbientAnimation} className="z-[1]" />
         <div
           className={cn(
-            "pointer-events-none absolute inset-0 bg-gradient-to-t opacity-80 transition-opacity duration-500 group-hover:opacity-95",
+            "pointer-events-none absolute inset-0 z-[2] bg-gradient-to-t opacity-80 transition-opacity duration-500 group-hover:opacity-95",
             imageMotionPreset.overlayClassName,
           )}
         />
-        {status && <span className="absolute left-3 top-3 rounded-full bg-background/95 px-2 py-1 text-xs font-medium">{status}</span>}
+        {status && <span className="absolute left-3 top-3 z-[3] rounded-full bg-background/95 px-2 py-1 text-xs font-medium">{status}</span>}
         <button
           type="button"
           className={cn(
-            "absolute right-3 top-3 rounded-full p-2 transition-colors",
+            "absolute right-3 top-3 z-[3] rounded-full p-2 transition-colors",
             isFavorite
               ? "bg-brand-soft text-brand-strong shadow-[0_8px_22px_hsl(var(--brand)/0.18)]"
               : "bg-background/90 text-foreground hover:bg-brand-soft/75",

@@ -13,6 +13,8 @@ import { useUiStore } from "@/lib/state/useUiStore";
 import { getSiteUrl, useSeo } from "@/lib/seo/useSeo";
 import { MarketCounters } from "@/features/content/components/MarketCounters";
 import { getAgencyReviews } from "@/features/content/api/googleReviews.service";
+import { inferPlaceImageMood } from "@/lib/visuals/placeImageMotion";
+import { PlaceAtmosphereLayer } from "@/components/visuals/PlaceAtmosphereLayer";
 
 const serviceCards = [
   {
@@ -71,6 +73,9 @@ export default function HomePage() {
 
     return () => window.clearInterval(timer);
   }, [heroSlides.length]);
+
+  const activeHeroSlide = heroSlides[activeHeroIndex];
+  const heroMood = inferPlaceImageMood(activeHeroSlide?.title, "Le Havre");
 
   useSeo({
     title: "Foch Immobilier | Immobilier d'exception au Havre",
@@ -139,8 +144,9 @@ export default function HomePage() {
             />
           )}
         </AnimatePresence>
-        <div className="absolute inset-0 bg-gradient-to-br from-black/55 via-black/35 to-black/55" />
-        <div className="container relative mx-auto flex min-h-[68vh] flex-col justify-center px-4 py-16">
+        {heroSlides.length > 0 && <PlaceAtmosphereLayer mood={heroMood} animated={!reducedMotion} className="z-[1]" />}
+        <div className="absolute inset-0 z-[2] bg-gradient-to-br from-black/55 via-black/35 to-black/55" />
+        <div className="container relative z-[3] mx-auto flex min-h-[68vh] flex-col justify-center px-4 py-16">
           <motion.h1
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}

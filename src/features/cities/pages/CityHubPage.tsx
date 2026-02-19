@@ -10,6 +10,7 @@ import { toSearchItem } from "@/features/listings/utils/mappers";
 import { getSiteUrl, useSeo } from "@/lib/seo/useSeo";
 import { cn } from "@/lib/utils";
 import { getPlaceImageMotionPreset, inferPlaceImageMood } from "@/lib/visuals/placeImageMotion";
+import { PlaceAtmosphereLayer } from "@/components/visuals/PlaceAtmosphereLayer";
 
 export default function CityHubPage() {
   const { ville } = useParams();
@@ -108,8 +109,9 @@ export default function CityHubPage() {
                 }
           }
         />
+        <PlaceAtmosphereLayer mood={heroMood} animated={!reducedMotion} className="z-[1]" />
         <motion.div
-          className={cn("absolute inset-0 bg-gradient-to-br", heroMotionPreset.overlayClassName)}
+          className={cn("absolute inset-0 z-[2] bg-gradient-to-br", heroMotionPreset.overlayClassName)}
           animate={reducedMotion ? { opacity: 0.66 } : { opacity: [0.6, 0.74, 0.6] }}
           transition={{
             duration: heroMotionPreset.floatDuration - 2,
@@ -117,7 +119,7 @@ export default function CityHubPage() {
             ease: "easeInOut",
           }}
         />
-        <div className="absolute inset-0 flex flex-col justify-end p-6 text-white md:p-8">
+        <div className="absolute inset-0 z-[3] flex flex-col justify-end p-6 text-white md:p-8">
           <p className="inline-flex items-center gap-1 text-xs uppercase tracking-[0.2em] text-white/85">
             <MapPin className="h-3.5 w-3.5" /> Ville
           </p>

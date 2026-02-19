@@ -4,6 +4,7 @@ import { MapPin, Building2, Landmark, Anchor } from "lucide-react";
 import { getSiteUrl, useSeo } from "@/lib/seo/useSeo";
 import { cn } from "@/lib/utils";
 import { getPlaceImageMotionPreset, inferPlaceImageMood } from "@/lib/visuals/placeImageMotion";
+import { PlaceAtmosphereLayer } from "@/components/visuals/PlaceAtmosphereLayer";
 import {
   competitiveKeywordSignals,
   leHavreDistrictHistory,
@@ -219,9 +220,14 @@ export default function LeHavreHistoryPage() {
                           ease: [0.22, 1, 0.36, 1],
                         }}
                       />
+                      <PlaceAtmosphereLayer
+                        mood={districtMood}
+                        animated={!reducedMotion && photoIndex === 0}
+                        className="z-[1]"
+                      />
                       <div
                         className={cn(
-                          "pointer-events-none absolute inset-0 bg-gradient-to-tr opacity-0 transition-opacity duration-500 group-hover:opacity-95",
+                          "pointer-events-none absolute inset-0 z-[2] bg-gradient-to-tr opacity-0 transition-opacity duration-500 group-hover:opacity-95",
                           districtMotionPreset.overlayClassName,
                         )}
                       />

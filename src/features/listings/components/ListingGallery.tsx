@@ -13,6 +13,7 @@ import type { PropertyImage } from "@/types/domain";
 import { trackEvent } from "@/lib/analytics/events";
 import { cn } from "@/lib/utils";
 import { getPlaceImageMotionPreset, inferPlaceImageMood } from "@/lib/visuals/placeImageMotion";
+import { PlaceAtmosphereLayer } from "@/components/visuals/PlaceAtmosphereLayer";
 
 export function ListingGallery({ images, title }: { images: PropertyImage[]; title: string }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -54,8 +55,9 @@ export function ListingGallery({ images, title }: { images: PropertyImage[]; tit
                 }
           }
         />
+        <PlaceAtmosphereLayer mood={imageMood} animated={!reducedMotion} className="z-[1]" />
         <motion.div
-          className={cn("pointer-events-none absolute inset-0 bg-gradient-to-br", imageMotionPreset.overlayClassName)}
+          className={cn("pointer-events-none absolute inset-0 z-[2] bg-gradient-to-br", imageMotionPreset.overlayClassName)}
           animate={reducedMotion ? { opacity: 0.32 } : { opacity: [0.28, 0.45, 0.28] }}
           transition={{
             duration: imageMotionPreset.floatDuration - 2,
@@ -64,7 +66,7 @@ export function ListingGallery({ images, title }: { images: PropertyImage[]; tit
           }}
         />
 
-        <div className="absolute left-3 top-3 z-10 rounded-full bg-background/90 px-2 py-1 text-xs">
+        <div className="absolute left-3 top-3 z-[3] rounded-full bg-background/90 px-2 py-1 text-xs">
           <Images className="mr-1 inline h-3.5 w-3.5" />
           {selectedIndex + 1}/{images.length}
         </div>
@@ -73,7 +75,7 @@ export function ListingGallery({ images, title }: { images: PropertyImage[]; tit
           <DialogTrigger asChild>
             <button
               type="button"
-              className="absolute right-3 top-3 z-10 rounded-full bg-background/90 p-2"
+              className="absolute right-3 top-3 z-[3] rounded-full bg-background/90 p-2"
               aria-label="Ouvrir la galerie en plein écran"
               onClick={() => trackEvent("gallery_opened")}
             >
