@@ -43,6 +43,7 @@ const serviceCards = [
 
 const HERO_ROTATE_MS = 6500;
 const HERO_KEN_BURNS_DURATION_S = HERO_ROTATE_MS / 1000 + 0.45;
+const HERO_CROSS_FADE_DURATION_S = 1.35;
 
 type HeroSlide = {
   id: number;
@@ -50,9 +51,17 @@ type HeroSlide = {
   imageUrl: string;
 };
 
+type KenBurnsPoint = { scale: number; x: number; y: number };
+
 type KenBurnsPreset = {
-  from: { scale: number; x: number; y: number };
-  to: { scale: number; x: number; y: number };
+  from: KenBurnsPoint;
+  to: KenBurnsPoint;
+};
+
+type CrossKenBurnsPreset = {
+  from: KenBurnsPoint;
+  to: KenBurnsPoint;
+  exit: KenBurnsPoint;
 };
 
 const kenBurnsPresets: KenBurnsPreset[] = [
@@ -112,6 +121,25 @@ function getKenBurnsPreset(slideId: number, index: number, seed: number): KenBur
   return kenBurnsPresets[presetIndex];
 }
 
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+function toCrossKenBurnsPreset(preset: KenBurnsPreset): CrossKenBurnsPreset {
+  const driftX = preset.to.x - preset.from.x;
+  const driftY = preset.to.y - preset.from.y;
+
+  return {
+    from: preset.from,
+    to: preset.to,
+    exit: {
+      scale: clamp(preset.to.scale + 0.05, 1, 1.24),
+      x: clamp(preset.to.x + driftX * 0.45, -40, 40),
+      y: clamp(preset.to.y + driftY * 0.45, -26, 26),
+    },
+  };
+}
+
 export default function HomePage() {
   const setSearchDrawerOpen = useUiStore((state) => state.setSearchDrawerOpen);
   const featuredQuery = useQuery({ queryKey: ["featured-properties"], queryFn: () => getFeaturedProperties(24) });
@@ -163,11 +191,11 @@ export default function HomePage() {
   const activeHeroSlide = heroSlides[activeHeroIndex];
   const heroMood = inferPlaceImageMood(activeHeroSlide?.title, "Le Havre");
   const heroMotionDirector = useMemo(() => getMotionDirectorProfile(heroMood), [heroMood]);
-  const kenBurnsPreset = useMemo(
+  const crossKenBurnsPreset = useMemo(
     () =>
       activeHeroSlide
-        ? getKenBurnsPreset(activeHeroSlide.id, activeHeroIndex, heroSeed)
-        : { from: { scale: 1.1, x: -10, y: -6 }, to: { scale: 1.02, x: 6, y: 4 } },
+        ? toCrossKenBurnsPreset(getKenBurnsPreset(activeHeroSlide.id, activeHeroIndex, heroSeed))
+        : toCrossKenBurnsPreset({ from: { scale: 1.1, x: -10, y: -6 }, to: { scale: 1.02, x: 6, y: 4 } }),
     [activeHeroIndex, activeHeroSlide, heroSeed],
   );
   const ctaSweepStyle = useMemo(
@@ -221,7 +249,7 @@ export default function HomePage() {
   return (
     <>
       <section className="relative min-h-[68vh] overflow-hidden">
-        <AnimatePresence initial={false}>
+        <AnimatePresence initial={false} mode="sync">
           {heroSlides.length > 0 && (
             <motion.div
               key={`${heroSlides[activeHeroIndex].id}-${activeHeroIndex}`}
@@ -229,17 +257,30 @@ export default function HomePage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={reducedMotion ? { duration: 0.4, ease: "easeOut" } : { duration: 1.1, ease: "easeInOut" }}
+              transition={
+                reducedMotion
+                  ? { duration: 0.4, ease: "easeOut" }
+                  : { duration: HERO_CROSS_FADE_DURATION_S, ease: [0.22, 1, 0.36, 1] }
+              }
             >
               <motion.div
                 className="h-full w-full will-change-transform"
-                initial={reducedMotion ? { scale: 1, x: 0, y: 0 } : kenBurnsPreset.from}
-                animate={reducedMotion ? { scale: 1, x: 0, y: 0 } : kenBurnsPreset.to}
                 transition={
                   reducedMotion
                     ? { duration: 0.3, ease: "linear" }
                     : { duration: HERO_KEN_BURNS_DURATION_S, ease: [0.25, 0.1, 0.25, 1] }
                 }
+                initial={reducedMotion ? { scale: 1, x: 0, y: 0 } : crossKenBurnsPreset.from}
+                animate={reducedMotion ? { scale: 1, x: 0, y: 0 } : crossKenBurnsPreset.to}
+                exit={
+                  reducedMotion
+                    ? { scale: 1, x: 0, y: 0, transition: { duration: 0.35, ease: "easeOut" } }
+                    : {
+                        ...crossKenBurnsPreset.exit,
+                        transition: { duration: HERO_CROSS_FADE_DURATION_S, ease: [0.22, 1, 0.36, 1] },
+                      }
+                }
+                style={{ transformOrigin: "center center" }}
               >
                 <LivingPhotoWebGL
                   imageUrl={heroSlides[activeHeroIndex].imageUrl}
