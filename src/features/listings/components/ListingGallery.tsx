@@ -14,6 +14,7 @@ import { trackEvent } from "@/lib/analytics/events";
 import { cn } from "@/lib/utils";
 import { getPlaceImageMotionPreset, inferPlaceImageMood } from "@/lib/visuals/placeImageMotion";
 import { PlaceAtmosphereLayer } from "@/components/visuals/PlaceAtmosphereLayer";
+import { ContextAwareParallax } from "@/components/visuals/ContextAwareParallax";
 
 export function ListingGallery({ images, title }: { images: PropertyImage[]; title: string }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -34,27 +35,29 @@ export function ListingGallery({ images, title }: { images: PropertyImage[]; tit
   return (
     <div>
       <div className="relative overflow-hidden rounded-2xl border border-border">
-        <motion.img
-          key={activeImage.id}
-          src={activeImage.sourceUrl}
-          alt={activeImage.altText}
-          className="aspect-[16/10] w-full object-cover"
-          initial={reducedMotion ? { opacity: 0.86 } : { opacity: 0, scale: imageMotionPreset.enterScale, y: imageMotionPreset.enterY }}
-          animate={
-            reducedMotion
-              ? { opacity: 1 }
-              : { opacity: 1, scale: [1, imageMotionPreset.hoverScale - 0.01, 1], y: [0, imageMotionPreset.hoverY, 0] }
-          }
-          transition={
-            reducedMotion
-              ? { duration: 0.28, ease: "easeOut" }
-              : {
-                  opacity: { duration: 0.42, ease: [0.22, 1, 0.36, 1] },
-                  scale: { duration: imageMotionPreset.floatDuration, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" },
-                  y: { duration: imageMotionPreset.floatDuration, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" },
-                }
-          }
-        />
+        <ContextAwareParallax mood={imageMood} reducedMotion={reducedMotion} intensity="immersive" scrollReactive className="z-[0]">
+          <motion.img
+            key={activeImage.id}
+            src={activeImage.sourceUrl}
+            alt={activeImage.altText}
+            className="aspect-[16/10] w-full object-cover"
+            initial={reducedMotion ? { opacity: 0.86 } : { opacity: 0, scale: imageMotionPreset.enterScale, y: imageMotionPreset.enterY }}
+            animate={
+              reducedMotion
+                ? { opacity: 1 }
+                : { opacity: 1, scale: [1, imageMotionPreset.hoverScale - 0.01, 1], y: [0, imageMotionPreset.hoverY, 0] }
+            }
+            transition={
+              reducedMotion
+                ? { duration: 0.28, ease: "easeOut" }
+                : {
+                    opacity: { duration: 0.42, ease: [0.22, 1, 0.36, 1] },
+                    scale: { duration: imageMotionPreset.floatDuration, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" },
+                    y: { duration: imageMotionPreset.floatDuration, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" },
+                  }
+            }
+          />
+        </ContextAwareParallax>
         <PlaceAtmosphereLayer mood={imageMood} animated={!reducedMotion} variant="gallery" className="z-[1]" />
         <div className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-t from-black/22 via-black/8 to-transparent" />
 

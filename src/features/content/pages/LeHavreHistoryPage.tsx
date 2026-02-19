@@ -5,6 +5,7 @@ import { getSiteUrl, useSeo } from "@/lib/seo/useSeo";
 import { cn } from "@/lib/utils";
 import { getPlaceImageMotionPreset, inferPlaceImageMood } from "@/lib/visuals/placeImageMotion";
 import { PlaceAtmosphereLayer } from "@/components/visuals/PlaceAtmosphereLayer";
+import { ContextAwareParallax } from "@/components/visuals/ContextAwareParallax";
 import {
   competitiveKeywordSignals,
   leHavreDistrictHistory,
@@ -198,28 +199,30 @@ export default function LeHavreHistoryPage() {
                 {districtPhotos.map((photo, photoIndex) => (
                   <figure key={`${district.id}-${photo?.id}`} className="group overflow-hidden rounded-xl border border-border">
                     <div className="relative overflow-hidden">
-                      <motion.img
-                        src={photo?.src}
-                        alt={photo?.alt}
-                        loading="lazy"
-                        className={cn(
-                          "aspect-[4/3] w-full object-cover transition-transform",
-                          districtMotionPreset.hoverClassName,
-                        )}
-                        itemProp="image"
-                        initial={
-                          reducedMotion
-                            ? { opacity: 1 }
-                            : { opacity: 0, scale: districtMotionPreset.enterScale, y: districtMotionPreset.enterY }
-                        }
-                        whileInView={reducedMotion ? { opacity: 1 } : { opacity: 1, scale: 1, y: 0 }}
-                        viewport={{ once: true, amount: 0.24 }}
-                        transition={{
-                          duration: 0.42,
-                          delay: Math.min(photoIndex * 0.05, 0.2),
-                          ease: [0.22, 1, 0.36, 1],
-                        }}
-                      />
+                      <ContextAwareParallax mood={districtMood} reducedMotion={reducedMotion} intensity="subtle">
+                        <motion.img
+                          src={photo?.src}
+                          alt={photo?.alt}
+                          loading="lazy"
+                          className={cn(
+                            "aspect-[4/3] w-full object-cover transition-transform",
+                            districtMotionPreset.hoverClassName,
+                          )}
+                          itemProp="image"
+                          initial={
+                            reducedMotion
+                              ? { opacity: 1 }
+                              : { opacity: 0, scale: districtMotionPreset.enterScale, y: districtMotionPreset.enterY }
+                          }
+                          whileInView={reducedMotion ? { opacity: 1 } : { opacity: 1, scale: 1, y: 0 }}
+                          viewport={{ once: true, amount: 0.24 }}
+                          transition={{
+                            duration: 0.42,
+                            delay: Math.min(photoIndex * 0.05, 0.2),
+                            ease: [0.22, 1, 0.36, 1],
+                          }}
+                        />
+                      </ContextAwareParallax>
                       <PlaceAtmosphereLayer
                         mood={districtMood}
                         animated={!reducedMotion && photoIndex === 0}

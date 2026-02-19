@@ -13,6 +13,7 @@ import {
 import { useFavoritesStore } from "@/features/favorites/useFavoritesStore";
 import { getPlaceImageMotionPreset, inferPlaceImageMood } from "@/lib/visuals/placeImageMotion";
 import { PlaceAtmosphereLayer } from "@/components/visuals/PlaceAtmosphereLayer";
+import { ContextAwareParallax } from "@/components/visuals/ContextAwareParallax";
 
 interface ListingCardProps {
   item: PropertySearchItem;
@@ -51,16 +52,18 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0 }: Listin
       >
         <Link to={path} className="group grid gap-4 p-3 md:grid-cols-[280px_1fr] md:p-4" itemProp="url">
           <div className="relative overflow-hidden rounded-xl">
-            <img
-              src={item.coverImageUrl}
-              alt={item.title}
-              className={cn(
-                "aspect-[4/3] h-full w-full object-cover transition-transform",
-                imageMotionPreset.hoverClassName,
-              )}
-              loading="lazy"
-              itemProp="image"
-            />
+            <ContextAwareParallax mood={imageMood} reducedMotion={reducedMotion} intensity="subtle">
+              <img
+                src={item.coverImageUrl}
+                alt={item.title}
+                className={cn(
+                  "aspect-[4/3] h-full w-full object-cover transition-transform",
+                  imageMotionPreset.hoverClassName,
+                )}
+                loading="lazy"
+                itemProp="image"
+              />
+            </ContextAwareParallax>
             <PlaceAtmosphereLayer mood={imageMood} animated={enableAmbientAnimation} className="z-[1]" />
             <div
               className={cn(
@@ -144,16 +147,18 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0 }: Listin
       itemType="https://schema.org/RealEstateListing"
     >
       <Link to={path} className="relative block overflow-hidden" itemProp="url">
-        <img
-          src={item.coverImageUrl}
-          alt={item.title}
-          className={cn(
-            "aspect-[4/3] w-full object-cover transition-transform",
-            imageMotionPreset.hoverClassName,
-          )}
-          loading="lazy"
-          itemProp="image"
-        />
+        <ContextAwareParallax mood={imageMood} reducedMotion={reducedMotion} intensity="subtle">
+          <img
+            src={item.coverImageUrl}
+            alt={item.title}
+            className={cn(
+              "aspect-[4/3] w-full object-cover transition-transform",
+              imageMotionPreset.hoverClassName,
+            )}
+            loading="lazy"
+            itemProp="image"
+          />
+        </ContextAwareParallax>
         <PlaceAtmosphereLayer mood={imageMood} animated={enableAmbientAnimation} className="z-[1]" />
         <div
           className={cn(

@@ -15,6 +15,7 @@ import { MarketCounters } from "@/features/content/components/MarketCounters";
 import { getAgencyReviews } from "@/features/content/api/googleReviews.service";
 import { inferPlaceImageMood } from "@/lib/visuals/placeImageMotion";
 import { PlaceAtmosphereLayer } from "@/components/visuals/PlaceAtmosphereLayer";
+import { ContextAwareParallax } from "@/components/visuals/ContextAwareParallax";
 
 const serviceCards = [
   {
@@ -125,23 +126,25 @@ export default function HomePage() {
       <section className="relative min-h-[68vh] overflow-hidden">
         <AnimatePresence initial={false}>
           {heroSlides.length > 0 && (
-            <motion.img
-              key={`${heroSlides[activeHeroIndex].id}-${activeHeroIndex}`}
-              src={heroSlides[activeHeroIndex].imageUrl}
-              alt={heroSlides[activeHeroIndex].title}
-              className="absolute inset-0 h-full w-full object-cover"
-              initial={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 1.03 }}
-              animate={reducedMotion ? { opacity: 1 } : { opacity: 1, scale: 1.09 }}
-              exit={{ opacity: 0 }}
-              transition={
-                reducedMotion
-                  ? { duration: 0.4, ease: "easeOut" }
-                  : {
-                      opacity: { duration: 1.1, ease: "easeInOut" },
-                      scale: { duration: HERO_ROTATE_MS / 1000 + 0.8, ease: "linear" },
-                    }
-              }
-            />
+            <ContextAwareParallax mood={heroMood} reducedMotion={reducedMotion} intensity="immersive" scrollReactive className="absolute inset-0 z-0">
+              <motion.img
+                key={`${heroSlides[activeHeroIndex].id}-${activeHeroIndex}`}
+                src={heroSlides[activeHeroIndex].imageUrl}
+                alt={heroSlides[activeHeroIndex].title}
+                className="absolute inset-0 h-full w-full object-cover"
+                initial={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 1.03 }}
+                animate={reducedMotion ? { opacity: 1 } : { opacity: 1, scale: 1.09 }}
+                exit={{ opacity: 0 }}
+                transition={
+                  reducedMotion
+                    ? { duration: 0.4, ease: "easeOut" }
+                    : {
+                        opacity: { duration: 1.1, ease: "easeInOut" },
+                        scale: { duration: HERO_ROTATE_MS / 1000 + 0.8, ease: "linear" },
+                      }
+                }
+              />
+            </ContextAwareParallax>
           )}
         </AnimatePresence>
         {heroSlides.length > 0 && <PlaceAtmosphereLayer mood={heroMood} animated={!reducedMotion} className="z-[1]" />}

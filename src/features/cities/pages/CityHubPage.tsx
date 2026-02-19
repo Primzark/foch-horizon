@@ -11,6 +11,7 @@ import { getSiteUrl, useSeo } from "@/lib/seo/useSeo";
 import { cn } from "@/lib/utils";
 import { getPlaceImageMotionPreset, inferPlaceImageMood } from "@/lib/visuals/placeImageMotion";
 import { PlaceAtmosphereLayer } from "@/components/visuals/PlaceAtmosphereLayer";
+import { ContextAwareParallax } from "@/components/visuals/ContextAwareParallax";
 
 export default function CityHubPage() {
   const { ville } = useParams();
@@ -89,26 +90,28 @@ export default function CityHubPage() {
   return (
     <section className="container mx-auto px-4 py-10">
       <header className="relative overflow-hidden rounded-2xl border border-border">
-        <motion.img
-          src={city.heroImageUrl}
-          alt={`Immobilier à ${city.name}`}
-          className="h-64 w-full object-cover md:h-80"
-          initial={reducedMotion ? { opacity: 0.9 } : { opacity: 0, scale: heroMotionPreset.enterScale, y: heroMotionPreset.enterY }}
-          animate={
-            reducedMotion
-              ? { opacity: 1 }
-              : { opacity: 1, scale: [1, heroMotionPreset.hoverScale - 0.01, 1], y: [0, heroMotionPreset.hoverY, 0] }
-          }
-          transition={
-            reducedMotion
-              ? { duration: 0.34, ease: "easeOut" }
-              : {
-                  opacity: { duration: 0.56, ease: [0.22, 1, 0.36, 1] },
-                  scale: { duration: heroMotionPreset.floatDuration, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" },
-                  y: { duration: heroMotionPreset.floatDuration, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" },
-                }
-          }
-        />
+        <ContextAwareParallax mood={heroMood} reducedMotion={reducedMotion} intensity="immersive" scrollReactive className="z-[0]">
+          <motion.img
+            src={city.heroImageUrl}
+            alt={`Immobilier à ${city.name}`}
+            className="h-64 w-full object-cover md:h-80"
+            initial={reducedMotion ? { opacity: 0.9 } : { opacity: 0, scale: heroMotionPreset.enterScale, y: heroMotionPreset.enterY }}
+            animate={
+              reducedMotion
+                ? { opacity: 1 }
+                : { opacity: 1, scale: [1, heroMotionPreset.hoverScale - 0.01, 1], y: [0, heroMotionPreset.hoverY, 0] }
+            }
+            transition={
+              reducedMotion
+                ? { duration: 0.34, ease: "easeOut" }
+                : {
+                    opacity: { duration: 0.56, ease: [0.22, 1, 0.36, 1] },
+                    scale: { duration: heroMotionPreset.floatDuration, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" },
+                    y: { duration: heroMotionPreset.floatDuration, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" },
+                  }
+            }
+          />
+        </ContextAwareParallax>
         <PlaceAtmosphereLayer mood={heroMood} animated={!reducedMotion} className="z-[1]" />
         <motion.div
           className={cn("absolute inset-0 z-[2] bg-gradient-to-br", heroMotionPreset.overlayClassName)}
