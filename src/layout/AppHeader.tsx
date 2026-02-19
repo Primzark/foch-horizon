@@ -74,7 +74,7 @@ function SelectionLink({
       aria-label={`Biens sauvegardés (${count} ${itemLabel})`}
     >
       <Heart className={cn("h-5 w-5 text-brand", count > 0 && "fill-brand")} />
-      <span className="text-xs font-semibold leading-none tabular-nums">{count}</span>
+      <span className="text-xs font-semibold leading-none tabular-nums max-[390px]:hidden">{count}</span>
     </NavLink>
   );
 }
@@ -117,7 +117,7 @@ export function AppHeader() {
   const headerClass = useMemo(
     () =>
       cn(
-        "sticky top-0 z-50 transition-all duration-200",
+        "sticky top-0 z-50 [padding-top:env(safe-area-inset-top)] transition-all duration-200",
         scrolled || mobileOpen
           ? "border-b border-border/70 bg-background/85 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/70"
           : "border-b border-transparent bg-transparent py-3",
@@ -128,27 +128,28 @@ export function AppHeader() {
   return (
     <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
       <header className={headerClass}>
-        <div className="container mx-auto flex items-center justify-between px-4">
+        <div className="container mx-auto flex items-center justify-between gap-1.5 px-2.5 sm:gap-2 sm:px-4">
           <SheetTrigger asChild>
             <button
               type="button"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background/95 text-foreground shadow-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent lg:hidden"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-background/95 text-foreground shadow-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent lg:hidden"
               aria-label={mobileOpen ? "Fermer le menu" : "Ouvrir le menu"}
               aria-expanded={mobileOpen}
             >
-              <Menu className="h-5 w-5" />
+              <Menu className="h-[1.28rem] w-[1.28rem]" />
             </button>
           </SheetTrigger>
 
-          <Link to="/" className="flex items-center gap-2 sm:gap-2.5">
+          <Link to="/" className="flex min-w-0 items-center gap-1.5 sm:gap-2">
             <span
               className={cn(
-                "font-sans text-[1.8rem] font-semibold leading-none tracking-tight transition-all duration-200 md:text-[2rem]",
-                scrolled && "text-[1.55rem] md:text-[1.7rem]",
+                "whitespace-nowrap font-sans text-[1.34rem] font-semibold leading-none tracking-tight transition-all duration-200 sm:text-[1.56rem] md:text-[2rem]",
+                scrolled && "text-[1.16rem] sm:text-[1.36rem] md:text-[1.7rem]",
               )}
             >
               <span className="text-[#000000]">Foch</span>
-              <span className="text-[#2eca6a]">Immobilier</span>
+              <span className="text-[#2eca6a] max-[360px]:hidden">Immobilier</span>
+              <span className="hidden text-[#2eca6a] max-[360px]:inline">Immo</span>
             </span>
             <img
               src={legacyLogoUrl}
@@ -165,14 +166,15 @@ export function AppHeader() {
             ))}
           </nav>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <SelectionLink
               count={favoriteIds.length}
+              className="max-[390px]:h-10 max-[390px]:min-w-10 max-[390px]:gap-0 max-[390px]:px-0"
               onClick={() => trackEvent("favorites_opened", { source: "header" })}
             />
             <button
               type="button"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background/90 transition-colors hover:border-brand-border hover:bg-brand-soft/70"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background/90 transition-colors hover:border-brand-border hover:bg-brand-soft/70 sm:h-10 sm:w-10"
               aria-label="Ouvrir la recherche"
               onClick={() => {
                 setSearchDrawerOpen(true);
@@ -184,7 +186,8 @@ export function AppHeader() {
             <button
               type="button"
               className={cn(
-                "inline-flex h-10 w-10 items-center justify-center rounded-full border bg-background/90 transition-colors",
+                "inline-flex h-9 w-9 items-center justify-center rounded-full border bg-background/90 transition-colors sm:h-10 sm:w-10",
+                "max-[390px]:hidden",
                 reducedMotionEnabled
                   ? "border-brand-border bg-brand-soft text-brand-strong"
                   : "border-border hover:border-brand-border hover:bg-brand-soft/70",

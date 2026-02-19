@@ -87,7 +87,7 @@ export function AppFooter() {
             </li>
             <li className="flex items-center gap-2">
               <Mail className="h-4 w-4" />
-              <a href="mailto:vendre@fochimmobilier.com" className="u-email" itemProp="email">
+              <a href="mailto:vendre@fochimmobilier.com" className="u-email break-all" itemProp="email">
                 vendre@fochimmobilier.com
               </a>
             </li>

@@ -83,7 +83,10 @@ export function SearchDrawer() {
 
   return (
     <Sheet open={searchDrawerOpen} onOpenChange={setSearchDrawerOpen}>
-      <SheetContent side={isMobile ? "bottom" : "top"} className="max-h-[92vh] overflow-y-auto px-4 sm:px-8">
+      <SheetContent
+        side={isMobile ? "bottom" : "top"}
+        className="max-h-[92vh] overflow-y-auto px-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-8"
+      >
         <SheetHeader className="pb-4">
           <SheetTitle>Rechercher un bien</SheetTitle>
           <SheetDescription>

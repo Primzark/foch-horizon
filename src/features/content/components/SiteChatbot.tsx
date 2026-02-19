@@ -600,18 +600,28 @@ export function SiteChatbot() {
   };
 
   return (
-    <div className="pointer-events-auto fixed bottom-4 right-4 z-[160]">
+    <>
+      {open && (
+        <button
+          type="button"
+          aria-label="Fermer le chatbot"
+          className="fixed inset-0 z-[150] bg-black/20 backdrop-blur-[1px]"
+          onClick={closeChat}
+        />
+      )}
+
+      <div className="pointer-events-auto fixed z-[160] bottom-[max(0.75rem,env(safe-area-inset-bottom))] right-[max(0.75rem,env(safe-area-inset-right))] max-sm:left-[max(0.75rem,env(safe-area-inset-left))]">
       {open && (
         <motion.section
           initial={{ opacity: 0, y: 18, scale: 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.2, ease: "easeOut" }}
-          className="pointer-events-auto mb-3 w-[min(94vw,420px)] rounded-2xl border border-border bg-card shadow-card"
+          className="pointer-events-auto mb-3 w-[min(94vw,420px)] rounded-2xl border border-border bg-card shadow-card max-sm:w-full"
         >
             <header className="flex items-center justify-between border-b border-border px-4 py-3">
               <div>
                 <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Assistant IA</p>
-                <h2 className="font-display text-2xl">Chatbot immobilier Le Havre</h2>
+                <h2 className="font-display text-xl sm:text-2xl">Chatbot immobilier Le Havre</h2>
               </div>
 
               <div className="flex items-center gap-2">
@@ -636,7 +646,7 @@ export function SiteChatbot() {
               </div>
             </header>
 
-            <div ref={scrollRef} className="max-h-[56vh] space-y-3 overflow-y-auto px-4 py-4">
+            <div ref={scrollRef} className="max-h-[52vh] space-y-3 overflow-y-auto px-4 py-4 sm:max-h-[56vh]">
               {messages.map((message) => (
                 <article
                   key={message.id}
@@ -757,11 +767,16 @@ export function SiteChatbot() {
         </motion.section>
       )}
 
-      <Button type="button" className="h-12 rounded-full px-4 shadow-card" onClick={openChatWithGreeting}>
+      <Button
+        type="button"
+        className="h-12 rounded-full px-4 shadow-card max-sm:w-full max-sm:justify-center"
+        onClick={openChatWithGreeting}
+      >
         {open ? <X className="mr-1 h-4 w-4" /> : <BotMessageSquare className="mr-1 h-4 w-4" />}
         {open ? "Fermer" : "Chat immobilier IA"}
         <Sparkles className="ml-1 h-3.5 w-3.5" />
       </Button>
-    </div>
+      </div>
+    </>
   );
 }
