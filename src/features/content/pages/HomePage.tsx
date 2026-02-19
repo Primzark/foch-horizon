@@ -17,6 +17,7 @@ import { inferPlaceImageMood } from "@/lib/visuals/placeImageMotion";
 import { PlaceAtmosphereLayer } from "@/components/visuals/PlaceAtmosphereLayer";
 import { ScrollReveal } from "@/components/visuals/ScrollReveal";
 import { LivingPhotoWebGL } from "@/components/visuals/LivingPhotoWebGL";
+import { ContextAwareParallax } from "@/components/visuals/ContextAwareParallax";
 import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
 import { getMotionDirectorProfile } from "@/lib/visuals/motionDirector";
 
@@ -46,6 +47,7 @@ const HERO_KEN_BURNS_DURATION_S = HERO_ROTATE_MS / 1000 + 0.45;
 const HERO_CROSS_FADE_DURATION_S = 1.35;
 const HERO_PRELOAD_PRIORITY_COUNT = 3;
 const HERO_FALLBACK_IMAGE_URL = "/images/le-havre-history/panorama-le-havre.jpg";
+const HERO_SLIDE_BLEED_CLASS = "absolute -inset-[14vw] sm:-inset-12 md:-inset-10 z-[1]";
 
 type HeroSlide = {
   id: number;
@@ -72,10 +74,10 @@ type HeroTransitionEffectsProps = {
 };
 
 const kenBurnsPresets: KenBurnsPreset[] = [
-  { from: { scale: 1.2, x: -30, y: -16 }, to: { scale: 1.03, x: 13, y: 9 } },
-  { from: { scale: 1.18, x: 26, y: -14 }, to: { scale: 1.03, x: -12, y: 8 } },
-  { from: { scale: 1.18, x: -22, y: 16 }, to: { scale: 1.02, x: 15, y: -10 } },
-  { from: { scale: 1.19, x: 22, y: 14 }, to: { scale: 1.03, x: -15, y: -10 } },
+  { from: { scale: 1.24, x: -26, y: -14 }, to: { scale: 1.1, x: 10, y: 7 } },
+  { from: { scale: 1.23, x: 24, y: -13 }, to: { scale: 1.09, x: -10, y: 7 } },
+  { from: { scale: 1.23, x: -20, y: 14 }, to: { scale: 1.09, x: 11, y: -8 } },
+  { from: { scale: 1.24, x: 20, y: 13 }, to: { scale: 1.1, x: -11, y: -8 } },
 ];
 
 function createSeededRng(seed: number) {
@@ -146,14 +148,14 @@ function getAlternatingKenBurnsPreset(slideId: number, motionStep: number, seed:
 
   return {
     from: {
-      scale: clamp(basePreset.to.scale + 0.03, 1.03, 1.09),
-      x: clamp(-basePreset.to.x * 0.88, -32, 32),
-      y: clamp(-basePreset.to.y * 0.88, -20, 20),
+      scale: clamp(basePreset.to.scale + 0.03, 1.11, 1.17),
+      x: clamp(-basePreset.to.x * 0.86, -28, 28),
+      y: clamp(-basePreset.to.y * 0.86, -18, 18),
     },
     to: {
-      scale: clamp(basePreset.from.scale - 0.02, 1.12, 1.24),
-      x: clamp(-basePreset.from.x * 0.72, -40, 40),
-      y: clamp(-basePreset.from.y * 0.72, -24, 24),
+      scale: clamp(basePreset.from.scale - 0.03, 1.17, 1.3),
+      x: clamp(-basePreset.from.x * 0.68, -34, 34),
+      y: clamp(-basePreset.from.y * 0.68, -22, 22),
     },
   };
 }
@@ -166,9 +168,9 @@ function toCrossKenBurnsPreset(preset: KenBurnsPreset): CrossKenBurnsPreset {
     from: preset.from,
     to: preset.to,
     exit: {
-      scale: clamp(preset.to.scale + 0.05, 1, 1.24),
-      x: clamp(preset.to.x + driftX * 0.45, -40, 40),
-      y: clamp(preset.to.y + driftY * 0.45, -26, 26),
+      scale: clamp(preset.to.scale + 0.04, 1.08, 1.3),
+      x: clamp(preset.to.x + driftX * 0.38, -34, 34),
+      y: clamp(preset.to.y + driftY * 0.38, -22, 22),
     },
   };
 }
@@ -284,16 +286,13 @@ export default function HomePage() {
   const [heroSeed] = useState(() => Math.floor(Math.random() * 0x7fffffff));
   const heroRng = useMemo(() => createSeededRng(heroSeed ^ 0x243f6a88), [heroSeed]);
   const heroSlides = useMemo(() => buildHeroSlides(featuredQuery.data ?? [], heroSeed), [featuredQuery.data, heroSeed]);
-  const heroSlidesSignature = useMemo(
-    () => heroSlides.map((slide) => `${slide.id}:${slide.imageUrl}`).join("|"),
-    [heroSlides],
-  );
   const heroImageUrls = useMemo(() => heroSlides.map((slide) => slide.imageUrl), [heroSlides]);
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
   const [heroMotionStep, setHeroMotionStep] = useState(0);
   const [readyHeroUrls, setReadyHeroUrls] = useState<Set<string>>(() => new Set([HERO_FALLBACK_IMAGE_URL]));
   const heroQueueRef = useRef<number[]>([]);
   const previousActiveHeroIndexRef = useRef<number | null>(null);
+  const previousActiveHeroImageUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (heroImageUrls.length === 0) {
@@ -340,15 +339,25 @@ export default function HomePage() {
       setHeroMotionStep(0);
       heroQueueRef.current = [];
       previousActiveHeroIndexRef.current = null;
+      previousActiveHeroImageUrlRef.current = null;
       return;
     }
 
-    const random = createSeededRng(heroSeed ^ 0x3c6ef372);
-    setActiveHeroIndex(Math.floor(random() * heroSlides.length));
-    setHeroMotionStep(0);
+    const previouslyActiveUrl = previousActiveHeroImageUrlRef.current;
+    const preservedIndex =
+      previouslyActiveUrl == null ? -1 : heroSlides.findIndex((slide) => slide.imageUrl === previouslyActiveUrl);
+
+    if (preservedIndex >= 0) {
+      setActiveHeroIndex(preservedIndex);
+      previousActiveHeroIndexRef.current = preservedIndex;
+    } else {
+      setActiveHeroIndex(0);
+      previousActiveHeroIndexRef.current = 0;
+      setHeroMotionStep(0);
+    }
+
     heroQueueRef.current = [];
-    previousActiveHeroIndexRef.current = null;
-  }, [heroSeed, heroSlides.length, heroSlidesSignature]);
+  }, [heroSlides]);
 
   useEffect(() => {
     if (heroSlides.length <= 1) {
@@ -446,6 +455,11 @@ export default function HomePage() {
   const activeHeroSlide = heroSlides[safeHeroIndex];
   const isActiveHeroReady = Boolean(activeHeroSlide && readyHeroUrls.has(activeHeroSlide.imageUrl));
   const activeHeroTransitionKey = activeHeroSlide ? `${activeHeroSlide.id}-${safeHeroIndex}` : `hero-${safeHeroIndex}`;
+
+  useEffect(() => {
+    previousActiveHeroImageUrlRef.current = activeHeroSlide?.imageUrl ?? null;
+  }, [activeHeroSlide?.imageUrl]);
+
   const heroMood = inferPlaceImageMood(activeHeroSlide?.title, "Le Havre");
   const heroMotionDirector = useMemo(() => getMotionDirectorProfile(heroMood), [heroMood]);
   const crossKenBurnsPreset = useMemo(
@@ -518,7 +532,7 @@ export default function HomePage() {
           {heroSlides.length > 0 && isActiveHeroReady && (
             <motion.div
               key={`${heroSlides[safeHeroIndex].id}-${safeHeroIndex}`}
-              className="absolute inset-0 z-[1]"
+              className={HERO_SLIDE_BLEED_CLASS}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -547,25 +561,30 @@ export default function HomePage() {
                 }
                 style={{ transformOrigin: "center center" }}
               >
-                <LivingPhotoWebGL
-                  imageUrl={heroSlides[safeHeroIndex].imageUrl}
-                  alt={heroSlides[safeHeroIndex].title}
-                  mood={heroMood}
-                  depthMapUrl="/images/motion/hero-depth-map.svg"
-                  maskUrl="/images/motion/sea-mask.svg"
-                  fallbackImageUrl="/images/le-havre-history/panorama-le-havre.jpg"
-                  reducedMotion={reducedMotion}
-                  qualityTier={reducedMotion ? undefined : "high"}
-                  qualityBoost={!reducedMotion}
-                  className="h-full w-full"
-                />
+                <ContextAwareParallax mood={heroMood} reducedMotion={reducedMotion} intensity="subtle" scrollReactive className="h-full w-full">
+                  <LivingPhotoWebGL
+                    imageUrl={heroSlides[safeHeroIndex].imageUrl}
+                    alt={heroSlides[safeHeroIndex].title}
+                    mood={heroMood}
+                    depthMapUrl="/images/motion/hero-depth-map.svg"
+                    maskUrl="/images/motion/sea-mask.svg"
+                    fallbackImageUrl="/images/le-havre-history/panorama-le-havre.jpg"
+                    reducedMotion={reducedMotion}
+                    qualityTier={reducedMotion ? undefined : "high"}
+                    qualityBoost={!reducedMotion}
+                    className="h-full w-full"
+                  />
+                </ContextAwareParallax>
               </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
         {heroSlides.length > 0 && <PlaceAtmosphereLayer mood={heroMood} animated={!reducedMotion} className="z-[2]" />}
         <div className="absolute inset-0 z-[3] bg-gradient-to-br from-black/55 via-black/35 to-black/55" />
-        <HeroTransitionEffects active={!reducedMotion && heroSlides.length > 1} transitionKey={activeHeroTransitionKey} />
+        <HeroTransitionEffects
+          active={!reducedMotion && heroSlides.length > 1 && isActiveHeroReady}
+          transitionKey={activeHeroTransitionKey}
+        />
         <div className="container relative z-[5] mx-auto flex min-h-[68vh] flex-col justify-center px-4 py-16">
           <motion.h1
             initial={{ opacity: 0, y: 12 }}
