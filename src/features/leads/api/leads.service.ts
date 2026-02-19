@@ -44,7 +44,8 @@ function assignAgent(input: LeadInput): string | null {
 }
 
 export async function submitLead(input: LeadInput): Promise<{ ok: true; leadId: string; assignedAgentId: string | null }> {
-  const payload = leadInputSchema.parse(input);
+  leadInputSchema.parse(input);
+  const payload: LeadInput = input;
 
   if (isEdgeApiEnabled()) {
     return apiJson<{ ok: true; leadId: string; assignedAgentId: string | null }>("/api/leads", {

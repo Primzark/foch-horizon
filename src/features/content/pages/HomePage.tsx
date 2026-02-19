@@ -149,17 +149,19 @@ function getAlternatingKenBurnsPreset(slideId: number, motionStep: number, seed:
   const basePreset = kenBurnsPresets[presetIndex];
 
   if (motionStep % 2 === 0) {
+    // Even steps: zoom-out (start big, end smaller) — same as base preset
     return basePreset;
   }
 
+  // Odd steps: zoom-in (start smaller, end bigger) — reverse direction
   return {
     from: {
-      scale: clamp(basePreset.to.scale + 0.03, 1.11, 1.17),
+      scale: clamp(basePreset.to.scale + 0.02, 1.08, 1.14),
       x: clamp(-basePreset.to.x * 0.86, -28, 28),
       y: clamp(-basePreset.to.y * 0.86, -18, 18),
     },
     to: {
-      scale: clamp(basePreset.from.scale - 0.03, 1.17, 1.3),
+      scale: clamp(basePreset.from.scale + 0.01, 1.2, 1.32),
       x: clamp(-basePreset.from.x * 0.68, -34, 34),
       y: clamp(-basePreset.from.y * 0.68, -22, 22),
     },
@@ -202,52 +204,52 @@ function HeroTransitionEffects({ active, transitionKey }: HeroTransitionEffectsP
 
   return (
     <>
+      {/* Radial ripple burst — strong, visible on dark hero */}
       <AnimatePresence initial={false} mode="sync">
         <motion.div
           key={`hero-ripple-${transitionKey}`}
           className="pointer-events-none absolute inset-0 z-[4]"
           style={{
             background:
-              "radial-gradient(circle at 48% 58%, rgba(208,240,255,0.46) 0%, rgba(158,216,250,0.35) 20%, rgba(90,154,217,0.2) 40%, rgba(26,73,125,0.04) 60%, rgba(11,35,66,0) 74%)",
-            mixBlendMode: "screen",
+              "radial-gradient(circle at 50% 50%, rgba(255,255,255,0.55) 0%, rgba(180,230,255,0.42) 18%, rgba(80,170,240,0.28) 38%, rgba(30,100,200,0.08) 60%, transparent 76%)",
           }}
-          initial={{ opacity: 0, scale: 0.82 }}
-          animate={{ opacity: [0, 0.6, 0], scale: [0.82, 1.04, 1.22] }}
+          initial={{ opacity: 0, scale: 0.55 }}
+          animate={{ opacity: [0, 1, 0.6, 0], scale: [0.55, 1.0, 1.35, 1.7] }}
           exit={{ opacity: 0 }}
-          transition={{ duration: HERO_CROSS_FADE_DURATION_S, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: HERO_CROSS_FADE_DURATION_S * 1.1, ease: [0.16, 1, 0.3, 1] }}
         />
       </AnimatePresence>
 
+      {/* Diagonal light sweep — liquid wipe */}
       <AnimatePresence initial={false} mode="sync">
         <motion.div
           key={`hero-liquid-wipe-${transitionKey}`}
-          className="pointer-events-none absolute inset-y-0 left-[-42%] z-[4] w-[84%]"
+          className="pointer-events-none absolute inset-y-0 left-[-52%] z-[4] w-[90%]"
           style={{
             background:
-              "linear-gradient(105deg, rgba(140,202,244,0) 0%, rgba(193,232,255,0.62) 34%, rgba(255,255,255,0.5) 50%, rgba(74,154,214,0.34) 66%, rgba(26,67,116,0) 100%)",
-            mixBlendMode: "screen",
-            filter: "blur(10px)",
+              "linear-gradient(108deg, rgba(255,255,255,0) 0%, rgba(220,240,255,0.72) 34%, rgba(255,255,255,0.65) 50%, rgba(100,180,240,0.48) 66%, rgba(255,255,255,0) 100%)",
+            filter: "blur(8px)",
             borderRadius: "999px",
             maskImage:
-              "radial-gradient(120% 85% at 35% 50%, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.8) 36%, rgba(255,255,255,0.48) 60%, rgba(255,255,255,0.14) 80%, transparent 100%)",
+              "radial-gradient(130% 90% at 35% 50%, rgba(255,255,255,1) 0%, rgba(255,255,255,0.85) 36%, rgba(255,255,255,0.5) 60%, rgba(255,255,255,0.15) 80%, transparent 100%)",
           }}
-          initial={{ x: "-18%", opacity: 0, rotate: -1.2 }}
-          animate={{ x: ["-18%", "112%"], opacity: [0, 0.72, 0], rotate: [-1.2, 0.9] }}
+          initial={{ x: "-22%", opacity: 0, rotate: -1.5 }}
+          animate={{ x: ["-22%", "116%"], opacity: [0, 0.88, 0.6, 0], rotate: [-1.5, 1.2] }}
           exit={{ opacity: 0 }}
-          transition={{ duration: HERO_CROSS_FADE_DURATION_S, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: HERO_CROSS_FADE_DURATION_S, ease: [0.2, 1, 0.35, 1] }}
         />
       </AnimatePresence>
 
+      {/* Ambient shimmer — continuous slow pan */}
       <motion.div
         className="pointer-events-none absolute inset-0 z-[4]"
         style={{
           background:
-            "linear-gradient(110deg, rgba(255,255,255,0) 20%, rgba(196,234,255,0.16) 36%, rgba(255,255,255,0.3) 48%, rgba(166,214,247,0.16) 62%, rgba(255,255,255,0) 78%)",
-          mixBlendMode: "screen",
-          maskImage: "linear-gradient(to bottom, transparent 26%, rgba(255,255,255,0.96) 100%)",
+            "linear-gradient(112deg, rgba(255,255,255,0) 18%, rgba(210,238,255,0.18) 36%, rgba(255,255,255,0.28) 50%, rgba(170,220,255,0.14) 64%, rgba(255,255,255,0) 80%)",
+          maskImage: "linear-gradient(to bottom, transparent 20%, rgba(255,255,255,0.92) 100%)",
         }}
-        animate={{ x: ["-34%", "24%", "-28%"] }}
-        transition={{ duration: 14.5, ease: "easeInOut", repeat: Number.POSITIVE_INFINITY }}
+        animate={{ x: ["-38%", "26%", "-32%"] }}
+        transition={{ duration: 13, ease: "easeInOut", repeat: Number.POSITIVE_INFINITY }}
       />
     </>
   );
@@ -411,6 +413,7 @@ export default function HomePage() {
       previousActiveHeroIndexRef.current = 0;
       setHeroMotionStep(0);
       heroLastChangeAtRef.current = Date.now();
+      heroSlideStartAtRef.current = Date.now();
     }
 
     heroQueueRef.current = [];
@@ -432,6 +435,7 @@ export default function HomePage() {
       setHeroMotionStep((step) => step + 1);
       previousActiveHeroIndexRef.current = normalizedActive;
       heroLastChangeAtRef.current = Date.now();
+      heroSlideStartAtRef.current = Date.now();
     }
   }, [activeHeroIndex, heroSlides.length]);
 
@@ -474,6 +478,9 @@ export default function HomePage() {
       : null;
   }, [activeHeroSlide]);
 
+  // Track when the current slide became the active slide (not when it became ready)
+  const heroSlideStartAtRef = useRef<number>(Date.now());
+
   useEffect(() => {
     if (heroSlides.length <= 1 || !isActiveHeroReady) {
       if (heroSlides.length <= 1) {
@@ -481,6 +488,10 @@ export default function HomePage() {
       }
       return;
     }
+
+    // Compute how long this slide has already been active so we honour the full dwell
+    const elapsed = Date.now() - heroSlideStartAtRef.current;
+    const remaining = Math.max(HERO_ROTATE_MS - elapsed, 600);
 
     const timeoutId = window.setTimeout(() => {
       const latestSlides = heroSlidesRef.current;
@@ -514,7 +525,7 @@ export default function HomePage() {
 
         return currentReadyIndex;
       });
-    }, HERO_ROTATE_MS);
+    }, remaining);
 
     return () => window.clearTimeout(timeoutId);
   }, [activeHeroTransitionKey, heroRng, heroSlides.length, isActiveHeroReady]);
