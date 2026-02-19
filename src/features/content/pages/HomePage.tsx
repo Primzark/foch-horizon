@@ -42,29 +42,95 @@ const serviceCards = [
 ];
 
 const HERO_ROTATE_MS = 6500;
+const HERO_KEN_BURNS_DURATION_S = 8.8;
+
+type HeroSlide = {
+  id: number;
+  title: string;
+  imageUrl: string;
+};
+
+type KenBurnsPreset = {
+  from: { scale: number; x: number; y: number };
+  to: { scale: number; x: number; y: number };
+};
+
+const kenBurnsPresets: KenBurnsPreset[] = [
+  { from: { scale: 1.14, x: -18, y: -10 }, to: { scale: 1.04, x: 8, y: 6 } },
+  { from: { scale: 1.12, x: 16, y: -9 }, to: { scale: 1.03, x: -9, y: 5 } },
+  { from: { scale: 1.11, x: -12, y: 11 }, to: { scale: 1.02, x: 11, y: -6 } },
+  { from: { scale: 1.13, x: 13, y: 10 }, to: { scale: 1.03, x: -12, y: -7 } },
+];
+
+function createSeededRng(seed: number) {
+  let state = seed >>> 0;
+  return () => {
+    state = (state * 1664525 + 1013904223) >>> 0;
+    return state / 0x100000000;
+  };
+}
+
+function shuffleWithSeed<T>(items: T[], seed: number): T[] {
+  const shuffled = [...items];
+  const random = createSeededRng(seed);
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(random() * (index + 1));
+    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+  }
+  return shuffled;
+}
+
+function buildHeroSlides(properties: Awaited<ReturnType<typeof getFeaturedProperties>>, seed: number): HeroSlide[] {
+  const random = createSeededRng(seed ^ 0xa5a5a5a5);
+
+  const slides = properties
+    .map((property) => {
+      if (!property.images.length) {
+        return null;
+      }
+
+      const selectableCount = Math.min(property.images.length, 4);
+      const imageIndex = Math.floor(random() * selectableCount);
+      const selectedImage = property.images[imageIndex] ?? property.images[0];
+
+      return {
+        id: property.id,
+        title: property.title,
+        imageUrl: selectedImage?.sourceUrl ?? "",
+      };
+    })
+    .filter((slide): slide is HeroSlide => Boolean(slide?.imageUrl));
+
+  const deduplicated = Array.from(new Map(slides.map((slide) => [slide.id, slide])).values());
+  const shuffled = shuffleWithSeed(deduplicated, seed ^ 0x9e3779b9);
+  const desiredCount = shuffled.length <= 6 ? shuffled.length : Math.min(shuffled.length, 10);
+  return shuffled.slice(0, desiredCount);
+}
+
+function getKenBurnsPreset(slideId: number, index: number, seed: number): KenBurnsPreset {
+  const presetIndex = (Math.abs(slideId * 31 + index * 17 + seed) % kenBurnsPresets.length) >>> 0;
+  return kenBurnsPresets[presetIndex];
+}
 
 export default function HomePage() {
   const setSearchDrawerOpen = useUiStore((state) => state.setSearchDrawerOpen);
-  const featuredQuery = useQuery({ queryKey: ["featured-properties"], queryFn: () => getFeaturedProperties(6) });
+  const featuredQuery = useQuery({ queryKey: ["featured-properties"], queryFn: () => getFeaturedProperties(24) });
   const reviewsQuery = useQuery({ queryKey: ["agency-google-reviews-home"], queryFn: getAgencyReviews });
   const { reducedMotion } = useMotionPreference();
   const siteUrl = getSiteUrl();
-  const heroSlides = useMemo(
-    () =>
-      (featuredQuery.data ?? [])
-        .map((property) => ({
-          id: property.id,
-          title: property.title,
-          imageUrl: property.images[0]?.sourceUrl ?? "",
-        }))
-        .filter((slide) => slide.imageUrl.length > 0),
-    [featuredQuery.data],
-  );
+  const [heroSeed] = useState(() => Math.floor(Math.random() * 0x7fffffff));
+  const heroSlides = useMemo(() => buildHeroSlides(featuredQuery.data ?? [], heroSeed), [featuredQuery.data, heroSeed]);
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
 
   useEffect(() => {
-    setActiveHeroIndex(0);
-  }, [heroSlides.length]);
+    if (heroSlides.length === 0) {
+      setActiveHeroIndex(0);
+      return;
+    }
+
+    const random = createSeededRng(heroSeed ^ 0x3c6ef372);
+    setActiveHeroIndex(Math.floor(random() * heroSlides.length));
+  }, [heroSeed, heroSlides]);
 
   useEffect(() => {
     if (heroSlides.length <= 1) {
@@ -81,6 +147,13 @@ export default function HomePage() {
   const activeHeroSlide = heroSlides[activeHeroIndex];
   const heroMood = inferPlaceImageMood(activeHeroSlide?.title, "Le Havre");
   const heroMotionDirector = useMemo(() => getMotionDirectorProfile(heroMood), [heroMood]);
+  const kenBurnsPreset = useMemo(
+    () =>
+      activeHeroSlide
+        ? getKenBurnsPreset(activeHeroSlide.id, activeHeroIndex, heroSeed)
+        : { from: { scale: 1.1, x: -10, y: -6 }, to: { scale: 1.02, x: 6, y: 4 } },
+    [activeHeroIndex, activeHeroSlide, heroSeed],
+  );
   const ctaSweepStyle = useMemo(
     () => ({ "--glass-sweep-duration": `${heroMotionDirector.ctaSweepDuration}s` }) as CSSProperties,
     [heroMotionDirector.ctaSweepDuration],
@@ -142,16 +215,28 @@ export default function HomePage() {
               exit={{ opacity: 0 }}
               transition={reducedMotion ? { duration: 0.4, ease: "easeOut" } : { duration: 1.1, ease: "easeInOut" }}
             >
-              <LivingPhotoWebGL
-                imageUrl={heroSlides[activeHeroIndex].imageUrl}
-                alt={heroSlides[activeHeroIndex].title}
-                mood={heroMood}
-                depthMapUrl="/images/motion/hero-depth-map.svg"
-                maskUrl="/images/motion/sea-mask.svg"
-                fallbackImageUrl="/images/le-havre-history/panorama-le-havre.jpg"
-                reducedMotion={reducedMotion}
-                className="h-full w-full"
-              />
+              <motion.div
+                className="h-full w-full will-change-transform"
+                initial={reducedMotion ? { scale: 1, x: 0, y: 0 } : kenBurnsPreset.from}
+                animate={reducedMotion ? { scale: 1, x: 0, y: 0 } : kenBurnsPreset.to}
+                transition={
+                  reducedMotion
+                    ? { duration: 0.3, ease: "linear" }
+                    : { duration: HERO_KEN_BURNS_DURATION_S, ease: [0.25, 0.1, 0.25, 1] }
+                }
+              >
+                <LivingPhotoWebGL
+                  imageUrl={heroSlides[activeHeroIndex].imageUrl}
+                  alt={heroSlides[activeHeroIndex].title}
+                  mood={heroMood}
+                  depthMapUrl="/images/motion/hero-depth-map.svg"
+                  maskUrl="/images/motion/sea-mask.svg"
+                  fallbackImageUrl="/images/le-havre-history/panorama-le-havre.jpg"
+                  reducedMotion={reducedMotion}
+                  qualityTier={reducedMotion ? undefined : "high"}
+                  className="h-full w-full"
+                />
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -224,7 +309,7 @@ export default function HomePage() {
 
         <ScrollReveal mood={heroMood} delay={heroMotionDirector.revealStagger + 0.02}>
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {(featuredQuery.data ?? []).map((property, index) => (
+            {(featuredQuery.data ?? []).slice(0, 6).map((property, index) => (
               <ListingCard key={property.id} item={toSearchItem(property)} revealIndex={index} />
             ))}
           </div>
