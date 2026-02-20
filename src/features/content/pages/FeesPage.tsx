@@ -17,7 +17,7 @@ export default function FeesPage() {
         <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Transparence</p>
         <h1 className="mt-2 font-display text-4xl">Honoraires</h1>
         <p className="mt-3 text-sm text-muted-foreground">
-          Le barème officiel reste consultable en permanence et téléchargeable directement depuis cette page.
+          Notre barème officiel reste consultable à tout moment et téléchargeable directement depuis cette page.
         </p>
       </header>
 
@@ -32,7 +32,7 @@ export default function FeesPage() {
       <section className="mt-6 rounded-2xl border border-border bg-card p-6">
         <h2 className="font-display text-2xl">Synthèse du barème</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Valeurs présentées à titre de lecture rapide. Le PDF officiel ci-dessus fait foi.
+          Valeurs présentées à titre indicatif pour une lecture rapide. Le PDF officiel ci-dessus fait foi.
         </p>
 
         <div className="mt-4 overflow-hidden rounded-xl border border-border">

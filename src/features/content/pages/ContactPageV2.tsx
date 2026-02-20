@@ -8,7 +8,7 @@ export default function ContactPageV2() {
 
   useSeo({
     title: "Contact | Foch Immobilier",
-    description: "Contactez Foch Immobilier au 109 Av. Foch, 76600 Le Havre.",
+    description: "Contactez Foch Immobilier, votre agence immobilière au Havre depuis 1972.",
     canonicalPath: "/contact",
     jsonLd: {
       "@context": "https://schema.org",
@@ -31,9 +31,9 @@ export default function ContactPageV2() {
     <section className="container mx-auto px-4 py-10">
       <header className="max-w-3xl">
         <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Contact</p>
-        <h1 className="mt-2 font-display text-4xl">Nous contacter</h1>
+        <h1 className="mt-2 font-display text-4xl">Parlons de votre projet immobilier</h1>
         <p className="mt-3 text-sm text-muted-foreground">
-          Nous répondons à toutes les demandes de transaction, location et gestion dans les meilleurs délais.
+          Nous répondons rapidement à vos demandes de vente, d'achat, de location et de gestion locative.
         </p>
       </header>
 
@@ -41,7 +41,7 @@ export default function ContactPageV2() {
         <section className="rounded-2xl border border-border bg-card p-6 h-card" itemScope itemType="https://schema.org/RealEstateAgent">
           <meta itemProp="name" content="Foch Immobilier" />
           <meta itemProp="url" content="https://www.foch-immobilier.fr" />
-          <h2 className="font-display text-2xl">Coordonnées agence</h2>
+          <h2 className="font-display text-2xl">Coordonnées de l'agence</h2>
           <ul className="mt-4 space-y-4 text-sm text-muted-foreground">
             <li className="flex items-start gap-2 p-adr h-adr" itemProp="address" itemScope itemType="https://schema.org/PostalAddress">
               <MapPin className="mt-0.5 h-4 w-4" />
@@ -88,12 +88,12 @@ export default function ContactPageV2() {
           </div>
         </section>
 
-        <LeadForm
-          source="contact_page"
-          title="Envoyer un message"
-          description="Un conseiller vous rappelle ou vous répond par email selon votre préférence."
-          ctaLabel="Transmettre"
-        />
+          <LeadForm
+            source="contact_page"
+            title="Écrire à l'agence"
+            description="Un conseiller dédié vous répond par téléphone ou par email selon votre préférence."
+            ctaLabel="Envoyer ma demande"
+          />
       </div>
     </section>
   );

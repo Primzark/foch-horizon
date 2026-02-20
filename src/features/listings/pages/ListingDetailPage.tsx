@@ -133,8 +133,10 @@ export default function ListingDetailPage() {
     return (
       <section className="container mx-auto px-4 py-14">
         <h1 className="font-display text-3xl">Annonce indisponible</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Cette annonce a pu être vendue ou retirée.</p>
-        <Button className="mt-4" asChild>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Cette annonce a pu être vendue ou retirée. Nous vous invitons à consulter des biens comparables.
+        </p>
+        <Button className="mt-4" variant="brand" asChild>
           <Link to="/biens">Voir des biens comparables</Link>
         </Button>
       </section>

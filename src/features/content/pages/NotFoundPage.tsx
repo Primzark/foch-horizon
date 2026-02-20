@@ -15,9 +15,9 @@ export default function NotFoundPage() {
       <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Erreur 404</p>
       <h1 className="mt-2 font-display text-5xl">Page introuvable</h1>
       <p className="mx-auto mt-4 max-w-xl text-sm text-muted-foreground">
-        Cette page n'existe plus ou a été déplacée. Vous pouvez revenir aux annonces actives.
+        Cette page n'est plus disponible ou a été déplacée. Vous pouvez revenir à notre sélection de biens actifs.
       </p>
-      <Button className="mt-6" asChild>
+      <Button className="mt-6" variant="brand" asChild>
         <Link to="/biens">Voir les biens</Link>
       </Button>
     </section>

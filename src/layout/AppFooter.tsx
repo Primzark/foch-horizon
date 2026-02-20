@@ -14,7 +14,7 @@ const legalLinks = [
 const quickLinks = [
   { href: "/", label: "Accueil" },
   { href: "/biens", label: "Biens" },
-  { href: "/histoire-immobilier-le-havre", label: "Histoire Le Havre" },
+  { href: "/histoire-immobilier-le-havre", label: "Le Havre & patrimoine" },
   { href: "/avis", label: "Avis clients" },
   { href: "/biens-sauvegardes", label: "Biens sauvegardés" },
   { href: "/vendre", label: "Vendre" },
@@ -34,7 +34,7 @@ export function AppFooter() {
           <p className="font-display text-2xl">Foch Immobilier</p>
           <p className="mt-1 text-xs uppercase tracking-[0.24em] text-muted-foreground">Depuis 1972 · Réseau UNIS</p>
           <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-            Transaction, location et administration de biens au Havre et dans sa région.
+            Immobilier résidentiel haut de gamme, location et gestion locative au Havre et sur le littoral.
           </p>
           <a
             href="https://extranet2.ics.fr"
@@ -99,7 +99,7 @@ export function AppFooter() {
         </div>
 
         <div>
-          <p className="mb-4 text-sm uppercase tracking-[0.18em] text-muted-foreground">Conformité</p>
+          <p className="mb-4 text-sm uppercase tracking-[0.18em] text-muted-foreground">Informations légales</p>
           <ul className="space-y-2 text-sm">
             {legalLinks.map((link) => (
               <li key={link.href}>
@@ -112,7 +112,7 @@ export function AppFooter() {
         </div>
       </div>
       <div className="border-t border-border px-4 py-4 text-center text-xs text-muted-foreground">
-        © {new Date().getFullYear()} Foch Immobilier. CPI et mentions contractuelles disponibles dans les mentions légales.
+        © {new Date().getFullYear()} Foch Immobilier. Carte professionnelle CPI et mentions contractuelles disponibles dans les mentions légales.
       </div>
     </footer>
   );

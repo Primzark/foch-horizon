@@ -33,7 +33,7 @@ export default function ReviewsPage() {
   useSeo({
     title: "Avis clients | Foch Immobilier Le Havre",
     description:
-      "Consultez les avis clients de Foch Immobilier au Havre: achat, vente, location et gestion locative.",
+      "Consultez les avis clients vérifiés de Foch Immobilier au Havre: achat, vente, location et gestion locative.",
     canonicalPath: "/avis",
     jsonLd: payload
       ? [
@@ -80,10 +80,10 @@ export default function ReviewsPage() {
   return (
     <section className="container mx-auto px-4 py-10 h-feed">
       <header className="max-w-3xl">
-        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Reputation</p>
+        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Réputation</p>
         <h1 className="mt-2 font-display text-4xl">Avis clients Foch Immobilier</h1>
         <p className="mt-3 text-sm text-muted-foreground">
-          Notes et retours verifies sur nos services en immobilier Le Havre: vente, achat, location et gestion locative.
+          Notes et retours vérifiés sur nos services immobiliers au Havre: vente, achat, location et gestion locative.
         </p>
       </header>
 
@@ -97,7 +97,7 @@ export default function ReviewsPage() {
 
       {reviewsQuery.isError && (
         <div className="mt-8 rounded-2xl border border-destructive/40 bg-destructive/5 p-6 text-sm">
-          Impossible de recuperer les avis Google pour le moment.
+          Les avis Google sont momentanément indisponibles. Merci de réessayer dans quelques instants.
         </div>
       )}
 
@@ -118,13 +118,12 @@ export default function ReviewsPage() {
 
             {!payload.live && (
               <p className="mt-4 rounded-xl border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
-                Mode de secours actif. Configurez `VITE_GOOGLE_PLACE_ID` + `VITE_GOOGLE_PLACES_API_KEY` (ou l'endpoint
-                `/api/google-reviews`) pour afficher le flux live Google Reviews.
+                Les avis affichés sont issus de notre dernière mise à jour disponible.
               </p>
             )}
 
             <p className="mt-4 text-xs text-muted-foreground">
-              Derniere mise a jour: {formatDate(payload.fetchedAt) ?? "indisponible"}
+              Dernière mise à jour: {formatDate(payload.fetchedAt) ?? "indisponible"}
             </p>
           </section>
 

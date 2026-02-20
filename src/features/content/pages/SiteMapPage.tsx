@@ -30,6 +30,7 @@ export default function SiteMapPage() {
     <section className="container mx-auto max-w-4xl px-4 py-10">
       <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Navigation</p>
       <h1 className="mt-2 font-display text-4xl">Plan du site</h1>
+      <p className="mt-3 text-sm text-muted-foreground">Retrouvez rapidement l'ensemble de nos pages de services et de biens immobiliers.</p>
 
       <ul className="mt-8 grid gap-3 rounded-2xl border border-border bg-card p-6 sm:grid-cols-2">
         {pages.map((page) => (

@@ -5,19 +5,19 @@ const services = [
   {
     title: "Transaction",
     description:
-      "Vente et acquisition de biens résidentiels avec accompagnement commercial, technique et juridique.",
+      "Vente et acquisition de biens résidentiels avec pilotage commercial, technique et juridique de bout en bout.",
     icon: BriefcaseBusiness,
   },
   {
     title: "Location",
     description:
-      "Mise en location, sélection des candidats, rédaction des baux et suivi administratif d'entrée/sortie.",
+      "Mise en location, sélection des candidats, rédaction des baux et suivi administratif d'entrée et de sortie.",
     icon: KeyRound,
   },
   {
     title: "Administration de biens",
     description:
-      "Gestion locative courante, encaissements, reporting propriétaire et coordination des intervenants.",
+      "Gestion locative complète, reporting propriétaire et coordination rigoureuse des intervenants.",
     icon: Building2,
   },
 ];
@@ -25,7 +25,7 @@ const services = [
 export default function ServicesPage() {
   useSeo({
     title: "Services | Foch Immobilier",
-    description: "Découvrez nos prestations en transaction, location et administration de biens.",
+    description: "Découvrez nos services immobiliers premium en transaction, location et gestion locative.",
     canonicalPath: "/services",
   });
 
@@ -34,6 +34,9 @@ export default function ServicesPage() {
       <header className="max-w-3xl">
         <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Prestations</p>
         <h1 className="mt-2 font-display text-4xl">Nos services immobiliers</h1>
+        <p className="mt-3 text-sm text-muted-foreground">
+          Une offre complète pensée pour sécuriser vos décisions et valoriser durablement votre patrimoine immobilier.
+        </p>
       </header>
 
       <div className="mt-8 grid gap-5 md:grid-cols-3">

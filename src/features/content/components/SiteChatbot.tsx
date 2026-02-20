@@ -34,7 +34,7 @@ const initialMessage: ChatMessage = {
   id: "init-assistant",
   role: "assistant",
   content:
-    "Bonjour 👋 Je suis l'assistant immobilier Foch. Je peux vous aider sur les biens, quartiers du Havre, services et etapes de vente/achat.",
+    "Bonjour 👋 Je suis l'assistant immobilier Foch. Je peux vous guider sur les biens, les quartiers du Havre, nos services et les étapes clés de votre projet.",
   suggestedPrompts: chatbotExamplePrompts,
 };
 
@@ -42,7 +42,7 @@ const openingGreetingVariants: OpeningGreetingVariant[] = [
   {
     content: "Bonjour 👋 Sur quoi avancez-vous aujourd'hui: achat, vente, location ou estimation ?",
     prompts: [
-      "Je cherche un appartement a vendre au Havre",
+      "Je cherche un appartement à vendre au Havre",
       "Je veux vendre mon bien",
       "Montrez-moi les avis clients",
       "Je veux une estimation",
@@ -51,7 +51,7 @@ const openingGreetingVariants: OpeningGreetingVariant[] = [
   {
     content: "Ravi de vous revoir 😊 Quel est votre objectif immobilier du moment ?",
     prompts: [
-      "Je cherche une maison familiale a Sanvic",
+      "Je cherche une maison familiale à Sanvic",
       "Quels services proposez-vous ?",
       "Comment se passe un compromis de vente ?",
       "Je veux contacter l'agence",
@@ -67,21 +67,21 @@ const openingGreetingVariants: OpeningGreetingVariant[] = [
     ],
   },
   {
-    content: "Hello 🙂 Vous cherchez plutot un bien, une info quartier ou une aide process ?",
+    content: "Bonjour 🙂 Vous recherchez plutôt un bien, une information de quartier ou une aide sur les étapes ?",
     prompts: [
-      "Quel quartier du Havre est le plus adapte pour un investissement locatif ?",
+      "Quel quartier du Havre est le plus adapté pour un investissement locatif ?",
       "Je cherche un T3 avec balcon",
-      "Ou trouver les honoraires ?",
-      "Je ne trouve pas de bien adapte",
+      "Où trouver les honoraires ?",
+      "Je ne trouve pas de bien adapté",
     ],
   },
   {
     content: "Bonjour 🤝 Je peux vous orienter rapidement: annonces, avis, histoire locale, estimation, contact.",
     prompts: [
       "Voir toutes les annonces",
-      "Resumer les avis clients",
+      "Résumer les avis clients",
       "Je veux estimer mon bien",
-      "Je veux parler a un conseiller",
+      "Je veux parler à un conseiller",
     ],
   },
 ];
@@ -354,7 +354,7 @@ export function SiteChatbot() {
     setInput("");
     setLeadForm({ firstName: "", lastName: "", email: "", criteria: "" });
     setMessages([nextOpeningGreetingMessage()]);
-    toast.success("Nouvelle conversation initialisee.");
+    toast.success("Nouvelle conversation initialisée.");
   }, [nextOpeningGreetingMessage, unlockRequestState]);
 
   useEffect(() => {
@@ -456,7 +456,7 @@ export function SiteChatbot() {
         if (requestSequenceRef.current !== nextRequestId) return;
 
         unlockRequestState();
-        toast.error("Le chatbot met trop de temps a repondre. Vous pouvez relancer votre question.");
+        toast.error("Le chatbot met trop de temps à répondre. Vous pouvez relancer votre question.");
       }, CHATBOT_HARD_UNLOCK_MS);
 
       const reply = await Promise.race([
@@ -489,15 +489,15 @@ export function SiteChatbot() {
 
       toast.error(
         aborted
-          ? "Le chatbot a pris trop de temps a repondre. Reessayez votre question."
-          : "Le chatbot est momentanement indisponible.",
+          ? "Le chatbot a pris trop de temps à répondre. Réessayez votre question."
+          : "Le chatbot est momentanément indisponible.",
       );
 
       appendMessage({
         id: createMessageId(),
         role: "assistant",
         content:
-          "Je reste disponible pour vous aider. Reformulez votre demande et je vous reponds sur les biens, quartiers, services et etapes de votre projet au Havre.",
+          "Je reste à votre disposition. Reformulez votre demande et je vous répondrai sur les biens, les quartiers et les services adaptés à votre projet au Havre.",
         suggestedPrompts: chatbotExamplePrompts,
       });
     } finally {
@@ -548,7 +548,7 @@ export function SiteChatbot() {
         firstName: leadForm.firstName,
         lastName: leadForm.lastName,
         email: leadForm.email,
-        message: `Demande chatbot - aucun bien trouve\n\nCriteres: ${leadForm.criteria}`,
+        message: `Demande chatbot - aucun bien trouvé\n\nCritères: ${leadForm.criteria}`,
         consent: true,
       });
 
@@ -556,12 +556,12 @@ export function SiteChatbot() {
         id: createMessageId(),
         role: "assistant",
         content:
-          "Votre demande a ete transmise a l'agence. Un conseiller vous enverra une selection de biens adaptes par email.",
+          "Votre demande a été transmise à l'agence. Un conseiller vous enverra une sélection de biens adaptés par email.",
       });
 
       setLeadForm({ firstName: "", lastName: "", email: "", criteria: "" });
       setShowLeadCapture(false);
-      toast.success("Demande envoyee a l'agence.");
+      toast.success("Demande envoyée à l'agence.");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Impossible de transmettre votre demande.";
       toast.error(message);
@@ -688,7 +688,7 @@ export function SiteChatbot() {
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  aria-label="Reinitialiser la conversation"
+                  aria-label="Réinitialiser la conversation"
                   title="Nouvelle conversation"
                   className="rounded-full border border-border p-1.5"
                   onClick={handleResetButtonClick}
@@ -771,13 +771,13 @@ export function SiteChatbot() {
               <section className="border-t border-border bg-muted/30 px-4 py-4">
                 <h3 className="font-medium">Vous ne trouvez pas le bon bien ?</h3>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Laissez votre email et vos criteres: la demande part automatiquement a l'agence.
+                  Laissez votre email et vos critères: la demande part automatiquement à l'agence.
                 </p>
 
                 <form onSubmit={handleLeadSubmit} className="mt-3 space-y-2.5">
                   <div className="grid grid-cols-2 gap-2">
                     <Input
-                      placeholder="Prenom"
+                      placeholder="Prénom"
                       value={leadForm.firstName}
                       onChange={(event) =>
                         setLeadForm((current) => ({ ...current, firstName: event.target.value }))
@@ -808,7 +808,7 @@ export function SiteChatbot() {
 
                   <Button type="submit" size="sm" disabled={leadLoading} className="w-full">
                     <Mail className="mr-1 h-4 w-4" />
-                    {leadLoading ? "Transmission..." : "Envoyer a l'agence"}
+                    {leadLoading ? "Transmission..." : "Envoyer à l'agence"}
                   </Button>
                 </form>
               </section>
@@ -818,7 +818,7 @@ export function SiteChatbot() {
               <Input
                 value={input}
                 onChange={(event) => setInput(event.target.value)}
-                placeholder="Posez une question sur les biens, quartiers ou process..."
+                placeholder="Posez une question sur les biens, les quartiers ou les étapes de votre projet..."
                 disabled={loading}
               />
               <Button type="submit" size="icon" disabled={loading || input.trim().length === 0}>
@@ -830,12 +830,13 @@ export function SiteChatbot() {
 
       <Button
         type="button"
+        variant="brand"
         className="h-10 max-w-[13.5rem] rounded-full px-3 text-xs shadow-card sm:h-12 sm:max-w-none sm:px-4 sm:text-sm"
         onClick={openChatWithGreeting}
       >
         {open ? <X className="mr-1 h-4 w-4" /> : <BotMessageSquare className="mr-1 h-4 w-4" />}
-        <span className="sm:hidden">{open ? "Fermer" : "Chat IA"}</span>
-        <span className="hidden sm:inline">{open ? "Fermer" : "Chat immobilier IA"}</span>
+        <span className="sm:hidden">{open ? "Fermer" : "Assistant IA"}</span>
+        <span className="hidden sm:inline">{open ? "Fermer" : "Assistant immobilier IA"}</span>
         <Sparkles className="ml-1 h-3.5 w-3.5" />
       </Button>
       </div>
