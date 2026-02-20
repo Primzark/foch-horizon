@@ -831,16 +831,18 @@ export default function HomePage() {
       </section>
 
       <section className="container mx-auto px-4 pt-8 pb-16 md:py-16">
-        <div className="mb-6 flex items-end justify-between gap-4">
-          <div>
-            <h2 className="font-display text-3xl">Sélection du moment</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Une sélection de biens d'exception actuellement disponibles à la vente et à la location.</p>
+        <ScrollReveal mood={heroMood} y={10} duration={0.34}>
+          <div className="mb-6 flex items-end justify-between gap-4">
+            <div>
+              <h2 className="font-display text-3xl">Sélection du moment</h2>
+              <p className="mt-1 text-sm text-muted-foreground">Une sélection de biens d'exception actuellement disponibles à la vente et à la location.</p>
+            </div>
+            <Link to="/biens" className="inline-flex items-center gap-1 text-sm hover:underline">
+              Découvrir tous les biens
+              <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
-          <Link to="/biens" className="inline-flex items-center gap-1 text-sm hover:underline">
-            Découvrir tous les biens
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
+        </ScrollReveal>
 
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {featuredQuery.isLoading &&
