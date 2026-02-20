@@ -810,13 +810,13 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="py-12">
+      <section className="pt-8 pb-4 md:py-12">
         <ScrollReveal mood={heroMood}>
           <MarketCounters />
         </ScrollReveal>
       </section>
 
-      <section className="container mx-auto px-4 py-16">
+      <section className="container mx-auto px-4 pt-8 pb-16 md:py-16">
         <ScrollReveal mood={heroMood}>
           <div className="mb-6 flex items-end justify-between gap-4">
             <div>

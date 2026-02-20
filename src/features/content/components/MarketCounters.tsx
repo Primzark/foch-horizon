@@ -109,8 +109,8 @@ export function MarketCounters() {
         <Counter label="Biens sous offre" value={query.data.underOfferCount} icon={HandCoins} />
         <Counter label="Compromis en cours" value={query.data.underContractCount} icon={FileCheck2} />
       </div>
-      <p className="mt-3 text-center text-xs text-muted-foreground">
-        Mise a jour {new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium" }).format(new Date(query.data.updatedAt))}
+      <p className="mt-2 text-center text-xs text-muted-foreground">
+        Mise à jour {new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium" }).format(new Date(query.data.updatedAt))}
       </p>
     </section>
   );
