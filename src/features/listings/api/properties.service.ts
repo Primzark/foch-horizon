@@ -257,6 +257,7 @@ export async function getSimilarProperties(property: Property, limit = 3): Promi
 }
 
 export async function getFeaturedProperties(limit = 8): Promise<Property[]> {
+  await apiDelay();
   const activeProperties = properties.filter((property) => property.status === "active");
   const featured = activeProperties.filter((property) => property.isFeatured);
 

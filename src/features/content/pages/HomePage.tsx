@@ -366,7 +366,6 @@ export default function HomePage() {
   const [heroSeed] = useState(() => Math.floor(Math.random() * 0x7fffffff));
   const heroRng = useMemo(() => createSeededRng(heroSeed ^ 0x243f6a88), [heroSeed]);
   const heroSlides = useMemo(() => buildHeroSlides(featuredQuery.data ?? [], heroSeed), [featuredQuery.data, heroSeed]);
-  const featuredSelection = useMemo(() => (featuredQuery.data ?? []).slice(0, 6), [featuredQuery.data]);
   const heroImageUrls = useMemo(() => heroSlides.map((slide) => slide.imageUrl), [heroSlides]);
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
   const [heroMotionStep, setHeroMotionStep] = useState(0);
@@ -427,19 +426,6 @@ export default function HomePage() {
       cancelled = true;
     };
   }, [heroImageUrls]);
-
-  useEffect(() => {
-    featuredSelection.forEach((property, index) => {
-      const imageUrl = property.images[0]?.sourceUrl;
-      if (!imageUrl) {
-        return;
-      }
-
-      void preloadHeroImage(imageUrl, index < 3 ? "high" : "low").catch(() => {
-        // Best-effort prefetch to keep "Sélection du moment" instant on reveal.
-      });
-    });
-  }, [featuredSelection]);
 
   useEffect(() => {
     heroSlidesRef.current = heroSlides;
@@ -831,7 +817,7 @@ export default function HomePage() {
       </section>
 
       <section className="container mx-auto px-4 pt-8 pb-16 md:py-16">
-        <ScrollReveal mood={heroMood} y={10} duration={0.34}>
+        <ScrollReveal mood={heroMood}>
           <div className="mb-6 flex items-end justify-between gap-4">
             <div>
               <h2 className="font-display text-3xl">Sélection du moment</h2>
@@ -849,8 +835,8 @@ export default function HomePage() {
             Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="h-[320px] animate-pulse rounded-2xl bg-muted/60" />
             ))}
-          {featuredSelection.map((property, index) => (
-            <ListingCard key={property.id} item={toSearchItem(property)} revealIndex={index} optimizeEntry />
+          {(featuredQuery.data ?? []).slice(0, 6).map((property, index) => (
+            <ListingCard key={property.id} item={toSearchItem(property)} revealIndex={index} />
           ))}
         </div>
       </section>

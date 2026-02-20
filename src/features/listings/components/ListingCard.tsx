@@ -21,10 +21,9 @@ interface ListingCardProps {
   item: PropertySearchItem;
   viewMode?: "grid" | "list";
   revealIndex?: number;
-  optimizeEntry?: boolean;
 }
 
-export function ListingCard({ item, viewMode = "grid", revealIndex = 0, optimizeEntry = false }: ListingCardProps) {
+export function ListingCard({ item, viewMode = "grid", revealIndex = 0 }: ListingCardProps) {
   const toggleFavorite = useFavoritesStore((state) => state.toggle);
   const isFavorite = useFavoritesStore((state) => state.isFavorite(item.id));
   const { reducedMotion } = useMotionPreference();
@@ -35,11 +34,9 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, optimize
   const imageMood = inferPlaceImageMood(item.city.name, item.title, propertyTypeLabel);
   const imageMotionPreset = getPlaceImageMotionPreset(imageMood);
   const motionDirector = getMotionDirectorProfile(imageMood);
-  const enableAmbientAnimation = !reducedMotion && !optimizeEntry && revealIndex < 4;
-  const shouldUseParallax = !optimizeEntry;
-  const prioritizeImage = optimizeEntry && revealIndex < 3;
+  const enableAmbientAnimation = !reducedMotion && revealIndex < 4;
   const revealDelay = Math.min(revealIndex * motionDirector.revealStagger, 0.45);
-  const revealProps = reducedMotion || optimizeEntry
+  const revealProps = reducedMotion
     ? { initial: false as const }
     : {
         initial: { opacity: 0, y: 20 },
@@ -60,22 +57,7 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, optimize
       >
         <Link to={path} className="group grid gap-4 p-3 md:grid-cols-[280px_1fr] md:p-4" itemProp="url">
           <div className="relative overflow-hidden rounded-xl">
-            {shouldUseParallax ? (
-              <ContextAwareParallax mood={imageMood} reducedMotion={reducedMotion} intensity="subtle">
-                <img
-                  src={item.coverImageUrl}
-                  alt={item.title}
-                  className={cn(
-                    "aspect-[4/3] h-full w-full object-cover transition-transform",
-                    imageMotionPreset.hoverClassName,
-                  )}
-                  loading={prioritizeImage ? "eager" : "lazy"}
-                  fetchPriority={prioritizeImage ? "high" : "auto"}
-                  decoding="async"
-                  itemProp="image"
-                />
-              </ContextAwareParallax>
-            ) : (
+            <ContextAwareParallax mood={imageMood} reducedMotion={reducedMotion} intensity="subtle">
               <img
                 src={item.coverImageUrl}
                 alt={item.title}
@@ -83,12 +65,10 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, optimize
                   "aspect-[4/3] h-full w-full object-cover transition-transform",
                   imageMotionPreset.hoverClassName,
                 )}
-                loading={prioritizeImage ? "eager" : "lazy"}
-                fetchPriority={prioritizeImage ? "high" : "auto"}
-                decoding="async"
+                loading="lazy"
                 itemProp="image"
               />
-            )}
+            </ContextAwareParallax>
             <PlaceAtmosphereLayer mood={imageMood} animated={enableAmbientAnimation} className="z-[1]" />
             <div
               className={cn(
@@ -173,22 +153,7 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, optimize
       itemType="https://schema.org/RealEstateListing"
     >
       <Link to={path} className="relative block overflow-hidden" itemProp="url">
-        {shouldUseParallax ? (
-          <ContextAwareParallax mood={imageMood} reducedMotion={reducedMotion} intensity="subtle">
-            <img
-              src={item.coverImageUrl}
-              alt={item.title}
-              className={cn(
-                "aspect-[4/3] w-full object-cover transition-transform",
-                imageMotionPreset.hoverClassName,
-              )}
-              loading={prioritizeImage ? "eager" : "lazy"}
-              fetchPriority={prioritizeImage ? "high" : "auto"}
-              decoding="async"
-              itemProp="image"
-            />
-          </ContextAwareParallax>
-        ) : (
+        <ContextAwareParallax mood={imageMood} reducedMotion={reducedMotion} intensity="subtle">
           <img
             src={item.coverImageUrl}
             alt={item.title}
@@ -196,12 +161,10 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, optimize
               "aspect-[4/3] w-full object-cover transition-transform",
               imageMotionPreset.hoverClassName,
             )}
-            loading={prioritizeImage ? "eager" : "lazy"}
-            fetchPriority={prioritizeImage ? "high" : "auto"}
-            decoding="async"
+            loading="lazy"
             itemProp="image"
           />
-        )}
+        </ContextAwareParallax>
         <PlaceAtmosphereLayer mood={imageMood} animated={enableAmbientAnimation} className="z-[1]" />
         <div
           className={cn(
