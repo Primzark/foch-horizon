@@ -14,29 +14,27 @@ import { getSiteUrl, useSeo } from "@/lib/seo/useSeo";
 import { MarketCounters } from "@/features/content/components/MarketCounters";
 import { getAgencyReviews } from "@/features/content/api/googleReviews.service";
 import { inferPlaceImageMood } from "@/lib/visuals/placeImageMotion";
-import { PlaceAtmosphereLayer } from "@/components/visuals/PlaceAtmosphereLayer";
 import { ScrollReveal } from "@/components/visuals/ScrollReveal";
-import { LivingPhotoWebGL } from "@/components/visuals/LivingPhotoWebGL";
-import { ContextAwareParallax } from "@/components/visuals/ContextAwareParallax";
 import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
 import { getMotionDirectorProfile } from "@/lib/visuals/motionDirector";
+import { heroScenicImages } from "@/features/content/data/heroScenicImages";
 
 const serviceCards = [
   {
     title: "Estimation",
-    description: "Obtenez une estimation argumentée de votre bien à partir de notre connaissance locale.",
+    description: "Une estimation précise, argumentée et alignée avec les attentes du marché havrais.",
     href: "/estimation",
     icon: Compass,
   },
   {
     title: "Vente",
-    description: "Mise en valeur, qualification acheteurs et suivi de la négociation jusqu'à l'acte.",
+    description: "Valorisation premium, ciblage qualifié des acquéreurs et pilotage jusqu'à la signature.",
     href: "/vendre",
     icon: Handshake,
   },
   {
     title: "Location",
-    description: "Recherche locataire, constitution dossier et accompagnement de la gestion courante.",
+    description: "Sélection rigoureuse des candidats et accompagnement complet de la mise en location.",
     href: "/services",
     icon: Building2,
   },
@@ -50,11 +48,16 @@ const HERO_FALLBACK_IMAGE_URL = "/images/le-havre-history/panorama-le-havre.jpg"
 const HERO_EXCLUDED_IMAGE_PATTERN = /panorama-le-havre|foch\.staticlbi\.com\/original\/images\/header\/1\.jpg/i;
 const HERO_SLIDE_BLEED_CLASS = "absolute -inset-[20vw] sm:-inset-14 md:-inset-10 z-[1]";
 const HERO_MIN_DWELL_BEFORE_OVERRIDE_MS = HERO_ROTATE_MS - 600;
+const HERO_MAX_SLIDES = 10;
+const HERO_PROPERTY_RATIO = 0.6;
 
+type HeroSlideSource = "property" | "scenic";
 type HeroSlide = {
-  id: number;
+  id: string;
+  motionSeed: number;
   title: string;
   imageUrl: string;
+  source: HeroSlideSource;
 };
 
 type KenBurnsPoint = { scale: number; x: number; y: number };
@@ -76,7 +79,7 @@ type HeroTransitionEffectsProps = {
 };
 
 type HeroSlideIdentity = {
-  id: number;
+  id: string;
   imageUrl: string;
 } | null;
 
@@ -118,11 +121,67 @@ function isExcludedHeroImage(url: string): boolean {
   return HERO_EXCLUDED_IMAGE_PATTERN.test(url);
 }
 
+function hashStringToSeed(value: string): number {
+  let hash = 2166136261;
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+
+  return hash >>> 0;
+}
+
+function interleaveHeroSlides(propertyPool: HeroSlide[], scenicPool: HeroSlide[], seed: number): HeroSlide[] {
+  const ordered: HeroSlide[] = [];
+  let previousSource: HeroSlideSource | null = null;
+  let sourceStreak = 0;
+  const startsWithProperty = (seed & 1) === 0;
+
+  while (propertyPool.length > 0 || scenicPool.length > 0) {
+    const hasProperty = propertyPool.length > 0;
+    const hasScenic = scenicPool.length > 0;
+
+    let nextSource: HeroSlideSource;
+    if (!hasScenic) {
+      nextSource = "property";
+    } else if (!hasProperty) {
+      nextSource = "scenic";
+    } else if (previousSource == null) {
+      nextSource = startsWithProperty ? "property" : "scenic";
+    } else {
+      const opposite = previousSource === "property" ? "scenic" : "property";
+      const oppositeAvailable = opposite === "property" ? hasProperty : hasScenic;
+      if (sourceStreak >= 2 && oppositeAvailable) {
+        nextSource = opposite;
+      } else if (oppositeAvailable) {
+        nextSource = opposite;
+      } else {
+        nextSource = previousSource;
+      }
+    }
+
+    const nextSlide = nextSource === "property" ? propertyPool.shift() : scenicPool.shift();
+    if (!nextSlide) {
+      continue;
+    }
+
+    ordered.push(nextSlide);
+    if (nextSlide.source === previousSource) {
+      sourceStreak += 1;
+    } else {
+      previousSource = nextSlide.source;
+      sourceStreak = 1;
+    }
+  }
+
+  return ordered;
+}
+
 function buildHeroSlides(properties: Awaited<ReturnType<typeof getFeaturedProperties>>, seed: number): HeroSlide[] {
   const random = createSeededRng(seed ^ 0xa5a5a5a5);
   const orderedProperties = [...properties].sort((left, right) => left.id - right.id);
 
-  const slides = orderedProperties
+  const propertySlides = orderedProperties
     .map((property) => {
       const availableImages = property.images.filter((image) => image.sourceUrl && !isExcludedHeroImage(image.sourceUrl));
       if (!availableImages.length) {
@@ -134,18 +193,55 @@ function buildHeroSlides(properties: Awaited<ReturnType<typeof getFeaturedProper
       const selectedImage = availableImages[imageIndex] ?? availableImages[0];
 
       return {
-        id: property.id,
+        id: `property-${property.id}`,
+        motionSeed: property.id,
         title: property.title,
         imageUrl: selectedImage?.sourceUrl ?? "",
+        source: "property" as const,
       };
     })
     .filter((slide): slide is HeroSlide => Boolean(slide?.imageUrl));
 
-  const deduplicatedById = Array.from(new Map(slides.map((slide) => [slide.id, slide])).values());
-  const deduplicated = Array.from(new Map(deduplicatedById.map((slide) => [slide.imageUrl, slide])).values());
-  const shuffled = shuffleWithSeed(deduplicated, seed ^ 0x9e3779b9);
-  const desiredCount = shuffled.length <= 6 ? shuffled.length : Math.min(shuffled.length, 10);
-  return shuffled.slice(0, desiredCount);
+  const uniqueProperties = Array.from(new Map(propertySlides.map((slide) => [slide.id, slide])).values());
+  const uniquePropertyImages = Array.from(new Map(uniqueProperties.map((slide) => [slide.imageUrl, slide])).values());
+  const propertyImageSet = new Set(uniquePropertyImages.map((slide) => slide.imageUrl));
+
+  const scenicSlides = heroScenicImages
+    .filter((scenic) => !isExcludedHeroImage(scenic.imageUrl))
+    .filter((scenic) => !propertyImageSet.has(scenic.imageUrl))
+    .map((scenic) => ({
+      id: `scenic-${scenic.id}`,
+      motionSeed: hashStringToSeed(scenic.id),
+      title: scenic.title,
+      imageUrl: scenic.imageUrl,
+      source: "scenic" as const,
+    }));
+  const uniqueScenicImages = Array.from(new Map(scenicSlides.map((slide) => [slide.imageUrl, slide])).values());
+
+  const targetPropertyCount = Math.round(HERO_MAX_SLIDES * HERO_PROPERTY_RATIO);
+  const targetScenicCount = HERO_MAX_SLIDES - targetPropertyCount;
+
+  const shuffledProperties = shuffleWithSeed(uniquePropertyImages, seed ^ 0x9e3779b9);
+  const shuffledScenic = shuffleWithSeed(uniqueScenicImages, seed ^ 0x85ebca6b);
+
+  const selectedProperties = shuffledProperties.slice(0, Math.min(targetPropertyCount, shuffledProperties.length));
+  const selectedScenic = shuffledScenic.slice(0, Math.min(targetScenicCount, shuffledScenic.length));
+
+  const remainingProperty = shuffledProperties.slice(selectedProperties.length);
+  const remainingScenic = shuffledScenic.slice(selectedScenic.length);
+  const remainderPool = shuffleWithSeed([...remainingProperty, ...remainingScenic], seed ^ 0xc2b2ae35);
+
+  const combined: HeroSlide[] = [...selectedProperties, ...selectedScenic];
+  for (const candidate of remainderPool) {
+    if (combined.length >= HERO_MAX_SLIDES) {
+      break;
+    }
+    combined.push(candidate);
+  }
+
+  const propertyPool = combined.filter((slide) => slide.source === "property");
+  const scenicPool = combined.filter((slide) => slide.source === "scenic");
+  return interleaveHeroSlides(propertyPool, scenicPool, seed);
 }
 
 function clamp(value: number, min: number, max: number): number {
@@ -211,55 +307,20 @@ function HeroTransitionEffects({ active, transitionKey }: HeroTransitionEffectsP
   }
 
   return (
-    <>
-      {/* Radial ripple burst — strong, visible on dark hero */}
-      <AnimatePresence initial={false} mode="sync">
-        <motion.div
-          key={`hero-ripple-${transitionKey}`}
-          className="pointer-events-none absolute inset-0 z-[4]"
-          style={{
-            background:
-              "radial-gradient(circle at 50% 50%, rgba(255,255,255,0.55) 0%, rgba(180,230,255,0.42) 18%, rgba(80,170,240,0.28) 38%, rgba(30,100,200,0.08) 60%, transparent 76%)",
-          }}
-          initial={{ opacity: 0, scale: 0.55 }}
-          animate={{ opacity: [0, 1, 0.6, 0], scale: [0.55, 1.0, 1.35, 1.7] }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: HERO_CROSS_FADE_DURATION_S * 1.1, ease: [0.16, 1, 0.3, 1] }}
-        />
-      </AnimatePresence>
-
-      {/* Diagonal light sweep — liquid wipe */}
-      <AnimatePresence initial={false} mode="sync">
-        <motion.div
-          key={`hero-liquid-wipe-${transitionKey}`}
-          className="pointer-events-none absolute inset-y-0 left-[-52%] z-[4] w-[90%]"
-          style={{
-            background:
-              "linear-gradient(108deg, rgba(255,255,255,0) 0%, rgba(220,240,255,0.72) 34%, rgba(255,255,255,0.65) 50%, rgba(100,180,240,0.48) 66%, rgba(255,255,255,0) 100%)",
-            filter: "blur(8px)",
-            borderRadius: "999px",
-            maskImage:
-              "radial-gradient(130% 90% at 35% 50%, rgba(255,255,255,1) 0%, rgba(255,255,255,0.85) 36%, rgba(255,255,255,0.5) 60%, rgba(255,255,255,0.15) 80%, transparent 100%)",
-          }}
-          initial={{ x: "-22%", opacity: 0, rotate: -1.5 }}
-          animate={{ x: ["-22%", "116%"], opacity: [0, 0.88, 0.6, 0], rotate: [-1.5, 1.2] }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: HERO_CROSS_FADE_DURATION_S, ease: [0.2, 1, 0.35, 1] }}
-        />
-      </AnimatePresence>
-
-      {/* Ambient shimmer — continuous slow pan */}
+    <AnimatePresence initial={false} mode="sync">
       <motion.div
+        key={`hero-ripple-${transitionKey}`}
         className="pointer-events-none absolute inset-0 z-[4]"
         style={{
           background:
-            "linear-gradient(112deg, rgba(255,255,255,0) 18%, rgba(210,238,255,0.18) 36%, rgba(255,255,255,0.28) 50%, rgba(170,220,255,0.14) 64%, rgba(255,255,255,0) 80%)",
-          maskImage: "linear-gradient(to bottom, transparent 20%, rgba(255,255,255,0.92) 100%)",
+            "radial-gradient(circle at 50% 50%, rgba(255,255,255,0.55) 0%, rgba(180,230,255,0.42) 18%, rgba(80,170,240,0.28) 38%, rgba(30,100,200,0.08) 60%, transparent 76%)",
         }}
-        animate={{ x: ["-38%", "26%", "-32%"] }}
-        transition={{ duration: 13, ease: "easeInOut", repeat: Number.POSITIVE_INFINITY }}
+        initial={{ opacity: 0, scale: 0.55 }}
+        animate={{ opacity: [0, 1, 0.6, 0], scale: [0.55, 1.0, 1.35, 1.7] }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: HERO_CROSS_FADE_DURATION_S * 1.1, ease: [0.16, 1, 0.3, 1] }}
       />
-    </>
+    </AnimatePresence>
   );
 }
 
@@ -583,7 +644,7 @@ export default function HomePage() {
   const crossKenBurnsPreset = useMemo(
     () =>
       activeHeroSlide
-        ? toCrossKenBurnsPreset(getAlternatingKenBurnsPreset(activeHeroSlide.id, heroMotionStep, heroSeed))
+        ? toCrossKenBurnsPreset(getAlternatingKenBurnsPreset(activeHeroSlide.motionSeed, heroMotionStep, heroSeed))
         : toCrossKenBurnsPreset({ from: { scale: 1.1, x: -10, y: -6 }, to: { scale: 1.02, x: 6, y: 4 } }),
     [activeHeroSlide, heroMotionStep, heroSeed],
   );
@@ -595,7 +656,7 @@ export default function HomePage() {
   useSeo({
     title: "Foch Immobilier | Immobilier d'exception au Havre",
     description:
-      "Foch Immobilier vous accompagne depuis 1972 pour vos projets de vente, location et administration de biens au Havre.",
+      "Depuis 1972, Foch Immobilier accompagne vos projets de vente, location et gestion locative au Havre et sur le littoral.",
     canonicalPath: "/",
     image: heroSlides[0]?.imageUrl,
     jsonLd: [
@@ -619,7 +680,7 @@ export default function HomePage() {
         name: "Foch Immobilier",
         url: siteUrl,
         areaServed: ["Le Havre", "Sainte-Adresse", "Montivilliers"],
-        serviceType: ["Achat immobilier", "Vente immobiliere", "Location", "Gestion locative", "Estimation immobiliere"],
+        serviceType: ["Achat immobilier", "Vente immobilière", "Location", "Gestion locative", "Estimation immobilière"],
       },
       {
         "@context": "https://schema.org",
@@ -681,24 +742,24 @@ export default function HomePage() {
                 }
                 style={{ transformOrigin: "center center" }}
               >
-                <ContextAwareParallax mood={heroMood} reducedMotion={reducedMotion} intensity="subtle" scrollReactive className="h-full w-full">
-                  <LivingPhotoWebGL
-                    imageUrl={heroSlides[safeHeroIndex].imageUrl}
-                    alt={heroSlides[safeHeroIndex].title}
-                    mood={heroMood}
-                    depthMapUrl="/images/motion/hero-depth-map.svg"
-                    maskUrl="/images/motion/sea-mask.svg"
-                    reducedMotion={reducedMotion}
-                    qualityTier={reducedMotion ? undefined : "high"}
-                    qualityBoost={!reducedMotion}
-                    className="h-full w-full"
-                  />
-                </ContextAwareParallax>
+                <img
+                  src={heroSlides[safeHeroIndex].imageUrl}
+                  alt={heroSlides[safeHeroIndex].title}
+                  className="h-full w-full object-cover"
+                  loading="eager"
+                  decoding="async"
+                  fetchPriority="high"
+                  onError={(event) => {
+                    const image = event.currentTarget;
+                    if (image.src !== new URL(HERO_FALLBACK_IMAGE_URL, window.location.href).href) {
+                      image.src = HERO_FALLBACK_IMAGE_URL;
+                    }
+                  }}
+                />
               </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
-        {heroSlides.length > 0 && <PlaceAtmosphereLayer mood={heroMood} animated={!reducedMotion} className="z-[2]" />}
         <div className="absolute inset-0 z-[3] bg-gradient-to-br from-black/55 via-black/35 to-black/55" />
         <HeroTransitionEffects
           active={!reducedMotion && heroSlides.length > 1 && isActiveHeroReady}
@@ -719,7 +780,7 @@ export default function HomePage() {
             transition={{ duration: reducedMotion ? 0.3 : heroMotionDirector.revealDuration, delay: reducedMotion ? 0.08 : heroMotionDirector.revealStagger * 2 }}
             className="mt-4 max-w-2xl text-base text-white/85 md:text-lg"
           >
-            Depuis 1972, notre équipe accompagne les vendeurs, acquéreurs, bailleurs et locataires avec une approche sur-mesure.
+            Depuis 1972, nos conseillers dédiés accompagnent vendeurs, acquéreurs, bailleurs et locataires avec une approche sur mesure.
           </motion.p>
 
           <motion.div
@@ -732,18 +793,18 @@ export default function HomePage() {
             <Button size="lg" className="glass-sweep" asChild>
               <Link to="/biens">Explorer les biens</Link>
             </Button>
-            <Button size="lg" variant="outline" className="glass-sweep" asChild>
-              <Link to="/estimation">Estimer mon bien</Link>
+            <Button size="lg" variant="brand" className="glass-sweep" asChild>
+              <Link to="/estimation">Estimer votre bien</Link>
             </Button>
             <Button
               size="lg"
-              variant="secondary"
+              variant="brand"
               onClick={() => {
                 setSearchDrawerOpen(true);
               }}
               className="gap-2"
             >
-              <Search className="h-4 w-4" /> Rechercher un bien
+              <Search className="h-4 w-4" /> Rechercher un bien d'exception
             </Button>
           </motion.div>
         </div>
@@ -760,10 +821,10 @@ export default function HomePage() {
           <div className="mb-6 flex items-end justify-between gap-4">
             <div>
               <h2 className="font-display text-3xl">Sélection du moment</h2>
-              <p className="mt-1 text-sm text-muted-foreground">Une sélection de biens actifs à la vente et à la location.</p>
+              <p className="mt-1 text-sm text-muted-foreground">Une sélection de biens d'exception actuellement disponibles à la vente et à la location.</p>
             </div>
             <Link to="/biens" className="inline-flex items-center gap-1 text-sm hover:underline">
-              Voir tout
+              Découvrir tous les biens
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
@@ -784,7 +845,7 @@ export default function HomePage() {
         <ScrollReveal mood={heroMood}>
           <h2 className="font-display text-3xl">Explorer par ville</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Pages locales dédiées pour faciliter votre recherche immobilière par secteur.
+            Explorez nos pages locales pour affiner votre recherche sur Le Havre et ses communes voisines.
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
             {cities.map((city) => (
@@ -799,10 +860,10 @@ export default function HomePage() {
           </div>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link to="/histoire-immobilier-le-havre" className="rounded-full border border-border px-4 py-2 text-sm hover:bg-card">
-              Histoire de l'immobilier au Havre
+              Le Havre & patrimoine immobilier
             </Link>
             <Link to="/avis" className="rounded-full border border-border px-4 py-2 text-sm hover:bg-card">
-              Lire les avis clients Google
+              Lire les avis clients
             </Link>
           </div>
         </ScrollReveal>
@@ -836,7 +897,7 @@ export default function HomePage() {
                 </p>
               </div>
               <Link to="/avis" className="inline-flex items-center gap-1 text-sm hover:underline">
-                Voir tous les avis
+                Consulter tous les avis
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
