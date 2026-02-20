@@ -27,7 +27,7 @@ export default function SelectionPage() {
 
   useSeo({
     title: "Biens sauvegardés | Foch Immobilier",
-    description: "Retrouvez vos biens sauvegardés et reprenez votre recherche immobilière.",
+    description: "Retrouvez vos biens sauvegardés et reprenez votre recherche immobilière en toute fluidité.",
     canonicalPath: "/biens-sauvegardes",
     noIndex: true,
   });
@@ -57,8 +57,7 @@ export default function SelectionPage() {
 
         {savedListings.length > 0 && (
           <Button
-            variant="outline"
-            className="border-brand-border bg-brand-soft text-brand-strong hover:bg-brand-soft/70 hover:text-brand-strong"
+            variant="brand"
             onClick={clear}
           >
             <Trash2 className="h-4 w-4" />
@@ -74,7 +73,7 @@ export default function SelectionPage() {
           <Heart className="mx-auto h-12 w-12 text-brand" />
           <h2 className="mt-4 font-display text-3xl">Aucun bien sauvegardé</h2>
           <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">
-            Cliquez sur le cœur des annonces pour constituer votre sélection et y revenir à tout moment.
+            Cliquez sur le cœur d'une annonce pour constituer votre sélection et la retrouver à tout moment.
           </p>
           <Button variant="brand" className="mt-6" asChild>
             <Link to="/biens">Explorer les biens</Link>

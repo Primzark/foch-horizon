@@ -73,7 +73,7 @@ export default function ListingsIndexPage() {
 
   useSeo({
     title: "Biens immobiliers | Foch Immobilier",
-    description: "Tous nos biens à la vente et à la location dans la région du Havre.",
+    description: "Découvrez nos biens à la vente et à la location au Havre et sur le littoral.",
     canonicalPath: "/biens",
     noIndex: searchParams.toString().length > 0,
     jsonLd: query.data
@@ -97,7 +97,9 @@ export default function ListingsIndexPage() {
       <header className="mb-6">
         <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Biens</p>
         <h1 className="mt-2 font-display text-4xl">Tous nos biens</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Affinez votre recherche avec des filtres avancés et des liens partageables.</p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Affinez votre recherche avec des filtres avancés et accédez rapidement aux biens d'exception qui correspondent à vos critères.
+        </p>
       </header>
 
       <FiltersBar
@@ -118,7 +120,7 @@ export default function ListingsIndexPage() {
       {favoriteIds.length >= 3 && (
         <div className="mb-4 rounded-2xl border border-brand-border bg-brand-soft/60 p-4 text-sm text-brand-strong">
           <p>
-            Vous avez sauvegardé {favoriteIds.length} biens. Besoin d'un avis personnalisé ?{" "}
+            Vous avez sauvegardé {favoriteIds.length} biens. Besoin d'un regard expert ?{" "}
             <a href="/contact" className="font-semibold underline underline-offset-4">
               Envoyer ma sélection à l'agence
             </a>
@@ -154,9 +156,9 @@ export default function ListingsIndexPage() {
               <div className="mt-8 rounded-2xl border border-border bg-card p-8 text-center">
                 <p className="font-display text-2xl">Aucun bien ne correspond à ces critères.</p>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  Essayez d'élargir la recherche ou contactez l'agence pour un accompagnement personnalisé.
+                  Élargissez vos critères ou contactez l'agence pour bénéficier d'un accompagnement sur mesure.
                 </p>
-                <Button className="mt-4" asChild>
+                <Button className="mt-4" variant="brand" asChild>
                   <a href="/contact">Nous contacter</a>
                 </Button>
               </div>

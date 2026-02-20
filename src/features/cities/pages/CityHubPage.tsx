@@ -39,7 +39,7 @@ export default function CityHubPage() {
     city
       ? {
           title: `Immobilier ${city.name} | Foch Immobilier`,
-          description: `Découvrez les biens à ${city.name} et les services d'accompagnement de Foch Immobilier.`,
+          description: `Découvrez nos biens et notre accompagnement immobilier premium à ${city.name}.`,
           canonicalPath: `/immobilier/${city.slug}`,
           jsonLd: [
             {
@@ -131,7 +131,7 @@ export default function CityHubPage() {
           </p>
           <h1 className="mt-2 font-display text-4xl md:text-5xl">Immobilier à {city.name}</h1>
           <p className="mt-2 text-sm text-white/85">
-            Sélection de biens disponibles et accompagnement local pour vendre, acheter ou louer dans ce secteur.
+            Une sélection de biens et un accompagnement local sur mesure pour vendre, acheter ou louer dans ce secteur.
           </p>
         </div>
       </header>
@@ -140,9 +140,11 @@ export default function CityHubPage() {
         <div className="mb-4 flex items-end justify-between gap-4">
           <div>
             <h2 className="font-display text-3xl">Biens à {city.name}</h2>
-            <p className="mt-1 text-sm text-muted-foreground">{cityProperties.length} annonce{cityProperties.length > 1 ? "s" : ""} actuellement disponible{cityProperties.length > 1 ? "s" : ""}.</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {cityProperties.length} annonce{cityProperties.length > 1 ? "s" : ""} actuellement disponible{cityProperties.length > 1 ? "s" : ""}.
+            </p>
           </div>
-          <Button variant="outline" asChild>
+          <Button variant="brand" asChild>
             <Link to={`/biens?city=${city.slug}`}>Voir tous les résultats</Link>
           </Button>
         </div>
@@ -166,10 +168,10 @@ export default function CityHubPage() {
           Préparez votre estimation avec un conseiller local et obtenez une stratégie de mise en marché adaptée à votre bien.
         </p>
         <div className="mt-4 flex flex-wrap gap-3">
-          <Button asChild>
+          <Button asChild variant="brand">
             <Link to={`/estimation?ville=${city.slug}`}>Estimer mon bien à {city.name}</Link>
           </Button>
-          <Button variant="outline" asChild>
+          <Button variant="brand" asChild>
             <Link to="/contact">Parler à l'agence</Link>
           </Button>
         </div>

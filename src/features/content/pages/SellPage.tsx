@@ -4,16 +4,16 @@ import { Button } from "@/components/ui/button";
 import { useSeo } from "@/lib/seo/useSeo";
 
 const points = [
-  "Avis de valeur argumenté avec analyse locale.",
-  "Mise en marché premium: photos, descriptif, diffusion ciblée.",
-  "Qualification acheteurs et organisation des visites.",
-  "Accompagnement administratif jusqu'à la signature.",
+  "Avis de valeur argumenté avec analyse locale approfondie.",
+  "Mise en marché premium: visuels, narration et diffusion ciblée.",
+  "Qualification acquéreurs et pilotage des visites.",
+  "Accompagnement juridique et administratif jusqu'à la signature.",
 ];
 
 export default function SellPage() {
   useSeo({
     title: "Vendre | Foch Immobilier",
-    description: "Un accompagnement structuré pour vendre votre bien dans la région du Havre.",
+    description: "Un accompagnement haut de gamme et structuré pour vendre votre bien au Havre et sur le littoral.",
     canonicalPath: "/vendre",
   });
 
@@ -23,7 +23,7 @@ export default function SellPage() {
         <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Vendre</p>
         <h1 className="mt-2 font-display text-4xl">Vendre avec méthode, du mandat à l'acte</h1>
         <p className="mt-3 text-sm text-muted-foreground">
-          Notre équipe construit une stratégie de mise en vente cohérente avec votre bien, votre calendrier et le marché local.
+          Nous construisons une stratégie de vente cohérente avec votre bien, votre calendrier et les standards du marché local.
         </p>
       </header>
 
@@ -39,11 +39,11 @@ export default function SellPage() {
       </div>
 
       <div className="mt-8 flex flex-wrap gap-3">
-        <Button asChild>
+        <Button asChild variant="brand">
           <Link to="/estimation">Demander une estimation</Link>
         </Button>
-        <Button variant="outline" asChild>
-          <Link to="/contact">Parler à un conseiller</Link>
+        <Button variant="brand" asChild>
+          <Link to="/contact">Échanger avec un conseiller</Link>
         </Button>
       </div>
     </section>

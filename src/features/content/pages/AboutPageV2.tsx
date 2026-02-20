@@ -25,7 +25,7 @@ export default function AboutPageV2() {
   useSeo({
     title: "À propos | Foch Immobilier",
     description:
-      "Professionnels de l'immobilier au Havre depuis 1972. Conseils de professionnels et réseau UNIS.",
+      "Foch Immobilier accompagne vos projets immobiliers au Havre depuis 1972, avec un service haut de gamme et sur mesure.",
     canonicalPath: "/apropos",
   });
 
@@ -36,9 +36,9 @@ export default function AboutPageV2() {
       <div className="container relative mx-auto px-4">
         <motion.header {...fadeUp} className="max-w-4xl">
           <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">L'agence</p>
-          <h1 className="mt-2 font-display text-4xl md:text-5xl">Professionnels de l'immobilier au Havre</h1>
+          <h1 className="mt-2 font-display text-4xl md:text-5xl">L'exigence immobilière depuis 1972</h1>
           <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-            Agence immobilière depuis <strong>1972</strong>. Conseils de <strong>Professionnels</strong> et réseau <strong>UNIS</strong>.
+            Foch Immobilier conseille et accompagne ses clients au Havre avec la rigueur d'une maison indépendante, membre du réseau <strong>UNIS</strong>.
           </p>
         </motion.header>
 
@@ -67,33 +67,30 @@ export default function AboutPageV2() {
             </h2>
             <div className="mt-5 space-y-4 text-sm leading-relaxed text-muted-foreground">
               <p>
-                Vous souhaitez vendre votre bien immobilier en toute tranquillité, n'hésitez pas à nous contacter, notre
-                équipe commerciale se tient à votre disposition pour estimer gratuitement votre bien.
+                Nous pilotons chaque projet avec méthode: analyse de marché, valorisation du bien, sélection des acquéreurs
+                et suivi jusqu'à l'acte.
               </p>
               <p>
-                Notre parfaite connaissance de la région Havraise et du marché de l'immobilier nous permet de vous proposer
-                des estimations gratuites réalistes.
+                Notre connaissance fine du marché havrais nous permet de proposer des estimations fiables, une stratégie de
+                commercialisation cohérente et un accompagnement réellement sur mesure.
               </p>
               <p>
-                Vous recherchez un bien immobilier, vous pouvez le trouver sur notre site immobilier ou venir le découvrir du
-                lundi au samedi dans notre agence du Havre. N'hésitez pas à nous contacter pour visiter un bien, ou pour
-                toute autre information. Si vous recherchez un bien nous trouverons avec vous la meilleure solution.
+                Pour un achat, une vente ou une location, vous bénéficiez d'un interlocuteur dédié, disponible à chaque étape.
               </p>
               <p>
-                Vous recherchez une location, vous pouvez la trouver sur notre site immobilier ou venir la découvrir du lundi
-                au samedi dans notre agence du Havre. N'hésitez pas à nous contacter pour visiter un bien, ou pour toute
-                autre information. Si vous recherchez une location nous trouverons avec vous la meilleure solution.
+                Notre objectif reste constant: défendre vos intérêts, sécuriser les décisions et offrir une expérience premium,
+                claire et sereine.
               </p>
             </div>
 
             <div className="mt-6 flex flex-wrap gap-3">
-              <Button asChild>
+              <Button asChild variant="brand">
                 <Link to="/contact">Nous contacter</Link>
               </Button>
-              <Button variant="outline" asChild>
+              <Button variant="brand" asChild>
                 <Link to="/honoraires">Consulter les honoraires</Link>
               </Button>
-              <Button variant="ghost" asChild>
+              <Button variant="brand" asChild>
                 <a href={feesPdfUrl} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-2">
                   <Download className="h-4 w-4" />
                   PDF officiel
@@ -114,15 +111,15 @@ export default function AboutPageV2() {
 
         <motion.section {...fadeUp} className="mt-12">
           <h2 className="font-display text-3xl">
-            <a
-              href="https://www.economie.gouv.fr/dgccrf/Publications/Vie-pratique/Fiches-pratiques/Agent-immobilier"
-              target="_blank"
-              rel="noreferrer noopener"
-              className="underline-offset-4 hover:underline"
-            >
-              Nos agents immobiliers au Havre
-            </a>
-          </h2>
+              <a
+                href="https://www.economie.gouv.fr/dgccrf/Publications/Vie-pratique/Fiches-pratiques/Agent-immobilier"
+                target="_blank"
+                rel="noreferrer noopener"
+                className="underline-offset-4 hover:underline"
+              >
+                Nos conseillers immobiliers au Havre
+              </a>
+            </h2>
           <div className="mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
             {agents.map((agent, index) => (
               <motion.article

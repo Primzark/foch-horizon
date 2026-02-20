@@ -115,11 +115,11 @@ export function LeadForm({
               <div>
                 <p className="text-sm font-medium text-emerald-900">Demande envoyée avec succès</p>
                 <p className="mt-1 text-sm text-emerald-800/90">
-                  Merci. Un conseiller Foch Immobilier revient vers vous rapidement.
+                  Merci. Un conseiller dédié Foch Immobilier revient vers vous dans les meilleurs délais.
                 </p>
               </div>
             </div>
-            <Button type="button" variant="outline" className="mt-4" onClick={() => setSubmitted(false)}>
+            <Button type="button" variant="brand" className="mt-4" onClick={() => setSubmitted(false)}>
               Envoyer une autre demande
             </Button>
           </motion.div>
