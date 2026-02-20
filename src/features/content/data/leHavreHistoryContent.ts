@@ -20,74 +20,12 @@ export interface DistrictHistorySection {
   photoIds: string[];
 }
 
-export const competitiveKeywordSignals = [
-  {
-    source: "SeLoger - Le Havre",
-    keywordPatterns: [
-      "appartement a vendre le havre",
-      "maison a vendre le havre",
-      "prix immobilier le havre",
-      "annonce immobiliere le havre",
-    ],
-  },
-  {
-    source: "Bien'ici - Le Havre",
-    keywordPatterns: [
-      "immobilier le havre centre",
-      "achat appartement le havre",
-      "location appartement le havre",
-      "quartier perret immobilier",
-    ],
-  },
-  {
-    source: "LeBonCoin Immobilier - Le Havre",
-    keywordPatterns: [
-      "vente appartement le havre",
-      "vente maison le havre",
-      "investissement locatif le havre",
-      "studio le havre rendement",
-    ],
-  },
-  {
-    source: "Logic-Immo - Le Havre",
-    keywordPatterns: [
-      "agence immobiliere le havre",
-      "estimation immobiliere le havre",
-      "gestion locative le havre",
-      "syndic le havre",
-    ],
-  },
-];
-
-export const leHavreSeoKeywordBank = [
-  "immobilier le havre",
-  "agence immobiliere le havre",
-  "appartement a vendre le havre",
-  "maison a vendre le havre",
-  "location appartement le havre",
-  "estimation immobiliere le havre",
-  "gestion locative le havre",
-  "prix immobilier le havre",
-  "prix m2 le havre",
-  "investissement locatif le havre",
-  "quartier perret immobilier",
-  "quartier saint-francois le havre",
-  "quartier saint-vincent le havre",
-  "immobilier centre-ville le havre",
-  "compromis de vente le havre",
-  "achat appartement perret",
-  "vente maison sanvic",
-  "immeuble de rapport le havre",
-  "studio etudiant le havre",
-  "patrimoine perret unesco",
-];
-
 export const leHavreHistoryPhotos: HistoryPhotoAsset[] = [
   {
     id: "perret-architecture",
     src: "/images/le-havre-history/architecture-perret.jpg",
-    alt: "Architecture Perret au Havre, facades reconstruites et trame urbaine moderne",
-    caption: "Trame architecturale du quartier Perret, coeur du marche immobilier du centre reconstruit.",
+    alt: "Architecture Perret au Havre, façades reconstruites et trame urbaine moderne",
+    caption: "Trame architecturale du quartier Perret, cœur du marché immobilier du centre reconstruit.",
     author: "Philippe Roudaut",
     license: "CC0",
     sourceUrl: "https://commons.wikimedia.org/wiki/File:Architecture_Perret_Au_Havre_(180697579).jpeg",
@@ -96,7 +34,7 @@ export const leHavreHistoryPhotos: HistoryPhotoAsset[] = [
     id: "saint-francois-bassin",
     src: "/images/le-havre-history/saint-francois-bassin-du-roy.jpg",
     alt: "Quartier Saint-Francois et Bassin du Roy au Havre",
-    caption: "Saint-Francois combine patrimoine maritime, immeubles anciens et forte demande locative.",
+    caption: "Saint-François conjugue patrimoine maritime, immeubles anciens et forte demande locative.",
     author: "Philippe Ales",
     license: "CC BY-SA 3.0",
     sourceUrl: "https://commons.wikimedia.org/wiki/File:Le_Havre_(France),_quarter_Saint-Fran%C3%A7ois_and_Bassin_du_Roy.JPG",
@@ -104,8 +42,8 @@ export const leHavreHistoryPhotos: HistoryPhotoAsset[] = [
   {
     id: "saint-vincent-place",
     src: "/images/le-havre-history/place-saint-vincent.jpg",
-    alt: "Place Saint-Vincent au Havre, architecture residentielle pres de la plage",
-    caption: "Saint-Vincent attire les acquereurs cherchant un appartement proche mer au Havre.",
+    alt: "Place Saint-Vincent au Havre, architecture résidentielle près de la plage",
+    caption: "Saint-Vincent attire les acquéreurs en quête d'un appartement proche de la mer.",
     author: "Philippe Ales",
     license: "CC BY-SA 4.0",
     sourceUrl: "https://commons.wikimedia.org/wiki/File:Place_Saint-Vincent_(France).jpg",
@@ -113,8 +51,8 @@ export const leHavreHistoryPhotos: HistoryPhotoAsset[] = [
   {
     id: "hotel-ville",
     src: "/images/le-havre-history/hotel-de-ville.jpg",
-    alt: "Hotel de ville du Havre dans le secteur Perret",
-    caption: "Le secteur Hotel de Ville reste une reference pour l'achat appartement Le Havre centre.",
+    alt: "Hôtel de ville du Havre dans le secteur Perret",
+    caption: "Le secteur Hôtel de Ville reste une référence pour l'achat d'appartements au Havre centre.",
     author: "Ronan L.",
     license: "CC BY-SA 2.0",
     sourceUrl: "https://commons.wikimedia.org/wiki/File:Le_Havre_-_l%27h%C3%B4tel_de_ville.jpg",
@@ -123,7 +61,7 @@ export const leHavreHistoryPhotos: HistoryPhotoAsset[] = [
     id: "docks-vauban",
     src: "/images/le-havre-history/docks-vauban.jpg",
     alt: "Docks Vauban au Havre, reconversion urbaine et commerces",
-    caption: "Le quartier de l'Eure et les Docks Vauban structurent un nouveau pole immobilier au Havre.",
+    caption: "Le quartier de l'Eure et les Docks Vauban structurent un nouveau pôle immobilier au Havre.",
     author: "Philippe Ales",
     license: "CC BY-SA 4.0",
     sourceUrl: "https://commons.wikimedia.org/wiki/File:Docks_Vauban_au_Havre.jpg",
@@ -132,7 +70,7 @@ export const leHavreHistoryPhotos: HistoryPhotoAsset[] = [
     id: "bassin-commerce",
     src: "/images/le-havre-history/bassin-du-commerce.jpg",
     alt: "Bassin du Commerce au Havre avec front urbain reconstruit",
-    caption: "Autour du Bassin du Commerce, la demande reste soutenue en investissement locatif Le Havre.",
+    caption: "Autour du Bassin du Commerce, la demande reste soutenue pour l'investissement locatif havrais.",
     author: "Gfmorin",
     license: "Public domain",
     sourceUrl: "https://commons.wikimedia.org/wiki/File:Le_Havre_Bassin_du_Commerce.jpg",
@@ -140,8 +78,8 @@ export const leHavreHistoryPhotos: HistoryPhotoAsset[] = [
   {
     id: "saint-joseph",
     src: "/images/le-havre-history/eglise-saint-joseph.jpg",
-    alt: "Eglise Saint-Joseph du Havre, symbole du patrimoine Perret",
-    caption: "Le patrimoine Perret autour de Saint-Joseph soutient la valeur immobiliere du centre-ville.",
+    alt: "Église Saint-Joseph du Havre, symbole du patrimoine Perret",
+    caption: "Le patrimoine Perret autour de Saint-Joseph soutient la valeur immobilière du centre-ville.",
     author: "Aerith (transfer to Commons)",
     license: "Public domain",
     sourceUrl: "https://commons.wikimedia.org/wiki/File:Eglise_saint_joseph_du_Havre.jpg",
@@ -149,8 +87,8 @@ export const leHavreHistoryPhotos: HistoryPhotoAsset[] = [
   {
     id: "panorama-havre",
     src: "/images/le-havre-history/panorama-le-havre.jpg",
-    alt: "Panorama urbain du Havre, front de mer, bassins et quartiers residentiels",
-    caption: "Vue d'ensemble du marche immobilier Le Havre, entre centre reconstruit, mer et cote.",
+    alt: "Panorama urbain du Havre, front de mer, bassins et quartiers résidentiels",
+    caption: "Vue d'ensemble du marché immobilier havrais, entre centre reconstruit, mer et côte.",
     author: "Martin Falbisoner",
     license: "CC BY-SA 4.0",
     sourceUrl: "https://commons.wikimedia.org/wiki/File:Panorama_of_Le_Havre,_September_2019.jpg",
@@ -162,31 +100,31 @@ export const leHavreHistoryTimeline = [
     period: "1517-1789",
     title: "Fondation du Havre et premiers tissus urbains",
     description:
-      "Fondee en 1517, la ville se structure autour du port et des activites marchandes. Les premiers ilots proches de l'actuel Saint-Francois installent un marche immobilier portuaire, compose de maisons de negoce, d'habitats d'artisans et de commerces de quai.",
+      "Fondée en 1517, la ville se structure autour du port et des activités marchandes. Les premiers îlots proches de l'actuel Saint-François installent un marché immobilier portuaire, composé de maisons de négoce, d'habitats d'artisans et de commerces de quai.",
   },
   {
-    period: "XIXe siecle",
+    period: "XIXe siècle",
     title: "Expansion industrielle et nouveaux quartiers",
     description:
-      "L'essor maritime et industriel augmente la population et stimule l'immobilier Le Havre: creation de logements ouvriers, d'immeubles bourgeois cote ville haute, et extension vers Graville, Sanvic et les axes de tramways historiques.",
+      "L'essor maritime et industriel augmente la population et stimule l'immobilier havrais : création de logements ouvriers, d'immeubles bourgeois côté ville haute, et extension vers Graville, Sanvic et les axes de tramways historiques.",
   },
   {
     period: "1944-1964",
-    title: "Reconstruction Perret et modernite urbaine",
+    title: "Reconstruction Perret et modernité urbaine",
     description:
-      "Apres les destructions de 1944, la reconstruction conduite par Auguste Perret redefine le centre. Ce plan coherent cree aujourd'hui un segment tres recherche pour l'achat appartement Le Havre centre, reconnu par l'UNESCO.",
+      "Après les destructions de 1944, la reconstruction conduite par Auguste Perret redéfinit le centre. Ce plan cohérent crée aujourd'hui un segment très recherché pour l'achat d'appartements au Havre centre, reconnu par l'UNESCO.",
   },
   {
     period: "1965-2000",
-    title: "Structuration residentielle et mobilites",
+    title: "Structuration résidentielle et mobilités",
     description:
-      "La ville consolide ses quartiers residentiels: Saint-Vincent cote mer, Sanvic familial, Graville mixte. Les agences immobilieres du Havre deploient des services de transaction, gestion locative et syndic a grande echelle.",
+      "La ville consolide ses quartiers résidentiels : Saint-Vincent côté mer, Sanvic familial, Graville mixte. Les agences immobilières du Havre déploient des services de transaction, gestion locative et syndic à grande échelle.",
   },
   {
     period: "2000-aujourd'hui",
-    title: "Renouvellement des docks et attractivite locative",
+    title: "Renouvellement des docks et attractivité locative",
     description:
-      "Les Docks Vauban, le front de mer et les operations de renovation energetique renforcent l'investissement locatif Le Havre. Le marche combine rendement, cadre de vie et diversification entre residences principales et patrimoine a valoriser.",
+      "Les Docks Vauban, le front de mer et les opérations de rénovation énergétique renforcent l'investissement locatif au Havre. Le marché combine rendement, cadre de vie et diversification entre résidences principales et patrimoine à valoriser.",
   },
 ];
 
@@ -194,24 +132,24 @@ export const leHavreDistrictHistory: DistrictHistorySection[] = [
   {
     id: "perret",
     name: "Quartier Perret",
-    headline: "Le centre reconstruit, reference de l'immobilier Le Havre UNESCO",
+    headline: "Le centre reconstruit, référence patrimoniale du Havre UNESCO",
     summary:
-      "Le quartier Perret concentre la demande la plus visible en immobilier Le Havre centre-ville. Les appartements Perret, les immeubles avec ascenseur et les vues degagees sur la perspective de l'hotel de ville attirent acquereurs occupants, investisseurs et professions liberales. L'agence immobiliere Le Havre doit ici maitriser les coproprietes anciennes, les audits energetiques et la valorisation patrimoniale.",
+      "Le quartier Perret concentre une demande soutenue en centre-ville. Les immeubles de la reconstruction, les vues dégagées et la cohérence architecturale attirent acquéreurs occupants, investisseurs et professions libérales. Dans ce secteur, l'accompagnement se joue sur la maîtrise des copropriétés anciennes, la lecture énergétique et la valorisation patrimoniale.",
     marketFocus:
-      "Mots-clés dominants: appartement a vendre Le Havre, prix m2 Le Havre centre, estimation immobiliere Le Havre Perret, compromis de vente Le Havre.",
+      "Marché : appartements familiaux et biens de caractère au cœur du Havre, avec des valeurs stables et une forte profondeur d'acheteurs.",
     investmentAngle:
-      "Pour un investissement locatif Le Havre, Perret offre une demande locative stable (actifs et cadres), une excellente liquidite de revente et une forte lisibilite des valeurs au m2.",
+      "Pour un investissement locatif, Perret offre une demande régulière, une bonne liquidité à la revente et une lisibilité durable des valeurs au m².",
     timeline: [
-      "1945-1954: lancement des grands ilots en beton arme",
-      "2005: inscription UNESCO, acceleration de la demande patrimoniale",
-      "2015-2026: montee des projets de renovation energetique et de requalification interieure",
+      "1945-1954 : lancement des grands îlots en béton armé",
+      "2005 : inscription UNESCO et accélération de la demande patrimoniale",
+      "2015-2026 : montée des rénovations énergétiques et des requalifications intérieures",
     ],
     keywordTags: [
-      "immobilier le havre perret",
-      "appartement a vendre le havre centre",
-      "agence immobiliere perret",
-      "prix m2 perret le havre",
-      "estimation appartement perret",
+      "Immobilier Le Havre Perret",
+      "Appartement centre Perret",
+      "Prix m² Perret",
+      "Estimation Perret",
+      "Patrimoine UNESCO",
     ],
     photoIds: ["perret-architecture", "hotel-ville", "saint-joseph"],
   },
@@ -220,94 +158,94 @@ export const leHavreDistrictHistory: DistrictHistorySection[] = [
     name: "Quartier Saint-Francois",
     headline: "Le secteur maritime historique, tension locative forte",
     summary:
-      "Saint-Francois est l'un des quartiers les plus typiques pour acheter un appartement au Havre proche port et bassins. Le parc immobilier melange immeubles anciens, petites surfaces, duplex atypiques et biens avec vue eau. Pour une agence immobiliere Le Havre, c'est un secteur cle en vente appartement Le Havre et en location appartement Le Havre grace a la demande de jeunes actifs et de profils lies a l'economie maritime.",
+      "Saint-François est l'un des secteurs les plus singuliers du Havre, entre bassins, patrimoine et vie de quartier. Son parc immobilier mêle immeubles anciens, petites surfaces et biens atypiques avec vues sur l'eau. La demande locative y reste active, portée par les jeunes actifs et les métiers liés à l'économie maritime.",
     marketFocus:
-      "Mots-clés dominants: quartier Saint-Francois Le Havre, studio Le Havre rendement, investissement locatif Le Havre port, annonce immobiliere Le Havre ancien.",
+      "Marché : studios, deux-pièces et appartements de charme dans un environnement à forte identité portuaire.",
     investmentAngle:
-      "Le secteur presente des tickets d'entree encore accessibles sur certaines rues, avec une rentabilite locative souvent competitive face aux zones les plus premium du front de mer.",
+      "Le quartier conserve, sur certaines rues, des tickets d'entrée mesurés avec une rentabilité locative compétitive face aux zones les plus premium du front de mer.",
     timeline: [
-      "XVIe-XVIIIe: formation du noyau portuaire",
-      "XIXe: densification commerciale et habitats de negoce",
-      "Depuis 2000: revalorisation touristique et residentielle autour des bassins",
+      "XVIe-XVIIIe : formation du noyau portuaire",
+      "XIXe : densification commerciale et habitat de négoce",
+      "Depuis 2000 : revalorisation touristique et résidentielle autour des bassins",
     ],
     keywordTags: [
-      "immobilier saint-francois le havre",
-      "appartement vue bassin le havre",
-      "vente appartement saint-francois",
-      "location meublée le havre port",
-      "investissement locatif saint-francois",
+      "Immobilier Saint-François",
+      "Appartement vue bassin",
+      "Location meublée port",
+      "Investissement locatif",
+      "Quartier maritime",
     ],
     photoIds: ["saint-francois-bassin", "bassin-commerce"],
   },
   {
     id: "saint-vincent",
     name: "Quartier Saint-Vincent",
-    headline: "L'adresse balneaire pour un immobilier residentiel premium",
+    headline: "L'adresse balnéaire pour un immobilier résidentiel premium",
     summary:
-      "Entre plage, commerces de proximite et batiments de caractere, Saint-Vincent reste un pole majeur pour maison a vendre Le Havre et appartement familial Le Havre bord de mer. Le marche immobilier Le Havre y valorise fortement l'exterieur, la luminosite et la marche a pied vers la promenade littorale. Les delais de vente sont souvent courts pour les biens bien positionnes.",
+      "Entre plage, commerces de proximité et immeubles de caractère, Saint-Vincent demeure une adresse recherchée pour les appartements familiaux et les maisons proches du littoral. Le marché valorise fortement les extérieurs, la luminosité et la proximité immédiate de la promenade maritime.",
     marketFocus:
-      "Mots-clés dominants: immobilier saint-vincent le havre, appartement mer le havre, maison familiale saint-vincent, agence immobiliere front de mer.",
+      "Marché : biens résidentiels à fort confort de vie, avec une demande soutenue sur les adresses les mieux situées.",
     investmentAngle:
-      "Le quartier combine securite patrimoniale et rarete fonciere, ce qui soutient la valeur sur long terme et facilite la revente.",
+      "Le quartier combine sécurité patrimoniale et rareté foncière, ce qui soutient la valeur à long terme et facilite la revente.",
     timeline: [
-      "Fin XIXe: essor des residences de bord de mer",
-      "Annees 1960-1990: consolidation residentielle",
-      "Depuis 2010: regain d'attractivite avec cadre de vie littoral",
+      "Fin XIXe : essor des résidences de bord de mer",
+      "Années 1960-1990 : consolidation résidentielle",
+      "Depuis 2010 : regain d'attractivité grâce au cadre de vie littoral",
     ],
     keywordTags: [
-      "appartement saint-vincent le havre",
-      "maison a vendre proche plage le havre",
-      "prix immobilier front de mer le havre",
-      "estimation immobiliere saint-vincent",
-      "agence immobiliere plage le havre",
+      "Appartement Saint-Vincent",
+      "Maison proche plage",
+      "Front de mer Le Havre",
+      "Estimation Saint-Vincent",
+      "Adresse littorale",
     ],
     photoIds: ["saint-vincent-place", "panorama-havre"],
   },
   {
     id: "graville",
     name: "Graville et ville basse",
-    headline: "Un marche mixte, residentiel et patrimonial",
+    headline: "Un marché mixte, résidentiel et patrimonial",
     summary:
-      "Graville offre une lecture immobiliere tres interessante au Havre: maisons de ville, petits collectifs et parc locatif etabli. Le secteur attire les menages cherchant un prix immobilier Le Havre plus contenu tout en restant connecte aux zones d'emploi. Les agences immobilieres y travaillent aussi bien la primo-accession que la vente maison Le Havre avec potentiel de renovation.",
+      "Graville offre un positionnement équilibré : maisons de ville, petits collectifs et parc locatif établi. Le secteur attire les ménages recherchant un budget plus contenu tout en restant connecté aux zones d'emploi et aux axes de mobilité.",
     marketFocus:
-      "Mots-clés dominants: maison a vendre graville le havre, estimation maison le havre, achat immobilier ville basse, investissement locatif graville.",
+      "Marché : biens familiaux et opportunités de rénovation, adaptés à la primo-accession comme à l'investissement raisonné.",
     investmentAngle:
-      "La profondeur de marche et le niveau de prix d'entree permettent des strategies diversifiees: residence principale, location nue ou location meublee longue duree.",
+      "La profondeur de marché et le niveau de prix d'entrée permettent des stratégies diversifiées : résidence principale, location nue ou meublée longue durée.",
     timeline: [
-      "XIXe: integration progressive au tissu havrais",
-      "1950-1980: urbanisation residentielle continue",
-      "Depuis 2015: regain d'interet pour les biens a renover",
+      "XIXe : intégration progressive au tissu havrais",
+      "1950-1980 : urbanisation résidentielle continue",
+      "Depuis 2015 : regain d'intérêt pour les biens à rénover",
     ],
     keywordTags: [
-      "immobilier graville le havre",
-      "maison de ville le havre",
-      "achat maison graville",
-      "agence immobiliere ville basse le havre",
-      "estimation graville le havre",
+      "Immobilier Graville",
+      "Maison de ville",
+      "Achat Graville",
+      "Ville basse Le Havre",
+      "Estimation Graville",
     ],
     photoIds: ["bassin-commerce", "panorama-havre"],
   },
   {
     id: "sanvic",
     name: "Sanvic",
-    headline: "Le pole familial de la ville haute",
+    headline: "Le pôle familial de la ville haute",
     summary:
-      "Sanvic reste central pour la recherche maison a vendre Le Havre avec jardin, garage et proximite des etablissements scolaires. Le marche immobilier Le Havre Sanvic est porte par la demande familiale, la qualite de vie et la presence d'un parc de maisons individuelles. Les transactions y mobilisent frequemment des dossiers de financement classiques avec compromis de vente le havre securises.",
+      "Sanvic reste central pour la recherche de maisons avec jardin et garage, à proximité des établissements scolaires. Le marché y est porté par une demande familiale continue, une qualité de vie reconnue et un parc de maisons individuelles bien entretenu.",
     marketFocus:
-      "Mots-clés dominants: vente maison sanvic le havre, quartier residentiel le havre, estimation maison familiale, agence immobiliere sanvic.",
+      "Marché : maisons familiales, surfaces extérieures et transactions sécurisées sur des horizons patrimoniaux long terme.",
     investmentAngle:
-      "Moins speculatif que les secteurs hyper-centraux, Sanvic offre une forte stabilite de valeur et un rythme de rotation sain.",
+      "Moins spéculatif que les secteurs hyper-centraux, Sanvic offre une bonne stabilité de valeur et un rythme de rotation sain.",
     timeline: [
-      "Debut XXe: urbanisation de la ville haute",
-      "1960-2000: extension du parc pavillonnaire",
-      "Depuis 2018: forte recherche sur maisons renovees energetiquement",
+      "Début XXe : urbanisation de la ville haute",
+      "1960-2000 : extension du parc pavillonnaire",
+      "Depuis 2018 : forte demande pour les maisons rénovées énergétiquement",
     ],
     keywordTags: [
-      "immobilier sanvic le havre",
-      "maison familiale le havre",
-      "vente pavillon sanvic",
-      "estimation maison sanvic",
-      "agence immobiliere ville haute le havre",
+      "Immobilier Sanvic",
+      "Maison familiale",
+      "Pavillon Sanvic",
+      "Estimation maison",
+      "Ville haute Le Havre",
     ],
     photoIds: ["panorama-havre", "hotel-ville"],
   },
@@ -316,22 +254,22 @@ export const leHavreDistrictHistory: DistrictHistorySection[] = [
     name: "Eure - Docks Vauban",
     headline: "Le Havre en renouvellement urbain et rendement locatif",
     summary:
-      "Le secteur Eure - Docks Vauban symbolise le nouveau cycle immobilier Le Havre: programmes recents, commerces, mobilites et mixite habitat-activites. La location appartement Le Havre y est soutenue par les actifs mobiles et les etudiants. Les investisseurs ciblent souvent studio, T2 et petites surfaces proches des transports pour optimiser la vacance locative.",
+      "Le secteur Eure - Docks Vauban incarne le nouveau cycle immobilier havrais : programmes récents, commerces, mobilités et mixité habitat-activités. La location y est soutenue par les actifs mobiles et les étudiants, avec une demande régulière sur les petites surfaces proches des transports.",
     marketFocus:
-      "Mots-clés dominants: investissement locatif le havre docks, appartement neuf le havre, rendement locatif le havre eure, gestion locative le havre.",
+      "Marché : studios, T2 et résidences récentes dans un secteur en transformation continue.",
     investmentAngle:
-      "La zone combine potentiel de valorisation a moyen terme et strategie de revenus, notamment pour un portefeuille locatif diversifie.",
+      "La zone combine potentiel de valorisation à moyen terme et stratégie de revenus, notamment pour un portefeuille locatif diversifié.",
     timeline: [
-      "1990-2010: lancement des reconversions de friches portuaires",
-      "2010-2020: acceleration des commerces et residences recentes",
-      "2020-2026: renforcement de l'attractivite locative et des projets mixtes",
+      "1990-2010 : lancement des reconversions de friches portuaires",
+      "2010-2020 : accélération des commerces et résidences récentes",
+      "2020-2026 : renforcement de l'attractivité locative et des projets mixtes",
     ],
     keywordTags: [
-      "immobilier eure le havre",
-      "docks vauban appartement",
-      "location appartement docks le havre",
-      "gestion locative eure",
-      "investissement locatif le havre docks",
+      "Immobilier Eure",
+      "Docks Vauban",
+      "Location appartement",
+      "Gestion locative",
+      "Investissement locatif",
     ],
     photoIds: ["docks-vauban", "panorama-havre"],
   },
@@ -341,16 +279,16 @@ export const leHavreFaq = [
   {
     question: "Quel quartier choisir pour acheter un appartement au Havre ?",
     answer:
-      "Pour un appartement a vendre Le Havre centre, Perret reste la reference. Pour un cadre maritime, Saint-Vincent et Saint-Francois sont tres demandes. Pour un budget plus modulable, Graville et certains secteurs de l'Eure offrent de bonnes opportunites.",
+      "Pour un achat en centre-ville, Perret reste une référence. Pour un cadre maritime, Saint-Vincent et Saint-François sont très demandés. Avec un budget plus modulable, Graville et certains secteurs de l'Eure offrent de belles opportunités.",
   },
   {
     question: "Le Havre est-il pertinent pour un investissement locatif ?",
     answer:
-      "Oui, le marche immobilier Le Havre combine demande locative active, prix d'entree encore competitifs sur plusieurs quartiers et typologies variees (studio, T2, maisons). La selection du quartier et de la surface reste determinante pour le rendement.",
+      "Oui. Le marché havrais combine une demande locative active, des prix d'entrée encore accessibles sur plusieurs secteurs et des typologies variées. Le choix du quartier et de la surface reste déterminant pour sécuriser le rendement.",
   },
   {
-    question: "Comment optimiser une estimation immobiliere au Havre ?",
+    question: "Comment optimiser une estimation immobilière au Havre ?",
     answer:
-      "Une estimation immobiliere Le Havre performante repose sur les ventes recentes du micro-secteur, l'etat energetique, la copropriete, la vue, l'etage, l'exterieur et la liquidite de la typologie dans le quartier cible.",
+      "Une estimation performante repose sur les ventes récentes du micro-secteur, l'état énergétique, la copropriété, la vue, l'étage, les extérieurs et la liquidité de la typologie dans le quartier ciblé.",
   },
 ];

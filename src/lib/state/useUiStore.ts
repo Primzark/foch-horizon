@@ -7,7 +7,6 @@ interface UiState {
   cookieConsent: "accepted" | "rejected" | "unset";
   setCookieConsent: (consent: UiState["cookieConsent"]) => void;
   motionPreference: "system" | "reduced";
-  setMotionPreference: (preference: UiState["motionPreference"]) => void;
 }
 
 export const useUiStore = create<UiState>()(
@@ -18,10 +17,20 @@ export const useUiStore = create<UiState>()(
       cookieConsent: "unset",
       setCookieConsent: (consent) => set({ cookieConsent: consent }),
       motionPreference: "system",
-      setMotionPreference: (preference) => set({ motionPreference: preference }),
     }),
     {
       name: "foch_ui",
+      version: 2,
+      migrate: (persistedState) => {
+        const state =
+          (persistedState as
+            | { cookieConsent?: UiState["cookieConsent"]; motionPreference?: UiState["motionPreference"] }
+            | undefined) ?? {};
+        return {
+          cookieConsent: state.cookieConsent ?? "unset",
+          motionPreference: "system",
+        };
+      },
       partialize: (state) => ({ cookieConsent: state.cookieConsent, motionPreference: state.motionPreference }),
     },
   ),

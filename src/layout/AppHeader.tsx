@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
-import { ExternalLink, Heart, Menu, Phone, Search, Wind } from "lucide-react";
+import { ExternalLink, Heart, Menu, Phone, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useFavoritesStore } from "@/features/favorites/useFavoritesStore";
 import { cn } from "@/lib/utils";
 import { useUiStore } from "@/lib/state/useUiStore";
 import { trackEvent } from "@/lib/analytics/events";
+import { FiMonogram } from "@/components/branding/FiMonogram";
 
 const primaryLinks = [
   { to: "/biens", label: "Biens" },
@@ -84,10 +85,7 @@ export function AppHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const setSearchDrawerOpen = useUiStore((state) => state.setSearchDrawerOpen);
-  const motionPreference = useUiStore((state) => state.motionPreference);
-  const setMotionPreference = useUiStore((state) => state.setMotionPreference);
   const favoriteIds = useFavoritesStore((state) => state.ids);
-  const reducedMotionEnabled = motionPreference === "reduced";
 
   useEffect(() => {
     const onScroll = () => {
@@ -141,6 +139,7 @@ export function AppHeader() {
           </SheetTrigger>
 
           <Link to="/" className="flex min-w-0 items-center gap-1.5 sm:gap-2">
+            <FiMonogram size={32} decorative={false} title="FI" className="h-7 w-7 sm:h-8 sm:w-8" />
             <span
               className={cn(
                 "whitespace-nowrap font-display text-[1.34rem] font-semibold leading-none tracking-tight transition-all duration-200 sm:text-[1.56rem] md:text-[2rem]",
@@ -182,24 +181,6 @@ export function AppHeader() {
               }}
             >
               <Search className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              className={cn(
-                "inline-flex h-9 w-9 items-center justify-center rounded-full border bg-background/90 transition-colors sm:h-10 sm:w-10",
-                "max-[390px]:hidden",
-                reducedMotionEnabled
-                  ? "border-brand-border bg-brand-soft text-brand-strong"
-                  : "border-border hover:border-brand-border hover:bg-brand-soft/70",
-              )}
-              aria-label={reducedMotionEnabled ? "Réactiver les animations" : "Réduire les animations"}
-              onClick={() => {
-                const nextPreference = reducedMotionEnabled ? "system" : "reduced";
-                setMotionPreference(nextPreference);
-                trackEvent("motion_pref_changed", { preference: nextPreference, source: "header" });
-              }}
-            >
-              <Wind className="h-4 w-4" />
             </button>
             <a
               href="tel:0235425176"
@@ -280,24 +261,6 @@ export function AppHeader() {
                   <Link to="/estimation">Estimer votre bien</Link>
                 </Button>
               </SheetClose>
-
-              <button
-                type="button"
-                className={cn(
-                  "mt-1 inline-flex items-center gap-2 rounded-lg border px-3 py-3 text-[1rem] font-medium transition-colors",
-                  reducedMotionEnabled
-                    ? "border-brand-border bg-brand-soft text-brand-strong"
-                    : "border-border text-foreground hover:bg-muted",
-                )}
-                onClick={() => {
-                  const nextPreference = reducedMotionEnabled ? "system" : "reduced";
-                  setMotionPreference(nextPreference);
-                  trackEvent("motion_pref_changed", { preference: nextPreference, source: "mobile_menu" });
-                }}
-              >
-                <Wind className="h-4 w-4" />
-                {reducedMotionEnabled ? "Animations réduites" : "Réduire les animations"}
-              </button>
 
               <SheetClose asChild>
                 <a

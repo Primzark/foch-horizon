@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { MapPin, Building2, Landmark, Anchor } from "lucide-react";
+import { MapPin, Building2, Landmark } from "lucide-react";
 import { getSiteUrl, useSeo } from "@/lib/seo/useSeo";
 import { cn } from "@/lib/utils";
 import { getPlaceImageMotionPreset, inferPlaceImageMood } from "@/lib/visuals/placeImageMotion";
@@ -9,12 +9,10 @@ import { ContextAwareParallax } from "@/components/visuals/ContextAwareParallax"
 import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
 import { getMotionDirectorProfile } from "@/lib/visuals/motionDirector";
 import {
-  competitiveKeywordSignals,
   leHavreDistrictHistory,
   leHavreFaq,
   leHavreHistoryPhotos,
   leHavreHistoryTimeline,
-  leHavreSeoKeywordBank,
 } from "@/features/content/data/leHavreHistoryContent";
 
 const photosById = new Map(leHavreHistoryPhotos.map((photo) => [photo.id, photo]));
@@ -24,9 +22,9 @@ export default function LeHavreHistoryPage() {
   const { reducedMotion } = useMotionPreference();
 
   useSeo({
-    title: "Histoire de l'immobilier au Havre | Quartiers, prix et dynamiques",
+    title: "Histoire de l'immobilier au Havre | Patrimoine, quartiers et tendances",
     description:
-      "Analyse historique complete de l'immobilier au Havre: Perret, Saint-Francois, Saint-Vincent, Sanvic, Graville et Eure-Docks. Evolution du marche, investissement locatif et tendances locales.",
+      "Repères historiques et lecture marché du Havre : Perret, Saint-François, Saint-Vincent, Sanvic, Graville et Eure-Docks.",
     canonicalPath: "/histoire-immobilier-le-havre",
     image: "/images/le-havre-history/panorama-le-havre.jpg",
     type: "article",
@@ -52,9 +50,9 @@ export default function LeHavreHistoryPage() {
       {
         "@context": "https://schema.org",
         "@type": "Article",
-        headline: "Histoire de l'immobilier au Havre: de la fondation a 2026",
+        headline: "Histoire de l'immobilier au Havre : des origines portuaires aux dynamiques actuelles",
         description:
-          "Page historique dediee au marche immobilier du Havre, avec focus sur Perret, Saint-Francois, Saint-Vincent et les quartiers majeurs pour achat, vente, location et investissement locatif.",
+          "Analyse historique et immobilière du Havre, quartier par quartier, pour éclairer un projet d'achat, de vente ou d'investissement.",
         image: leHavreHistoryPhotos.map((photo) => `${siteUrl}${photo.src}`),
         inLanguage: "fr-FR",
         author: {
@@ -102,19 +100,18 @@ export default function LeHavreHistoryPage() {
       <header className="max-w-5xl p-summary" itemProp="description">
         <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Le Havre immobilier</p>
         <h1 className="mt-2 font-display text-4xl md:text-5xl p-name" itemProp="headline">
-          Histoire de l'immobilier au Havre: des origines portuaires au marche 2026
+          Histoire de l'immobilier au Havre : des origines portuaires aux tendances actuelles
         </h1>
         <p className="mt-4 text-sm leading-relaxed text-muted-foreground e-content" itemProp="articleBody">
-          Cette page rassemble les mots-cles les plus performants du marche immobilier Le Havre et les replace dans
-          leur contexte historique: achat appartement Le Havre, maison a vendre Le Havre, location appartement Le Havre,
-          estimation immobiliere Le Havre, gestion locative Le Havre et investissement locatif Le Havre. Objectif:
-          proposer un contenu local, dense et utile pour comprendre chaque quartier avant un projet de vente, d'achat
-          ou de mise en location.
+          Depuis 1972, Foch Immobilier observe l'évolution du marché havrais au plus près du terrain. Cette page
+          propose une lecture claire des grands repères historiques, des dynamiques de quartiers et des enjeux
+          patrimoniaux pour vous aider à décider avec méthode, que votre projet concerne l'achat, la vente ou
+          l'investissement locatif.
         </p>
       </header>
 
       <section className="mt-8 rounded-2xl border border-border bg-card p-6" aria-label="Navigation quartiers">
-        <h2 className="font-display text-2xl">Quartiers cles de l'immobilier au Havre</h2>
+        <h2 className="font-display text-2xl">Quartiers clés de l'immobilier au Havre</h2>
         <div className="mt-4 flex flex-wrap gap-2">
           {leHavreDistrictHistory.map((district) => (
             <a
@@ -169,7 +166,7 @@ export default function LeHavreHistoryPage() {
               <div className="mt-5 grid gap-4 lg:grid-cols-2">
                 <article className="rounded-xl border border-border bg-muted/20 p-4">
                   <h3 className="inline-flex items-center gap-1 font-display text-2xl">
-                    <Building2 className="h-5 w-5" /> Lecture marche
+                    <Building2 className="h-5 w-5" /> Lecture du marché
                   </h3>
                   <p className="mt-2 text-sm text-muted-foreground">{district.marketFocus}</p>
                   <p className="mt-3 text-sm text-muted-foreground">{district.investmentAngle}</p>
@@ -190,7 +187,7 @@ export default function LeHavreHistoryPage() {
                 </article>
               </div>
 
-              <div className="mt-5 flex flex-wrap gap-2" aria-label={`Mots-cles ${district.name}`}>
+              <div className="mt-5 flex flex-wrap gap-2" aria-label={`Mots-clés ${district.name}`}>
                 {district.keywordTags.map((tag) => (
                   <span key={tag} className="rounded-full border border-brand-border bg-brand-soft px-3 py-1 text-xs text-brand-strong">
                     {tag}
@@ -261,50 +258,15 @@ export default function LeHavreHistoryPage() {
         })}
       </section>
 
-      <section className="mt-10 rounded-2xl border border-border bg-card p-6">
-        <h2 className="inline-flex items-center gap-2 font-display text-3xl">
-          <Anchor className="h-6 w-6" /> Densite semantique immobilier Le Havre
-        </h2>
-        <p className="mt-3 text-sm text-muted-foreground">
-          Ce contenu a ete structure autour des intentions de recherche les plus competitives du secteur local: agence
-          immobiliere Le Havre, appartement a vendre Le Havre, maison a vendre Le Havre, location appartement Le Havre,
-          estimation immobiliere Le Havre, prix immobilier Le Havre, investissement locatif Le Havre, gestion locative
-          Le Havre, quartier Perret immobilier, quartier Saint-Francois Le Havre et quartier Saint-Vincent Le Havre.
-        </p>
-
-        <div className="mt-4 flex flex-wrap gap-2">
-          {leHavreSeoKeywordBank.map((keyword) => (
-            <span key={keyword} className="rounded-full border border-border px-3 py-1 text-xs">
-              {keyword}
-            </span>
-          ))}
-        </div>
-      </section>
-
-      <section className="mt-10 grid gap-4 lg:grid-cols-2">
+      <section className="mt-10">
         <article className="rounded-2xl border border-border bg-card p-6">
-          <h2 className="font-display text-3xl">Questions frequentes</h2>
+          <h2 className="font-display text-3xl">Questions fréquentes</h2>
           <div className="mt-4 space-y-4">
             {leHavreFaq.map((item) => (
               <article key={item.question} className="rounded-xl border border-border p-4">
                 <h3 className="font-medium">{item.question}</h3>
                 <p className="mt-2 text-sm text-muted-foreground">{item.answer}</p>
               </article>
-            ))}
-          </div>
-        </article>
-
-        <article className="rounded-2xl border border-border bg-card p-6">
-          <h2 className="font-display text-3xl">Signaux SEO concurrents (Le Havre)</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Grille de mots-cles inspirée des pages leaders sur le marche immobilier Le Havre.
-          </p>
-          <div className="mt-4 space-y-3 text-sm text-muted-foreground">
-            {competitiveKeywordSignals.map((signal) => (
-              <div key={signal.source} className="rounded-xl border border-border p-4">
-                <p className="font-medium text-foreground">{signal.source}</p>
-                <p className="mt-2">{signal.keywordPatterns.join(" · ")}</p>
-              </div>
             ))}
           </div>
         </article>
