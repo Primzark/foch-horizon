@@ -7,7 +7,6 @@ import { useFavoritesStore } from "@/features/favorites/useFavoritesStore";
 import { cn } from "@/lib/utils";
 import { useUiStore } from "@/lib/state/useUiStore";
 import { trackEvent } from "@/lib/analytics/events";
-import { FiMonogram } from "@/components/branding/FiMonogram";
 
 const primaryLinks = [
   { to: "/biens", label: "Biens" },
@@ -18,6 +17,7 @@ const primaryLinks = [
   { to: "/apropos", label: "Agence" },
   { to: "/contact", label: "Contact" },
 ];
+const fiLogoUrl = "https://www.fochimmobilier.com/static/img/favicon.png";
 const legacyLogoUrl = "https://www.fochimmobilier.com/static/img/logo_unis.png";
 
 function LinkItem({
@@ -139,7 +139,13 @@ export function AppHeader() {
           </SheetTrigger>
 
           <Link to="/" className="flex min-w-0 items-center gap-1.5 sm:gap-2">
-            <FiMonogram size={32} decorative={false} title="FI" className="h-7 w-7 sm:h-8 sm:w-8" />
+            <img
+              src={fiLogoUrl}
+              alt="FI logo"
+              className="h-7 w-7 rounded-[0.45rem] sm:h-8 sm:w-8"
+              loading="eager"
+              decoding="async"
+            />
             <span
               className={cn(
                 "whitespace-nowrap font-display text-[1.34rem] font-semibold leading-none tracking-tight transition-all duration-200 sm:text-[1.56rem] md:text-[2rem]",
