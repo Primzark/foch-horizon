@@ -41,7 +41,7 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0 }: Listin
     : {
         initial: { opacity: 0, y: 20 },
         whileInView: { opacity: 1, y: 0 },
-        viewport: { once: true, amount: 0.2 },
+        viewport: { once: true, amount: 0.05 },
         transition: { duration: motionDirector.revealDuration * 0.65, delay: revealDelay, ease: [0.22, 1, 0.36, 1] as const },
       };
   const cardHoverMotion = reducedMotion ? undefined : { y: motionDirector.cardHoverLift, scale: motionDirector.cardHoverScale };

@@ -769,13 +769,15 @@ export default function HomePage() {
           </div>
         </ScrollReveal>
 
-        <ScrollReveal mood={heroMood} delay={heroMotionDirector.revealStagger + 0.02}>
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {(featuredQuery.data ?? []).slice(0, 6).map((property, index) => (
-              <ListingCard key={property.id} item={toSearchItem(property)} revealIndex={index} />
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {featuredQuery.isLoading &&
+            Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="h-[320px] animate-pulse rounded-2xl bg-muted/60" />
             ))}
-          </div>
-        </ScrollReveal>
+          {(featuredQuery.data ?? []).slice(0, 6).map((property, index) => (
+            <ListingCard key={property.id} item={toSearchItem(property)} revealIndex={index} />
+          ))}
+        </div>
       </section>
 
       <section className="container mx-auto px-4 pb-14">
