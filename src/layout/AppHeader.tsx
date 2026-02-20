@@ -7,6 +7,7 @@ import { useFavoritesStore } from "@/features/favorites/useFavoritesStore";
 import { cn } from "@/lib/utils";
 import { useUiStore } from "@/lib/state/useUiStore";
 import { trackEvent } from "@/lib/analytics/events";
+import { FiMonogram } from "@/components/branding/FiMonogram";
 
 const primaryLinks = [
   { to: "/biens", label: "Biens" },
@@ -14,7 +15,7 @@ const primaryLinks = [
   { to: "/biens?transaction=location", label: "Louer" },
   { to: "/histoire-immobilier-le-havre", label: "Histoire" },
   { to: "/avis", label: "Avis" },
-  { to: "/apropos", label: "L'agence" },
+  { to: "/apropos", label: "Agence" },
   { to: "/contact", label: "Contact" },
 ];
 const legacyLogoUrl = "https://www.fochimmobilier.com/static/img/logo_unis.png";
@@ -141,15 +142,16 @@ export function AppHeader() {
           </SheetTrigger>
 
           <Link to="/" className="flex min-w-0 items-center gap-1.5 sm:gap-2">
+            <FiMonogram size={34} decorative={false} title="FI" className="h-8 w-8 sm:h-8.5 sm:w-8.5" />
             <span
               className={cn(
-                "whitespace-nowrap font-sans text-[1.34rem] font-semibold leading-none tracking-tight transition-all duration-200 sm:text-[1.56rem] md:text-[2rem]",
-                scrolled && "text-[1.16rem] sm:text-[1.36rem] md:text-[1.7rem]",
+                "whitespace-nowrap font-display text-[1.34rem] font-semibold leading-none tracking-tight transition-all duration-200 sm:text-[1.56rem] md:text-[2rem]",
+                scrolled && "text-[1.16rem] sm:text-[1.36rem] md:text-[1.66rem]",
               )}
             >
               <span className="text-[#000000]">Foch</span>
-              <span className="text-[#2eca6a] max-[360px]:hidden">Immobilier</span>
-              <span className="hidden text-[#2eca6a] max-[360px]:inline">Immo</span>
+              <span className="text-[#2ca46d] max-[360px]:hidden">Immobilier</span>
+              <span className="hidden text-[#2ca46d] max-[360px]:inline">Immo</span>
             </span>
             <img
               src={legacyLogoUrl}
@@ -175,7 +177,7 @@ export function AppHeader() {
             <button
               type="button"
               className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background/90 transition-colors hover:border-brand-border hover:bg-brand-soft/70 sm:h-10 sm:w-10"
-              aria-label="Ouvrir la recherche"
+              aria-label="Ouvrir la recherche de biens"
               onClick={() => {
                 setSearchDrawerOpen(true);
                 trackEvent("search_opened", { source: "header" });
@@ -221,7 +223,9 @@ export function AppHeader() {
               <ExternalLink className="h-3 w-3" />
             </a>
             <Link to="/estimation" className="hidden md:block">
-              <Button className="rounded-full px-5">Estimer mon bien</Button>
+              <Button variant="brand" className="rounded-full px-5">
+                Estimer votre bien
+              </Button>
             </Link>
           </div>
         </div>
@@ -237,9 +241,10 @@ export function AppHeader() {
           <div className="border-b border-border px-5 py-5">
             <SheetClose asChild>
               <Link to="/" className="inline-flex items-center gap-2">
-                <span className="font-sans text-[1.45rem] font-semibold leading-none tracking-tight">
+                <FiMonogram size={32} decorative={false} title="FI" className="h-8 w-8" />
+                <span className="font-display text-[1.45rem] font-semibold leading-none tracking-tight">
                   <span className="text-[#000000]">Foch</span>
-                  <span className="text-[#2eca6a]">Immobilier</span>
+                  <span className="text-[#2ca46d]">Immobilier</span>
                 </span>
               </Link>
             </SheetClose>
@@ -274,12 +279,9 @@ export function AppHeader() {
               />
 
               <SheetClose asChild>
-                <Link
-                  to="/estimation"
-                  className="mt-2 rounded-lg border border-border px-3 py-3 text-[1rem] font-semibold text-foreground transition-colors hover:bg-muted"
-                >
-                  Estimer mon bien
-                </Link>
+                <Button asChild variant="brand" className="mt-2 h-auto rounded-lg px-3 py-3 text-[1rem] font-semibold">
+                  <Link to="/estimation">Estimer votre bien</Link>
+                </Button>
               </SheetClose>
 
               <button
