@@ -7,7 +7,6 @@ import { useFavoritesStore } from "@/features/favorites/useFavoritesStore";
 import { cn } from "@/lib/utils";
 import { useUiStore } from "@/lib/state/useUiStore";
 import { trackEvent } from "@/lib/analytics/events";
-import { FiMonogram } from "@/components/branding/FiMonogram";
 
 const primaryLinks = [
   { to: "/biens", label: "Biens" },
@@ -142,7 +141,6 @@ export function AppHeader() {
           </SheetTrigger>
 
           <Link to="/" className="flex min-w-0 items-center gap-1.5 sm:gap-2">
-            <FiMonogram size={34} decorative={false} title="FI" className="h-8 w-8 sm:h-8.5 sm:w-8.5" />
             <span
               className={cn(
                 "whitespace-nowrap font-display text-[1.34rem] font-semibold leading-none tracking-tight transition-all duration-200 sm:text-[1.56rem] md:text-[2rem]",
@@ -241,7 +239,6 @@ export function AppHeader() {
           <div className="border-b border-border px-5 py-5">
             <SheetClose asChild>
               <Link to="/" className="inline-flex items-center gap-2">
-                <FiMonogram size={32} decorative={false} title="FI" className="h-8 w-8" />
                 <span className="font-display text-[1.45rem] font-semibold leading-none tracking-tight">
                   <span className="text-[#000000]">Foch</span>
                   <span className="text-[#2ca46d]">Immobilier</span>

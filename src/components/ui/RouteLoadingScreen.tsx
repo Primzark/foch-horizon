@@ -1,10 +1,11 @@
 import { cn } from "@/lib/utils";
-import { FiMonogram } from "@/components/branding/FiMonogram";
 
 interface RouteLoadingScreenProps {
   fullscreen?: boolean;
   className?: string;
 }
+
+const fiLogoUrl = "https://www.fochimmobilier.com/static/img/favicon.png";
 
 export function RouteLoadingScreen({ fullscreen = false, className }: RouteLoadingScreenProps) {
   return (
@@ -20,7 +21,7 @@ export function RouteLoadingScreen({ fullscreen = false, className }: RouteLoadi
     >
       <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 p-6 shadow-[0_24px_52px_-38px_rgba(14,22,34,0.55)]">
         <div className="relative overflow-hidden rounded-sm">
-          <FiMonogram size={48} decorative={false} title="FI" className="h-11 w-11 md:h-12 md:w-12" />
+          <img src={fiLogoUrl} alt="FI logo" className="h-11 w-11 md:h-12 md:w-12" loading="eager" decoding="async" />
           <span className="luxury-shimmer pointer-events-none absolute inset-y-0 -left-1/2 w-1/2 bg-gradient-to-r from-transparent via-white/75 to-transparent" />
         </div>
       </div>
