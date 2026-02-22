@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BASE_URL="${1:-https://www.foch-immobilier.fr}"
+BASE_URL="${1:-https://fochimmobilier.lovable.app}"
 DATE_STAMP="$(date +%F)"
 OUT_DIR="docs/audit/${DATE_STAMP}"
 

@@ -10,7 +10,7 @@ interface SeoOptions {
   type?: "website" | "article";
 }
 
-const fallbackSiteUrl = "https://www.foch-immobilier.fr";
+const fallbackSiteUrl = "https://fochimmobilier.lovable.app";
 const defaultOgImage =
   "https://storage.googleapis.com/gpt-engineer-file-uploads/1c5Ul6EafQQxFKZpYyK1fNvJX4a2/social-images/social-1771265379992-fochimmobilier-agence-immobiliere-le-havre-76_2.webp";
 

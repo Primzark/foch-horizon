@@ -59,7 +59,7 @@ RUN_EDGE_INTEGRATION=true RUN_EDGE_WRITE_TESTS=true EDGE_API_BASE_URL=https://<y
 Run:
 
 ```bash
-scripts/audit/run-deepsearch.sh https://www.foch-immobilier.fr
+scripts/audit/run-deepsearch.sh https://fochimmobilier.lovable.app
 ```
 
 Artifacts are generated under `docs/audit/<date>/`.

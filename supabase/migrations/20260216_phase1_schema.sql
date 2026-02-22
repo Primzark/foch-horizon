@@ -121,19 +121,31 @@ alter table property_features enable row level security;
 alter table leads enable row level security;
 
 -- Public read access for inventory
-create policy if not exists public_read_cities on cities for select using (is_active = true);
-create policy if not exists public_read_agents on agents for select using (is_active = true);
-create policy if not exists public_read_properties on properties for select using (status <> 'off_market');
-create policy if not exists public_read_property_images on property_images for select using (true);
-create policy if not exists public_read_property_features on property_features for select using (true);
+drop policy if exists public_read_cities on cities;
+create policy public_read_cities on cities for select using (is_active = true);
+drop policy if exists public_read_agents on agents;
+create policy public_read_agents on agents for select using (is_active = true);
+drop policy if exists public_read_properties on properties;
+create policy public_read_properties on properties for select using (status <> 'off_market');
+drop policy if exists public_read_property_images on property_images;
+create policy public_read_property_images on property_images for select using (true);
+drop policy if exists public_read_property_features on property_features;
+create policy public_read_property_features on property_features for select using (true);
 
 -- Leads are insert-only for public API, no public reads
-create policy if not exists public_insert_leads on leads for insert with check (consent = true);
+drop policy if exists public_insert_leads on leads;
+create policy public_insert_leads on leads for insert with check (consent = true);
 
 -- Placeholder admin policy hooks (to be bound with auth roles in project)
-create policy if not exists service_role_all_cities on cities for all using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
-create policy if not exists service_role_all_agents on agents for all using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
-create policy if not exists service_role_all_properties on properties for all using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
-create policy if not exists service_role_all_property_images on property_images for all using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
-create policy if not exists service_role_all_property_features on property_features for all using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
-create policy if not exists service_role_all_leads on leads for all using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
+drop policy if exists service_role_all_cities on cities;
+create policy service_role_all_cities on cities for all using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
+drop policy if exists service_role_all_agents on agents;
+create policy service_role_all_agents on agents for all using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
+drop policy if exists service_role_all_properties on properties;
+create policy service_role_all_properties on properties for all using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
+drop policy if exists service_role_all_property_images on property_images;
+create policy service_role_all_property_images on property_images for all using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
+drop policy if exists service_role_all_property_features on property_features;
+create policy service_role_all_property_features on property_features for all using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
+drop policy if exists service_role_all_leads on leads;
+create policy service_role_all_leads on leads for all using (auth.role() = 'service_role') with check (auth.role() = 'service_role');

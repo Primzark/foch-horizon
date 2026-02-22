@@ -30,7 +30,7 @@ export function AppFooter() {
       <div className="container mx-auto grid gap-10 px-4 py-12 md:grid-cols-2 lg:grid-cols-4">
         <div className="h-card" itemScope itemType="https://schema.org/RealEstateAgent">
           <meta itemProp="name" content="Foch Immobilier" />
-          <meta itemProp="url" content="https://www.foch-immobilier.fr" />
+          <meta itemProp="url" content="https://fochimmobilier.lovable.app" />
           <p className="font-display text-2xl">Foch Immobilier</p>
           <p className="mt-1 text-xs uppercase tracking-[0.24em] text-muted-foreground">Depuis 1972 · Réseau UNIS</p>
           <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
