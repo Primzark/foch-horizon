@@ -20,23 +20,195 @@ export interface ChatbotCitation {
   similarity?: number;
 }
 
+export interface ToolSearchParams {
+  transaction?: "vente" | "location";
+  type?: "appartement" | "maison_villa" | "autre";
+  city?: string;
+  q?: string;
+  bedroomsMin?: number;
+  priceMin?: number;
+  priceMax?: number;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface ChatbotConversationState {
+  recentSearch?: {
+    params?: ToolSearchParams;
+    resultIds: number[];
+    total?: number;
+    generatedAt: string;
+  };
+  selectedPropertyIds?: number[];
+  recentPropertyIds?: number[];
+  leadDraft?: {
+    propertyId?: number;
+    citySlug?: string;
+    criteriaSummary?: string;
+  };
+  preferences?: {
+    transaction?: "vente" | "location";
+    type?: "appartement" | "maison_villa" | "autre";
+    city?: string;
+    bedroomsMin?: number;
+    priceMin?: number;
+    priceMax?: number;
+  };
+}
+
+export type ChatbotActionRequest =
+  | {
+      type: "search_refine";
+      payload?: {
+        searchParams?: ToolSearchParams;
+        page?: number;
+        pageSize?: number;
+      };
+    }
+  | {
+      type: "compare_selected_properties";
+      payload?: {
+        propertyIds?: number[];
+      };
+    }
+  | {
+      type: "open_path_confirmed";
+      payload?: {
+        path?: string;
+      };
+    }
+  | {
+      type: "prepare_handoff";
+      payload?: {
+        propertyIds?: number[];
+      };
+    }
+  | {
+      type: "prefill_lead_form";
+      payload?: {
+        propertyId?: number;
+        propertyIds?: number[];
+      };
+    };
+
+export type ChatbotToolTrace = {
+  tool: "search_properties" | "get_properties" | "compare_properties" | "prepare_handoff";
+  status: "ok" | "error" | "skipped";
+  latencyMs: number;
+  resultCount?: number;
+  errorCode?: string;
+};
+
+interface ChatbotUiActionBase {
+  id: string;
+  title: string;
+  description?: string;
+  requiresConfirmation?: boolean;
+}
+
+export type ChatbotUiAction =
+  | (ChatbotUiActionBase & {
+      kind: "search_results";
+      data: {
+        criteriaSummary: string;
+        searchParams: ToolSearchParams;
+        total: number;
+        items: Array<{
+          id: number;
+          title: string;
+          priceAmount: number;
+          currency: string;
+          surfaceM2: number | null;
+          bedrooms: number | null;
+          cityName: string;
+          citySlug: string;
+          path: string;
+          coverImageUrl: string;
+          dpeLabel: string | null;
+          transaction: string;
+          type: string;
+        }>;
+        canCompare: boolean;
+        compareSelectionLimit: number;
+        nextSuggestedRefinements?: string[];
+      };
+    })
+  | (ChatbotUiActionBase & {
+      kind: "compare_summary";
+      data: {
+        propertyIds: number[];
+        properties: Array<{
+          id: number;
+          title: string;
+          path: string;
+          priceAmount: number;
+          surfaceM2: number | null;
+          bedrooms: number | null;
+          cityName: string;
+          dpeLabel: string | null;
+          terrainM2?: number | null;
+          garageCount?: number | null;
+          bathrooms?: number | null;
+        }>;
+        comparisonRows: Array<{ label: string; values: Array<string | null> }>;
+        summary: string;
+        recommendedPropertyId?: number;
+        nextActions?: Array<"open_property" | "prefill_handoff">;
+      };
+    })
+  | (ChatbotUiActionBase & {
+      kind: "open_page";
+      data: {
+        path: string;
+        label: string;
+        reason?: string;
+      };
+    })
+  | (ChatbotUiActionBase & {
+      kind: "lead_handoff_draft";
+      data: {
+        draft: { source: "contact_page"; propertyId?: number; criteriaMessage: string };
+        prefill: { criteria: string; firstName?: string; lastName?: string; email?: string };
+        missingFields: Array<"firstName" | "lastName" | "email">;
+        contextSummary: string;
+      };
+    })
+  | (ChatbotUiActionBase & {
+      kind: "notice";
+      data: {
+        level?: "info" | "warning";
+        code?: string;
+      };
+    });
+
 export interface ChatbotReply {
   answer: string;
   suggestedPrompts: string[];
   needsLeadCapture?: boolean;
   propertySuggestions?: ChatbotPropertySuggestion[];
   citations?: ChatbotCitation[];
+  actions?: ChatbotUiAction[];
+  conversationStatePatch?: Partial<ChatbotConversationState>;
+  toolTrace?: ChatbotToolTrace[];
   ragUsed?: boolean;
+  edgeProvider?: "gemini" | "openai" | "fallback";
+  retrievalMode?: "none" | "vector" | "keyword" | "hybrid";
+  routeDecision?: string;
+  routeCategory?: "deterministic_local" | "edge_rag" | "edge_general" | "edge_tools" | "fallback";
+  requestId?: string;
+  agentMode?: "tool" | "rag" | "fallback";
   source: "local" | "edge";
 }
 
 export interface ChatbotRequest {
   question: string;
   chatHistory?: Array<{ role: "user" | "assistant"; content: string }>;
+  conversationState?: ChatbotConversationState;
+  actionRequest?: ChatbotActionRequest;
   signal?: AbortSignal;
 }
 
-type ChatbotIntent =
+export type ChatbotIntent =
   | "lead_capture"
   | "property"
   | "process"
@@ -49,19 +221,19 @@ type ChatbotIntent =
   | "navigation"
   | "unknown";
 
-interface DistrictDescriptor {
+export interface DistrictDescriptor {
   id: string;
   label: string;
   aliases: string[];
 }
 
-interface CityRouteDescriptor {
+export interface CityRouteDescriptor {
   slug: string;
   name: string;
   aliases: string[];
 }
 
-interface ConversationContext {
+export interface ConversationContext {
   normalizedQuestion: string;
   normalizedHistory: string;
   normalizedFullHistory: string;
@@ -75,6 +247,15 @@ interface ConversationContext {
   cityRoute: CityRouteDescriptor | null;
   requestedPath: string | null;
   recentKnownPaths: string[];
+}
+
+export type ChatbotRouteCategory = "deterministic_local" | "edge_rag" | "edge_general" | "edge_tools" | "fallback";
+
+export interface ChatbotRouteDecision {
+  target: "local" | "edge";
+  category: ChatbotRouteCategory;
+  reason: string;
+  intent: ChatbotIntent;
 }
 
 interface SiteTopicDescriptor {
@@ -628,7 +809,7 @@ function detectIntent(text: string): ChatbotIntent {
   return "unknown";
 }
 
-function buildConversationContext(question: string, chatHistory: ChatbotRequest["chatHistory"]): ConversationContext {
+export function buildConversationContext(question: string, chatHistory: ChatbotRequest["chatHistory"]): ConversationContext {
   const normalizedQuestion = normalizeKeyword(question);
   const historyMessages = (chatHistory ?? []).map((message) => message.content.trim()).filter((content) => content.length > 0);
   const historyUserMessages = (chatHistory ?? [])
@@ -1343,6 +1524,131 @@ function isWebsiteContentQuestion(context: ConversationContext): boolean {
   );
 }
 
+function isListingsNavigationPath(path: string | null): boolean {
+  if (!path) return false;
+  return /^\/biens(?:$|[-/])/.test(path);
+}
+
+function isInformationalCityHubQuestion(context: ConversationContext): boolean {
+  if (!context.cityRoute) return false;
+  if (!/immobilier|prix|marche|quartier|investissement|ville/.test(context.normalizedQuestion)) return false;
+
+  const listingFilterSignals =
+    context.propertyType !== null ||
+    context.transactionPreference !== null ||
+    context.bedroomsMin !== null ||
+    context.budgetMax !== null;
+
+  return !listingFilterSignals;
+}
+
+function isExplicitRouteContentQuestion(context: ConversationContext): boolean {
+  if (!context.requestedPath) return false;
+  if (followPathRequestPattern.test(context.normalizedQuestion)) return false;
+  return true;
+}
+
+function isDeterministicLocalQuestion(context: ConversationContext): boolean {
+  return (
+    context.inferredIntent === "lead_capture" ||
+    context.inferredIntent === "property" ||
+    context.inferredIntent === "process" ||
+    greetingPattern.test(context.normalizedQuestion) ||
+    thanksPattern.test(context.normalizedQuestion) ||
+    capabilityPattern.test(context.normalizedQuestion) ||
+    selectionIntentPattern.test(context.normalizedQuestion) ||
+    isListingsNavigationPath(context.requestedPath)
+  );
+}
+
+interface ChatbotRoutingOptions {
+  edgeApiEnabled: boolean;
+  edgeRagForWebsiteQuestionsEnabled: boolean;
+  edgeAgentToolsEnabled?: boolean;
+  routerV2Enabled: boolean;
+}
+
+interface ChatbotRoutingMeta {
+  actionRequest?: ChatbotActionRequest;
+  conversationState?: ChatbotConversationState;
+}
+
+export function decideChatbotRoute(
+  context: ConversationContext,
+  options: ChatbotRoutingOptions,
+  meta?: ChatbotRoutingMeta,
+): ChatbotRouteDecision {
+  const edgeAgentToolsEnabled = options.edgeAgentToolsEnabled === true;
+  if (!options.routerV2Enabled) {
+    if (!options.edgeApiEnabled) {
+      return { target: "local", category: "fallback", reason: "edge_disabled_legacy", intent: context.inferredIntent };
+    }
+    if (isWebsiteContentQuestion(context) && !options.edgeRagForWebsiteQuestionsEnabled) {
+      return { target: "local", category: "fallback", reason: "edge_rag_disabled_legacy", intent: context.inferredIntent };
+    }
+    return { target: "edge", category: "edge_general", reason: "legacy_edge_path", intent: context.inferredIntent };
+  }
+
+  if (isDeterministicLocalQuestion(context)) {
+    if (context.inferredIntent === "property" && edgeAgentToolsEnabled && options.edgeApiEnabled) {
+      return { target: "edge", category: "edge_tools", reason: "property_tool_mode", intent: context.inferredIntent };
+    }
+    return { target: "local", category: "deterministic_local", reason: "deterministic_local_match", intent: context.inferredIntent };
+  }
+
+  if (meta?.actionRequest) {
+    if (!options.edgeApiEnabled) {
+      return { target: "local", category: "fallback", reason: "edge_disabled_for_tool_action", intent: context.inferredIntent };
+    }
+    return { target: "edge", category: "edge_tools", reason: "tool_action_request", intent: context.inferredIntent };
+  }
+
+  if (!options.edgeApiEnabled) {
+    return { target: "local", category: "fallback", reason: "edge_disabled", intent: context.inferredIntent };
+  }
+
+  const needsEdgeRag =
+    context.inferredIntent === "navigation" ||
+    context.inferredIntent === "fees" ||
+    context.inferredIntent === "reviews" ||
+    context.inferredIntent === "history" ||
+    context.inferredIntent === "about" ||
+    context.inferredIntent === "contact" ||
+    context.inferredIntent === "service" ||
+    legalIntentPattern.test(context.normalizedQuestion) ||
+    pageSummaryPattern.test(context.normalizedQuestion) ||
+    isExplicitRouteContentQuestion(context) ||
+    isInformationalCityHubQuestion(context);
+
+  if (needsEdgeRag) {
+    if (!options.edgeRagForWebsiteQuestionsEnabled) {
+      return { target: "local", category: "fallback", reason: "edge_rag_disabled", intent: context.inferredIntent };
+    }
+    return { target: "edge", category: "edge_rag", reason: "website_content_rag", intent: context.inferredIntent };
+  }
+
+  if (context.inferredIntent === "unknown") {
+    const hasCompareSelection = (meta?.conversationState?.selectedPropertyIds?.length ?? 0) >= 2;
+    if (edgeAgentToolsEnabled && hasCompareSelection && /compar|compare|entre les deux|entre ces biens/.test(context.normalizedQuestion)) {
+      return { target: "edge", category: "edge_tools", reason: "compare_tool_with_selection", intent: context.inferredIntent };
+    }
+    return { target: "edge", category: "edge_general", reason: "unknown_intent_edge_general", intent: context.inferredIntent };
+  }
+
+  if (
+    edgeAgentToolsEnabled &&
+    options.edgeApiEnabled &&
+    (context.inferredIntent === "property" ||
+      (context.inferredIntent === "contact" &&
+        ((meta?.conversationState?.recentSearch?.resultIds?.length ?? 0) > 0 ||
+          (meta?.conversationState?.selectedPropertyIds?.length ?? 0) > 0)))
+  ) {
+    return { target: "edge", category: "edge_tools", reason: "property_or_handoff_tool_mode", intent: context.inferredIntent };
+  }
+
+  return { target: "local", category: "deterministic_local", reason: "default_local", intent: context.inferredIntent };
+}
+
 function isEdgeReplyUsable(payload: unknown): payload is ChatbotReply {
   if (!payload || typeof payload !== "object") {
     return false;
@@ -1352,25 +1658,442 @@ function isEdgeReplyUsable(payload: unknown): payload is ChatbotReply {
   return typeof maybeReply.answer === "string" && maybeReply.answer.trim().length > 0;
 }
 
+function sanitizeToolSearchParams(raw: unknown): ToolSearchParams | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const candidate = raw as Record<string, unknown>;
+  const params: ToolSearchParams = {};
+  if (candidate.transaction === "vente" || candidate.transaction === "location") params.transaction = candidate.transaction;
+  if (candidate.type === "appartement" || candidate.type === "maison_villa" || candidate.type === "autre") {
+    params.type = candidate.type;
+  }
+  if (typeof candidate.city === "string" && candidate.city.trim().length > 0) params.city = candidate.city.trim().slice(0, 80);
+  if (typeof candidate.q === "string" && candidate.q.trim().length > 0) params.q = candidate.q.trim().slice(0, 120);
+  for (const key of ["bedroomsMin", "priceMin", "priceMax", "page", "pageSize"] as const) {
+    const value = candidate[key];
+    if (typeof value === "number" && Number.isFinite(value)) {
+      (params as Record<string, number>)[key] = Math.floor(value);
+    }
+  }
+  return Object.keys(params).length > 0 ? params : undefined;
+}
+
+function sanitizeConversationStatePatch(raw: unknown): Partial<ChatbotConversationState> | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const candidate = raw as Record<string, unknown>;
+  const patch: Partial<ChatbotConversationState> = {};
+
+  if (candidate.recentSearch && typeof candidate.recentSearch === "object") {
+    const recent = candidate.recentSearch as Record<string, unknown>;
+    const resultIds = Array.isArray(recent.resultIds)
+      ? recent.resultIds
+          .map((value) => (typeof value === "number" && Number.isInteger(value) ? value : Number(value)))
+          .filter((value) => Number.isInteger(value) && value > 0)
+          .slice(0, 20)
+      : [];
+    const generatedAt =
+      typeof recent.generatedAt === "string" && recent.generatedAt.trim().length > 0
+        ? recent.generatedAt.trim().slice(0, 80)
+        : new Date().toISOString();
+    patch.recentSearch = {
+      params: sanitizeToolSearchParams(recent.params),
+      resultIds,
+      total: typeof recent.total === "number" && Number.isFinite(recent.total) ? Math.max(0, Math.floor(recent.total)) : undefined,
+      generatedAt,
+    };
+  }
+
+  if (Array.isArray(candidate.selectedPropertyIds)) {
+    patch.selectedPropertyIds = candidate.selectedPropertyIds
+      .map((value) => (typeof value === "number" ? value : Number(value)))
+      .filter((value) => Number.isInteger(value) && value > 0)
+      .slice(0, 3);
+  }
+
+  if (Array.isArray(candidate.recentPropertyIds)) {
+    patch.recentPropertyIds = candidate.recentPropertyIds
+      .map((value) => (typeof value === "number" ? value : Number(value)))
+      .filter((value) => Number.isInteger(value) && value > 0)
+      .slice(0, 20);
+  }
+
+  if (candidate.leadDraft && typeof candidate.leadDraft === "object") {
+    const leadDraftCandidate = candidate.leadDraft as Record<string, unknown>;
+    patch.leadDraft = {
+      propertyId:
+        typeof leadDraftCandidate.propertyId === "number" && Number.isInteger(leadDraftCandidate.propertyId)
+          ? leadDraftCandidate.propertyId
+          : undefined,
+      citySlug:
+        typeof leadDraftCandidate.citySlug === "string" && leadDraftCandidate.citySlug.trim().length > 0
+          ? leadDraftCandidate.citySlug.trim().slice(0, 80)
+          : undefined,
+      criteriaSummary:
+        typeof leadDraftCandidate.criteriaSummary === "string" && leadDraftCandidate.criteriaSummary.trim().length > 0
+          ? leadDraftCandidate.criteriaSummary.trim().slice(0, 500)
+          : undefined,
+    };
+  }
+
+  if (candidate.preferences && typeof candidate.preferences === "object") {
+    const preferencesCandidate = candidate.preferences as Record<string, unknown>;
+    patch.preferences = {
+      ...sanitizeToolSearchParams(preferencesCandidate),
+    };
+  }
+
+  return Object.keys(patch).length > 0 ? patch : undefined;
+}
+
+function sanitizeToolTrace(raw: unknown): ChatbotToolTrace[] | undefined {
+  if (!Array.isArray(raw)) return undefined;
+  const traces = raw
+    .filter((value): value is Record<string, unknown> => Boolean(value && typeof value === "object"))
+    .map((trace) => {
+      const tool =
+        trace.tool === "search_properties" ||
+        trace.tool === "get_properties" ||
+        trace.tool === "compare_properties" ||
+        trace.tool === "prepare_handoff"
+          ? trace.tool
+          : null;
+      const status = trace.status === "ok" || trace.status === "error" || trace.status === "skipped" ? trace.status : null;
+      const latencyMs =
+        typeof trace.latencyMs === "number" && Number.isFinite(trace.latencyMs) ? Math.max(0, Math.floor(trace.latencyMs)) : null;
+      if (!tool || !status || latencyMs == null) return null;
+      return {
+        tool,
+        status,
+        latencyMs,
+        resultCount:
+          typeof trace.resultCount === "number" && Number.isFinite(trace.resultCount)
+            ? Math.max(0, Math.floor(trace.resultCount))
+            : undefined,
+        errorCode:
+          typeof trace.errorCode === "string" && trace.errorCode.trim().length > 0
+            ? trace.errorCode.trim().slice(0, 80)
+            : undefined,
+      } satisfies ChatbotToolTrace;
+    })
+    .filter((trace): trace is ChatbotToolTrace => Boolean(trace))
+    .slice(0, 10);
+
+  return traces.length > 0 ? traces : undefined;
+}
+
+function sanitizeActions(raw: unknown): ChatbotUiAction[] | undefined {
+  if (!Array.isArray(raw)) return undefined;
+  const actions: ChatbotUiAction[] = [];
+
+  for (const value of raw.slice(0, 5)) {
+    if (!value || typeof value !== "object") continue;
+    const candidate = value as Record<string, unknown>;
+    const id = typeof candidate.id === "string" && candidate.id.trim().length > 0 ? candidate.id.trim().slice(0, 120) : undefined;
+    const title =
+      typeof candidate.title === "string" && candidate.title.trim().length > 0 ? candidate.title.trim().slice(0, 160) : undefined;
+    const description =
+      typeof candidate.description === "string" && candidate.description.trim().length > 0
+        ? candidate.description.trim().slice(0, 300)
+        : undefined;
+    const requiresConfirmation = typeof candidate.requiresConfirmation === "boolean" ? candidate.requiresConfirmation : undefined;
+    if (!id || !title || typeof candidate.kind !== "string" || !candidate.data || typeof candidate.data !== "object") continue;
+
+    const base = { id, title, description, requiresConfirmation };
+    const data = candidate.data as Record<string, unknown>;
+
+    if (candidate.kind === "search_results") {
+      const items = Array.isArray(data.items)
+        ? data.items
+            .filter((item): item is Record<string, unknown> => Boolean(item && typeof item === "object"))
+            .map((item) => ({
+              id: typeof item.id === "number" ? item.id : Number(item.id),
+              title: typeof item.title === "string" ? item.title.trim().slice(0, 200) : "",
+              priceAmount: typeof item.priceAmount === "number" ? item.priceAmount : Number(item.priceAmount),
+              currency: typeof item.currency === "string" ? item.currency.trim().slice(0, 10) : "EUR",
+              surfaceM2:
+                typeof item.surfaceM2 === "number" && Number.isFinite(item.surfaceM2)
+                  ? item.surfaceM2
+                  : item.surfaceM2 == null
+                    ? null
+                    : Number(item.surfaceM2) || null,
+              bedrooms:
+                typeof item.bedrooms === "number" && Number.isFinite(item.bedrooms)
+                  ? item.bedrooms
+                  : item.bedrooms == null
+                    ? null
+                    : Number(item.bedrooms) || null,
+              cityName: typeof item.cityName === "string" ? item.cityName.trim().slice(0, 120) : "",
+              citySlug: typeof item.citySlug === "string" ? item.citySlug.trim().slice(0, 80) : "",
+              path: typeof item.path === "string" ? item.path.trim().slice(0, 500) : "",
+              coverImageUrl:
+                typeof item.coverImageUrl === "string" ? item.coverImageUrl.trim().slice(0, 1000) : "",
+              dpeLabel: typeof item.dpeLabel === "string" ? item.dpeLabel.trim().slice(0, 10) : null,
+              transaction: typeof item.transaction === "string" ? item.transaction.trim().slice(0, 30) : "",
+              type: typeof item.type === "string" ? item.type.trim().slice(0, 30) : "",
+            }))
+            .filter((item) => Number.isInteger(item.id) && item.id > 0 && item.title.length > 0 && item.path.startsWith("/"))
+            .slice(0, 5)
+        : [];
+      if (items.length === 0 && !(typeof data.total === "number" && data.total === 0)) continue;
+
+      actions.push({
+        ...base,
+        kind: "search_results",
+        data: {
+          criteriaSummary:
+            typeof data.criteriaSummary === "string" ? data.criteriaSummary.trim().slice(0, 300) : "Résultats de recherche",
+          searchParams: sanitizeToolSearchParams(data.searchParams) ?? {},
+          total: typeof data.total === "number" && Number.isFinite(data.total) ? Math.max(0, Math.floor(data.total)) : items.length,
+          items,
+          canCompare: Boolean(data.canCompare),
+          compareSelectionLimit:
+            typeof data.compareSelectionLimit === "number" && Number.isFinite(data.compareSelectionLimit)
+              ? Math.min(3, Math.max(2, Math.floor(data.compareSelectionLimit)))
+              : 3,
+          nextSuggestedRefinements: Array.isArray(data.nextSuggestedRefinements)
+            ? data.nextSuggestedRefinements
+                .filter((v): v is string => typeof v === "string")
+                .map((v) => v.trim())
+                .filter(Boolean)
+                .slice(0, 5)
+            : undefined,
+        },
+      });
+      continue;
+    }
+
+    if (candidate.kind === "compare_summary") {
+      const propertyIds = Array.isArray(data.propertyIds)
+        ? data.propertyIds
+            .map((value) => (typeof value === "number" ? value : Number(value)))
+            .filter((value) => Number.isInteger(value) && value > 0)
+            .slice(0, 3)
+        : [];
+      const properties = Array.isArray(data.properties)
+        ? data.properties
+            .filter((item): item is Record<string, unknown> => Boolean(item && typeof item === "object"))
+            .map((item) => ({
+              id: typeof item.id === "number" ? item.id : Number(item.id),
+              title: typeof item.title === "string" ? item.title.trim().slice(0, 200) : "",
+              path: typeof item.path === "string" ? item.path.trim().slice(0, 500) : "",
+              priceAmount: typeof item.priceAmount === "number" ? item.priceAmount : Number(item.priceAmount),
+              surfaceM2:
+                typeof item.surfaceM2 === "number" && Number.isFinite(item.surfaceM2)
+                  ? item.surfaceM2
+                  : item.surfaceM2 == null
+                    ? null
+                    : Number(item.surfaceM2) || null,
+              bedrooms:
+                typeof item.bedrooms === "number" && Number.isFinite(item.bedrooms)
+                  ? item.bedrooms
+                  : item.bedrooms == null
+                    ? null
+                    : Number(item.bedrooms) || null,
+              cityName: typeof item.cityName === "string" ? item.cityName.trim().slice(0, 120) : "",
+              dpeLabel: typeof item.dpeLabel === "string" ? item.dpeLabel.trim().slice(0, 10) : null,
+              terrainM2:
+                typeof item.terrainM2 === "number" && Number.isFinite(item.terrainM2)
+                  ? item.terrainM2
+                  : item.terrainM2 == null
+                    ? null
+                    : undefined,
+              garageCount:
+                typeof item.garageCount === "number" && Number.isFinite(item.garageCount)
+                  ? Math.floor(item.garageCount)
+                  : item.garageCount == null
+                    ? null
+                    : undefined,
+              bathrooms:
+                typeof item.bathrooms === "number" && Number.isFinite(item.bathrooms)
+                  ? Math.floor(item.bathrooms)
+                  : item.bathrooms == null
+                    ? null
+                    : undefined,
+            }))
+            .filter((item) => Number.isInteger(item.id) && item.id > 0 && item.title.length > 0 && item.path.startsWith("/"))
+            .slice(0, 3)
+        : [];
+      const comparisonRows = Array.isArray(data.comparisonRows)
+        ? data.comparisonRows
+            .filter((row): row is Record<string, unknown> => Boolean(row && typeof row === "object"))
+            .map((row) => ({
+              label: typeof row.label === "string" ? row.label.trim().slice(0, 80) : "",
+              values: Array.isArray(row.values)
+                ? row.values.map((v) => (typeof v === "string" ? v.slice(0, 80) : v == null ? null : String(v).slice(0, 80))).slice(0, 3)
+                : [],
+            }))
+            .filter((row) => row.label.length > 0)
+            .slice(0, 10)
+        : [];
+      if (properties.length < 2) continue;
+      actions.push({
+        ...base,
+        kind: "compare_summary",
+        data: {
+          propertyIds: propertyIds.length > 0 ? propertyIds : properties.map((p) => p.id),
+          properties,
+          comparisonRows,
+          summary: typeof data.summary === "string" ? data.summary.trim().slice(0, 800) : "",
+          recommendedPropertyId:
+            typeof data.recommendedPropertyId === "number" && Number.isInteger(data.recommendedPropertyId)
+              ? data.recommendedPropertyId
+              : undefined,
+          nextActions: Array.isArray(data.nextActions)
+            ? data.nextActions
+                .filter((v): v is "open_property" | "prefill_handoff" => v === "open_property" || v === "prefill_handoff")
+                .slice(0, 4)
+            : undefined,
+        },
+      });
+      continue;
+    }
+
+    if (candidate.kind === "lead_handoff_draft") {
+      const draft = data.draft && typeof data.draft === "object" ? (data.draft as Record<string, unknown>) : null;
+      const prefill = data.prefill && typeof data.prefill === "object" ? (data.prefill as Record<string, unknown>) : null;
+      const criteria = typeof prefill?.criteria === "string" ? prefill.criteria.trim().slice(0, 2000) : "";
+      if (!draft || !prefill || criteria.length === 0) continue;
+      actions.push({
+        ...base,
+        kind: "lead_handoff_draft",
+        data: {
+          draft: {
+            source: "contact_page",
+            propertyId:
+              typeof draft.propertyId === "number" && Number.isInteger(draft.propertyId) ? draft.propertyId : undefined,
+            criteriaMessage:
+              typeof draft.criteriaMessage === "string" ? draft.criteriaMessage.trim().slice(0, 2000) : criteria,
+          },
+          prefill: {
+            criteria,
+            firstName: typeof prefill.firstName === "string" ? prefill.firstName.trim().slice(0, 80) : undefined,
+            lastName: typeof prefill.lastName === "string" ? prefill.lastName.trim().slice(0, 80) : undefined,
+            email: typeof prefill.email === "string" ? prefill.email.trim().slice(0, 120) : undefined,
+          },
+          missingFields: Array.isArray(data.missingFields)
+            ? data.missingFields
+                .filter(
+                  (v): v is "firstName" | "lastName" | "email" => v === "firstName" || v === "lastName" || v === "email",
+                )
+                .slice(0, 3)
+            : ["firstName", "lastName", "email"],
+          contextSummary:
+            typeof data.contextSummary === "string" ? data.contextSummary.trim().slice(0, 500) : "Demande de contact",
+        },
+      });
+      continue;
+    }
+
+    if (candidate.kind === "open_page") {
+      const path = typeof data.path === "string" ? data.path.trim().slice(0, 500) : "";
+      const label = typeof data.label === "string" ? data.label.trim().slice(0, 120) : path;
+      if (!path.startsWith("/")) continue;
+      actions.push({
+        ...base,
+        kind: "open_page",
+        data: {
+          path,
+          label,
+          reason: typeof data.reason === "string" ? data.reason.trim().slice(0, 80) : undefined,
+        },
+      });
+      continue;
+    }
+
+    if (candidate.kind === "notice") {
+      actions.push({
+        ...base,
+        kind: "notice",
+        data: {
+          level: data.level === "warning" ? "warning" : data.level === "info" ? "info" : undefined,
+          code: typeof data.code === "string" ? data.code.trim().slice(0, 80) : undefined,
+        },
+      });
+    }
+  }
+
+  return actions.length > 0 ? actions : undefined;
+}
+
 function normalizeReplyOutput(reply: ChatbotReply): ChatbotReply {
   const answer = typeof reply.answer === "string" && reply.answer.trim().length > 0 ? reply.answer.trim() : buildFallbackReply().answer;
   const prompts = normalizePromptList(reply.suggestedPrompts ?? []);
+  const edgeProvider =
+    reply.edgeProvider === "gemini" || reply.edgeProvider === "openai" || reply.edgeProvider === "fallback"
+      ? reply.edgeProvider
+      : undefined;
+  const retrievalMode =
+    reply.retrievalMode === "none" ||
+    reply.retrievalMode === "vector" ||
+    reply.retrievalMode === "keyword" ||
+    reply.retrievalMode === "hybrid"
+      ? reply.retrievalMode
+      : undefined;
+  const routeCategory =
+    reply.routeCategory === "deterministic_local" ||
+    reply.routeCategory === "edge_rag" ||
+    reply.routeCategory === "edge_general" ||
+    reply.routeCategory === "edge_tools" ||
+    reply.routeCategory === "fallback"
+      ? reply.routeCategory
+      : undefined;
+  const routeDecision = typeof reply.routeDecision === "string" ? reply.routeDecision.trim().slice(0, 120) : undefined;
+  const requestId = typeof reply.requestId === "string" ? reply.requestId.trim().slice(0, 120) : undefined;
+  const agentMode = reply.agentMode === "tool" || reply.agentMode === "rag" || reply.agentMode === "fallback" ? reply.agentMode : undefined;
+  const actions = sanitizeActions(reply.actions);
+  const conversationStatePatch = sanitizeConversationStatePatch(reply.conversationStatePatch);
+  const toolTrace = sanitizeToolTrace(reply.toolTrace);
 
   return {
     ...reply,
     answer,
     suggestedPrompts: prompts.length > 0 ? prompts : normalizePromptList(chatbotExamplePrompts),
+    edgeProvider,
+    retrievalMode,
+    routeCategory,
+    routeDecision: routeDecision && routeDecision.length > 0 ? routeDecision : undefined,
+    requestId: requestId && requestId.length > 0 ? requestId : undefined,
+    agentMode,
+    actions,
+    conversationStatePatch,
+    toolTrace,
+  };
+}
+
+function applyRouteMetadata(reply: ChatbotReply, route: ChatbotRouteDecision): ChatbotReply {
+  return {
+    ...reply,
+    routeDecision: route.reason,
+    routeCategory: route.category,
   };
 }
 
 export async function askAgencyChatbot(request: ChatbotRequest): Promise<ChatbotReply> {
   const context = buildConversationContext(request.question, request.chatHistory);
-  const localReply = normalizeReplyOutput(buildLocalReply(request.question, context));
   const edgeRagForWebsiteQuestionsEnabled =
     (import.meta.env.VITE_CHATBOT_ENABLE_EDGE_RAG as string | undefined)?.toLowerCase() === "true";
+  const edgeAgentToolsEnabled =
+    ((import.meta.env.VITE_CHATBOT_ENABLE_EDGE_AGENT_TOOLS as string | undefined) ?? "false").toLowerCase() === "true";
+  const routerV2Enabled = ((import.meta.env.VITE_CHATBOT_ROUTER_V2 as string | undefined) ?? "true").toLowerCase() !== "false";
+  const routeDecision = decideChatbotRoute(context, {
+    edgeApiEnabled: isEdgeApiEnabled(),
+    edgeRagForWebsiteQuestionsEnabled,
+    edgeAgentToolsEnabled,
+    routerV2Enabled,
+  }, {
+    actionRequest: request.actionRequest,
+    conversationState: request.conversationState,
+  });
 
-  if (!isEdgeApiEnabled() || (isWebsiteContentQuestion(context) && !edgeRagForWebsiteQuestionsEnabled)) {
-    return localReply;
+  let localReplyCache: ChatbotReply | null = null;
+  const getLocalReply = () => {
+    if (!localReplyCache) {
+      localReplyCache = normalizeReplyOutput(buildLocalReply(request.question, context));
+    }
+    return localReplyCache;
+  };
+
+  if (routeDecision.target === "local") {
+    return normalizeReplyOutput(applyRouteMetadata(getLocalReply(), routeDecision));
   }
 
   const { signal, ...requestPayload } = request;
@@ -1383,11 +2106,42 @@ export async function askAgencyChatbot(request: ChatbotRequest): Promise<Chatbot
     });
 
     if (!isEdgeReplyUsable(responsePayload)) {
-      return localReply;
+      return normalizeReplyOutput(
+        applyRouteMetadata(getLocalReply(), {
+          ...routeDecision,
+          target: "local",
+          category: "fallback",
+          reason: "edge_invalid_payload",
+        }),
+      );
     }
 
-    return normalizeReplyOutput({ ...responsePayload, source: "edge" });
+    const inferredEdgeProvider =
+      responsePayload.edgeProvider ??
+      ((responsePayload as Partial<ChatbotReply> & { source?: unknown }).source === "gemini" ||
+      (responsePayload as Partial<ChatbotReply> & { source?: unknown }).source === "openai" ||
+      (responsePayload as Partial<ChatbotReply> & { source?: unknown }).source === "fallback"
+        ? ((responsePayload as Partial<ChatbotReply> & { source?: "gemini" | "openai" | "fallback" }).source ?? undefined)
+        : undefined);
+
+    return normalizeReplyOutput(
+      applyRouteMetadata(
+        {
+          ...responsePayload,
+          source: "edge",
+          edgeProvider: inferredEdgeProvider,
+        },
+        routeDecision,
+      ),
+    );
   } catch {
-    return localReply;
+    return normalizeReplyOutput(
+      applyRouteMetadata(getLocalReply(), {
+        ...routeDecision,
+        target: "local",
+        category: "fallback",
+        reason: "edge_request_failed",
+      }),
+    );
   }
 }

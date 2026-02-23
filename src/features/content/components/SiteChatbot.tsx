@@ -1,18 +1,25 @@
 import { FormEvent, Fragment, MouseEvent, useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { BotMessageSquare, Mail, RotateCcw, Send, Sparkles, X } from "lucide-react";
+import { BotMessageSquare, Mail, RotateCcw, Send, Sparkles, ThumbsDown, ThumbsUp, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   askAgencyChatbot,
+  type ChatbotActionRequest,
   type ChatbotCitation,
+  type ChatbotConversationState,
+  type ChatbotToolTrace,
+  type ChatbotUiAction,
   chatbotExamplePrompts,
   type ChatbotPropertySuggestion,
   type ChatbotReply,
+  type ToolSearchParams,
 } from "@/features/content/api/chatbot.service";
+import { flushChatbotTelemetryQueue, queueChatbotTelemetryEvent } from "@/features/content/api/chatbotFeedback.service";
 import { submitLead } from "@/features/leads/api/leads.service";
+import { trackEvent } from "@/lib/analytics/events";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -25,6 +32,22 @@ interface ChatMessage {
   propertySuggestions?: ChatbotPropertySuggestion[];
   citations?: ChatbotCitation[];
   suggestedPrompts?: string[];
+  source?: "local" | "edge";
+  edgeProvider?: "gemini" | "openai" | "fallback";
+  ragUsed?: boolean;
+  retrievalMode?: "none" | "vector" | "keyword" | "hybrid";
+  routeDecision?: string;
+  routeCategory?: "deterministic_local" | "edge_rag" | "edge_general" | "edge_tools" | "fallback";
+  requestId?: string;
+  agentMode?: "tool" | "rag" | "fallback";
+  actions?: ChatbotUiAction[];
+  toolTrace?: ChatbotToolTrace[];
+  latencyMs?: number;
+  feedback?: {
+    value: 1 | -1;
+    reason?: string;
+    submittedAt: number;
+  };
 }
 
 interface OpeningGreetingVariant {
@@ -112,7 +135,9 @@ const openingGreetingVariants: OpeningGreetingVariant[] = [
 ];
 
 const CHATBOT_STORAGE_KEY = "foch_chatbot_messages_v1";
-const CHATBOT_STORAGE_VERSION = 1;
+const CHATBOT_STORAGE_VERSION = 2;
+const CHATBOT_STATE_STORAGE_KEY = "foch_chatbot_state_v1";
+const CHATBOT_SESSION_STORAGE_KEY = "foch_chatbot_session_id_v1";
 const CHATBOT_REQUEST_TIMEOUT_MS = 18000;
 const CHATBOT_HARD_UNLOCK_MS = 32000;
 const CHATBOT_MEMORY_LIMIT = 44;
@@ -125,6 +150,13 @@ const CHATBOT_MAX_REPLY_DELAY_MS = 2600;
 
 const internalPathSplitPattern = /(\/[a-z0-9-]+(?:\/[a-z0-9-]+)*(?:\?[a-z0-9=&_-]+)?)/gi;
 const internalPathMatchPattern = /^\/[a-z0-9-]+(?:\/[a-z0-9-]+)*(?:\?[a-z0-9=&_-]+)?$/i;
+const chatbotFeedbackReasonOptions = [
+  "Hors sujet",
+  "Source/lien incorrect",
+  "Réponse incomplète",
+  "Je voulais des biens",
+  "Trop lent",
+] as const;
 
 function createMessageId(): string {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
@@ -132,6 +164,28 @@ function createMessageId(): string {
   }
 
   return `chat-${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
+}
+
+function readOrCreateChatbotSessionId(): string {
+  if (typeof window === "undefined") {
+    return createMessageId();
+  }
+
+  try {
+    const existing = window.localStorage.getItem(CHATBOT_SESSION_STORAGE_KEY);
+    if (existing && existing.trim().length > 0) {
+      return existing.trim();
+    }
+    const next = createMessageId();
+    window.localStorage.setItem(CHATBOT_SESSION_STORAGE_KEY, next);
+    return next;
+  } catch {
+    return createMessageId();
+  }
+}
+
+function createTelemetryEventId(): string {
+  return `evt-${createMessageId()}`;
 }
 
 function normalizePromptList(prompts: string[]): string[] {
@@ -266,6 +320,22 @@ function sanitizeCitations(raw: unknown): ChatbotCitation[] | undefined {
   return citations.length > 0 ? citations : undefined;
 }
 
+function sanitizeFeedback(raw: unknown): ChatMessage["feedback"] | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const candidate = raw as { value?: unknown; reason?: unknown; submittedAt?: unknown };
+  const value = candidate.value === 1 || candidate.value === -1 ? candidate.value : null;
+  if (value == null) return undefined;
+  const reason =
+    typeof candidate.reason === "string" && candidate.reason.trim().length > 0
+      ? candidate.reason.trim().slice(0, 160)
+      : undefined;
+  const submittedAt =
+    typeof candidate.submittedAt === "number" && Number.isFinite(candidate.submittedAt) && candidate.submittedAt > 0
+      ? Math.floor(candidate.submittedAt)
+      : Date.now();
+  return { value, reason, submittedAt };
+}
+
 function sanitizeStoredMessages(raw: unknown): ChatMessage[] {
   if (!Array.isArray(raw)) {
     return [initialMessage];
@@ -283,6 +353,15 @@ function sanitizeStoredMessages(raw: unknown): ChatMessage[] {
       propertySuggestions?: unknown;
       citations?: unknown;
       suggestedPrompts?: unknown;
+      source?: unknown;
+      edgeProvider?: unknown;
+      ragUsed?: unknown;
+      retrievalMode?: unknown;
+      routeDecision?: unknown;
+      routeCategory?: unknown;
+      requestId?: unknown;
+      latencyMs?: unknown;
+      feedback?: unknown;
     };
 
     if (candidate.role !== "assistant" && candidate.role !== "user") continue;
@@ -298,6 +377,40 @@ function sanitizeStoredMessages(raw: unknown): ChatMessage[] {
       propertySuggestions: sanitizePropertySuggestions(candidate.propertySuggestions),
       citations: sanitizeCitations(candidate.citations),
       suggestedPrompts: sanitizePromptList(candidate.suggestedPrompts),
+      source: candidate.source === "local" || candidate.source === "edge" ? candidate.source : undefined,
+      edgeProvider:
+        candidate.edgeProvider === "gemini" || candidate.edgeProvider === "openai" || candidate.edgeProvider === "fallback"
+          ? candidate.edgeProvider
+          : undefined,
+      ragUsed: typeof candidate.ragUsed === "boolean" ? candidate.ragUsed : undefined,
+      retrievalMode:
+        candidate.retrievalMode === "none" ||
+        candidate.retrievalMode === "vector" ||
+        candidate.retrievalMode === "keyword" ||
+        candidate.retrievalMode === "hybrid"
+          ? candidate.retrievalMode
+          : undefined,
+      routeDecision:
+        typeof candidate.routeDecision === "string" && candidate.routeDecision.trim().length > 0
+          ? candidate.routeDecision.trim().slice(0, 120)
+          : undefined,
+      routeCategory:
+        candidate.routeCategory === "deterministic_local" ||
+        candidate.routeCategory === "edge_rag" ||
+        candidate.routeCategory === "edge_general" ||
+        candidate.routeCategory === "edge_tools" ||
+        candidate.routeCategory === "fallback"
+          ? candidate.routeCategory
+          : undefined,
+      requestId:
+        typeof candidate.requestId === "string" && candidate.requestId.trim().length > 0
+          ? candidate.requestId.trim().slice(0, 120)
+          : undefined,
+      latencyMs:
+        typeof candidate.latencyMs === "number" && Number.isFinite(candidate.latencyMs)
+          ? clampNumber(Math.floor(candidate.latencyMs), 0, 120000)
+          : undefined,
+      feedback: sanitizeFeedback(candidate.feedback),
     });
 
     if (sanitized.length >= CHATBOT_MEMORY_LIMIT) {
@@ -314,6 +427,164 @@ function sanitizeStoredMessages(raw: unknown): ChatMessage[] {
   }
 
   return trimMessages(sanitized);
+}
+
+function sanitizeConversationState(raw: unknown): ChatbotConversationState {
+  if (!raw || typeof raw !== "object") return {};
+  const candidate = raw as Record<string, unknown>;
+  const state: ChatbotConversationState = {};
+
+  if (candidate.recentSearch && typeof candidate.recentSearch === "object") {
+    const recent = candidate.recentSearch as Record<string, unknown>;
+    const resultIds = Array.isArray(recent.resultIds)
+      ? recent.resultIds
+          .map((value) => (typeof value === "number" ? value : Number(value)))
+          .filter((value) => Number.isInteger(value) && value > 0)
+          .slice(0, 20)
+      : [];
+    state.recentSearch = {
+      params:
+        recent.params && typeof recent.params === "object"
+          ? (recent.params as ToolSearchParams)
+          : undefined,
+      resultIds,
+      total: typeof recent.total === "number" && Number.isFinite(recent.total) ? Math.max(0, Math.floor(recent.total)) : undefined,
+      generatedAt:
+        typeof recent.generatedAt === "string" && recent.generatedAt.trim().length > 0
+          ? recent.generatedAt.trim().slice(0, 80)
+          : new Date().toISOString(),
+    };
+  }
+
+  if (Array.isArray(candidate.selectedPropertyIds)) {
+    state.selectedPropertyIds = candidate.selectedPropertyIds
+      .map((value) => (typeof value === "number" ? value : Number(value)))
+      .filter((value) => Number.isInteger(value) && value > 0)
+      .slice(0, 3);
+  }
+
+  if (Array.isArray(candidate.recentPropertyIds)) {
+    state.recentPropertyIds = candidate.recentPropertyIds
+      .map((value) => (typeof value === "number" ? value : Number(value)))
+      .filter((value) => Number.isInteger(value) && value > 0)
+      .slice(0, 20);
+  }
+
+  if (candidate.leadDraft && typeof candidate.leadDraft === "object") {
+    const draft = candidate.leadDraft as Record<string, unknown>;
+    state.leadDraft = {
+      propertyId: typeof draft.propertyId === "number" && Number.isInteger(draft.propertyId) ? draft.propertyId : undefined,
+      citySlug: typeof draft.citySlug === "string" ? draft.citySlug.trim().slice(0, 80) : undefined,
+      criteriaSummary:
+        typeof draft.criteriaSummary === "string" ? draft.criteriaSummary.trim().slice(0, 500) : undefined,
+    };
+  }
+
+  if (candidate.preferences && typeof candidate.preferences === "object") {
+    const preferences = candidate.preferences as Record<string, unknown>;
+    state.preferences = {
+      transaction: preferences.transaction === "vente" || preferences.transaction === "location" ? preferences.transaction : undefined,
+      type:
+        preferences.type === "appartement" || preferences.type === "maison_villa" || preferences.type === "autre"
+          ? preferences.type
+          : undefined,
+      city: typeof preferences.city === "string" ? preferences.city.trim().slice(0, 80) : undefined,
+      bedroomsMin:
+        typeof preferences.bedroomsMin === "number" && Number.isFinite(preferences.bedroomsMin)
+          ? Math.max(0, Math.floor(preferences.bedroomsMin))
+          : undefined,
+      priceMin:
+        typeof preferences.priceMin === "number" && Number.isFinite(preferences.priceMin)
+          ? Math.max(0, Math.floor(preferences.priceMin))
+          : undefined,
+      priceMax:
+        typeof preferences.priceMax === "number" && Number.isFinite(preferences.priceMax)
+          ? Math.max(0, Math.floor(preferences.priceMax))
+          : undefined,
+    };
+  }
+
+  return state;
+}
+
+function readStoredConversationState(): ChatbotConversationState {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = window.localStorage.getItem(CHATBOT_STATE_STORAGE_KEY);
+    if (!raw) return {};
+    return sanitizeConversationState(JSON.parse(raw));
+  } catch {
+    return {};
+  }
+}
+
+function mergeUniqueIds(existing: number[] | undefined, next: number[] | undefined, maxSize: number): number[] | undefined {
+  const merged: number[] = [];
+  const seen = new Set<number>();
+  for (const id of [...(next ?? []), ...(existing ?? [])]) {
+    if (!Number.isInteger(id) || id <= 0 || seen.has(id)) continue;
+    seen.add(id);
+    merged.push(id);
+    if (merged.length >= maxSize) break;
+  }
+  return merged.length > 0 ? merged : undefined;
+}
+
+function mergeConversationState(
+  current: ChatbotConversationState,
+  patch: Partial<ChatbotConversationState> | undefined,
+): ChatbotConversationState {
+  if (!patch) return current;
+  const merged: ChatbotConversationState = {
+    ...current,
+    ...patch,
+    recentSearch: patch.recentSearch
+      ? {
+          ...current.recentSearch,
+          ...patch.recentSearch,
+        }
+      : current.recentSearch,
+    preferences: patch.preferences
+      ? {
+          ...current.preferences,
+          ...patch.preferences,
+        }
+      : current.preferences,
+    leadDraft: patch.leadDraft
+      ? {
+          ...current.leadDraft,
+          ...patch.leadDraft,
+        }
+      : current.leadDraft,
+  };
+
+  merged.selectedPropertyIds = mergeUniqueIds(
+    current.selectedPropertyIds,
+    patch.selectedPropertyIds ?? current.selectedPropertyIds,
+    3,
+  );
+  merged.recentPropertyIds = mergeUniqueIds(current.recentPropertyIds, patch.recentPropertyIds, 20);
+  if (merged.recentSearch?.resultIds) {
+    merged.recentSearch.resultIds = mergeUniqueIds(undefined, merged.recentSearch.resultIds, 20) ?? [];
+  }
+  return sanitizeConversationState(merged);
+}
+
+function formatCompactPrice(amount: number, currency = "EUR"): string {
+  try {
+    return new Intl.NumberFormat("fr-FR", {
+      style: "currency",
+      currency,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  } catch {
+    return `${Math.round(amount)} ${currency}`;
+  }
+}
+
+function formatSurface(surface: number | null | undefined): string {
+  if (typeof surface !== "number" || !Number.isFinite(surface)) return "—";
+  return `${Math.round(surface)} m²`;
 }
 
 function readStoredMessages(): ChatMessage[] {
@@ -353,6 +624,7 @@ export function SiteChatbot() {
   const [loading, setLoading] = useState(false);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>(() => readStoredMessages());
+  const [conversationState, setConversationState] = useState<ChatbotConversationState>(() => readStoredConversationState());
   const [showLeadCapture, setShowLeadCapture] = useState(false);
   const [leadLoading, setLeadLoading] = useState(false);
   const [leadForm, setLeadForm] = useState({
@@ -365,10 +637,44 @@ export function SiteChatbot() {
   const abortControllerRef = useRef<AbortController | null>(null);
   const requestSequenceRef = useRef(0);
   const openingSequenceRef = useRef(0);
+  const sessionIdRef = useRef<string>(readOrCreateChatbotSessionId());
+  const conversationIdRef = useRef<string>(createMessageId());
+  const [pendingFeedbackMessageId, setPendingFeedbackMessageId] = useState<string | null>(null);
 
   const appendMessage = useCallback((message: ChatMessage) => {
     setMessages((current) => trimMessages([...current, message]));
   }, []);
+
+  const emitChatbotTelemetry = useCallback(
+    (
+      eventType:
+        | "reply_received"
+        | "feedback_submitted"
+        | "citation_clicked"
+        | "request_failed"
+        | "chatbot_opened"
+        | "chatbot_reset"
+        | "tool_action_rendered"
+        | "tool_action_clicked"
+        | "tool_orchestration_result"
+        | "tool_compare_requested"
+        | "tool_handoff_prefill_opened",
+      payload: Omit<
+        Parameters<typeof queueChatbotTelemetryEvent>[0],
+        "eventId" | "eventType" | "sessionId" | "conversationId" | "pagePath"
+      > = {},
+    ) => {
+      queueChatbotTelemetryEvent({
+        eventId: createTelemetryEventId(),
+        eventType,
+        sessionId: sessionIdRef.current,
+        conversationId: conversationIdRef.current,
+        pagePath: `${location.pathname}${location.search}`,
+        ...payload,
+      });
+    },
+    [location.pathname, location.search],
+  );
 
   const nextOpeningGreetingMessage = useCallback(() => {
     openingSequenceRef.current += 1;
@@ -400,10 +706,15 @@ export function SiteChatbot() {
     setShowLeadCapture(false);
     setLeadLoading(false);
     setInput("");
+    setPendingFeedbackMessageId(null);
+    conversationIdRef.current = createMessageId();
+    setConversationState({});
     setLeadForm({ firstName: "", lastName: "", email: "", criteria: "" });
     setMessages([nextOpeningGreetingMessage()]);
+    trackEvent("chatbot_reset", { source: "site_chatbot" });
+    emitChatbotTelemetry("chatbot_reset", { source: "local" });
     toast.success("Nouvelle conversation initialisée.");
-  }, [nextOpeningGreetingMessage, unlockRequestState]);
+  }, [emitChatbotTelemetry, nextOpeningGreetingMessage, unlockRequestState]);
 
   useEffect(() => {
     if (!scrollRef.current) return;
@@ -420,6 +731,7 @@ export function SiteChatbot() {
   useEffect(() => {
     return () => {
       cancelPendingRequest();
+      void flushChatbotTelemetryQueue();
     };
   }, [cancelPendingRequest]);
 
@@ -452,26 +764,136 @@ export function SiteChatbot() {
     }
   }, [messages]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    try {
+      window.localStorage.setItem(CHATBOT_STATE_STORAGE_KEY, JSON.stringify(sanitizeConversationState(conversationState)));
+    } catch {
+      // Ignore storage write failures
+    }
+  }, [conversationState]);
+
   const pushAssistantReply = useCallback(
-    (reply: ChatbotReply) => {
+    (
+      reply: ChatbotReply,
+      telemetry?: {
+        responseLatencyMs?: number;
+        requestChars?: number;
+      },
+    ) => {
+      const messageId = createMessageId();
       appendMessage({
-        id: createMessageId(),
+        id: messageId,
         role: "assistant",
         content: reply.answer,
         propertySuggestions: reply.propertySuggestions,
         citations: reply.citations,
+        actions: reply.actions,
+        toolTrace: reply.toolTrace,
         suggestedPrompts: reply.suggestedPrompts,
+        source: reply.source,
+        edgeProvider: reply.edgeProvider,
+        ragUsed: reply.ragUsed,
+        retrievalMode: reply.retrievalMode,
+        routeDecision: reply.routeDecision,
+        routeCategory: reply.routeCategory,
+        requestId: reply.requestId,
+        agentMode: reply.agentMode,
+        latencyMs: telemetry?.responseLatencyMs,
       });
+
+      if (reply.conversationStatePatch) {
+        setConversationState((current) => mergeConversationState(current, reply.conversationStatePatch));
+      }
+
+      trackEvent("chatbot_reply_received", {
+        source: reply.source,
+        edgeProvider: reply.edgeProvider,
+        ragUsed: reply.ragUsed,
+        retrievalMode: reply.retrievalMode,
+        routeCategory: reply.routeCategory,
+        citationsCount: reply.citations?.length ?? 0,
+      });
+      emitChatbotTelemetry("reply_received", {
+        messageId,
+        requestId: reply.requestId,
+        source: reply.source,
+        edgeProvider: reply.edgeProvider,
+        routeDecision: reply.routeDecision,
+        routeCategory: reply.routeCategory,
+        ragUsed: reply.ragUsed,
+        retrievalMode: reply.retrievalMode,
+        citationsCount: reply.citations?.length ?? 0,
+        responseLatencyMs: telemetry?.responseLatencyMs,
+        requestChars: telemetry?.requestChars,
+        answerChars: reply.answer.trim().length,
+      });
+
+      if (reply.actions && reply.actions.length > 0) {
+        for (const action of reply.actions) {
+          trackEvent("chatbot_tool_action_rendered", {
+            actionKind: action.kind,
+            source: reply.source,
+            edgeProvider: reply.edgeProvider,
+            routeCategory: reply.routeCategory,
+          });
+          emitChatbotTelemetry("tool_action_rendered", {
+            messageId,
+            requestId: reply.requestId,
+            source: reply.source,
+            edgeProvider: reply.edgeProvider,
+            routeDecision: reply.routeDecision,
+            routeCategory: reply.routeCategory,
+            ragUsed: reply.ragUsed,
+            retrievalMode: reply.retrievalMode,
+            metadata: {
+              actionKind: action.kind,
+              actionId: action.id,
+            },
+          });
+        }
+      }
+
+      if (reply.toolTrace && reply.toolTrace.length > 0) {
+        for (const trace of reply.toolTrace) {
+          trackEvent("chatbot_tool_orchestration_result", {
+            toolName: trace.tool,
+            status: trace.status,
+            source: reply.source,
+            routeCategory: reply.routeCategory,
+          });
+          emitChatbotTelemetry("tool_orchestration_result", {
+            messageId,
+            requestId: reply.requestId,
+            source: reply.source,
+            edgeProvider: reply.edgeProvider,
+            routeDecision: reply.routeDecision,
+            routeCategory: reply.routeCategory,
+            responseLatencyMs: trace.latencyMs,
+            metadata: {
+              toolName: trace.tool,
+              status: trace.status,
+              resultCount: trace.resultCount,
+              errorCode: trace.errorCode,
+            },
+          });
+        }
+      }
 
       if (reply.needsLeadCapture) {
         setShowLeadCapture(true);
       }
     },
-    [appendMessage],
+    [appendMessage, emitChatbotTelemetry],
   );
 
-  const sendMessage = async (value: string) => {
-    const text = value.trim();
+  const sendChatRequest = async (params: {
+    question: string;
+    actionRequest?: ChatbotActionRequest;
+    syntheticPrompt?: string;
+  }) => {
+    const text = params.question.trim();
     if (!text || loading) return;
 
     cancelPendingRequest();
@@ -484,9 +906,41 @@ export function SiteChatbot() {
 
     const chatHistory = buildChatHistoryPayload(messages, text);
 
-    appendMessage({ id: createMessageId(), role: "user", content: text });
+    appendMessage({ id: createMessageId(), role: "user", content: params.syntheticPrompt?.trim() || text });
+    trackEvent("chatbot_message_sent", {
+      source: "site_chatbot",
+      requestChars: text.length,
+      hasHistory: chatHistory.length > 1,
+      routeHint: params.actionRequest ? "edge_tools" : undefined,
+      actionType: params.actionRequest?.type,
+    });
+    if (params.actionRequest) {
+      trackEvent("chatbot_tool_action_clicked", {
+        actionType: params.actionRequest.type,
+      });
+      emitChatbotTelemetry("tool_action_clicked", {
+        source: "edge",
+        routeCategory: "edge_tools",
+        metadata: {
+          actionType: params.actionRequest.type,
+        },
+      });
+      if (params.actionRequest.type === "compare_selected_properties") {
+        trackEvent("chatbot_tool_compare_requested", {});
+        emitChatbotTelemetry("tool_compare_requested", {
+          source: "edge",
+          routeCategory: "edge_tools",
+          metadata: {
+            selectedPropertyIdsCount: Array.isArray(params.actionRequest.payload?.propertyIds)
+              ? params.actionRequest.payload.propertyIds.length
+              : 0,
+          },
+        });
+      }
+    }
     setInput("");
     setShowLeadCapture(false);
+    setPendingFeedbackMessageId(null);
     setLoading(true);
 
     const requestStartedAt = performance.now();
@@ -512,6 +966,8 @@ export function SiteChatbot() {
         askAgencyChatbot({
           question: text,
           chatHistory,
+          conversationState,
+          actionRequest: params.actionRequest,
           signal: controller.signal,
         }),
         timeoutPromise,
@@ -528,7 +984,10 @@ export function SiteChatbot() {
         return;
       }
 
-      pushAssistantReply(reply);
+      pushAssistantReply(reply, {
+        responseLatencyMs: Math.round(performance.now() - requestStartedAt),
+        requestChars: text.length,
+      });
     } catch (error) {
       if (requestSequenceRef.current !== nextRequestId) {
         return;
@@ -541,6 +1000,20 @@ export function SiteChatbot() {
           ? "Le chatbot a pris trop de temps à répondre. Réessayez votre question."
           : "Le chatbot est momentanément indisponible.",
       );
+      trackEvent("chatbot_request_failed", {
+        source: "site_chatbot",
+        aborted,
+      });
+      emitChatbotTelemetry("request_failed", {
+        source: "local",
+        routeCategory: "fallback",
+        routeDecision: aborted ? "request_timeout" : "request_error",
+        responseLatencyMs: Math.round(performance.now() - requestStartedAt),
+        requestChars: text.length,
+        metadata: {
+          aborted,
+        },
+      });
 
       appendMessage({
         id: createMessageId(),
@@ -548,6 +1021,9 @@ export function SiteChatbot() {
         content:
           "Je reste à votre disposition. Reformulez votre demande et je vous répondrai sur les biens, les quartiers et les services adaptés à votre projet au Havre.",
         suggestedPrompts: chatbotExamplePrompts,
+        source: "local",
+        routeCategory: "fallback",
+        routeDecision: aborted ? "request_timeout" : "request_error",
       });
     } finally {
       if (typeof timeoutId === "number") {
@@ -566,6 +1042,18 @@ export function SiteChatbot() {
         setLoading(false);
       }
     }
+  };
+
+  const sendMessage = async (value: string) => {
+    await sendChatRequest({ question: value });
+  };
+
+  const sendAction = async (actionRequest: ChatbotActionRequest, opts?: { syntheticPrompt?: string }) => {
+    await sendChatRequest({
+      question: opts?.syntheticPrompt ?? actionRequest.type,
+      actionRequest,
+      syntheticPrompt: opts?.syntheticPrompt,
+    });
   };
 
   const handlePromptClick = (prompt: string) => {
@@ -619,6 +1107,76 @@ export function SiteChatbot() {
     }
   };
 
+  const submitAssistantFeedback = useCallback(
+    (message: ChatMessage, value: 1 | -1, reason?: string) => {
+      if (message.role !== "assistant" || isOpeningGreetingMessage(message) || message.feedback) {
+        return;
+      }
+
+      const submittedAt = Date.now();
+      setMessages((current) =>
+        current.map((item) =>
+          item.id === message.id
+            ? {
+                ...item,
+                feedback: {
+                  value,
+                  reason,
+                  submittedAt,
+                },
+              }
+            : item,
+        ),
+      );
+      setPendingFeedbackMessageId((current) => (current === message.id ? null : current));
+
+      trackEvent("chatbot_feedback_submitted", {
+        feedbackValue: value,
+        feedbackReason: reason,
+        source: message.source,
+        edgeProvider: message.edgeProvider,
+        routeCategory: message.routeCategory,
+      });
+
+      emitChatbotTelemetry("feedback_submitted", {
+        messageId: message.id,
+        requestId: message.requestId,
+        source: message.source ?? "local",
+        edgeProvider: message.edgeProvider,
+        routeDecision: message.routeDecision,
+        routeCategory: message.routeCategory,
+        ragUsed: message.ragUsed,
+        retrievalMode: message.retrievalMode,
+        citationsCount: message.citations?.length ?? 0,
+        responseLatencyMs: message.latencyMs,
+        answerChars: message.content.trim().length,
+        feedbackValue: value,
+        feedbackReason: reason,
+      });
+    },
+    [emitChatbotTelemetry],
+  );
+
+  const handleFeedbackVoteClick = useCallback(
+    (message: ChatMessage, value: 1 | -1) => {
+      if (message.feedback) return;
+      if (value === -1) {
+        setPendingFeedbackMessageId(message.id);
+        return;
+      }
+      submitAssistantFeedback(message, 1);
+    },
+    [submitAssistantFeedback],
+  );
+
+  const handleFeedbackReasonSelect = useCallback(
+    (message: ChatMessage, reason: string) => {
+      if (message.feedback) return;
+      submitAssistantFeedback(message, -1, reason);
+    },
+    [submitAssistantFeedback],
+  );
+
   const navigateFromChat = useCallback(
     (path: string) => {
       closeChat();
@@ -644,6 +1202,137 @@ export function SiteChatbot() {
     },
     [navigateFromChat],
   );
+
+  const handleCitationClick = useCallback(
+    (event: MouseEvent<HTMLAnchorElement>, message: ChatMessage, path: string) => {
+      trackEvent("chatbot_citation_clicked", {
+        citationPath: path,
+        source: message.source,
+        edgeProvider: message.edgeProvider,
+        routeCategory: message.routeCategory,
+      });
+      emitChatbotTelemetry("citation_clicked", {
+        messageId: message.id,
+        requestId: message.requestId,
+        source: message.source ?? "local",
+        edgeProvider: message.edgeProvider,
+        routeDecision: message.routeDecision,
+        routeCategory: message.routeCategory,
+        ragUsed: message.ragUsed,
+        retrievalMode: message.retrievalMode,
+        citationsCount: message.citations?.length ?? 0,
+        citationPath: path,
+      });
+      handleInternalPathClick(event, path);
+    },
+    [emitChatbotTelemetry, handleInternalPathClick],
+  );
+
+  const toggleSelectedPropertyId = useCallback((propertyId: number) => {
+    setConversationState((current) => {
+      const existing = current.selectedPropertyIds ?? [];
+      if (existing.includes(propertyId)) {
+        return mergeConversationState(current, {
+          selectedPropertyIds: existing.filter((id) => id !== propertyId),
+        });
+      }
+      if (existing.length >= 3) {
+        toast.info("Vous pouvez comparer jusqu’à 3 biens.");
+        return current;
+      }
+      return mergeConversationState(current, {
+        selectedPropertyIds: [...existing, propertyId],
+      });
+    });
+  }, []);
+
+  const prefillLeadFormFromCriteria = useCallback(
+    (criteria: string) => {
+      setLeadForm((current) => ({
+        ...current,
+        criteria: criteria.trim().slice(0, 2500),
+      }));
+      setShowLeadCapture(true);
+      setOpen(true);
+      trackEvent("chatbot_tool_handoff_prefill_opened", { source: "site_chatbot" });
+      emitChatbotTelemetry("tool_handoff_prefill_opened", {
+        source: "edge",
+        routeCategory: "edge_tools",
+      });
+    },
+    [emitChatbotTelemetry],
+  );
+
+  const handleToolOpenPage = useCallback(
+    (path: string, meta?: { requestId?: string; routeCategory?: ChatMessage["routeCategory"]; edgeProvider?: ChatMessage["edgeProvider"] }) => {
+      trackEvent("chatbot_tool_action_clicked", {
+        actionKind: "open_page",
+        path,
+        routeCategory: meta?.routeCategory,
+      });
+      emitChatbotTelemetry("tool_action_clicked", {
+        requestId: meta?.requestId,
+        source: "edge",
+        edgeProvider: meta?.edgeProvider,
+        routeCategory: meta?.routeCategory ?? "edge_tools",
+        metadata: {
+          actionKind: "open_page",
+          path,
+        },
+      });
+      navigateFromChat(path);
+    },
+    [emitChatbotTelemetry, navigateFromChat],
+  );
+
+  const handleCompareSelectionRequest = (message: ChatMessage) => {
+    const selectedIds = (conversationState.selectedPropertyIds ?? []).slice(0, 3);
+    if (selectedIds.length < 2) {
+      toast.info("Sélectionnez au moins 2 biens pour comparer.");
+      return;
+    }
+    void sendAction(
+      {
+        type: "compare_selected_properties",
+        payload: { propertyIds: selectedIds },
+      },
+      { syntheticPrompt: "Comparer la sélection" },
+    );
+    emitChatbotTelemetry("tool_compare_requested", {
+      messageId: message.id,
+      requestId: message.requestId,
+      source: "edge",
+      edgeProvider: message.edgeProvider,
+      routeCategory: message.routeCategory ?? "edge_tools",
+      metadata: {
+        selectedPropertyIdsCount: selectedIds.length,
+      },
+    });
+  };
+
+  const handleSearchRefineAction = (searchParams: ToolSearchParams, nextPage: number) => {
+    void sendAction(
+      {
+        type: "search_refine",
+        payload: {
+          searchParams,
+          page: nextPage,
+          pageSize: searchParams.pageSize,
+        },
+      },
+      { syntheticPrompt: `Voir plus de résultats (page ${nextPage})` },
+    );
+  };
+
+  const handlePrepareHandoffAction = (propertyIds?: number[]) => {
+    void sendAction(
+      {
+        type: "prepare_handoff",
+        payload: propertyIds && propertyIds.length > 0 ? { propertyIds: propertyIds.slice(0, 3) } : undefined,
+      },
+      { syntheticPrompt: "Préremplir le formulaire de contact" },
+    );
+  };
 
   const handleResetButtonClick = (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
@@ -683,12 +1372,226 @@ export function SiteChatbot() {
     [handleInternalPathClick],
   );
 
+  const renderToolActionCard = useCallback(
+    (message: ChatMessage, action: ChatbotUiAction) => {
+      if (action.kind === "notice") {
+        return (
+          <div className="mt-3 rounded-lg border border-border/70 bg-background/60 px-3 py-2 text-xs">
+            <p className="font-medium">{action.title}</p>
+            {action.description && <p className="mt-1 text-muted-foreground">{action.description}</p>}
+          </div>
+        );
+      }
+
+      if (action.kind === "open_page") {
+        return (
+          <div className="mt-3 rounded-lg border border-border/70 bg-background/60 px-3 py-2 text-xs">
+            <p className="font-medium">{action.title}</p>
+            {action.description && <p className="mt-1 text-muted-foreground">{action.description}</p>}
+            <button
+              type="button"
+              onClick={() => handleToolOpenPage(action.data.path, { requestId: message.requestId, routeCategory: message.routeCategory, edgeProvider: message.edgeProvider })}
+              className="mt-2 rounded-full border border-border bg-background px-2.5 py-1 text-[11px] hover:bg-muted"
+            >
+              {action.data.label || "Ouvrir"}
+            </button>
+          </div>
+        );
+      }
+
+      if (action.kind === "lead_handoff_draft") {
+        return (
+          <div className="mt-3 rounded-lg border border-border/70 bg-background/60 px-3 py-2 text-xs">
+            <p className="font-medium">{action.title}</p>
+            {action.description && <p className="mt-1 text-muted-foreground">{action.description}</p>}
+            <p className="mt-2 whitespace-pre-line text-foreground/90">{action.data.contextSummary}</p>
+            <button
+              type="button"
+              onClick={() => prefillLeadFormFromCriteria(action.data.prefill.criteria)}
+              className="mt-2 rounded-full border border-border bg-background px-2.5 py-1 text-[11px] hover:bg-muted"
+            >
+              Préremplir le formulaire
+            </button>
+          </div>
+        );
+      }
+
+      if (action.kind === "compare_summary") {
+        return (
+          <div className="mt-3 rounded-lg border border-border/70 bg-background/60 px-3 py-2 text-xs">
+            <div className="flex items-center justify-between gap-2">
+              <p className="font-medium">{action.title}</p>
+              {action.data.recommendedPropertyId && (
+                <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] text-emerald-700">
+                  Recommandé
+                </span>
+              )}
+            </div>
+            {action.description && <p className="mt-1 text-muted-foreground">{action.description}</p>}
+            <div className="mt-2 overflow-x-auto">
+              <table className="w-full min-w-[280px] text-[11px]">
+                <thead>
+                  <tr className="text-left text-muted-foreground">
+                    <th className="pb-1 pr-2 font-medium">Critère</th>
+                    {action.data.properties.map((property) => (
+                      <th key={`${action.id}-col-${property.id}`} className="pb-1 pr-2 font-medium">
+                        {property.title}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {action.data.comparisonRows.map((row) => (
+                    <tr key={`${action.id}-${row.label}`} className="align-top">
+                      <td className="pr-2 pt-1 font-medium">{row.label}</td>
+                      {row.values.map((value, index) => (
+                        <td key={`${action.id}-${row.label}-${index}`} className="pr-2 pt-1 text-foreground/90">
+                          {value ?? "—"}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {action.data.properties.map((property) => (
+                <button
+                  key={`${action.id}-open-${property.id}`}
+                  type="button"
+                  onClick={() => handleToolOpenPage(property.path, { requestId: message.requestId, routeCategory: message.routeCategory, edgeProvider: message.edgeProvider })}
+                  className="rounded-full border border-border bg-background px-2.5 py-1 text-[11px] hover:bg-muted"
+                >
+                  Ouvrir {property.id === action.data.recommendedPropertyId ? "le recommandé" : property.title}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => handlePrepareHandoffAction(action.data.propertyIds)}
+                className="rounded-full border border-border bg-background px-2.5 py-1 text-[11px] hover:bg-muted"
+              >
+                Préremplir le formulaire
+              </button>
+            </div>
+          </div>
+        );
+      }
+
+      if (action.kind === "search_results") {
+        const selectedIds = conversationState.selectedPropertyIds ?? [];
+        const nextPage = Math.max(2, (action.data.searchParams.page ?? 1) + 1);
+
+        return (
+          <div className="mt-3 rounded-lg border border-border/70 bg-background/60 px-3 py-2 text-xs">
+            <p className="font-medium">{action.title}</p>
+            <p className="mt-1 text-muted-foreground">{action.data.criteriaSummary}</p>
+            {action.description && <p className="mt-1 text-muted-foreground">{action.description}</p>}
+
+            <div className="mt-2 space-y-2">
+              {action.data.items.map((item) => {
+                const isSelected = selectedIds.includes(item.id);
+                return (
+                  <div key={`${action.id}-item-${item.id}`} className="rounded-md border border-border bg-card/90 px-2.5 py-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="font-medium">{item.title}</p>
+                        <p className="text-muted-foreground">
+                          {item.cityName || item.citySlug} · {formatCompactPrice(item.priceAmount, item.currency)}
+                          {item.surfaceM2 ? ` · ${formatSurface(item.surfaceM2)}` : ""}
+                          {typeof item.bedrooms === "number" ? ` · ${item.bedrooms} ch.` : ""}
+                        </p>
+                      </div>
+                      {item.dpeLabel && (
+                        <span className="rounded-full border border-border px-1.5 py-0.5 text-[10px]">
+                          DPE {item.dpeLabel}
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => handleToolOpenPage(item.path, { requestId: message.requestId, routeCategory: message.routeCategory, edgeProvider: message.edgeProvider })}
+                        className="rounded-full border border-border bg-background px-2 py-1 text-[11px] hover:bg-muted"
+                      >
+                        Ouvrir
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => toggleSelectedPropertyId(item.id)}
+                        className={cn(
+                          "rounded-full border px-2 py-1 text-[11px]",
+                          isSelected
+                            ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-700"
+                            : "border-border bg-background hover:bg-muted",
+                        )}
+                      >
+                        {isSelected ? "Sélectionné" : "Sélectionner"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handlePrepareHandoffAction([item.id])}
+                        className="rounded-full border border-border bg-background px-2 py-1 text-[11px] hover:bg-muted"
+                      >
+                        Préremplir contact
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              <button
+                type="button"
+                onClick={() => handleCompareSelectionRequest(message)}
+                disabled={(conversationState.selectedPropertyIds?.length ?? 0) < 2}
+                className="rounded-full border border-border bg-background px-2.5 py-1 text-[11px] hover:bg-muted disabled:opacity-50"
+              >
+                Comparer la sélection
+              </button>
+              {action.data.total > action.data.items.length && (
+                <button
+                  type="button"
+                  onClick={() => handleSearchRefineAction(action.data.searchParams, nextPage)}
+                  className="rounded-full border border-border bg-background px-2.5 py-1 text-[11px] hover:bg-muted"
+                >
+                  Voir plus de résultats
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => handlePrepareHandoffAction()}
+                className="rounded-full border border-border bg-background px-2.5 py-1 text-[11px] hover:bg-muted"
+              >
+                Préremplir le formulaire
+              </button>
+            </div>
+          </div>
+        );
+      }
+
+      return null;
+    },
+    [
+      conversationState.selectedPropertyIds,
+      emitChatbotTelemetry,
+      handleCompareSelectionRequest,
+      handlePrepareHandoffAction,
+      handleSearchRefineAction,
+      handleToolOpenPage,
+      prefillLeadFormFromCriteria,
+      toggleSelectedPropertyId,
+    ],
+  );
+
   const openChatWithGreeting = () => {
     if (open) {
       closeChat();
       return;
     }
 
+    trackEvent("chatbot_opened", { source: "site_chatbot" });
+    emitChatbotTelemetry("chatbot_opened", { source: "local" });
     setOpen(true);
     setMessages((current) => {
       if (current.length === 0) {
@@ -798,7 +1701,7 @@ export function SiteChatbot() {
                           <Link
                             key={`${message.id}-citation-${citation.path}-${index}`}
                             to={citation.path}
-                            onClick={(event) => handleInternalPathClick(event, citation.path)}
+                            onClick={(event) => handleCitationClick(event, message, citation.path)}
                             className="block rounded-md px-1.5 py-1 text-xs text-foreground hover:bg-muted"
                           >
                             <span className="font-medium">{citation.title || citation.path}</span>
@@ -808,6 +1711,80 @@ export function SiteChatbot() {
                           </Link>
                         ))}
                       </div>
+                    </div>
+                  )}
+
+                  {message.role === "assistant" && message.actions && message.actions.length > 0 && (
+                    <div>
+                      {message.actions.map((action) => (
+                        <Fragment key={`${message.id}-${action.id}`}>{renderToolActionCard(message, action)}</Fragment>
+                      ))}
+                    </div>
+                  )}
+
+                  {message.role === "assistant" && !isOpeningGreetingMessage(message) && (
+                    <div className="mt-3">
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          aria-label="Réponse utile"
+                          title="Réponse utile"
+                          disabled={Boolean(message.feedback)}
+                          onClick={() => handleFeedbackVoteClick(message, 1)}
+                          className={cn(
+                            "inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] transition-colors",
+                            message.feedback?.value === 1
+                              ? "border-emerald-500/60 bg-emerald-500/10 text-emerald-700"
+                              : "border-border bg-background text-muted-foreground hover:bg-muted disabled:opacity-60",
+                          )}
+                        >
+                          <ThumbsUp className="h-3 w-3" />
+                          Utile
+                        </button>
+                        <button
+                          type="button"
+                          aria-label="Réponse peu utile"
+                          title="Réponse peu utile"
+                          disabled={Boolean(message.feedback)}
+                          onClick={() => handleFeedbackVoteClick(message, -1)}
+                          className={cn(
+                            "inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] transition-colors",
+                            message.feedback?.value === -1
+                              ? "border-amber-500/60 bg-amber-500/10 text-amber-700"
+                              : "border-border bg-background text-muted-foreground hover:bg-muted disabled:opacity-60",
+                          )}
+                        >
+                          <ThumbsDown className="h-3 w-3" />
+                          Peu utile
+                        </button>
+                        {message.feedback && (
+                          <span className="text-[10px] text-muted-foreground">
+                            Merci pour votre retour.
+                          </span>
+                        )}
+                      </div>
+
+                      {pendingFeedbackMessageId === message.id && !message.feedback && (
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          {chatbotFeedbackReasonOptions.map((reason) => (
+                            <button
+                              key={`${message.id}-feedback-${reason}`}
+                              type="button"
+                              onClick={() => handleFeedbackReasonSelect(message, reason)}
+                              className="rounded-full border border-border bg-background px-2 py-1 text-[10px] text-foreground/90 hover:bg-muted"
+                            >
+                              {reason}
+                            </button>
+                          ))}
+                          <button
+                            type="button"
+                            onClick={() => submitAssistantFeedback(message, -1)}
+                            className="rounded-full border border-dashed border-border bg-background px-2 py-1 text-[10px] text-muted-foreground hover:bg-muted"
+                          >
+                            Sans précision
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
 

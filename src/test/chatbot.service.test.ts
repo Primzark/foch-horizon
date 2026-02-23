@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { askAgencyChatbot, chatbotExamplePrompts } from "@/features/content/api/chatbot.service";
+import {
+  askAgencyChatbot,
+  buildConversationContext,
+  chatbotExamplePrompts,
+  decideChatbotRoute,
+} from "@/features/content/api/chatbot.service";
 
 describe("chatbot service", () => {
   it("returns process guidance for compromis questions", async () => {
@@ -184,5 +189,55 @@ describe("chatbot service", () => {
     });
 
     expect(reply.answer).toContain("/immobilier/montivilliers");
+  });
+
+  it("routes property search intents to deterministic local in router v2", () => {
+    const context = buildConversationContext("Je cherche un appartement T3 a vendre au Havre", []);
+    const route = decideChatbotRoute(context, {
+      edgeApiEnabled: true,
+      edgeRagForWebsiteQuestionsEnabled: true,
+      routerV2Enabled: true,
+    });
+
+    expect(route.target).toBe("local");
+    expect(route.category).toBe("deterministic_local");
+    expect(route.intent).toBe("property");
+  });
+
+  it("routes fees questions to edge_rag in router v2", () => {
+    const context = buildConversationContext("Ou trouver les honoraires ?", []);
+    const route = decideChatbotRoute(context, {
+      edgeApiEnabled: true,
+      edgeRagForWebsiteQuestionsEnabled: true,
+      routerV2Enabled: true,
+    });
+
+    expect(route.target).toBe("edge");
+    expect(route.category).toBe("edge_rag");
+  });
+
+  it("routes unknown intents to edge_general in router v2", () => {
+    const context = buildConversationContext("Peux-tu reformuler ce que tu viens de dire en plus court", []);
+    const route = decideChatbotRoute(context, {
+      edgeApiEnabled: true,
+      edgeRagForWebsiteQuestionsEnabled: true,
+      routerV2Enabled: true,
+    });
+
+    expect(route.target).toBe("edge");
+    expect(route.category).toBe("edge_general");
+  });
+
+  it("falls back to local when edge api is disabled", () => {
+    const context = buildConversationContext("Ou trouver les honoraires ?", []);
+    const route = decideChatbotRoute(context, {
+      edgeApiEnabled: false,
+      edgeRagForWebsiteQuestionsEnabled: true,
+      routerV2Enabled: true,
+    });
+
+    expect(route.target).toBe("local");
+    expect(route.category).toBe("fallback");
+    expect(route.reason).toBe("edge_disabled");
   });
 });

@@ -8,7 +8,19 @@ export type AnalyticsEventName =
   | "extranet_clicked"
   | "favorites_opened"
   | "motion_performance"
-  | "motion_pref_changed";
+  | "motion_pref_changed"
+  | "chatbot_opened"
+  | "chatbot_reset"
+  | "chatbot_message_sent"
+  | "chatbot_reply_received"
+  | "chatbot_request_failed"
+  | "chatbot_citation_clicked"
+  | "chatbot_feedback_submitted"
+  | "chatbot_tool_action_rendered"
+  | "chatbot_tool_action_clicked"
+  | "chatbot_tool_orchestration_result"
+  | "chatbot_tool_compare_requested"
+  | "chatbot_tool_handoff_prefill_opened";
 
 export function trackEvent(name: AnalyticsEventName, payload?: Record<string, unknown>): void {
   if (typeof window === "undefined") {

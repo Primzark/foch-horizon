@@ -2,6 +2,59 @@ import { z } from "https://esm.sh/zod@3.25.76";
 import { createServiceClient } from "../_shared/client.ts";
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 
+const toolSearchParamsSchema = z.object({
+  transaction: z.enum(["vente", "location"]).optional(),
+  type: z.enum(["appartement", "maison_villa", "autre"]).optional(),
+  city: z.string().min(1).max(80).optional(),
+  q: z.string().min(1).max(120).optional(),
+  bedroomsMin: z.number().int().min(0).max(12).optional(),
+  priceMin: z.number().int().min(0).max(50_000_000).optional(),
+  priceMax: z.number().int().min(0).max(50_000_000).optional(),
+  page: z.number().int().min(1).max(100).optional(),
+  pageSize: z.number().int().min(1).max(10).optional(),
+});
+
+const conversationStateSchema = z.object({
+  recentSearch: z
+    .object({
+      params: toolSearchParamsSchema.optional(),
+      resultIds: z.array(z.number().int().positive()).max(20),
+      total: z.number().int().min(0).max(5000).optional(),
+      generatedAt: z.string().min(1).max(80),
+    })
+    .optional(),
+  selectedPropertyIds: z.array(z.number().int().positive()).max(3).optional(),
+  recentPropertyIds: z.array(z.number().int().positive()).max(20).optional(),
+  leadDraft: z
+    .object({
+      propertyId: z.number().int().positive().optional(),
+      citySlug: z.string().min(1).max(80).optional(),
+      criteriaSummary: z.string().min(1).max(500).optional(),
+    })
+    .optional(),
+  preferences: z
+    .object({
+      transaction: z.enum(["vente", "location"]).optional(),
+      type: z.enum(["appartement", "maison_villa", "autre"]).optional(),
+      city: z.string().min(1).max(80).optional(),
+      bedroomsMin: z.number().int().min(0).max(12).optional(),
+      priceMax: z.number().int().min(0).max(50_000_000).optional(),
+      priceMin: z.number().int().min(0).max(50_000_000).optional(),
+    })
+    .optional(),
+});
+
+const actionRequestSchema = z.object({
+  type: z.enum([
+    "search_refine",
+    "compare_selected_properties",
+    "open_path_confirmed",
+    "prepare_handoff",
+    "prefill_lead_form",
+  ]),
+  payload: z.record(z.string(), z.unknown()).optional(),
+});
+
 const payloadSchema = z.object({
   question: z.string().min(2).max(1200),
   chatHistory: z
@@ -12,6 +65,8 @@ const payloadSchema = z.object({
       }),
     )
     .optional(),
+  conversationState: conversationStateSchema.optional(),
+  actionRequest: actionRequestSchema.optional(),
 });
 
 const systemPrompt = `You are the assistant for Foch Immobilier in Le Havre, France.
@@ -39,6 +94,162 @@ interface GeminiEmbedContentResponse {
 }
 
 type AIProvider = "gemini" | "openai";
+type RAGRetrievalMode = "none" | "vector" | "keyword" | "hybrid";
+type AgentMode = "tool" | "rag" | "fallback";
+
+interface ToolSearchParams {
+  transaction?: "vente" | "location";
+  type?: "appartement" | "maison_villa" | "autre";
+  city?: string;
+  q?: string;
+  bedroomsMin?: number;
+  priceMin?: number;
+  priceMax?: number;
+  page?: number;
+  pageSize?: number;
+}
+
+interface ToolRecentSearchState {
+  params?: ToolSearchParams;
+  resultIds: number[];
+  total?: number;
+  generatedAt: string;
+}
+
+interface ToolConversationState {
+  recentSearch?: ToolRecentSearchState;
+  selectedPropertyIds?: number[];
+  recentPropertyIds?: number[];
+  leadDraft?: {
+    propertyId?: number;
+    citySlug?: string;
+    criteriaSummary?: string;
+  };
+  preferences?: {
+    transaction?: "vente" | "location";
+    type?: "appartement" | "maison_villa" | "autre";
+    city?: string;
+    bedroomsMin?: number;
+    priceMin?: number;
+    priceMax?: number;
+  };
+}
+
+interface ToolActionRequest {
+  type:
+    | "search_refine"
+    | "compare_selected_properties"
+    | "open_path_confirmed"
+    | "prepare_handoff"
+    | "prefill_lead_form";
+  payload?: Record<string, unknown>;
+}
+
+interface ToolSearchResultItem {
+  id: number;
+  title: string;
+  priceAmount: number;
+  currency: string;
+  surfaceM2: number | null;
+  bedrooms: number | null;
+  cityName: string;
+  citySlug: string;
+  path: string;
+  coverImageUrl: string;
+  dpeLabel: string | null;
+  transaction: string;
+  type: string;
+}
+
+interface ToolCompareProperty {
+  id: number;
+  title: string;
+  path: string;
+  priceAmount: number;
+  surfaceM2: number | null;
+  bedrooms: number | null;
+  cityName: string;
+  dpeLabel: string | null;
+  terrainM2?: number | null;
+  garageCount?: number | null;
+  bathrooms?: number | null;
+}
+
+interface ToolTraceItem {
+  tool: "search_properties" | "get_properties" | "compare_properties" | "prepare_handoff";
+  status: "ok" | "error" | "skipped";
+  latencyMs: number;
+  resultCount?: number;
+  errorCode?: string;
+}
+
+interface ToolUiActionBase {
+  id: string;
+  title: string;
+  description?: string;
+  requiresConfirmation?: boolean;
+}
+
+interface ToolUiActionSearchResults extends ToolUiActionBase {
+  kind: "search_results";
+  data: {
+    criteriaSummary: string;
+    searchParams: ToolSearchParams;
+    total: number;
+    items: ToolSearchResultItem[];
+    canCompare: boolean;
+    compareSelectionLimit: number;
+    nextSuggestedRefinements?: string[];
+  };
+}
+
+interface ToolUiActionCompareSummary extends ToolUiActionBase {
+  kind: "compare_summary";
+  data: {
+    propertyIds: number[];
+    properties: ToolCompareProperty[];
+    comparisonRows: Array<{ label: string; values: Array<string | null> }>;
+    summary: string;
+    recommendedPropertyId?: number;
+    nextActions?: Array<"open_property" | "prefill_handoff">;
+  };
+}
+
+interface ToolUiActionOpenPage extends ToolUiActionBase {
+  kind: "open_page";
+  data: { path: string; label: string; reason?: string };
+}
+
+interface ToolUiActionLeadHandoffDraft extends ToolUiActionBase {
+  kind: "lead_handoff_draft";
+  data: {
+    draft: { source: "contact_page"; propertyId?: number; criteriaMessage: string };
+    prefill: { criteria: string; firstName?: string; lastName?: string; email?: string };
+    missingFields: Array<"firstName" | "lastName" | "email">;
+    contextSummary: string;
+  };
+}
+
+interface ToolUiActionNotice extends ToolUiActionBase {
+  kind: "notice";
+  data: { level?: "info" | "warning"; code?: string };
+}
+
+type ToolUiAction =
+  | ToolUiActionSearchResults
+  | ToolUiActionCompareSummary
+  | ToolUiActionOpenPage
+  | ToolUiActionLeadHandoffDraft
+  | ToolUiActionNotice;
+
+interface ToolOrchestrationResult {
+  answer: string;
+  suggestedPrompts: string[];
+  actions: ToolUiAction[];
+  conversationStatePatch?: Partial<ToolConversationState>;
+  toolTrace: ToolTraceItem[];
+  agentMode: AgentMode;
+}
 
 interface RAGMatchRow {
   id?: string;
@@ -50,15 +261,21 @@ interface RAGMatchRow {
   content?: string;
   metadata?: Record<string, unknown> | null;
   similarity?: number | null;
+  keyword_rank?: number | null;
 }
 
 interface SanitizedRAGMatchRow {
+  id?: string;
+  document_key?: string;
   path: string;
   source_url?: string;
   title: string | null;
   section_heading: string | null;
   content: string;
   similarity: number | null;
+  keyword_rank: number | null;
+  metadata?: Record<string, unknown> | null;
+  rerank_score?: number;
 }
 
 interface RAGCitation {
@@ -71,6 +288,7 @@ interface RAGCitation {
 interface RAGContextResult {
   contextBlock: string | null;
   citations: RAGCitation[];
+  retrievalMode: RAGRetrievalMode;
 }
 
 function parseProviderEnv(name: string): AIProvider | null {
@@ -134,6 +352,47 @@ function vectorToPgLiteral(vector: number[]): string {
 function truncateText(value: string, maxChars: number): string {
   if (value.length <= maxChars) return value;
   return `${value.slice(0, Math.max(0, maxChars - 3)).trim()}...`;
+}
+
+function normalizeText(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9/\s-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function tokenize(value: string): string[] {
+  return normalizeText(value)
+    .split(" ")
+    .map((token) => token.trim())
+    .filter((token) => token.length >= 2);
+}
+
+function uniqueTokens(value: string): Set<string> {
+  return new Set(tokenize(value));
+}
+
+function extractPathMentions(question: string): string[] {
+  const matches = question.match(/\/[a-z0-9-]+(?:\/[a-z0-9-]+)*/gi) ?? [];
+  return [...new Set(matches.map((value) => value.toLowerCase()))];
+}
+
+function clamp01(value: number): number {
+  return clamp(value, 0, 1);
+}
+
+function createRequestId(): string {
+  try {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+      return crypto.randomUUID();
+    }
+  } catch {
+    // Ignore and fall back to a time-based id.
+  }
+  return `req-${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
 }
 
 function normalizeHistoryForModel(
@@ -240,35 +499,43 @@ function sanitizeRagRows(rawRows: unknown): SanitizedRAGMatchRow[] {
     .filter((row): row is RAGMatchRow => Boolean(row && typeof row === "object"))
     .filter((row) => typeof row.path === "string" && typeof row.content === "string")
     .map((row): SanitizedRAGMatchRow => ({
+      id: typeof row.id === "string" ? row.id : undefined,
+      document_key: typeof row.document_key === "string" ? row.document_key : undefined,
       path: row.path!.trim(),
       content: row.content!.trim(),
       title: typeof row.title === "string" ? row.title.trim() : null,
       section_heading: typeof row.section_heading === "string" ? row.section_heading.trim() : null,
       source_url: typeof row.source_url === "string" ? row.source_url.trim() : undefined,
       similarity: typeof row.similarity === "number" ? row.similarity : null,
+      keyword_rank: typeof row.keyword_rank === "number" ? row.keyword_rank : null,
+      metadata:
+        row.metadata && typeof row.metadata === "object" && !Array.isArray(row.metadata)
+          ? row.metadata
+          : null,
     }))
     .filter((row) => row.path.length > 0 && row.content.length > 0);
 }
 
-function buildRagContextBlock(rows: SanitizedRAGMatchRow[]): RAGContextResult {
+function buildRagContextBlock(rows: SanitizedRAGMatchRow[], retrievalMode: RAGRetrievalMode): RAGContextResult {
   if (rows.length === 0) {
-    return { contextBlock: null, citations: [] };
+    return { contextBlock: null, citations: [], retrievalMode: "none" };
   }
 
   const maxContextChars = clamp(Math.floor(parseNumberEnv("CHATBOT_RAG_MAX_CONTEXT_CHARS", 5200)), 1200, 12000);
-  const maxChunks = clamp(Math.floor(parseNumberEnv("CHATBOT_RAG_MAX_CHUNKS", 5)), 1, 8);
+  const maxChunksFallback = clamp(Math.floor(parseNumberEnv("CHATBOT_RAG_MAX_CHUNKS", 5)), 1, 8);
+  const maxChunks = clamp(Math.floor(parseNumberEnv("CHATBOT_RAG_CONTEXT_TOP_N", maxChunksFallback)), 1, 8);
   const seenPaths = new Set<string>();
-  const citations: RAGCitation[] = [];
   const blocks: string[] = [];
+  const citations: RAGCitation[] = [];
   let totalChars = 0;
 
   for (const row of rows.slice(0, maxChunks)) {
-    const similarityLabel =
-      typeof row.similarity === "number" ? ` (sim=${row.similarity.toFixed(3)})` : "";
+    const similarityLabel = typeof row.similarity === "number" ? ` (sim=${row.similarity.toFixed(3)})` : "";
+    const rankLabel = typeof row.rerank_score === "number" ? ` (rank=${row.rerank_score.toFixed(3)})` : "";
     const sectionLine = row.section_heading ? `\nsection: ${row.section_heading}` : "";
-    const excerpt = truncateText(row.content ?? "", 1100);
+    const excerpt = truncateText(row.content, 1100);
     const block =
-      `[source]\npath: ${row.path}${similarityLabel}\n` +
+      `[source]\npath: ${row.path}${similarityLabel}${rankLabel}\n` +
       `title: ${row.title || "Sans titre"}${sectionLine}\n` +
       `excerpt: ${excerpt}`;
 
@@ -291,54 +558,237 @@ function buildRagContextBlock(rows: SanitizedRAGMatchRow[]): RAGContextResult {
   }
 
   if (blocks.length === 0) {
-    return { contextBlock: null, citations: [] };
+    return { contextBlock: null, citations: [], retrievalMode: "none" };
   }
 
   const contextBlock = [
     "WEBSITE_CONTEXT",
     "Use this context first for questions about pages, services, neighborhoods, legal pages, or site navigation.",
     "Cite internal paths like /services or /contact when relevant. If context is insufficient, say so briefly.",
+    `retrieval_mode: ${retrievalMode}`,
     ...blocks,
   ].join("\n\n");
 
-  return { contextBlock, citations };
+  return { contextBlock, citations, retrievalMode };
+}
+
+async function retrieveVectorCandidates(
+  supabase: ReturnType<typeof createServiceClient>,
+  embedding: number[],
+  pathPrefix: string | null,
+): Promise<SanitizedRAGMatchRow[]> {
+  const matchCount = clamp(
+    Math.floor(parseNumberEnv("CHATBOT_RAG_VECTOR_MATCH_COUNT", parseNumberEnv("CHATBOT_RAG_MATCH_COUNT", 6))),
+    1,
+    20,
+  );
+  const matchThreshold = clamp(parseNumberEnv("CHATBOT_RAG_MATCH_THRESHOLD", 0.7), 0, 1);
+  const { data, error } = await supabase.rpc("match_chatbot_content_chunks", {
+    query_embedding_text: vectorToPgLiteral(embedding),
+    match_count: matchCount,
+    match_threshold: matchThreshold,
+    path_prefix: pathPrefix,
+  });
+
+  if (error) {
+    return [];
+  }
+
+  return sanitizeRagRows(data);
+}
+
+async function retrieveKeywordCandidates(
+  supabase: ReturnType<typeof createServiceClient>,
+  question: string,
+  pathPrefix: string | null,
+): Promise<SanitizedRAGMatchRow[]> {
+  const matchCount = clamp(Math.floor(parseNumberEnv("CHATBOT_RAG_KEYWORD_MATCH_COUNT", 12)), 1, 30);
+  const { data, error } = await supabase.rpc("match_chatbot_content_chunks_keyword", {
+    query_text: question,
+    match_count: matchCount,
+    path_prefix: pathPrefix,
+  });
+
+  if (error) {
+    return [];
+  }
+
+  return sanitizeRagRows(data);
+}
+
+function tokenOverlapScore(queryTokens: Set<string>, text: string): number {
+  if (queryTokens.size === 0) return 0;
+  const candidateTokens = uniqueTokens(text);
+  if (candidateTokens.size === 0) return 0;
+  let overlap = 0;
+  for (const token of queryTokens) {
+    if (candidateTokens.has(token)) overlap += 1;
+  }
+  return clamp01(overlap / Math.max(1, Math.min(queryTokens.size, 8)));
+}
+
+const domainTerms = new Set([
+  "honoraires",
+  "confidentialite",
+  "cookies",
+  "mentions",
+  "legales",
+  "rgpd",
+  "sanvic",
+  "perret",
+  "graville",
+  "eure",
+  "montivilliers",
+  "harfleur",
+  "gainneville",
+]);
+
+function domainTermBoost(questionTokens: Set<string>, row: SanitizedRAGMatchRow): number {
+  const matchedQuestionTerms = [...questionTokens].filter((token) => domainTerms.has(token));
+  if (matchedQuestionTerms.length === 0) return 0;
+  const haystack = normalizeText(`${row.path} ${row.title ?? ""} ${row.section_heading ?? ""} ${row.content.slice(0, 300)}`);
+  let hits = 0;
+  for (const token of matchedQuestionTerms) {
+    if (haystack.includes(token)) hits += 1;
+  }
+  return clamp01(hits / matchedQuestionTerms.length);
+}
+
+function mergeAndRerankCandidates(
+  question: string,
+  vectorRows: SanitizedRAGMatchRow[],
+  keywordRows: SanitizedRAGMatchRow[],
+): { rows: SanitizedRAGMatchRow[]; retrievalMode: RAGRetrievalMode } {
+  const hasVector = vectorRows.length > 0;
+  const hasKeyword = keywordRows.length > 0;
+  const retrievalMode: RAGRetrievalMode = hasVector && hasKeyword ? "hybrid" : hasVector ? "vector" : hasKeyword ? "keyword" : "none";
+  if (retrievalMode === "none") {
+    return { rows: [], retrievalMode };
+  }
+
+  const byKey = new Map<string, SanitizedRAGMatchRow>();
+  const keyForRow = (row: SanitizedRAGMatchRow) =>
+    `${row.path}::${row.section_heading ?? ""}::${row.content.slice(0, 160)}`;
+
+  for (const row of [...vectorRows, ...keywordRows]) {
+    const key = keyForRow(row);
+    const existing = byKey.get(key);
+    if (!existing) {
+      byKey.set(key, { ...row });
+      continue;
+    }
+    byKey.set(key, {
+      ...existing,
+      similarity:
+        typeof row.similarity === "number"
+          ? Math.max(existing.similarity ?? 0, row.similarity)
+          : existing.similarity,
+      keyword_rank:
+        typeof row.keyword_rank === "number"
+          ? Math.max(existing.keyword_rank ?? 0, row.keyword_rank)
+          : existing.keyword_rank,
+      source_url: existing.source_url ?? row.source_url,
+      title: existing.title ?? row.title,
+      section_heading: existing.section_heading ?? row.section_heading,
+    });
+  }
+
+  const allRows = [...byKey.values()];
+  const maxKeywordRank = allRows.reduce((max, row) => Math.max(max, row.keyword_rank ?? 0), 0);
+  const queryTokens = uniqueTokens(question);
+  const pathMentions = extractPathMentions(question);
+  const vectorWeight = clamp(parseNumberEnv("CHATBOT_RAG_HYBRID_VECTOR_WEIGHT", 0.55), 0, 1);
+  const keywordWeight = clamp(parseNumberEnv("CHATBOT_RAG_HYBRID_KEYWORD_WEIGHT", 0.30), 0, 1);
+  const rerankTopN = clamp(Math.floor(parseNumberEnv("CHATBOT_RAG_RERANK_TOP_N", 8)), 1, 20);
+
+  const scored = allRows
+    .map((row) => {
+      const vectorScore = clamp01(row.similarity ?? 0);
+      const keywordScore =
+        maxKeywordRank > 0 && typeof row.keyword_rank === "number"
+          ? clamp01(Math.log1p(Math.max(0, row.keyword_rank)) / Math.log1p(maxKeywordRank))
+          : 0;
+      const titleAndSection = `${row.title ?? ""} ${row.section_heading ?? ""}`;
+      const titleTokenScore = tokenOverlapScore(queryTokens, titleAndSection);
+      const exactPathBoost =
+        pathMentions.length > 0 && pathMentions.some((path) => row.path.toLowerCase() === path || row.path.toLowerCase().startsWith(path))
+          ? 1
+          : 0;
+      const titleSignal = clamp01(titleTokenScore + domainTermBoost(queryTokens, row) * 0.35);
+      const rerankScore = clamp01(
+        vectorWeight * vectorScore +
+          keywordWeight * keywordScore +
+          0.1 * titleSignal +
+          0.05 * exactPathBoost,
+      );
+      return {
+        ...row,
+        rerank_score: rerankScore,
+      } satisfies SanitizedRAGMatchRow;
+    })
+    .sort((a, b) => {
+      const scoreDelta = (b.rerank_score ?? 0) - (a.rerank_score ?? 0);
+      if (scoreDelta !== 0) return scoreDelta;
+      const similarityDelta = (b.similarity ?? 0) - (a.similarity ?? 0);
+      if (similarityDelta !== 0) return similarityDelta;
+      return a.path.localeCompare(b.path);
+    });
+
+  const selected: SanitizedRAGMatchRow[] = [];
+  const pool = [...scored];
+  const pathCounts = new Map<string, number>();
+
+  while (selected.length < rerankTopN && pool.length > 0) {
+    let bestIndex = 0;
+    let bestScore = -Infinity;
+    for (let index = 0; index < pool.length; index += 1) {
+      const row = pool[index];
+      const duplicatePenalty = 0.08 * (pathCounts.get(row.path) ?? 0);
+      const penalizedScore = (row.rerank_score ?? 0) - duplicatePenalty;
+      if (penalizedScore > bestScore) {
+        bestScore = penalizedScore;
+        bestIndex = index;
+      }
+    }
+    const [bestRow] = pool.splice(bestIndex, 1);
+    selected.push(bestRow);
+    pathCounts.set(bestRow.path, (pathCounts.get(bestRow.path) ?? 0) + 1);
+  }
+
+  return { rows: selected, retrievalMode };
 }
 
 async function retrieveWebsiteContext(question: string): Promise<RAGContextResult> {
   const ragEnabled = parseBooleanEnv("CHATBOT_RAG_ENABLED", true);
   if (!ragEnabled) {
-    return { contextBlock: null, citations: [] };
+    return { contextBlock: null, citations: [], retrievalMode: "none" };
   }
 
   let supabase: ReturnType<typeof createServiceClient>;
   try {
     supabase = createServiceClient();
   } catch {
-    return { contextBlock: null, citations: [] };
+    return { contextBlock: null, citations: [], retrievalMode: "none" };
   }
 
-  const embedding = await createQueryEmbedding(question);
-  if (!embedding) {
-    return { contextBlock: null, citations: [] };
+  const hybridEnabled = parseBooleanEnv("CHATBOT_RAG_HYBRID_ENABLED", true);
+  const pathPrefixRaw = (Deno.env.get("CHATBOT_RAG_PATH_PREFIX") ?? "").trim();
+  const pathPrefix = pathPrefixRaw.length > 0 ? pathPrefixRaw : null;
+
+  const keywordPromise = hybridEnabled ? retrieveKeywordCandidates(supabase, question, pathPrefix) : Promise.resolve([]);
+  const embeddingPromise = createQueryEmbedding(question);
+
+  const [keywordRows, embedding] = await Promise.all([keywordPromise, embeddingPromise]);
+
+  let vectorRows: SanitizedRAGMatchRow[] = [];
+  if (embedding) {
+    vectorRows = await retrieveVectorCandidates(supabase, embedding, pathPrefix);
+  } else if (!hybridEnabled) {
+    return { contextBlock: null, citations: [], retrievalMode: "none" };
   }
 
-  const matchCount = clamp(Math.floor(parseNumberEnv("CHATBOT_RAG_MATCH_COUNT", 6)), 1, 12);
-  const matchThreshold = clamp(parseNumberEnv("CHATBOT_RAG_MATCH_THRESHOLD", 0.7), 0, 1);
-  const pathPrefix = (Deno.env.get("CHATBOT_RAG_PATH_PREFIX") ?? "").trim();
-
-  const { data, error } = await supabase.rpc("match_chatbot_content_chunks", {
-    query_embedding_text: vectorToPgLiteral(embedding),
-    match_count: matchCount,
-    match_threshold: matchThreshold,
-    path_prefix: pathPrefix.length > 0 ? pathPrefix : null,
-  });
-
-  if (error) {
-    return { contextBlock: null, citations: [] };
-  }
-
-  const rows = sanitizeRagRows(data);
-  return buildRagContextBlock(rows);
+  const merged = mergeAndRerankCandidates(question, vectorRows, keywordRows);
+  return buildRagContextBlock(merged.rows, merged.retrievalMode);
 }
 
 function extractOutputText(payload: unknown): string {
@@ -563,6 +1013,900 @@ function buildSuggestedPromptsFromCitations(citations: RAGCitation[]): string[] 
   return prompts;
 }
 
+interface PropertySearchQueryRow {
+  id: number;
+  title: string;
+  slug: string;
+  transaction_type: string;
+  property_type: string;
+  status: string;
+  price_amount: number;
+  price_currency: string;
+  surface_m2: number | null;
+  terrain_m2?: number | null;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  garage_count: number | null;
+  dpe_label: string | null;
+  city?: { name?: string | null; slug?: string | null } | null;
+  images?: Array<{ source_url?: string | null; sort_order?: number | null }> | null;
+}
+
+const toolPropertyIntentPattern =
+  /appartement|maison|villa|studio|t[1-9]\b|bien(?:s)?|acheter|achat|louer|location|vente|budget|chambre|surface|m2|annonce/;
+const toolCompareIntentPattern = /compar|compare|lequel est mieux|laquelle est mieux|entre les deux|entre ces biens/;
+const toolHandoffIntentPattern = /contact|conseiller|rappel|rappeler|etre contacte|etre rappele|mail|email/;
+const toolWebsiteIntentPattern =
+  /honoraires|mentions legales|confidentialite|cookies|plan du site|ou trouver|histoire|avis|services?\b|page\b|rubrique/;
+
+const toolCityAliases: Array<{ slug: string; aliases: string[] }> = [
+  { slug: "le-havre", aliases: ["le havre", "havre"] },
+  { slug: "sainte-adresse", aliases: ["sainte adresse", "sainte-adresse"] },
+  { slug: "montivilliers", aliases: ["montivilliers"] },
+  { slug: "maneglise", aliases: ["maneglise", "maneglise"] },
+  { slug: "gainneville", aliases: ["gainneville"] },
+];
+
+function parseToolSearchParamsFromState(rawState: ToolConversationState | undefined): ToolSearchParams {
+  return {
+    ...rawState?.preferences,
+    ...(rawState?.recentSearch?.params ?? {}),
+  };
+}
+
+function formatPriceValue(amount: number | null | undefined, currency = "EUR"): string {
+  if (typeof amount !== "number" || !Number.isFinite(amount)) return "—";
+  try {
+    return new Intl.NumberFormat("fr-FR", {
+      style: "currency",
+      currency,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  } catch {
+    return `${Math.round(amount)} ${currency}`;
+  }
+}
+
+function formatMetricValue(value: number | null | undefined, suffix: string): string {
+  if (typeof value !== "number" || !Number.isFinite(value)) return "—";
+  const rounded = Math.round(value * 10) / 10;
+  return `${rounded.toString().replace(".", ",")} ${suffix}`;
+}
+
+function sanitizePropertySlugForPath(slug: string): string {
+  return slug
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .replace(/-{2,}/g, "-");
+}
+
+function toPropertyPath(id: number, slug: string): string {
+  return `/biens/${id}-${sanitizePropertySlugForPath(slug || `bien-${id}`)}`;
+}
+
+function uniqueNumberList(values: Array<number | null | undefined>, maxSize: number): number[] {
+  const result: number[] = [];
+  const seen = new Set<number>();
+  for (const value of values) {
+    if (!Number.isInteger(value) || (value as number) <= 0) continue;
+    if (seen.has(value as number)) continue;
+    seen.add(value as number);
+    result.push(value as number);
+    if (result.length >= maxSize) break;
+  }
+  return result;
+}
+
+function detectTransaction(question: string): "vente" | "location" | undefined {
+  const normalized = normalizeText(question);
+  const hasLocation = /\blocation\b|\blouer\b|\bloyer\b|\ba louer\b/.test(normalized);
+  const hasSale = /\bvente\b|\bvendre\b|\bacheter\b|\bachat\b|\ba vendre\b/.test(normalized);
+  if (hasLocation && !hasSale) return "location";
+  if (hasSale && !hasLocation) return "vente";
+  return undefined;
+}
+
+function detectPropertyType(question: string): "appartement" | "maison_villa" | "autre" | undefined {
+  const normalized = normalizeText(question);
+  if (/\bmaison\b|\bvilla\b/.test(normalized)) return "maison_villa";
+  if (/\bappartement\b|\bstudio\b|\bt[1-9]\b/.test(normalized)) return "appartement";
+  return undefined;
+}
+
+function detectCitySlug(question: string): string | undefined {
+  const normalized = normalizeText(question);
+  for (const city of toolCityAliases) {
+    if (city.aliases.some((alias) => normalized.includes(alias))) {
+      return city.slug;
+    }
+  }
+  return undefined;
+}
+
+function parseBedroomsMin(question: string): number | undefined {
+  const normalized = normalizeText(question);
+  const tMatch = normalized.match(/\bt([1-9])\b/);
+  if (tMatch) {
+    const rooms = Number(tMatch[1]);
+    return clamp(Math.max(0, rooms - 1), 0, 8);
+  }
+  const bedroomMatch = normalized.match(/(\d{1,2})\s*chamb/);
+  if (bedroomMatch) {
+    return clamp(Number(bedroomMatch[1]), 0, 12);
+  }
+  return undefined;
+}
+
+function parsePriceHints(question: string): Pick<ToolSearchParams, "priceMin" | "priceMax"> {
+  const normalized = normalizeText(question);
+  const extract = (value: string) => Number(value.replace(/\s+/g, ""));
+  const compactQuestion = question.replace(/\u00a0/g, " ");
+
+  const betweenMatch = compactQuestion.match(
+    /entre\s+([0-9][0-9\s.,]{2,})\s*(?:€|eur|euros)?\s+et\s+([0-9][0-9\s.,]{2,})/i,
+  );
+  if (betweenMatch) {
+    const a = extract(betweenMatch[1].replace(/[^\d]/g, ""));
+    const b = extract(betweenMatch[2].replace(/[^\d]/g, ""));
+    const min = Math.min(a, b);
+    const max = Math.max(a, b);
+    return {
+      priceMin: Number.isFinite(min) ? min : undefined,
+      priceMax: Number.isFinite(max) ? max : undefined,
+    };
+  }
+
+  const maxMatch = compactQuestion.match(
+    /(budget|max(?:imum)?|moins de|jusqu(?:e|')?a)\s*[:\-]?\s*([0-9][0-9\s.,]{2,})/i,
+  );
+  if (maxMatch) {
+    const max = extract(maxMatch[2].replace(/[^\d]/g, ""));
+    return { priceMax: Number.isFinite(max) ? max : undefined };
+  }
+
+  const minMatch = compactQuestion.match(/(min(?:imum)?|au moins|a partir de|plus de)\s*[:\-]?\s*([0-9][0-9\s.,]{2,})/i);
+  if (minMatch) {
+    const min = extract(minMatch[2].replace(/[^\d]/g, ""));
+    return { priceMin: Number.isFinite(min) ? min : undefined };
+  }
+
+  const euroMatches = [...compactQuestion.matchAll(/([0-9][0-9\s.,]{2,})\s*(?:€|eur|euros)\b/gi)];
+  if (euroMatches.length > 0) {
+    const parsed = euroMatches
+      .map((match) => extract(match[1].replace(/[^\d]/g, "")))
+      .filter((value) => Number.isFinite(value) && value >= 1000);
+    if (parsed.length >= 2) {
+      return { priceMin: Math.min(...parsed), priceMax: Math.max(...parsed) };
+    }
+    if (parsed.length === 1) {
+      if (/\bentre\b/.test(normalized)) return { priceMin: parsed[0] };
+      return { priceMax: parsed[0] };
+    }
+  }
+
+  return {};
+}
+
+function mergeSearchParams(
+  base: ToolSearchParams,
+  overrides: ToolSearchParams,
+  pageFallback: number,
+  pageSizeFallback: number,
+): ToolSearchParams {
+  const merged: ToolSearchParams = {
+    ...base,
+    ...overrides,
+  };
+  if (merged.priceMin && merged.priceMax && merged.priceMin > merged.priceMax) {
+    [merged.priceMin, merged.priceMax] = [merged.priceMax, merged.priceMin];
+  }
+  merged.page = clamp(Math.floor(merged.page ?? pageFallback), 1, 100);
+  merged.pageSize = clamp(Math.floor(merged.pageSize ?? pageSizeFallback), 1, 10);
+  return merged;
+}
+
+function extractSearchParamsFromQuestion(
+  question: string,
+  state: ToolConversationState | undefined,
+  actionRequest: ToolActionRequest | undefined,
+): ToolSearchParams {
+  const fallbackPageSize = clamp(Math.floor(parseNumberEnv("CHATBOT_AGENT_TOOLS_MAX_RESULTS", 5)), 1, 10);
+  const stateParams = parseToolSearchParamsFromState(state);
+  const inferredParams: ToolSearchParams = {
+    transaction: detectTransaction(question),
+    type: detectPropertyType(question),
+    city: detectCitySlug(question),
+    bedroomsMin: parseBedroomsMin(question),
+    ...parsePriceHints(question),
+  };
+
+  let actionParams: ToolSearchParams = {};
+  if (actionRequest?.type === "search_refine") {
+    const payload = actionRequest.payload ?? {};
+    const rawSearchParams = payload.searchParams;
+    if (rawSearchParams && typeof rawSearchParams === "object") {
+      const parsed = toolSearchParamsSchema.safeParse(rawSearchParams);
+      if (parsed.success) {
+        actionParams = { ...parsed.data };
+      }
+    }
+    const page = typeof payload.page === "number" ? payload.page : Number(payload.page);
+    if (Number.isFinite(page)) {
+      actionParams.page = Math.floor(page);
+    }
+    const pageSize = typeof payload.pageSize === "number" ? payload.pageSize : Number(payload.pageSize);
+    if (Number.isFinite(pageSize)) {
+      actionParams.pageSize = Math.floor(pageSize);
+    }
+  }
+
+  return mergeSearchParams(stateParams, { ...inferredParams, ...actionParams }, 1, fallbackPageSize);
+}
+
+function buildCriteriaSummary(params: ToolSearchParams): string {
+  const parts: string[] = [];
+  const transactionLabel =
+    params.transaction === "vente" ? "à vendre" : params.transaction === "location" ? "à louer" : undefined;
+  const typeLabel =
+    params.type === "appartement" ? "appartement" : params.type === "maison_villa" ? "maison" : params.type;
+
+  if (typeLabel && transactionLabel) {
+    parts.push(`${typeLabel} ${transactionLabel}`);
+  } else if (typeLabel) {
+    parts.push(typeLabel);
+  } else if (transactionLabel) {
+    parts.push(`biens ${transactionLabel}`);
+  } else {
+    parts.push("biens immobiliers");
+  }
+
+  if (params.city) parts.push(`sur ${params.city.replace(/-/g, " ")}`);
+  if (typeof params.bedroomsMin === "number" && params.bedroomsMin > 0) {
+    parts.push(`min. ${params.bedroomsMin} chambre${params.bedroomsMin > 1 ? "s" : ""}`);
+  }
+  if (typeof params.priceMax === "number") {
+    parts.push(`budget max ${formatPriceValue(params.priceMax)}`);
+  }
+  if (typeof params.priceMin === "number") {
+    parts.push(`budget min ${formatPriceValue(params.priceMin)}`);
+  }
+
+  return parts.join(" · ");
+}
+
+function buildToolActionId(prefix: string): string {
+  return `${prefix}-${Math.random().toString(16).slice(2, 10)}`;
+}
+
+function isLikelyWebsiteContentQuestion(question: string): boolean {
+  return toolWebsiteIntentPattern.test(normalizeText(question));
+}
+
+function isLikelyPropertyToolQuestion(question: string): boolean {
+  return toolPropertyIntentPattern.test(normalizeText(question));
+}
+
+function isLikelyCompareQuestion(question: string): boolean {
+  return toolCompareIntentPattern.test(normalizeText(question));
+}
+
+function isLikelyHandoffQuestion(question: string): boolean {
+  return toolHandoffIntentPattern.test(normalizeText(question));
+}
+
+function detectAgentMode(
+  question: string,
+  actionRequest: ToolActionRequest | undefined,
+  conversationState: ToolConversationState | undefined,
+): AgentMode {
+  if (actionRequest) return "tool";
+  if (isLikelyWebsiteContentQuestion(question)) return "rag";
+  if (
+    isLikelyCompareQuestion(question) &&
+    Array.isArray(conversationState?.selectedPropertyIds) &&
+    conversationState.selectedPropertyIds.length >= 2
+  ) {
+    return "tool";
+  }
+  if (isLikelyHandoffQuestion(question) && (conversationState?.recentSearch || conversationState?.selectedPropertyIds?.length)) {
+    return "tool";
+  }
+  if (isLikelyPropertyToolQuestion(question)) return "tool";
+  return "rag";
+}
+
+function mapSearchRowToToolItem(row: PropertySearchQueryRow): ToolSearchResultItem {
+  const sortedImages = [...(row.images ?? [])].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+  const cityName = (row.city?.name ?? "").trim();
+  const citySlug = (row.city?.slug ?? "").trim();
+  return {
+    id: row.id,
+    title: row.title,
+    priceAmount: row.price_amount,
+    currency: row.price_currency || "EUR",
+    surfaceM2: row.surface_m2 ?? null,
+    bedrooms: row.bedrooms ?? null,
+    cityName,
+    citySlug,
+    path: toPropertyPath(row.id, row.slug),
+    coverImageUrl: sortedImages[0]?.source_url?.trim() ?? "",
+    dpeLabel: row.dpe_label ?? null,
+    transaction: row.transaction_type,
+    type: row.property_type,
+  };
+}
+
+async function executeSearchPropertiesTool(
+  supabase: ReturnType<typeof createServiceClient>,
+  params: ToolSearchParams,
+): Promise<{ items: ToolSearchResultItem[]; total: number; searchParams: ToolSearchParams }> {
+  const page = clamp(Math.floor(params.page ?? 1), 1, 100);
+  const pageSize = clamp(Math.floor(params.pageSize ?? parseNumberEnv("CHATBOT_AGENT_TOOLS_MAX_RESULTS", 5)), 1, 10);
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  let query = supabase
+    .from("properties")
+    .select(
+      "id,title,slug,transaction_type,property_type,status,price_amount,price_currency,surface_m2,terrain_m2,bedrooms,bathrooms,garage_count,dpe_label,city:cities(name,slug),images:property_images(source_url,sort_order)",
+      { count: "exact" },
+    )
+    .neq("status", "off_market")
+    .order("published_at", { ascending: false })
+    .range(from, to);
+
+  if (params.transaction) query = query.eq("transaction_type", params.transaction);
+  if (params.type) query = query.eq("property_type", params.type);
+  if (params.city) query = query.eq("city.slug", params.city);
+  if (typeof params.priceMin === "number") query = query.gte("price_amount", params.priceMin);
+  if (typeof params.priceMax === "number") query = query.lte("price_amount", params.priceMax);
+  if (typeof params.bedroomsMin === "number") query = query.gte("bedrooms", params.bedroomsMin);
+  if (params.q) query = query.ilike("title", `%${params.q.replace(/[%_]/g, "")}%`);
+
+  const { data, error, count } = await query;
+  if (error) throw error;
+
+  const rows = ((data as PropertySearchQueryRow[] | null) ?? []).filter((row) => row && typeof row.id === "number");
+  return {
+    items: rows.map(mapSearchRowToToolItem),
+    total: count ?? rows.length,
+    searchParams: { ...params, page, pageSize },
+  };
+}
+
+async function executeGetPropertiesTool(
+  supabase: ReturnType<typeof createServiceClient>,
+  ids: number[],
+): Promise<ToolCompareProperty[]> {
+  const uniqueIds = uniqueNumberList(ids, 3);
+  if (uniqueIds.length === 0) return [];
+
+  const { data, error } = await supabase
+    .from("properties")
+    .select(
+      "id,title,slug,price_amount,price_currency,surface_m2,terrain_m2,bedrooms,bathrooms,garage_count,dpe_label,transaction_type,property_type,city:cities(name,slug)",
+    )
+    .in("id", uniqueIds)
+    .neq("status", "off_market");
+
+  if (error) throw error;
+
+  const rows = ((data as PropertySearchQueryRow[] | null) ?? []).filter((row) => row && typeof row.id === "number");
+  const byId = new Map(rows.map((row) => [row.id, row]));
+
+  return uniqueIds
+    .map((id) => byId.get(id))
+    .filter((row): row is PropertySearchQueryRow => Boolean(row))
+    .map((row) => ({
+      id: row.id,
+      title: row.title,
+      path: toPropertyPath(row.id, row.slug),
+      priceAmount: row.price_amount,
+      surfaceM2: row.surface_m2 ?? null,
+      bedrooms: row.bedrooms ?? null,
+      cityName: (row.city?.name ?? "").trim(),
+      dpeLabel: row.dpe_label ?? null,
+      terrainM2: row.terrain_m2 ?? null,
+      garageCount: row.garage_count ?? null,
+      bathrooms: row.bathrooms ?? null,
+    }));
+}
+
+function buildCompareRows(properties: ToolCompareProperty[]): Array<{ label: string; values: Array<string | null> }> {
+  const rows: Array<{ label: string; values: Array<string | null> }> = [
+    { label: "Prix", values: properties.map((property) => formatPriceValue(property.priceAmount)) },
+    { label: "Surface", values: properties.map((property) => formatMetricValue(property.surfaceM2, "m²")) },
+    { label: "Chambres", values: properties.map((property) => (property.bedrooms != null ? String(property.bedrooms) : "—")) },
+    { label: "Ville", values: properties.map((property) => property.cityName || "—") },
+    { label: "DPE", values: properties.map((property) => property.dpeLabel || "—") },
+  ];
+
+  if (properties.some((property) => property.terrainM2 != null)) {
+    rows.push({ label: "Terrain", values: properties.map((property) => formatMetricValue(property.terrainM2, "m²")) });
+  }
+  if (properties.some((property) => property.garageCount != null)) {
+    rows.push({
+      label: "Garages",
+      values: properties.map((property) => (property.garageCount != null ? String(property.garageCount) : "—")),
+    });
+  }
+  if (properties.some((property) => property.bathrooms != null)) {
+    rows.push({
+      label: "Salle(s) de bain",
+      values: properties.map((property) => (property.bathrooms != null ? String(property.bathrooms) : "—")),
+    });
+  }
+
+  return rows;
+}
+
+function buildCompareSummaryText(
+  properties: ToolCompareProperty[],
+  state: ToolConversationState | undefined,
+): { summary: string; recommendedPropertyId?: number } {
+  const prices = properties.map((property) => property.priceAmount).filter((value) => Number.isFinite(value));
+  const surfaces = properties
+    .map((property) => property.surfaceM2)
+    .filter((value): value is number => typeof value === "number" && Number.isFinite(value));
+  const minPrice = prices.length > 0 ? Math.min(...prices) : null;
+  const maxPrice = prices.length > 0 ? Math.max(...prices) : null;
+  const minSurface = surfaces.length > 0 ? Math.min(...surfaces) : null;
+  const maxSurface = surfaces.length > 0 ? Math.max(...surfaces) : null;
+
+  const budget = state?.preferences?.priceMax;
+  const bedroomsMin = state?.preferences?.bedroomsMin;
+  const cityPreference = state?.preferences?.city;
+  let recommendedPropertyId: number | undefined;
+
+  const ranked = [...properties]
+    .map((property) => {
+      let score = 0;
+      if (typeof budget === "number") {
+        score += property.priceAmount <= budget ? 2 : -2;
+        score -= Math.abs(property.priceAmount - budget) / Math.max(1, budget) * 0.5;
+      }
+      if (typeof bedroomsMin === "number") {
+        score += (property.bedrooms ?? 0) >= bedroomsMin ? 1.5 : -1;
+      }
+      if (cityPreference && property.cityName) {
+        const normalizedCity = normalizeText(property.cityName);
+        if (normalizedCity.includes(normalizeText(cityPreference))) score += 1;
+      }
+      if (property.surfaceM2 && property.priceAmount > 0) {
+        score += Math.min(1, property.surfaceM2 / 200);
+      }
+      return { property, score };
+    })
+    .sort((a, b) => b.score - a.score);
+
+  if (ranked.length > 0 && (ranked[0].score > 0.5 || properties.length === 2)) {
+    recommendedPropertyId = ranked[0].property.id;
+  }
+
+  const summaryParts = [`Comparaison de ${properties.length} biens.`];
+  if (minPrice != null && maxPrice != null) {
+    summaryParts.push(`Prix de ${formatPriceValue(minPrice)} à ${formatPriceValue(maxPrice)}.`);
+  }
+  if (minSurface != null && maxSurface != null) {
+    summaryParts.push(`Surface de ${formatMetricValue(minSurface, "m²")} à ${formatMetricValue(maxSurface, "m²")}.`);
+  }
+  if (recommendedPropertyId) {
+    const recommended = properties.find((property) => property.id === recommendedPropertyId);
+    if (recommended) {
+      summaryParts.push(`À première vue, ${recommended.title} semble le plus aligné avec vos critères.`);
+    }
+  }
+
+  return { summary: summaryParts.join(" "), recommendedPropertyId };
+}
+
+function buildNoticeAction(title: string, description: string, code?: string): ToolUiActionNotice {
+  return {
+    id: buildToolActionId("notice"),
+    kind: "notice",
+    title,
+    description,
+    data: { level: "info", code },
+  };
+}
+
+function normalizePropertyIdsFromAction(actionRequest: ToolActionRequest | undefined): number[] {
+  if (!actionRequest?.payload) return [];
+  const raw = actionRequest.payload.propertyIds;
+  if (!Array.isArray(raw)) return [];
+  return uniqueNumberList(raw.map((value) => (typeof value === "number" ? value : Number(value))), 3);
+}
+
+function buildLeadCriteriaFromState(
+  question: string,
+  state: ToolConversationState | undefined,
+  selectedProperties: ToolCompareProperty[] = [],
+): { criteriaMessage: string; propertyId?: number; contextSummary: string } {
+  const recent = state?.recentSearch;
+  const criteriaSummary = recent?.params ? buildCriteriaSummary(recent.params) : undefined;
+  const selectedTitles = selectedProperties.map((property) => property.title).slice(0, 3);
+  const propertyId = selectedProperties[0]?.id ?? state?.leadDraft?.propertyId;
+
+  const parts: string[] = [];
+  if (selectedTitles.length > 0) {
+    parts.push(`Biens suivis: ${selectedTitles.join(" / ")}`);
+  }
+  if (criteriaSummary) {
+    parts.push(`Critères: ${criteriaSummary}`);
+  } else if (state?.leadDraft?.criteriaSummary) {
+    parts.push(`Critères: ${state.leadDraft.criteriaSummary}`);
+  } else {
+    parts.push(`Demande: ${truncateText(question.trim(), 240)}`);
+  }
+
+  return {
+    propertyId,
+    criteriaMessage: parts.join("\n"),
+    contextSummary: criteriaSummary ?? "Demande de contact depuis le chatbot",
+  };
+}
+
+async function orchestrateToolRequest(input: {
+  question: string;
+  actionRequest?: ToolActionRequest;
+  conversationState?: ToolConversationState;
+}): Promise<ToolOrchestrationResult | null> {
+  const toolsEnabled = parseBooleanEnv("CHATBOT_AGENT_TOOLS_ENABLED", false);
+  if (!toolsEnabled) return null;
+
+  const agentMode = detectAgentMode(input.question, input.actionRequest, input.conversationState);
+  if (agentMode !== "tool") return null;
+
+  let supabase: ReturnType<typeof createServiceClient>;
+  try {
+    supabase = createServiceClient();
+  } catch {
+    return null;
+  }
+
+  const toolTrace: ToolTraceItem[] = [];
+  const compareLimit = clamp(Math.floor(parseNumberEnv("CHATBOT_AGENT_TOOLS_COMPARE_LIMIT", 3)), 2, 3);
+
+  const runSearch = async (): Promise<ToolOrchestrationResult> => {
+    const startedAt = Date.now();
+    try {
+      const params = extractSearchParamsFromQuestion(input.question, input.conversationState, input.actionRequest);
+      const result = await executeSearchPropertiesTool(supabase, params);
+      toolTrace.push({
+        tool: "search_properties",
+        status: "ok",
+        latencyMs: Date.now() - startedAt,
+        resultCount: result.items.length,
+      });
+
+      const criteriaSummary = buildCriteriaSummary(result.searchParams);
+      const nextPage = (result.searchParams.page ?? 1) + 1;
+      const actions: ToolUiAction[] = [
+        {
+          id: buildToolActionId("search"),
+          kind: "search_results",
+          title: result.total > 0 ? `${result.total} bien${result.total > 1 ? "s" : ""} trouvés` : "Aucun bien trouvé",
+          description:
+            result.total > 0
+              ? `Voici une sélection correspondant à votre demande (${Math.min(result.items.length, result.total)} affichés).`
+              : "Je peux affiner la recherche avec un budget, une ville ou un type de bien.",
+          data: {
+            criteriaSummary,
+            searchParams: result.searchParams,
+            total: result.total,
+            items: result.items,
+            canCompare: result.items.length >= 2,
+            compareSelectionLimit: compareLimit,
+            nextSuggestedRefinements:
+              result.total > result.items.length
+                ? [`Voir la page ${nextPage}`, "Préciser un budget", "Préciser un quartier"]
+                : ["Préciser un budget", "Changer de ville", "Comparer 2 biens"],
+          },
+        },
+      ];
+
+      if (result.items.length === 0) {
+        actions.push(
+          {
+            id: buildToolActionId("handoff"),
+            kind: "lead_handoff_draft",
+            title: "Préparer une demande à l’agence",
+            description: "Je peux préremplir le formulaire avec vos critères pour qu’un conseiller vous recontacte.",
+            requiresConfirmation: true,
+            data: {
+              draft: {
+                source: "contact_page",
+                criteriaMessage: `Critères: ${criteriaSummary}`,
+              },
+              prefill: {
+                criteria: criteriaSummary,
+              },
+              missingFields: ["firstName", "lastName", "email"],
+              contextSummary: criteriaSummary,
+            },
+          } satisfies ToolUiActionLeadHandoffDraft,
+        );
+      }
+
+      return {
+        answer:
+          result.total > 0
+            ? "J’ai trouvé des biens en direct dans votre base. Vous pouvez ouvrir un bien, sélectionner 2 à 3 biens pour les comparer, ou préparer un contact."
+            : "Je n’ai pas trouvé de bien avec ces critères pour le moment. Je peux élargir la recherche ou préparer une demande à l’agence.",
+        suggestedPrompts:
+          result.total > 0
+            ? ["Comparer la sélection", "Voir plus de résultats", "Préremplir le formulaire de contact"]
+            : ["Élargir le budget", "Changer de ville", "Je veux être rappelé"],
+        actions,
+        conversationStatePatch: {
+          recentSearch: {
+            params: result.searchParams,
+            resultIds: result.items.map((item) => item.id).slice(0, 20),
+            total: result.total,
+            generatedAt: new Date().toISOString(),
+          },
+          recentPropertyIds: uniqueNumberList(
+            [...result.items.map((item) => item.id), ...(input.conversationState?.recentPropertyIds ?? [])],
+            20,
+          ),
+          preferences: {
+            ...input.conversationState?.preferences,
+            transaction: result.searchParams.transaction ?? input.conversationState?.preferences?.transaction,
+            type: result.searchParams.type ?? input.conversationState?.preferences?.type,
+            city: result.searchParams.city ?? input.conversationState?.preferences?.city,
+            bedroomsMin:
+              result.searchParams.bedroomsMin ?? input.conversationState?.preferences?.bedroomsMin,
+            priceMin: result.searchParams.priceMin ?? input.conversationState?.preferences?.priceMin,
+            priceMax: result.searchParams.priceMax ?? input.conversationState?.preferences?.priceMax,
+          },
+        },
+        toolTrace,
+        agentMode: "tool",
+      };
+    } catch {
+      toolTrace.push({
+        tool: "search_properties",
+        status: "error",
+        latencyMs: Date.now() - startedAt,
+        errorCode: "search_failed",
+      });
+      return {
+        answer: "Je n’ai pas pu interroger les biens en direct pour le moment. Je peux quand même vous aider à reformuler votre recherche.",
+        suggestedPrompts: ["Je cherche un appartement au Havre", "Préciser budget et chambres", "Je veux être rappelé"],
+        actions: [buildNoticeAction("Recherche indisponible", "La recherche live est temporairement indisponible.", "search_failed")],
+        toolTrace,
+        agentMode: "tool",
+      };
+    }
+  };
+
+  const runCompare = async (propertyIds: number[]): Promise<ToolOrchestrationResult> => {
+    const normalizedIds = uniqueNumberList(propertyIds, compareLimit);
+    if (normalizedIds.length < 2) {
+      return {
+        answer: "Sélectionnez au moins 2 biens pour lancer la comparaison.",
+        suggestedPrompts: ["Comparer la sélection", "Montrer plus de biens", "Je veux être conseillé"],
+        actions: [buildNoticeAction("Comparaison", "Sélectionnez 2 à 3 biens dans la liste avant de comparer.", "compare_min_2")],
+        toolTrace,
+        agentMode: "tool",
+      };
+    }
+
+    const startedAt = Date.now();
+    try {
+      const properties = await executeGetPropertiesTool(supabase, normalizedIds);
+      toolTrace.push({
+        tool: "get_properties",
+        status: "ok",
+        latencyMs: Date.now() - startedAt,
+        resultCount: properties.length,
+      });
+      toolTrace.push({
+        tool: "compare_properties",
+        status: properties.length >= 2 ? "ok" : "error",
+        latencyMs: 0,
+        resultCount: properties.length,
+        errorCode: properties.length >= 2 ? undefined : "compare_not_enough_found",
+      });
+
+      if (properties.length < 2) {
+        return {
+          answer: "Je n’ai pas retrouvé suffisamment de biens pour comparer la sélection.",
+          suggestedPrompts: ["Relancer la recherche", "Comparer une autre sélection"],
+          actions: [buildNoticeAction("Comparaison impossible", "Au moins 2 biens valides sont nécessaires.", "compare_not_found")],
+          toolTrace,
+          agentMode: "tool",
+        };
+      }
+
+      const { summary, recommendedPropertyId } = buildCompareSummaryText(properties, input.conversationState);
+      const comparisonRows = buildCompareRows(properties);
+      const action: ToolUiActionCompareSummary = {
+        id: buildToolActionId("compare"),
+        kind: "compare_summary",
+        title: `Comparaison (${properties.length} biens)`,
+        description: "Résumé comparatif basé sur les données des annonces.",
+        data: {
+          propertyIds: properties.map((property) => property.id),
+          properties,
+          comparisonRows,
+          summary,
+          recommendedPropertyId,
+          nextActions: ["open_property", "prefill_handoff"],
+        },
+      };
+
+      return {
+        answer: summary,
+        suggestedPrompts: ["Ouvrir le bien recommandé", "Préremplir le formulaire de contact", "Voir plus de résultats"],
+        actions: [action],
+        conversationStatePatch: {
+          selectedPropertyIds: properties.map((property) => property.id).slice(0, compareLimit),
+          recentPropertyIds: uniqueNumberList(
+            [...properties.map((property) => property.id), ...(input.conversationState?.recentPropertyIds ?? [])],
+            20,
+          ),
+        },
+        toolTrace,
+        agentMode: "tool",
+      };
+    } catch {
+      toolTrace.push({
+        tool: "get_properties",
+        status: "error",
+        latencyMs: Date.now() - startedAt,
+        errorCode: "compare_fetch_failed",
+      });
+      return {
+        answer: "Je n’ai pas pu récupérer les annonces pour la comparaison.",
+        suggestedPrompts: ["Relancer la recherche", "Réessayer la comparaison"],
+        actions: [buildNoticeAction("Comparaison indisponible", "La récupération des biens a échoué.", "compare_fetch_failed")],
+        toolTrace,
+        agentMode: "tool",
+      };
+    }
+  };
+
+  const runPrepareHandoff = async (propertyIds?: number[]): Promise<ToolOrchestrationResult> => {
+    const selectedIds = uniqueNumberList(
+      [
+        ...(propertyIds ?? []),
+        ...normalizePropertyIdsFromAction(input.actionRequest),
+        ...(input.conversationState?.selectedPropertyIds ?? []),
+      ],
+      compareLimit,
+    );
+    let selectedProperties: ToolCompareProperty[] = [];
+    if (selectedIds.length > 0) {
+      const startedAt = Date.now();
+      try {
+        selectedProperties = await executeGetPropertiesTool(supabase, selectedIds);
+        toolTrace.push({
+          tool: "get_properties",
+          status: "ok",
+          latencyMs: Date.now() - startedAt,
+          resultCount: selectedProperties.length,
+        });
+      } catch {
+        toolTrace.push({
+          tool: "get_properties",
+          status: "error",
+          latencyMs: Date.now() - startedAt,
+          errorCode: "handoff_property_fetch_failed",
+        });
+      }
+    }
+
+    const startedAt = Date.now();
+    const lead = buildLeadCriteriaFromState(input.question, input.conversationState, selectedProperties);
+    toolTrace.push({
+      tool: "prepare_handoff",
+      status: "ok",
+      latencyMs: Date.now() - startedAt,
+      resultCount: selectedProperties.length,
+    });
+
+    const action: ToolUiActionLeadHandoffDraft = {
+      id: buildToolActionId("lead"),
+      kind: "lead_handoff_draft",
+      title: "Préremplir le formulaire de contact",
+      description: "Je prépare vos critères pour un conseiller. Vous gardez la validation finale.",
+      requiresConfirmation: true,
+      data: {
+        draft: {
+          source: "contact_page",
+          propertyId: lead.propertyId,
+          criteriaMessage: lead.criteriaMessage,
+        },
+        prefill: {
+          criteria: lead.criteriaMessage,
+        },
+        missingFields: ["firstName", "lastName", "email"],
+        contextSummary: lead.contextSummary,
+      },
+    };
+
+    return {
+      answer:
+        "Je peux préremplir le formulaire avec votre sélection et vos critères. Vérifiez les informations puis envoyez la demande quand vous êtes prêt.",
+      suggestedPrompts: ["Préremplir le formulaire", "Ajouter un budget", "Comparer d’autres biens"],
+      actions: [action],
+      conversationStatePatch: {
+        leadDraft: {
+          propertyId: lead.propertyId,
+          citySlug: input.conversationState?.preferences?.city,
+          criteriaSummary: lead.contextSummary,
+        },
+      },
+      toolTrace,
+      agentMode: "tool",
+    };
+  };
+
+  if (input.actionRequest) {
+    switch (input.actionRequest.type) {
+      case "compare_selected_properties": {
+        const ids = normalizePropertyIdsFromAction(input.actionRequest);
+        return await runCompare(ids);
+      }
+      case "prepare_handoff":
+      case "prefill_lead_form":
+        return await runPrepareHandoff();
+      case "search_refine":
+        return await runSearch();
+      case "open_path_confirmed": {
+        const rawPath = typeof input.actionRequest.payload?.path === "string" ? input.actionRequest.payload.path.trim() : "";
+        const safePath = /^\/[a-z0-9/_-]+(?:\?[a-z0-9=&_-]+)?$/i.test(rawPath) ? rawPath : null;
+        if (!safePath) {
+          return {
+            answer: "Je n’ai pas reçu de lien interne valide à ouvrir.",
+            suggestedPrompts: ["Ouvrir /biens", "Ouvrir /contact"],
+            actions: [buildNoticeAction("Lien invalide", "Le lien demandé n’est pas valide.", "open_path_invalid")],
+            toolTrace,
+            agentMode: "tool",
+          };
+        }
+        return {
+          answer: `Lien prêt: ${safePath}. Cliquez sur le bouton pour ouvrir la page.`,
+          suggestedPrompts: ["Ouvrir la page", "Revenir aux résultats"],
+          actions: [
+            {
+              id: buildToolActionId("open"),
+              kind: "open_page",
+              title: "Ouvrir la page",
+              requiresConfirmation: true,
+              data: {
+                path: safePath,
+                label: safePath,
+                reason: "navigation_confirmee",
+              },
+            } satisfies ToolUiActionOpenPage,
+          ],
+          toolTrace,
+          agentMode: "tool",
+        };
+      }
+    }
+  }
+
+  if (isLikelyCompareQuestion(input.question) && (input.conversationState?.selectedPropertyIds?.length ?? 0) >= 2) {
+    return await runCompare(input.conversationState?.selectedPropertyIds ?? []);
+  }
+
+  if (isLikelyHandoffQuestion(input.question) && (input.conversationState?.recentSearch || input.conversationState?.selectedPropertyIds?.length)) {
+    return await runPrepareHandoff();
+  }
+
+  if (isLikelyPropertyToolQuestion(input.question)) {
+    return await runSearch();
+  }
+
+  return null;
+}
+
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -575,15 +1919,51 @@ Deno.serve(async (request) => {
   try {
     const rawPayload = await request.json();
     const payload = payloadSchema.parse(rawPayload);
-    if (!resolveGenerationProvider()) {
-      return jsonResponse({ source: "fallback", ...buildFallback(payload.question) });
+    const requestId = createRequestId();
+
+    let toolResult: ToolOrchestrationResult | null = null;
+    try {
+      toolResult = await orchestrateToolRequest({
+        question: payload.question,
+        actionRequest: payload.actionRequest as ToolActionRequest | undefined,
+        conversationState: payload.conversationState as ToolConversationState | undefined,
+      });
+    } catch {
+      toolResult = null;
     }
 
-    let ragContext: RAGContextResult = { contextBlock: null, citations: [] };
+    if (toolResult) {
+      return jsonResponse({
+        source: "fallback",
+        edgeProvider: "fallback",
+        retrievalMode: "none",
+        requestId,
+        ragUsed: false,
+        agentMode: toolResult.agentMode,
+        answer: toolResult.answer,
+        suggestedPrompts: toolResult.suggestedPrompts,
+        actions: toolResult.actions,
+        conversationStatePatch: toolResult.conversationStatePatch,
+        toolTrace: toolResult.toolTrace,
+      });
+    }
+
+    if (!resolveGenerationProvider()) {
+      return jsonResponse({
+        source: "fallback",
+        edgeProvider: "fallback",
+        retrievalMode: "none",
+        requestId,
+        agentMode: "fallback",
+        ...buildFallback(payload.question),
+      });
+    }
+
+    let ragContext: RAGContextResult = { contextBlock: null, citations: [], retrievalMode: "none" };
     try {
       ragContext = await retrieveWebsiteContext(payload.question);
     } catch {
-      ragContext = { contextBlock: null, citations: [] };
+      ragContext = { contextBlock: null, citations: [], retrievalMode: "none" };
     }
 
     const normalizedHistory = normalizeHistoryForModel(payload.chatHistory, payload.question);
@@ -591,12 +1971,20 @@ Deno.serve(async (request) => {
 
     if (!generationResult) {
       const fallback = buildFallback(payload.question);
-      return jsonResponse({ source: "fallback", ...fallback });
+      return jsonResponse({
+        source: "fallback",
+        edgeProvider: "fallback",
+        retrievalMode: ragContext.retrievalMode,
+        requestId,
+        agentMode: "fallback",
+        ...fallback,
+      });
     }
     const citationPrompts = buildSuggestedPromptsFromCitations(ragContext.citations);
 
     return jsonResponse({
       source: generationResult.provider,
+      edgeProvider: generationResult.provider,
       answer: generationResult.answer,
       suggestedPrompts:
         citationPrompts.length > 0
@@ -612,6 +2000,9 @@ Deno.serve(async (request) => {
             ],
       citations: ragContext.citations,
       ragUsed: Boolean(ragContext.contextBlock),
+      retrievalMode: ragContext.retrievalMode,
+      agentMode: "rag",
+      requestId,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Internal error";

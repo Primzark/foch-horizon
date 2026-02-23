@@ -4,12 +4,15 @@ This folder contains Phase 1 backend scaffolding:
 
 - `migrations/20260216_phase1_schema.sql`: PostgreSQL schema + RLS policies.
 - `migrations/20260223_chatbot_rag.sql`: `pgvector`-backed content chunks + `match_chatbot_content_chunks(...)` RPC for chatbot RAG.
+- `migrations/20260225_chatbot_rag_hybrid_retrieval.sql`: keyword/FTS RPC `match_chatbot_content_chunks_keyword(...)` for hybrid retrieval + reranking.
+- `migrations/20260224_chatbot_quality_events.sql`: chatbot telemetry/feedback events table + dashboard views.
 - `functions/properties-search`: `GET /api/properties` contract.
 - `functions/property-detail`: `GET /api/properties/:id` contract.
 - `functions/cities-list`: `GET /api/cities` contract.
 - `functions/city-detail`: `GET /api/cities/:slug` contract.
 - `functions/city-properties`: `GET /api/cities/:slug/properties` contract.
 - `functions/leads-create`: `POST /api/leads` contract.
+- `functions/chatbot-feedback`: `POST /api/chatbot-feedback` telemetry/feedback batch ingest for chatbot QA dashboards.
 - `workers/provider-sync.ts`: scheduled feed sync worker (remote/local JSON feed -> cities/properties/images/features upsert + reconciliation).
 
 ## Security notes
@@ -21,6 +24,7 @@ This folder contains Phase 1 backend scaffolding:
 - Bind each function to your routing layer in Lovable/Supabase edge deploy config.
 - Configure secrets: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
 - Chatbot RAG edge function expects either `GEMINI_API_KEY` or `OPENAI_API_KEY` (Gemini is now the preferred provider).
+- Chatbot telemetry ingest (`chatbot-feedback`) requires `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`.
 
 ## Chatbot RAG indexing (website content)
 
@@ -54,6 +58,30 @@ npm run chatbot:index:site
 - `RAG_EMBEDDING_PROVIDER` (`gemini` or `openai`) for embeddings
 - `GEMINI_EMBEDDING_MODEL` (default `gemini-embedding-001`)
 - `OPENAI_EMBEDDING_MODEL` (default `text-embedding-3-small`)
+
+### Chatbot RAG runtime tuning (edge function)
+
+- `CHATBOT_RAG_HYBRID_ENABLED=true` (enable vector + keyword hybrid retrieval)
+- `CHATBOT_RAG_VECTOR_MATCH_COUNT=10` (vector candidate pool before rerank)
+- `CHATBOT_RAG_KEYWORD_MATCH_COUNT=12` (keyword candidate pool before rerank)
+- `CHATBOT_RAG_RERANK_TOP_N=8` (final reranked candidate pool)
+- `CHATBOT_RAG_CONTEXT_TOP_N=5` (top chunks used in prompt context)
+- `CHATBOT_RAG_HYBRID_VECTOR_WEIGHT=0.55`
+- `CHATBOT_RAG_HYBRID_KEYWORD_WEIGHT=0.30`
+- `CHATBOT_RAG_MATCH_THRESHOLD=0.70`
+- `CHATBOT_RAG_MAX_CONTEXT_CHARS=5200`
+
+### Frontend chatbot routing flags
+
+- `VITE_CHATBOT_ENABLE_EDGE_RAG=true` to route site-content questions to the edge chatbot
+- `VITE_CHATBOT_ROUTER_V2=true` to enable deterministic-first Router V2 (local for listing/process flows, edge for site content/unknown)
+- `VITE_CHATBOT_ENABLE_EDGE_AGENT_TOOLS=true` to route property search/compare/handoff flows to the edge tool assistant (Phase 1 tools)
+
+### Chatbot tool-assistant runtime flags (edge function)
+
+- `CHATBOT_AGENT_TOOLS_ENABLED=false` (default off; enable to activate live search/compare/handoff action cards)
+- `CHATBOT_AGENT_TOOLS_MAX_RESULTS=5` (search results returned per tool response)
+- `CHATBOT_AGENT_TOOLS_COMPARE_LIMIT=3` (max properties in compare flow)
 
 ### Automated re-index (GitHub Actions)
 
