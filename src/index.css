@@ -225,6 +225,13 @@
     --paper-grain-opacity: 0.065;
   }
 
+  @media (max-width: 767px) {
+    .paper-grain::before {
+      /* Soften texture density on small screens without changing per-section classes. */
+      opacity: clamp(0, calc(var(--paper-grain-opacity, 0.045) - var(--paper-grain-mobile-reduction, 0.01)), 1);
+    }
+  }
+
   .font-display {
     font-family: var(--font-display);
   }
