@@ -1,6 +1,8 @@
 -- Chatbot RAG content index (website pages + future sources)
 -- Generated on 2026-02-23
 
+set local search_path = public, extensions;
+
 create extension if not exists vector;
 
 create table if not exists chatbot_content_chunks (
@@ -29,7 +31,7 @@ create index if not exists idx_chatbot_content_chunks_path
 create index if not exists idx_chatbot_content_chunks_source_kind
   on chatbot_content_chunks(source_kind);
 create index if not exists idx_chatbot_content_chunks_embedding_cosine
-  on chatbot_content_chunks using ivfflat (embedding vector_cosine_ops)
+  on chatbot_content_chunks using ivfflat (embedding extensions.vector_cosine_ops)
   with (lists = 20);
 
 alter table chatbot_content_chunks enable row level security;
@@ -82,4 +84,3 @@ as $$
   order by chunk.embedding <=> query_params.embedding
   limit greatest(coalesce(match_count, 6), 1);
 $$;
-
