@@ -249,7 +249,68 @@ interface ToolOrchestrationResult {
   conversationStatePatch?: Partial<ToolConversationState>;
   toolTrace: ToolTraceItem[];
   agentMode: AgentMode;
+  planner?: PlannerMeta;
 }
+
+type PlannerToolName = "search_properties" | "compare_properties" | "prepare_handoff";
+type PlannerDecisionType = "tool_call" | "clarify" | "none";
+type PlannerMode = "disabled" | "gemini" | "deterministic_fallback";
+
+interface PlannerMeta {
+  provider: "gemini" | "fallback";
+  mode: PlannerMode;
+  decisionType: PlannerDecisionType;
+  toolName?: PlannerToolName;
+  reasonCode?: string;
+  confidence?: number;
+}
+
+interface PlannerClarification {
+  question: string;
+  missingFields?: Array<"transaction" | "city" | "budget" | "type" | "bedrooms">;
+  options?: string[];
+}
+
+type PlannerToolArgs =
+  | ({ tool: "search_properties"; args: ToolSearchParams })
+  | ({ tool: "compare_properties"; args?: { propertyIds?: number[] } })
+  | ({ tool: "prepare_handoff"; args?: { propertyIds?: number[] } });
+
+type PlannerDecision =
+  | {
+      version: 1;
+      decisionType: "tool_call";
+      confidence?: number;
+      reasonCode?: string;
+      toolCall: PlannerToolArgs;
+    }
+  | {
+      version: 1;
+      decisionType: "clarify";
+      confidence?: number;
+      reasonCode?: string;
+      clarification: PlannerClarification;
+    };
+
+const plannerRawToolCallSchema = z.object({
+  tool: z.string().min(1),
+  args: z.unknown().optional(),
+});
+
+const plannerRawClarificationSchema = z.object({
+  question: z.string().min(1),
+  missingFields: z.array(z.string()).optional(),
+  options: z.array(z.string()).optional(),
+});
+
+const plannerRawDecisionSchema = z.object({
+  version: z.number().optional(),
+  decisionType: z.string().min(1),
+  confidence: z.number().optional(),
+  reasonCode: z.string().optional(),
+  toolCall: plannerRawToolCallSchema.optional(),
+  clarification: plannerRawClarificationSchema.optional(),
+});
 
 interface RAGMatchRow {
   id?: string;
@@ -960,6 +1021,505 @@ async function generateAssistantAnswer(
   };
 }
 
+interface GeminiPlannerConfig {
+  apiKey: string;
+  model: string;
+  timeoutMs: number;
+  includeHistoryTurns: number;
+  maxQuestionChars: number;
+  temperature: number;
+}
+
+function resolveGeminiPlannerConfig(): GeminiPlannerConfig | null {
+  const enabled = parseBooleanEnv("CHATBOT_GEMINI_PLANNER_ENABLED", false);
+  if (!enabled) return null;
+
+  const apiKey = (Deno.env.get("GEMINI_API_KEY") ?? "").trim();
+  if (!apiKey) return null;
+
+  const model = (Deno.env.get("CHATBOT_GEMINI_PLANNER_MODEL") ?? "gemini-2.5-flash-lite").trim() || "gemini-2.5-flash-lite";
+  return {
+    apiKey,
+    model,
+    timeoutMs: clamp(Math.floor(parseNumberEnv("CHATBOT_GEMINI_PLANNER_TIMEOUT_MS", 1800)), 600, 10_000),
+    includeHistoryTurns: clamp(Math.floor(parseNumberEnv("CHATBOT_GEMINI_PLANNER_INCLUDE_HISTORY_TURNS", 4)), 0, 6),
+    maxQuestionChars: clamp(Math.floor(parseNumberEnv("CHATBOT_GEMINI_PLANNER_MAX_QUESTION_CHARS", 700)), 80, 1200),
+    temperature: clamp(parseNumberEnv("CHATBOT_GEMINI_PLANNER_TEMPERATURE", 0), 0, 1),
+  };
+}
+
+function stripJsonFence(text: string): string {
+  const trimmed = text.trim();
+  const fencedMatch = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
+  if (fencedMatch) {
+    return fencedMatch[1].trim();
+  }
+  return trimmed;
+}
+
+function parsePlannerNumber(value: unknown, min: number, max: number): number | undefined {
+  const parsed = typeof value === "number" ? value : typeof value === "string" ? Number(value) : NaN;
+  if (!Number.isFinite(parsed)) return undefined;
+  return clamp(Math.floor(parsed), min, max);
+}
+
+function sanitizePlannerSearchArgs(rawArgs: unknown): ToolSearchParams {
+  if (!rawArgs || typeof rawArgs !== "object") return {};
+  const candidate = rawArgs as Record<string, unknown>;
+  const parsed: ToolSearchParams = {};
+
+  if (candidate.transaction === "vente" || candidate.transaction === "location") {
+    parsed.transaction = candidate.transaction;
+  }
+  if (candidate.type === "appartement" || candidate.type === "maison_villa" || candidate.type === "autre") {
+    parsed.type = candidate.type;
+  }
+  if (typeof candidate.city === "string" && candidate.city.trim().length > 0) {
+    parsed.city = candidate.city.trim().slice(0, 80);
+  }
+  if (typeof candidate.q === "string" && candidate.q.trim().length > 0) {
+    parsed.q = candidate.q.trim().slice(0, 120);
+  }
+
+  const bedroomsMin = parsePlannerNumber(candidate.bedroomsMin, 0, 12);
+  if (typeof bedroomsMin === "number") parsed.bedroomsMin = bedroomsMin;
+  const priceMin = parsePlannerNumber(candidate.priceMin, 0, 50_000_000);
+  if (typeof priceMin === "number") parsed.priceMin = priceMin;
+  const priceMax = parsePlannerNumber(candidate.priceMax, 0, 50_000_000);
+  if (typeof priceMax === "number") parsed.priceMax = priceMax;
+  const page = parsePlannerNumber(candidate.page, 1, 100);
+  if (typeof page === "number") parsed.page = page;
+  const pageSize = parsePlannerNumber(candidate.pageSize, 1, 10);
+  if (typeof pageSize === "number") parsed.pageSize = pageSize;
+
+  if (parsed.priceMin != null && parsed.priceMax != null && parsed.priceMin > parsed.priceMax) {
+    [parsed.priceMin, parsed.priceMax] = [parsed.priceMax, parsed.priceMin];
+  }
+
+  return parsed;
+}
+
+function normalizePlannerRawInput(raw: unknown): unknown {
+  if (!raw || typeof raw !== "object") return raw;
+  const source = raw as Record<string, unknown>;
+  const root =
+    source.decision && typeof source.decision === "object" && !Array.isArray(source.decision)
+      ? (source.decision as Record<string, unknown>)
+      : source;
+
+  const maybeParseJsonString = (value: unknown): unknown => {
+    if (typeof value !== "string") return value;
+    const trimmed = value.trim();
+    if (!(trimmed.startsWith("{") || trimmed.startsWith("["))) return value;
+    try {
+      return JSON.parse(trimmed);
+    } catch {
+      return value;
+    }
+  };
+
+  const toolCallSource =
+    (root.toolCall && typeof root.toolCall === "object" && !Array.isArray(root.toolCall)
+      ? root.toolCall
+      : root.tool_call && typeof root.tool_call === "object" && !Array.isArray(root.tool_call)
+        ? root.tool_call
+        : null) as Record<string, unknown> | null;
+  const toolFunctionSource =
+    (toolCallSource?.function && typeof toolCallSource.function === "object" && !Array.isArray(toolCallSource.function)
+      ? (toolCallSource.function as Record<string, unknown>)
+      : null);
+  const rootToolCallSource =
+    (!toolCallSource &&
+      (typeof root.tool === "string" ||
+        typeof root.name === "string" ||
+        typeof root.toolName === "string" ||
+        typeof root.tool_name === "string"))
+      ? root
+      : null;
+
+  const clarificationSource =
+    (root.clarification && typeof root.clarification === "object" && !Array.isArray(root.clarification)
+      ? root.clarification
+      : root.clarify && typeof root.clarify === "object" && !Array.isArray(root.clarify)
+        ? root.clarify
+        : null) as Record<string, unknown> | null;
+
+  const normalizeDecisionType = (value: unknown): string | undefined => {
+    if (typeof value !== "string") return undefined;
+    const v = value.trim().toLowerCase();
+    if (v === "tool_call" || v === "toolcall" || v === "tool" || v === "call_tool") return "tool_call";
+    if (v === "clarify" || v === "clarification" || v === "ask_clarification" || v === "question") return "clarify";
+    return value;
+  };
+  const normalizeToolName = (value: unknown): string | undefined => {
+    if (typeof value !== "string") return undefined;
+    const v = value.trim().toLowerCase();
+    if (v === "search_properties" || v === "search" || v === "property_search") return "search_properties";
+    if (v === "compare_properties" || v === "compare" || v === "comparison") return "compare_properties";
+    if (v === "prepare_handoff" || v === "handoff" || v === "contact" || v === "prepare_contact") return "prepare_handoff";
+    return value;
+  };
+
+  const normalized: Record<string, unknown> = {
+    version: root.version === 1 ? 1 : 1,
+    decisionType: normalizeDecisionType(root.decisionType ?? root.decision_type ?? root.type),
+    confidence:
+      typeof root.confidence === "number"
+        ? root.confidence
+        : typeof root.confidence === "string"
+          ? Number(root.confidence)
+          : undefined,
+    reasonCode: root.reasonCode ?? root.reason_code,
+  };
+
+  if (toolCallSource) {
+    normalized.toolCall = {
+      tool: normalizeToolName(
+        toolFunctionSource?.name ??
+          toolCallSource.tool ??
+          toolCallSource.name ??
+          toolCallSource.toolName ??
+          toolCallSource.tool_name,
+      ),
+      args: maybeParseJsonString(
+        toolFunctionSource?.args ??
+          toolFunctionSource?.arguments ??
+          toolCallSource.args ??
+          toolCallSource.arguments ??
+          toolCallSource.parameters,
+      ),
+    };
+  } else if (rootToolCallSource) {
+    normalized.toolCall = {
+      tool: normalizeToolName(
+        rootToolCallSource.tool ??
+          rootToolCallSource.name ??
+          rootToolCallSource.toolName ??
+          rootToolCallSource.tool_name,
+      ),
+      args: maybeParseJsonString(rootToolCallSource.args ?? rootToolCallSource.arguments ?? rootToolCallSource.parameters),
+    };
+  }
+
+  if (clarificationSource) {
+    normalized.clarification = {
+      question:
+        clarificationSource.question ??
+        clarificationSource.prompt ??
+        clarificationSource.message,
+      missingFields:
+        clarificationSource.missingFields ??
+        clarificationSource.missing_fields,
+      options:
+        clarificationSource.options ??
+        clarificationSource.suggestions ??
+        clarificationSource.choices,
+    };
+  }
+
+  if (!normalized.decisionType) {
+    if (normalized.toolCall) normalized.decisionType = "tool_call";
+    else if (normalized.clarification) normalized.decisionType = "clarify";
+  }
+
+  return normalized;
+}
+
+function sanitizePlannerDecision(raw: unknown): PlannerDecision | null {
+  const parsed = plannerRawDecisionSchema.safeParse(normalizePlannerRawInput(raw));
+  if (!parsed.success) return null;
+
+  const candidate = parsed.data;
+  const decisionType = String(candidate.decisionType).trim().toLowerCase();
+  if (decisionType !== "tool_call" && decisionType !== "clarify") return null;
+  const confidence = typeof candidate.confidence === "number" ? clamp01(candidate.confidence) : undefined;
+  const reasonCode = typeof candidate.reasonCode === "string" ? candidate.reasonCode.trim().slice(0, 80) : undefined;
+
+  if (decisionType === "clarify") {
+    if (!candidate.clarification) return null;
+    const missingFields = Array.isArray(candidate.clarification.missingFields)
+      ? candidate.clarification.missingFields
+          .map((field) => String(field).trim().toLowerCase())
+          .map((field) => {
+            if (field === "transaction" || field === "city" || field === "budget" || field === "type" || field === "bedrooms") return field;
+            if (field === "price" || field === "price_max" || field === "budgetmax") return "budget";
+            if (field === "bedroom" || field === "rooms" || field === "chambres") return "bedrooms";
+            return null;
+          })
+          .filter(
+            (field): field is "transaction" | "city" | "budget" | "type" | "bedrooms" => field != null,
+          )
+          .slice(0, 5)
+      : undefined;
+    return {
+      version: 1,
+      decisionType: "clarify",
+      confidence,
+      reasonCode,
+      clarification: {
+        question: candidate.clarification.question.trim().slice(0, 280),
+        missingFields,
+        options: candidate.clarification.options?.map((option) => option.trim().slice(0, 120)).filter(Boolean).slice(0, 4),
+      },
+    };
+  }
+
+  if (!candidate.toolCall) return null;
+  const tool = String(candidate.toolCall.tool).trim();
+
+  if (tool === "search_properties") {
+    return {
+      version: 1,
+      decisionType: "tool_call",
+      confidence,
+      reasonCode,
+      toolCall: {
+        tool,
+        args: sanitizePlannerSearchArgs(candidate.toolCall.args),
+      },
+    };
+  }
+
+  if (tool === "compare_properties") {
+    const propertyIds = uniqueNumberList(
+      Array.isArray((candidate.toolCall.args as { propertyIds?: unknown[] } | undefined)?.propertyIds)
+        ? ((candidate.toolCall.args as { propertyIds?: unknown[] }).propertyIds ?? []).map((value) =>
+            typeof value === "number" ? value : Number(value)
+          )
+        : [],
+      3,
+    );
+    return {
+      version: 1,
+      decisionType: "tool_call",
+      confidence,
+      reasonCode,
+      toolCall: {
+        tool,
+        args: propertyIds.length > 0 ? { propertyIds } : {},
+      },
+    };
+  }
+
+  if (tool === "prepare_handoff") {
+    const propertyIds = uniqueNumberList(
+      Array.isArray((candidate.toolCall.args as { propertyIds?: unknown[] } | undefined)?.propertyIds)
+        ? ((candidate.toolCall.args as { propertyIds?: unknown[] }).propertyIds ?? []).map((value) =>
+            typeof value === "number" ? value : Number(value)
+          )
+        : [],
+      3,
+    );
+    return {
+      version: 1,
+      decisionType: "tool_call",
+      confidence,
+      reasonCode,
+      toolCall: {
+        tool,
+        args: propertyIds.length > 0 ? { propertyIds } : {},
+      },
+    };
+  }
+
+  return null;
+}
+
+function plannerDecisionToActionRequest(decision: Extract<PlannerDecision, { decisionType: "tool_call" }>): ToolActionRequest | null {
+  const toolCall = decision.toolCall;
+  if (toolCall.tool === "search_properties") {
+    return {
+      type: "search_refine",
+      payload: {
+        searchParams: toolCall.args ?? {},
+      },
+    };
+  }
+
+  if (toolCall.tool === "compare_properties") {
+    return {
+      type: "compare_selected_properties",
+      payload: toolCall.args?.propertyIds?.length ? { propertyIds: toolCall.args.propertyIds } : {},
+    };
+  }
+
+  if (toolCall.tool === "prepare_handoff") {
+    return {
+      type: "prepare_handoff",
+      payload: toolCall.args?.propertyIds?.length ? { propertyIds: toolCall.args.propertyIds } : {},
+    };
+  }
+
+  return null;
+}
+
+function buildGeminiPlannerPrompt(input: {
+  question: string;
+  chatHistory?: Array<{ role: "user" | "assistant"; content: string }>;
+  conversationState?: ToolConversationState;
+  includeHistoryTurns: number;
+  maxQuestionChars: number;
+}) {
+  const normalizedHistory = normalizeHistoryForModel(input.chatHistory, input.question)
+    .slice(-input.includeHistoryTurns)
+    .map((turn) => ({
+      role: turn.role,
+      content: truncateText(turn.content.trim(), 300),
+    }));
+
+  const stateSummary = input.conversationState
+    ? {
+        selectedPropertyIds: (input.conversationState.selectedPropertyIds ?? []).slice(0, 3),
+        recentPropertyIds: (input.conversationState.recentPropertyIds ?? []).slice(0, 10),
+        recentSearch: input.conversationState.recentSearch
+          ? {
+              params: input.conversationState.recentSearch.params ?? {},
+              total: input.conversationState.recentSearch.total,
+              resultIds: input.conversationState.recentSearch.resultIds.slice(0, 10),
+            }
+          : undefined,
+        preferences: input.conversationState.preferences ?? undefined,
+        leadDraft: input.conversationState.leadDraft
+          ? {
+              propertyId: input.conversationState.leadDraft.propertyId,
+              citySlug: input.conversationState.leadDraft.citySlug,
+              criteriaSummary: truncateText(input.conversationState.leadDraft.criteriaSummary ?? "", 240),
+            }
+          : undefined,
+      }
+    : undefined;
+
+  const promptPayload = {
+    question: truncateText(input.question.trim(), input.maxQuestionChars),
+    recentHistory: normalizedHistory,
+    conversationState: stateSummary,
+    heuristics: {
+      likelyCompare: isLikelyCompareQuestion(input.question),
+      likelyHandoff: isLikelyHandoffQuestion(input.question),
+      likelyPropertySearch: isLikelyPropertyToolQuestion(input.question),
+    },
+    allowedTools: {
+      search_properties: {
+        args: {
+          transaction: ["vente", "location"],
+          type: ["appartement", "maison_villa", "autre"],
+          city: "slug ville ex: le-havre",
+          bedroomsMin: "number",
+          priceMin: "number",
+          priceMax: "number",
+          q: "string",
+          page: "number",
+          pageSize: "number <= 10",
+        },
+      },
+      compare_properties: {
+        args: {
+          propertyIds: "optional number[] (2-3 ids if known)",
+        },
+      },
+      prepare_handoff: {
+        args: {
+          propertyIds: "optional number[] (focused properties)",
+        },
+      },
+    },
+  };
+
+  const systemInstruction = [
+    "You are a strict property-tool planner for a French real-estate chatbot (Foch Immobilier, Le Havre).",
+    "You are planning only for PROPERTY flows (search / compare / handoff).",
+    "Return JSON only. No markdown. No prose outside JSON.",
+    "Allowed decision types: tool_call or clarify.",
+    "Choose at most one tool call.",
+    "If request is vague or key criteria are missing, ask ONE clarification question instead of guessing.",
+    "Never produce side effects. Never claim a tool result.",
+    "Prefer clarify for ambiguous investment requests without city or transaction.",
+    "Use French for clarification.question and options.",
+    "Use exact tool names: search_properties, compare_properties, prepare_handoff.",
+    "For compare, use compare_properties only when the user clearly asks to compare or a selection exists.",
+    "Output schema version must be 1.",
+  ].join(" ");
+
+  return {
+    systemInstruction,
+    userPrompt: JSON.stringify(promptPayload),
+  };
+}
+
+async function generateGeminiPlannerDecision(
+  config: GeminiPlannerConfig,
+  input: {
+    question: string;
+    chatHistory?: Array<{ role: "user" | "assistant"; content: string }>;
+    conversationState?: ToolConversationState;
+  },
+): Promise<{ decision: PlannerDecision | null; failureCode?: string }> {
+  const prompt = buildGeminiPlannerPrompt({
+    question: input.question,
+    chatHistory: input.chatHistory,
+    conversationState: input.conversationState,
+    includeHistoryTurns: config.includeHistoryTurns,
+    maxQuestionChars: config.maxQuestionChars,
+  });
+
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${config.model}:generateContent`;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), config.timeoutMs);
+
+  try {
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": config.apiKey,
+      },
+      signal: controller.signal,
+      body: JSON.stringify({
+        systemInstruction: {
+          parts: [{ text: prompt.systemInstruction }],
+        },
+        contents: [{ role: "user", parts: [{ text: prompt.userPrompt }] }],
+        generationConfig: {
+          temperature: config.temperature,
+          maxOutputTokens: 220,
+          responseMimeType: "application/json",
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      return { decision: null, failureCode: `planner_http_${response.status}` };
+    }
+
+    const data = await response.json();
+    const rawText = stripJsonFence(extractGeminiOutputText(data));
+    if (!rawText) {
+      return { decision: null, failureCode: "planner_empty" };
+    }
+
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(rawText);
+    } catch {
+      return { decision: null, failureCode: "planner_invalid_json" };
+    }
+
+    const decision = sanitizePlannerDecision(parsed);
+    if (!decision) {
+      return { decision: null, failureCode: "planner_invalid_schema" };
+    }
+
+    return { decision };
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      return { decision: null, failureCode: "planner_timeout" };
+    }
+    return { decision: null, failureCode: "planner_request_failed" };
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 function buildFallback(question: string) {
   const q = question.toLowerCase();
 
@@ -1553,6 +2113,7 @@ async function orchestrateToolRequest(input: {
   question: string;
   actionRequest?: ToolActionRequest;
   conversationState?: ToolConversationState;
+  chatHistory?: Array<{ role: "user" | "assistant"; content: string }>;
 }): Promise<ToolOrchestrationResult | null> {
   const toolsEnabled = parseBooleanEnv("CHATBOT_AGENT_TOOLS_ENABLED", false);
   if (!toolsEnabled) return null;
@@ -1569,11 +2130,18 @@ async function orchestrateToolRequest(input: {
 
   const toolTrace: ToolTraceItem[] = [];
   const compareLimit = clamp(Math.floor(parseNumberEnv("CHATBOT_AGENT_TOOLS_COMPARE_LIMIT", 3)), 2, 3);
+  const plannerFeatureEnabled = parseBooleanEnv("CHATBOT_GEMINI_PLANNER_ENABLED", false);
+  let effectiveActionRequest = input.actionRequest;
+  let plannerMeta: PlannerMeta | undefined;
+  const applyPlannerMeta = (result: ToolOrchestrationResult): ToolOrchestrationResult => ({
+    ...result,
+    planner: result.planner ?? plannerMeta,
+  });
 
   const runSearch = async (): Promise<ToolOrchestrationResult> => {
     const startedAt = Date.now();
     try {
-      const params = extractSearchParamsFromQuestion(input.question, input.conversationState, input.actionRequest);
+      const params = extractSearchParamsFromQuestion(input.question, input.conversationState, effectiveActionRequest);
       const result = await executeSearchPropertiesTool(supabase, params);
       toolTrace.push({
         tool: "search_properties",
@@ -1774,7 +2342,7 @@ async function orchestrateToolRequest(input: {
     const selectedIds = uniqueNumberList(
       [
         ...(propertyIds ?? []),
-        ...normalizePropertyIdsFromAction(input.actionRequest),
+        ...normalizePropertyIdsFromAction(effectiveActionRequest),
         ...(input.conversationState?.selectedPropertyIds ?? []),
       ],
       compareLimit,
@@ -1846,30 +2414,106 @@ async function orchestrateToolRequest(input: {
     };
   };
 
-  if (input.actionRequest) {
-    switch (input.actionRequest.type) {
+  if (!input.actionRequest && plannerFeatureEnabled) {
+    const plannerConfig = resolveGeminiPlannerConfig();
+    if (!plannerConfig) {
+      plannerMeta = {
+        provider: "fallback",
+        mode: "disabled",
+        decisionType: "none",
+        reasonCode: "planner_unavailable",
+      };
+    } else {
+      const plannerResult = await generateGeminiPlannerDecision(plannerConfig, {
+        question: input.question,
+        chatHistory: input.chatHistory,
+        conversationState: input.conversationState,
+      });
+
+      if (plannerResult.decision?.decisionType === "clarify") {
+        const clarifier = plannerResult.decision.clarification;
+        plannerMeta = {
+          provider: "gemini",
+          mode: "gemini",
+          decisionType: "clarify",
+          reasonCode: plannerResult.decision.reasonCode,
+          confidence: plannerResult.decision.confidence,
+        };
+        const missingFieldsLabel =
+          clarifier.missingFields && clarifier.missingFields.length > 0
+            ? `Informations à préciser: ${clarifier.missingFields.join(", ")}.`
+            : "J’ai besoin d’une précision pour lancer la bonne action.";
+        return applyPlannerMeta({
+          answer: clarifier.question,
+          suggestedPrompts: (clarifier.options ?? []).slice(0, 4),
+          actions: [buildNoticeAction("Précision nécessaire", missingFieldsLabel, "planner_clarify")],
+          toolTrace,
+          agentMode: "tool",
+        });
+      }
+
+      if (plannerResult.decision?.decisionType === "tool_call") {
+        const mappedAction = plannerDecisionToActionRequest(plannerResult.decision);
+        if (mappedAction) {
+          effectiveActionRequest = mappedAction;
+          plannerMeta = {
+            provider: "gemini",
+            mode: "gemini",
+            decisionType: "tool_call",
+            toolName: plannerResult.decision.toolCall.tool,
+            reasonCode: plannerResult.decision.reasonCode,
+            confidence: plannerResult.decision.confidence,
+          };
+        } else {
+          plannerMeta = {
+            provider: "fallback",
+            mode: "deterministic_fallback",
+            decisionType: "none",
+            reasonCode: "planner_tool_unsupported",
+          };
+        }
+      } else if (!plannerResult.decision) {
+        plannerMeta = {
+          provider: "fallback",
+          mode: "deterministic_fallback",
+          decisionType: "none",
+          reasonCode: plannerResult.failureCode ?? "planner_no_decision",
+        };
+      }
+    }
+  } else {
+    plannerMeta = {
+      provider: "fallback",
+      mode: "disabled",
+      decisionType: "none",
+      reasonCode: plannerFeatureEnabled && input.actionRequest ? "explicit_action_request" : "planner_disabled",
+    };
+  }
+
+  if (effectiveActionRequest) {
+    switch (effectiveActionRequest.type) {
       case "compare_selected_properties": {
-        const ids = normalizePropertyIdsFromAction(input.actionRequest);
-        return await runCompare(ids);
+        const ids = normalizePropertyIdsFromAction(effectiveActionRequest);
+        return applyPlannerMeta(await runCompare(ids));
       }
       case "prepare_handoff":
       case "prefill_lead_form":
-        return await runPrepareHandoff();
+        return applyPlannerMeta(await runPrepareHandoff());
       case "search_refine":
-        return await runSearch();
+        return applyPlannerMeta(await runSearch());
       case "open_path_confirmed": {
-        const rawPath = typeof input.actionRequest.payload?.path === "string" ? input.actionRequest.payload.path.trim() : "";
+        const rawPath = typeof effectiveActionRequest.payload?.path === "string" ? effectiveActionRequest.payload.path.trim() : "";
         const safePath = /^\/[a-z0-9/_-]+(?:\?[a-z0-9=&_-]+)?$/i.test(rawPath) ? rawPath : null;
         if (!safePath) {
-          return {
+          return applyPlannerMeta({
             answer: "Je n’ai pas reçu de lien interne valide à ouvrir.",
             suggestedPrompts: ["Ouvrir /biens", "Ouvrir /contact"],
             actions: [buildNoticeAction("Lien invalide", "Le lien demandé n’est pas valide.", "open_path_invalid")],
             toolTrace,
             agentMode: "tool",
-          };
+          });
         }
-        return {
+        return applyPlannerMeta({
           answer: `Lien prêt: ${safePath}. Cliquez sur le bouton pour ouvrir la page.`,
           suggestedPrompts: ["Ouvrir la page", "Revenir aux résultats"],
           actions: [
@@ -1887,21 +2531,21 @@ async function orchestrateToolRequest(input: {
           ],
           toolTrace,
           agentMode: "tool",
-        };
+        });
       }
     }
   }
 
   if (isLikelyCompareQuestion(input.question) && (input.conversationState?.selectedPropertyIds?.length ?? 0) >= 2) {
-    return await runCompare(input.conversationState?.selectedPropertyIds ?? []);
+    return applyPlannerMeta(await runCompare(input.conversationState?.selectedPropertyIds ?? []));
   }
 
   if (isLikelyHandoffQuestion(input.question) && (input.conversationState?.recentSearch || input.conversationState?.selectedPropertyIds?.length)) {
-    return await runPrepareHandoff();
+    return applyPlannerMeta(await runPrepareHandoff());
   }
 
   if (isLikelyPropertyToolQuestion(input.question)) {
-    return await runSearch();
+    return applyPlannerMeta(await runSearch());
   }
 
   return null;
@@ -1927,6 +2571,7 @@ Deno.serve(async (request) => {
         question: payload.question,
         actionRequest: payload.actionRequest as ToolActionRequest | undefined,
         conversationState: payload.conversationState as ToolConversationState | undefined,
+        chatHistory: payload.chatHistory,
       });
     } catch {
       toolResult = null;
@@ -1945,6 +2590,7 @@ Deno.serve(async (request) => {
         actions: toolResult.actions,
         conversationStatePatch: toolResult.conversationStatePatch,
         toolTrace: toolResult.toolTrace,
+        planner: toolResult.planner,
       });
     }
 
