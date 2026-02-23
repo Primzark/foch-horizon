@@ -33,13 +33,14 @@ function isSafePath(path) {
   return typeof path === "string" && /^\/[a-z0-9/_-]+(?:\?[a-z0-9=&_-]+)?$/i.test(path) && !/^\/(?:api|admin|functions)\b/i.test(path);
 }
 
-function extractRenderedText(document) {
-  const title = document.title?.trim() || null;
-  const headings = [...document.querySelectorAll("h1,h2,h3")]
+function extractRenderedText() {
+  const doc = globalThis.document;
+  const title = doc?.title?.trim() || null;
+  const headings = [...(doc?.querySelectorAll("h1,h2,h3") ?? [])]
     .map((el) => (el.textContent || "").replace(/\s+/g, " ").trim())
     .filter(Boolean)
     .slice(0, 12);
-  const bodyText = (document.body?.innerText || "").replace(/\s+/g, " ").trim();
+  const bodyText = (doc?.body?.innerText || "").replace(/\s+/g, " ").trim();
   return {
     title,
     headings,
@@ -75,10 +76,17 @@ async function renderPage({ path, baseUrl, timeoutMs }) {
   const browser = await getBrowser();
   const page = await browser.newPage();
   try {
+    const navTimeoutMs = Math.max(1000, timeoutMs || DEFAULT_TIMEOUT_MS);
     await page.goto(url.toString(), {
-      waitUntil: "networkidle",
-      timeout: Math.max(1000, timeoutMs || DEFAULT_TIMEOUT_MS),
+      // `networkidle` can hang on sites with analytics/long-polling. We prefer
+      // a fast deterministic snapshot and then try a short best-effort settle.
+      waitUntil: "domcontentloaded",
+      timeout: navTimeoutMs,
     });
+    await page.waitForLoadState("networkidle", {
+      timeout: Math.min(1500, Math.max(800, Math.floor(navTimeoutMs / 3))),
+    }).catch(() => undefined);
+    await page.waitForTimeout(300).catch(() => undefined);
     const snapshot = await page.evaluate(extractRenderedText);
     return {
       ok: true,
@@ -140,4 +148,3 @@ process.on("SIGINT", async () => {
     // Ignore close errors.
   }
 });
-
