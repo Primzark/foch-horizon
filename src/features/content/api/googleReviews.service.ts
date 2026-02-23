@@ -4,6 +4,9 @@ const directApiKey =
   (import.meta.env.VITE_GOOGLE_PLACES_API_KEY as string | undefined) ??
   (import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined);
 const directPlaceId = import.meta.env.VITE_GOOGLE_PLACE_ID as string | undefined;
+const supabaseProjectUrl =
+  (import.meta.env.VITE_SUPABASE_PROJECT_URL as string | undefined)?.replace(/\/$/, "") ?? "";
+const supabaseAnonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined)?.trim() ?? "";
 
 export interface AgencyReview {
   id: string;
@@ -125,6 +128,31 @@ async function fetchDirectGoogleReviews(apiKey: string, placeId: string): Promis
   return normalizeDirectPlaceResponse(payload);
 }
 
+async function fetchSupabaseGoogleReviews(): Promise<AgencyReviewsResponse> {
+  if (!supabaseProjectUrl) {
+    throw new Error("Supabase project URL is missing");
+  }
+
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+  };
+
+  if (supabaseAnonKey) {
+    headers.apikey = supabaseAnonKey;
+    headers.Authorization = `Bearer ${supabaseAnonKey}`;
+  }
+
+  const response = await fetch(`${supabaseProjectUrl}/functions/v1/google-reviews`, {
+    headers,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Supabase google-reviews request failed (${response.status})`);
+  }
+
+  return (await response.json()) as AgencyReviewsResponse;
+}
+
 export async function getAgencyReviews(): Promise<AgencyReviewsResponse> {
   if (directApiKey && directPlaceId) {
     try {
@@ -137,6 +165,19 @@ export async function getAgencyReviews(): Promise<AgencyReviewsResponse> {
   if (isEdgeApiEnabled()) {
     try {
       const payload = await apiJson<AgencyReviewsResponse>("/api/google-reviews");
+      return {
+        ...payload,
+        source: "edge",
+        live: true,
+      };
+    } catch {
+      // Fall through to fallback payload.
+    }
+  }
+
+  if (supabaseProjectUrl) {
+    try {
+      const payload = await fetchSupabaseGoogleReviews();
       return {
         ...payload,
         source: "edge",
