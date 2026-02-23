@@ -10,6 +10,7 @@ import {
   type ChatbotActionRequest,
   type ChatbotCitation,
   type ChatbotConversationState,
+  type ChatbotPlannerMeta,
   type ChatbotToolTrace,
   type ChatbotUiAction,
   chatbotExamplePrompts,
@@ -42,6 +43,7 @@ interface ChatMessage {
   agentMode?: "tool" | "rag" | "fallback";
   actions?: ChatbotUiAction[];
   toolTrace?: ChatbotToolTrace[];
+  planner?: ChatbotPlannerMeta;
   latencyMs?: number;
   feedback?: {
     value: 1 | -1;
@@ -336,6 +338,66 @@ function sanitizeFeedback(raw: unknown): ChatMessage["feedback"] | undefined {
   return { value, reason, submittedAt };
 }
 
+function sanitizePlannerMeta(raw: unknown): ChatbotPlannerMeta | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const candidate = raw as Record<string, unknown>;
+  const provider = candidate.provider === "gemini" || candidate.provider === "fallback" ? candidate.provider : null;
+  const mode =
+    candidate.mode === "disabled" || candidate.mode === "gemini" || candidate.mode === "deterministic_fallback"
+      ? candidate.mode
+      : null;
+  const decisionType =
+    candidate.decisionType === "tool_call" || candidate.decisionType === "clarify" || candidate.decisionType === "none"
+      ? candidate.decisionType
+      : null;
+
+  if (!provider || !mode || !decisionType) return undefined;
+
+  return {
+    provider,
+    mode,
+    decisionType,
+    toolName:
+      candidate.toolName === "search_properties" ||
+      candidate.toolName === "compare_properties" ||
+      candidate.toolName === "prepare_handoff"
+        ? candidate.toolName
+        : undefined,
+    reasonCode:
+      typeof candidate.reasonCode === "string" && candidate.reasonCode.trim().length > 0
+        ? candidate.reasonCode.trim().slice(0, 80)
+        : undefined,
+    confidence:
+      typeof candidate.confidence === "number" && Number.isFinite(candidate.confidence)
+        ? clampNumber(candidate.confidence, 0, 1)
+        : undefined,
+  };
+}
+
+function plannerTelemetryMetadata(planner?: ChatbotPlannerMeta): Record<string, unknown> | undefined {
+  if (!planner) return undefined;
+  return {
+    plannerMode: planner.mode,
+    plannerDecisionType: planner.decisionType,
+    plannerToolName: planner.toolName,
+    plannerReasonCode: planner.reasonCode,
+    plannerConfidence: planner.confidence,
+    plannerFallback: planner.mode === "deterministic_fallback",
+  };
+}
+
+function mergeTelemetryMetadata(
+  base: Record<string, unknown> | undefined,
+  planner?: ChatbotPlannerMeta,
+): Record<string, unknown> | undefined {
+  const plannerMeta = plannerTelemetryMetadata(planner);
+  if (!base && !plannerMeta) return undefined;
+  return {
+    ...(base ?? {}),
+    ...(plannerMeta ?? {}),
+  };
+}
+
 function sanitizeStoredMessages(raw: unknown): ChatMessage[] {
   if (!Array.isArray(raw)) {
     return [initialMessage];
@@ -360,6 +422,7 @@ function sanitizeStoredMessages(raw: unknown): ChatMessage[] {
       routeDecision?: unknown;
       routeCategory?: unknown;
       requestId?: unknown;
+      planner?: unknown;
       latencyMs?: unknown;
       feedback?: unknown;
     };
@@ -406,6 +469,7 @@ function sanitizeStoredMessages(raw: unknown): ChatMessage[] {
         typeof candidate.requestId === "string" && candidate.requestId.trim().length > 0
           ? candidate.requestId.trim().slice(0, 120)
           : undefined,
+      planner: sanitizePlannerMeta(candidate.planner),
       latencyMs:
         typeof candidate.latencyMs === "number" && Number.isFinite(candidate.latencyMs)
           ? clampNumber(Math.floor(candidate.latencyMs), 0, 120000)
@@ -800,6 +864,7 @@ export function SiteChatbot() {
         routeCategory: reply.routeCategory,
         requestId: reply.requestId,
         agentMode: reply.agentMode,
+        planner: reply.planner,
         latencyMs: telemetry?.responseLatencyMs,
       });
 
@@ -828,6 +893,7 @@ export function SiteChatbot() {
         responseLatencyMs: telemetry?.responseLatencyMs,
         requestChars: telemetry?.requestChars,
         answerChars: reply.answer.trim().length,
+        metadata: mergeTelemetryMetadata(undefined, reply.planner),
       });
 
       if (reply.actions && reply.actions.length > 0) {
@@ -847,10 +913,13 @@ export function SiteChatbot() {
             routeCategory: reply.routeCategory,
             ragUsed: reply.ragUsed,
             retrievalMode: reply.retrievalMode,
-            metadata: {
-              actionKind: action.kind,
-              actionId: action.id,
-            },
+            metadata: mergeTelemetryMetadata(
+              {
+                actionKind: action.kind,
+                actionId: action.id,
+              },
+              reply.planner,
+            ),
           });
         }
       }
@@ -871,12 +940,15 @@ export function SiteChatbot() {
             routeDecision: reply.routeDecision,
             routeCategory: reply.routeCategory,
             responseLatencyMs: trace.latencyMs,
-            metadata: {
-              toolName: trace.tool,
-              status: trace.status,
-              resultCount: trace.resultCount,
-              errorCode: trace.errorCode,
-            },
+            metadata: mergeTelemetryMetadata(
+              {
+                toolName: trace.tool,
+                status: trace.status,
+                resultCount: trace.resultCount,
+                errorCode: trace.errorCode,
+              },
+              reply.planner,
+            ),
           });
         }
       }
@@ -1264,7 +1336,15 @@ export function SiteChatbot() {
   );
 
   const handleToolOpenPage = useCallback(
-    (path: string, meta?: { requestId?: string; routeCategory?: ChatMessage["routeCategory"]; edgeProvider?: ChatMessage["edgeProvider"] }) => {
+    (
+      path: string,
+      meta?: {
+        requestId?: string;
+        routeCategory?: ChatMessage["routeCategory"];
+        edgeProvider?: ChatMessage["edgeProvider"];
+        planner?: ChatMessage["planner"];
+      },
+    ) => {
       trackEvent("chatbot_tool_action_clicked", {
         actionKind: "open_page",
         path,
@@ -1275,10 +1355,13 @@ export function SiteChatbot() {
         source: "edge",
         edgeProvider: meta?.edgeProvider,
         routeCategory: meta?.routeCategory ?? "edge_tools",
-        metadata: {
-          actionKind: "open_page",
-          path,
-        },
+        metadata: mergeTelemetryMetadata(
+          {
+            actionKind: "open_page",
+            path,
+          },
+          meta?.planner,
+        ),
       });
       navigateFromChat(path);
     },
@@ -1304,9 +1387,12 @@ export function SiteChatbot() {
       source: "edge",
       edgeProvider: message.edgeProvider,
       routeCategory: message.routeCategory ?? "edge_tools",
-      metadata: {
-        selectedPropertyIdsCount: selectedIds.length,
-      },
+      metadata: mergeTelemetryMetadata(
+        {
+          selectedPropertyIdsCount: selectedIds.length,
+        },
+        message.planner,
+      ),
     });
   };
 
@@ -1390,7 +1476,13 @@ export function SiteChatbot() {
             {action.description && <p className="mt-1 text-muted-foreground">{action.description}</p>}
             <button
               type="button"
-              onClick={() => handleToolOpenPage(action.data.path, { requestId: message.requestId, routeCategory: message.routeCategory, edgeProvider: message.edgeProvider })}
+              onClick={() =>
+                handleToolOpenPage(action.data.path, {
+                  requestId: message.requestId,
+                  routeCategory: message.routeCategory,
+                  edgeProvider: message.edgeProvider,
+                  planner: message.planner,
+                })}
               className="mt-2 rounded-full border border-border bg-background px-2.5 py-1 text-[11px] hover:bg-muted"
             >
               {action.data.label || "Ouvrir"}
@@ -1459,7 +1551,13 @@ export function SiteChatbot() {
                 <button
                   key={`${action.id}-open-${property.id}`}
                   type="button"
-                  onClick={() => handleToolOpenPage(property.path, { requestId: message.requestId, routeCategory: message.routeCategory, edgeProvider: message.edgeProvider })}
+                  onClick={() =>
+                    handleToolOpenPage(property.path, {
+                      requestId: message.requestId,
+                      routeCategory: message.routeCategory,
+                      edgeProvider: message.edgeProvider,
+                      planner: message.planner,
+                    })}
                   className="rounded-full border border-border bg-background px-2.5 py-1 text-[11px] hover:bg-muted"
                 >
                   Ouvrir {property.id === action.data.recommendedPropertyId ? "le recommandé" : property.title}
@@ -1510,7 +1608,13 @@ export function SiteChatbot() {
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       <button
                         type="button"
-                        onClick={() => handleToolOpenPage(item.path, { requestId: message.requestId, routeCategory: message.routeCategory, edgeProvider: message.edgeProvider })}
+                        onClick={() =>
+                          handleToolOpenPage(item.path, {
+                            requestId: message.requestId,
+                            routeCategory: message.routeCategory,
+                            edgeProvider: message.edgeProvider,
+                            planner: message.planner,
+                          })}
                         className="rounded-full border border-border bg-background px-2 py-1 text-[11px] hover:bg-muted"
                       >
                         Ouvrir

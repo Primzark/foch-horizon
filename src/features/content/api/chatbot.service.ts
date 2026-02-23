@@ -99,6 +99,15 @@ export type ChatbotToolTrace = {
   errorCode?: string;
 };
 
+export interface ChatbotPlannerMeta {
+  provider: "gemini" | "fallback";
+  mode: "disabled" | "gemini" | "deterministic_fallback";
+  decisionType: "tool_call" | "clarify" | "none";
+  toolName?: "search_properties" | "compare_properties" | "prepare_handoff";
+  reasonCode?: string;
+  confidence?: number;
+}
+
 interface ChatbotUiActionBase {
   id: string;
   title: string;
@@ -197,6 +206,7 @@ export interface ChatbotReply {
   routeCategory?: "deterministic_local" | "edge_rag" | "edge_general" | "edge_tools" | "fallback";
   requestId?: string;
   agentMode?: "tool" | "rag" | "fallback";
+  planner?: ChatbotPlannerMeta;
   source: "local" | "edge";
 }
 
@@ -1780,6 +1790,41 @@ function sanitizeToolTrace(raw: unknown): ChatbotToolTrace[] | undefined {
   return traces.length > 0 ? traces : undefined;
 }
 
+function sanitizePlannerMeta(raw: unknown): ChatbotPlannerMeta | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const candidate = raw as Record<string, unknown>;
+  const provider = candidate.provider === "gemini" || candidate.provider === "fallback" ? candidate.provider : null;
+  const mode =
+    candidate.mode === "disabled" || candidate.mode === "gemini" || candidate.mode === "deterministic_fallback"
+      ? candidate.mode
+      : null;
+  const decisionType =
+    candidate.decisionType === "tool_call" || candidate.decisionType === "clarify" || candidate.decisionType === "none"
+      ? candidate.decisionType
+      : null;
+  if (!provider || !mode || !decisionType) return undefined;
+
+  return {
+    provider,
+    mode,
+    decisionType,
+    toolName:
+      candidate.toolName === "search_properties" ||
+      candidate.toolName === "compare_properties" ||
+      candidate.toolName === "prepare_handoff"
+        ? candidate.toolName
+        : undefined,
+    reasonCode:
+      typeof candidate.reasonCode === "string" && candidate.reasonCode.trim().length > 0
+        ? candidate.reasonCode.trim().slice(0, 80)
+        : undefined,
+    confidence:
+      typeof candidate.confidence === "number" && Number.isFinite(candidate.confidence)
+        ? Math.max(0, Math.min(1, candidate.confidence))
+        : undefined,
+  };
+}
+
 function sanitizeActions(raw: unknown): ChatbotUiAction[] | undefined {
   if (!Array.isArray(raw)) return undefined;
   const actions: ChatbotUiAction[] = [];
@@ -2042,6 +2087,7 @@ function normalizeReplyOutput(reply: ChatbotReply): ChatbotReply {
   const actions = sanitizeActions(reply.actions);
   const conversationStatePatch = sanitizeConversationStatePatch(reply.conversationStatePatch);
   const toolTrace = sanitizeToolTrace(reply.toolTrace);
+  const planner = sanitizePlannerMeta(reply.planner);
 
   return {
     ...reply,
@@ -2056,6 +2102,7 @@ function normalizeReplyOutput(reply: ChatbotReply): ChatbotReply {
     actions,
     conversationStatePatch,
     toolTrace,
+    planner,
   };
 }
 

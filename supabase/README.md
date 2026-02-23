@@ -83,6 +83,22 @@ npm run chatbot:index:site
 - `CHATBOT_AGENT_TOOLS_MAX_RESULTS=5` (search results returned per tool response)
 - `CHATBOT_AGENT_TOOLS_COMPARE_LIMIT=3` (max properties in compare flow)
 
+### Gemini planner runtime flags (edge function, property tools only)
+
+- `CHATBOT_GEMINI_PLANNER_ENABLED=false` (default off; Gemini proposes one tool call or one clarifier for property turns)
+- `CHATBOT_GEMINI_PLANNER_MODEL=gemini-2.5-flash-lite`
+- `CHATBOT_GEMINI_PLANNER_TIMEOUT_MS=1800`
+- `CHATBOT_GEMINI_PLANNER_INCLUDE_HISTORY_TURNS=4`
+- `CHATBOT_GEMINI_PLANNER_MAX_QUESTION_CHARS=700`
+- `CHATBOT_GEMINI_PLANNER_TEMPERATURE=0`
+
+Notes:
+
+- Planner is Gemini-only and only affects property tool turns (search / compare / handoff).
+- The server still validates planner JSON and executes tools deterministically.
+- Invalid planner JSON, timeout, or missing Gemini key automatically falls back to the deterministic tool path.
+- Planner metadata is returned in edge responses and forwarded to telemetry metadata, but not shown in the chat UI.
+
 ### Automated re-index (GitHub Actions)
 
 The workflow `\.github/workflows/chatbot-rag-reindex.yml` runs:
