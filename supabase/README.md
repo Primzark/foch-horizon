@@ -3,6 +3,7 @@
 This folder contains Phase 1 backend scaffolding:
 
 - `migrations/20260216_phase1_schema.sql`: PostgreSQL schema + RLS policies.
+- `migrations/20260223_chatbot_rag.sql`: `pgvector`-backed content chunks + `match_chatbot_content_chunks(...)` RPC for chatbot RAG.
 - `functions/properties-search`: `GET /api/properties` contract.
 - `functions/property-detail`: `GET /api/properties/:id` contract.
 - `functions/cities-list`: `GET /api/cities` contract.
@@ -19,6 +20,55 @@ This folder contains Phase 1 backend scaffolding:
 ## Deployment notes
 - Bind each function to your routing layer in Lovable/Supabase edge deploy config.
 - Configure secrets: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
+- Chatbot RAG edge function expects either `GEMINI_API_KEY` or `OPENAI_API_KEY` (Gemini is now the preferred provider).
+
+## Chatbot RAG indexing (website content)
+
+This repo includes a sitemap-based indexer that fetches pages, extracts visible text, chunks it, embeds chunks, and writes them to `chatbot_content_chunks`.
+
+### Run a dry run (no upload)
+
+```bash
+cd /Applications/MAMP/htdocs/Foch-1/foch-horizon
+npm run chatbot:index:site -- --dry-run --limit 5
+```
+
+### Run full index + upload to Supabase
+
+```bash
+cd /Applications/MAMP/htdocs/Foch-1/foch-horizon
+SUPABASE_URL=https://<project-ref>.supabase.co \
+SUPABASE_SERVICE_ROLE_KEY=<service-role-key> \
+GEMINI_API_KEY=<server-gemini-key> \
+RAG_EMBEDDING_PROVIDER=gemini \
+npm run chatbot:index:site
+```
+
+### Optional indexer env vars
+
+- `RAG_INDEX_BASE_URL` to override sitemap host (ex: staging/prod)
+- `RAG_INDEX_SITEMAP` to use another sitemap path/URL
+- `RAG_INDEX_PATH_PREFIX` to index only one site section
+- `RAG_INDEX_RENDER_MODE` (`http` or `headless`) for SPA pages (`headless` requires Playwright)
+- `RAG_INDEX_RENDER_WAIT_MS` extra wait after navigation in headless mode
+- `RAG_EMBEDDING_PROVIDER` (`gemini` or `openai`) for embeddings
+- `GEMINI_EMBEDDING_MODEL` (default `gemini-embedding-001`)
+- `OPENAI_EMBEDDING_MODEL` (default `text-embedding-3-small`)
+
+### Automated re-index (GitHub Actions)
+
+The workflow `\.github/workflows/chatbot-rag-reindex.yml` runs:
+
+- on a daily schedule
+- on pushes touching content/listing/indexer files
+- on manual trigger (`workflow_dispatch`)
+
+GitHub repository secrets required:
+
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `GEMINI_API_KEY` (preferred) or `OPENAI_API_KEY`
+- `RAG_INDEX_BASE_URL` (optional but recommended, e.g. your production site URL)
 
 ## Provider Sync Worker (inventory feed)
 

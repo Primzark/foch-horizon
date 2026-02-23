@@ -13,11 +13,20 @@ export interface ChatbotPropertySuggestion {
   path: string;
 }
 
+export interface ChatbotCitation {
+  path: string;
+  title?: string;
+  sourceUrl?: string;
+  similarity?: number;
+}
+
 export interface ChatbotReply {
   answer: string;
   suggestedPrompts: string[];
   needsLeadCapture?: boolean;
   propertySuggestions?: ChatbotPropertySuggestion[];
+  citations?: ChatbotCitation[];
+  ragUsed?: boolean;
   source: "local" | "edge";
 }
 
@@ -1357,8 +1366,10 @@ function normalizeReplyOutput(reply: ChatbotReply): ChatbotReply {
 export async function askAgencyChatbot(request: ChatbotRequest): Promise<ChatbotReply> {
   const context = buildConversationContext(request.question, request.chatHistory);
   const localReply = normalizeReplyOutput(buildLocalReply(request.question, context));
+  const edgeRagForWebsiteQuestionsEnabled =
+    (import.meta.env.VITE_CHATBOT_ENABLE_EDGE_RAG as string | undefined)?.toLowerCase() === "true";
 
-  if (!isEdgeApiEnabled() || isWebsiteContentQuestion(context)) {
+  if (!isEdgeApiEnabled() || (isWebsiteContentQuestion(context) && !edgeRagForWebsiteQuestionsEnabled)) {
     return localReply;
   }
 

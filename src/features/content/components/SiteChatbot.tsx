@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   askAgencyChatbot,
+  type ChatbotCitation,
   chatbotExamplePrompts,
   type ChatbotPropertySuggestion,
   type ChatbotReply,
@@ -22,6 +23,7 @@ interface ChatMessage {
   role: ChatRole;
   content: string;
   propertySuggestions?: ChatbotPropertySuggestion[];
+  citations?: ChatbotCitation[];
   suggestedPrompts?: string[];
 }
 
@@ -220,6 +222,27 @@ function sanitizePropertySuggestions(raw: unknown): ChatbotPropertySuggestion[] 
   return suggestions.length > 0 ? suggestions : undefined;
 }
 
+function sanitizeCitations(raw: unknown): ChatbotCitation[] | undefined {
+  if (!Array.isArray(raw)) return undefined;
+
+  const citations = raw
+    .filter((value): value is ChatbotCitation => {
+      if (!value || typeof value !== "object") return false;
+      const candidate = value as Partial<ChatbotCitation>;
+      return typeof candidate.path === "string";
+    })
+    .map((citation) => ({
+      path: citation.path.trim(),
+      title: typeof citation.title === "string" ? citation.title.trim() : undefined,
+      sourceUrl: typeof citation.sourceUrl === "string" ? citation.sourceUrl.trim() : undefined,
+      similarity: typeof citation.similarity === "number" ? citation.similarity : undefined,
+    }))
+    .filter((citation) => citation.path.length > 0)
+    .slice(0, 4);
+
+  return citations.length > 0 ? citations : undefined;
+}
+
 function sanitizeStoredMessages(raw: unknown): ChatMessage[] {
   if (!Array.isArray(raw)) {
     return [initialMessage];
@@ -235,6 +258,7 @@ function sanitizeStoredMessages(raw: unknown): ChatMessage[] {
       role?: unknown;
       content?: unknown;
       propertySuggestions?: unknown;
+      citations?: unknown;
       suggestedPrompts?: unknown;
     };
 
@@ -249,6 +273,7 @@ function sanitizeStoredMessages(raw: unknown): ChatMessage[] {
       role: candidate.role,
       content: content.slice(0, 3200),
       propertySuggestions: sanitizePropertySuggestions(candidate.propertySuggestions),
+      citations: sanitizeCitations(candidate.citations),
       suggestedPrompts: sanitizePromptList(candidate.suggestedPrompts),
     });
 
@@ -411,6 +436,7 @@ export function SiteChatbot() {
         role: "assistant",
         content: reply.answer,
         propertySuggestions: reply.propertySuggestions,
+        citations: reply.citations,
         suggestedPrompts: reply.suggestedPrompts,
       });
 
@@ -736,6 +762,29 @@ export function SiteChatbot() {
                           </span>
                         </Link>
                       ))}
+                    </div>
+                  )}
+
+                  {message.citations && message.citations.length > 0 && message.role === "assistant" && (
+                    <div className="mt-3 space-y-1 rounded-lg border border-border/70 bg-background/60 px-2.5 py-2">
+                      <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+                        Sources du site
+                      </p>
+                      <div className="space-y-1">
+                        {message.citations.map((citation, index) => (
+                          <Link
+                            key={`${message.id}-citation-${citation.path}-${index}`}
+                            to={citation.path}
+                            onClick={(event) => handleInternalPathClick(event, citation.path)}
+                            className="block rounded-md px-1.5 py-1 text-xs text-foreground hover:bg-muted"
+                          >
+                            <span className="font-medium">{citation.title || citation.path}</span>
+                            {citation.title && (
+                              <span className="ml-1 text-muted-foreground">{citation.path}</span>
+                            )}
+                          </Link>
+                        ))}
+                      </div>
                     </div>
                   )}
 
