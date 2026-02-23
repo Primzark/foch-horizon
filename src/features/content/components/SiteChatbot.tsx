@@ -7,7 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   askAgencyChatbot,
+  askAgencyChatbotStream,
   type ChatbotActionRequest,
+  type ChatbotAnalysisCard,
   type ChatbotCitation,
   type ChatbotConversationState,
   type ChatbotPlannerMeta,
@@ -44,6 +46,9 @@ interface ChatMessage {
   actions?: ChatbotUiAction[];
   toolTrace?: ChatbotToolTrace[];
   planner?: ChatbotPlannerMeta;
+  analysisCards?: ChatbotAnalysisCard[];
+  memory?: ChatbotReply["memory"];
+  costHints?: ChatbotReply["costHints"];
   latencyMs?: number;
   feedback?: {
     value: 1 | -1;
@@ -149,6 +154,11 @@ const CHATBOT_HISTORY_MIN_KEEP = 8;
 const CHATBOT_HISTORY_MESSAGE_LIMIT = 1400;
 const CHATBOT_MIN_REPLY_DELAY_MS = 900;
 const CHATBOT_MAX_REPLY_DELAY_MS = 2600;
+const CHATBOT_STREAMING_ENABLED = ((import.meta.env.VITE_CHATBOT_STREAMING_ENABLED as string | undefined) ?? "false").toLowerCase() === "true";
+const CHATBOT_MULTIMODAL_CARDS_ENABLED =
+  ((import.meta.env.VITE_CHATBOT_MULTIMODAL_CARDS_ENABLED as string | undefined) ?? "true").toLowerCase() !== "false";
+const CHATBOT_PERSISTENT_MEMORY_ENABLED =
+  ((import.meta.env.VITE_CHATBOT_PERSISTENT_MEMORY_ENABLED as string | undefined) ?? "false").toLowerCase() === "true";
 
 const internalPathSplitPattern = /(\/[a-z0-9-]+(?:\/[a-z0-9-]+)*(?:\?[a-z0-9=&_-]+)?)/gi;
 const internalPathMatchPattern = /^\/[a-z0-9-]+(?:\/[a-z0-9-]+)*(?:\?[a-z0-9=&_-]+)?$/i;
@@ -347,7 +357,10 @@ function sanitizePlannerMeta(raw: unknown): ChatbotPlannerMeta | undefined {
       ? candidate.mode
       : null;
   const decisionType =
-    candidate.decisionType === "tool_call" || candidate.decisionType === "clarify" || candidate.decisionType === "none"
+    candidate.decisionType === "tool_call" ||
+    candidate.decisionType === "clarify" ||
+    candidate.decisionType === "plan" ||
+    candidate.decisionType === "none"
       ? candidate.decisionType
       : null;
 
@@ -359,8 +372,12 @@ function sanitizePlannerMeta(raw: unknown): ChatbotPlannerMeta | undefined {
     decisionType,
     toolName:
       candidate.toolName === "search_properties" ||
+      candidate.toolName === "get_properties" ||
       candidate.toolName === "compare_properties" ||
-      candidate.toolName === "prepare_handoff"
+      candidate.toolName === "prepare_handoff" ||
+      candidate.toolName === "get_property_media_context" ||
+      candidate.toolName === "get_property_document_context" ||
+      candidate.toolName === "retrieve_site_context"
         ? candidate.toolName
         : undefined,
     reasonCode:
@@ -423,6 +440,9 @@ function sanitizeStoredMessages(raw: unknown): ChatMessage[] {
       routeCategory?: unknown;
       requestId?: unknown;
       planner?: unknown;
+      analysisCards?: unknown;
+      memory?: unknown;
+      costHints?: unknown;
       latencyMs?: unknown;
       feedback?: unknown;
     };
@@ -470,6 +490,44 @@ function sanitizeStoredMessages(raw: unknown): ChatMessage[] {
           ? candidate.requestId.trim().slice(0, 120)
           : undefined,
       planner: sanitizePlannerMeta(candidate.planner),
+      analysisCards: Array.isArray(candidate.analysisCards)
+        ? (candidate.analysisCards as ChatbotAnalysisCard[]).slice(0, 8)
+        : undefined,
+      memory:
+        candidate.memory && typeof candidate.memory === "object"
+          ? {
+              updated: Boolean((candidate.memory as { updated?: unknown }).updated),
+              preferenceKeys: Array.isArray((candidate.memory as { preferenceKeys?: unknown }).preferenceKeys)
+                ? ((candidate.memory as { preferenceKeys?: unknown[] }).preferenceKeys ?? [])
+                    .filter((v): v is string => typeof v === "string")
+                    .map((v) => v.trim().slice(0, 80))
+                    .slice(0, 20)
+                : undefined,
+              summary:
+                typeof (candidate.memory as { summary?: unknown }).summary === "string"
+                  ? ((candidate.memory as { summary?: string }).summary ?? "").trim().slice(0, 500) || undefined
+                  : undefined,
+            }
+          : undefined,
+      costHints:
+        candidate.costHints && typeof candidate.costHints === "object"
+          ? {
+              route:
+                typeof (candidate.costHints as { route?: unknown }).route === "string"
+                  ? ((candidate.costHints as { route?: string }).route ?? "").trim().slice(0, 80)
+                  : "",
+              multimodalUsed:
+                typeof (candidate.costHints as { multimodalUsed?: unknown }).multimodalUsed === "boolean"
+                  ? (candidate.costHints as { multimodalUsed: boolean }).multimodalUsed
+                  : undefined,
+              estimatedClass:
+                (candidate.costHints as { estimatedClass?: unknown }).estimatedClass === "low" ||
+                (candidate.costHints as { estimatedClass?: unknown }).estimatedClass === "medium" ||
+                (candidate.costHints as { estimatedClass?: unknown }).estimatedClass === "high"
+                  ? ((candidate.costHints as { estimatedClass: "low" | "medium" | "high" }).estimatedClass)
+                  : undefined,
+            }
+          : undefined,
       latencyMs:
         typeof candidate.latencyMs === "number" && Number.isFinite(candidate.latencyMs)
           ? clampNumber(Math.floor(candidate.latencyMs), 0, 120000)
@@ -709,6 +767,21 @@ export function SiteChatbot() {
     setMessages((current) => trimMessages([...current, message]));
   }, []);
 
+  const updateMessageById = useCallback((messageId: string, updater: (current: ChatMessage) => ChatMessage) => {
+    setMessages((current) =>
+      trimMessages(
+        current.map((message) => {
+          if (message.id !== messageId) return message;
+          return updater(message);
+        }),
+      ),
+    );
+  }, []);
+
+  const removeMessageById = useCallback((messageId: string) => {
+    setMessages((current) => current.filter((message) => message.id !== messageId));
+  }, []);
+
   const emitChatbotTelemetry = useCallback(
     (
       eventType:
@@ -722,7 +795,15 @@ export function SiteChatbot() {
         | "tool_action_clicked"
         | "tool_orchestration_result"
         | "tool_compare_requested"
-        | "tool_handoff_prefill_opened",
+        | "tool_handoff_prefill_opened"
+        | "multimodal_analysis_rendered"
+        | "multimodal_analysis_clicked"
+        | "memory_updated"
+        | "planner_v2_plan_executed"
+        | "planner_v2_clarify"
+        | "stream_started"
+        | "stream_completed"
+        | "stream_failed",
       payload: Omit<
         Parameters<typeof queueChatbotTelemetryEvent>[0],
         "eventId" | "eventType" | "sessionId" | "conversationId" | "pagePath"
@@ -844,10 +925,11 @@ export function SiteChatbot() {
       telemetry?: {
         responseLatencyMs?: number;
         requestChars?: number;
+        replaceMessageId?: string;
       },
     ) => {
-      const messageId = createMessageId();
-      appendMessage({
+      const messageId = telemetry?.replaceMessageId ?? createMessageId();
+      const nextMessage: ChatMessage = {
         id: messageId,
         role: "assistant",
         content: reply.answer,
@@ -865,8 +947,16 @@ export function SiteChatbot() {
         requestId: reply.requestId,
         agentMode: reply.agentMode,
         planner: reply.planner,
+        analysisCards: reply.analysisCards,
+        memory: reply.memory,
+        costHints: reply.costHints,
         latencyMs: telemetry?.responseLatencyMs,
-      });
+      };
+      if (telemetry?.replaceMessageId) {
+        updateMessageById(telemetry.replaceMessageId, () => nextMessage);
+      } else {
+        appendMessage(nextMessage);
+      }
 
       if (reply.conversationStatePatch) {
         setConversationState((current) => mergeConversationState(current, reply.conversationStatePatch));
@@ -893,8 +983,95 @@ export function SiteChatbot() {
         responseLatencyMs: telemetry?.responseLatencyMs,
         requestChars: telemetry?.requestChars,
         answerChars: reply.answer.trim().length,
-        metadata: mergeTelemetryMetadata(undefined, reply.planner),
+        metadata: mergeTelemetryMetadata(
+          {
+            estimatedCostClass: reply.costHints?.estimatedClass,
+            multimodalUsed: reply.costHints?.multimodalUsed,
+          },
+          reply.planner,
+        ),
       });
+
+      if (reply.planner?.mode === "gemini" && reply.planner.decisionType === "plan") {
+        trackEvent("chatbot_planner_v2_plan_executed", {
+          routeCategory: reply.routeCategory,
+          edgeProvider: reply.edgeProvider,
+        });
+        emitChatbotTelemetry("planner_v2_plan_executed", {
+          messageId,
+          requestId: reply.requestId,
+          source: reply.source,
+          edgeProvider: reply.edgeProvider,
+          routeDecision: reply.routeDecision,
+          routeCategory: reply.routeCategory,
+          metadata: mergeTelemetryMetadata(
+            {
+              plannerVersion: 2,
+              plannerStepCount: reply.toolTrace?.length ?? 0,
+            },
+            reply.planner,
+          ),
+        });
+      } else if (reply.planner?.mode === "gemini" && reply.planner.decisionType === "clarify") {
+        trackEvent("chatbot_planner_v2_clarify", {
+          routeCategory: reply.routeCategory,
+          edgeProvider: reply.edgeProvider,
+        });
+        emitChatbotTelemetry("planner_v2_clarify", {
+          messageId,
+          requestId: reply.requestId,
+          source: reply.source,
+          edgeProvider: reply.edgeProvider,
+          routeDecision: reply.routeDecision,
+          routeCategory: reply.routeCategory,
+          metadata: mergeTelemetryMetadata({ plannerVersion: 2 }, reply.planner),
+        });
+      }
+
+      if (reply.analysisCards && reply.analysisCards.length > 0) {
+        trackEvent("chatbot_multimodal_analysis_rendered", {
+          source: reply.source,
+          edgeProvider: reply.edgeProvider,
+          count: reply.analysisCards.length,
+        });
+        emitChatbotTelemetry("multimodal_analysis_rendered", {
+          messageId,
+          requestId: reply.requestId,
+          source: reply.source,
+          edgeProvider: reply.edgeProvider,
+          routeDecision: reply.routeDecision,
+          routeCategory: reply.routeCategory,
+          metadata: mergeTelemetryMetadata(
+            {
+              multimodalKinds: reply.analysisCards.map((card) => card.kind),
+              analysisCacheHit: true,
+            },
+            reply.planner,
+          ),
+        });
+      }
+
+      if (reply.memory?.updated) {
+        trackEvent("chatbot_memory_updated", {
+          source: reply.source,
+          edgeProvider: reply.edgeProvider,
+          updatedKeys: reply.memory.preferenceKeys?.length ?? 0,
+        });
+        emitChatbotTelemetry("memory_updated", {
+          messageId,
+          requestId: reply.requestId,
+          source: reply.source,
+          edgeProvider: reply.edgeProvider,
+          routeDecision: reply.routeDecision,
+          routeCategory: reply.routeCategory,
+          metadata: mergeTelemetryMetadata(
+            {
+              memoryUpdatedKeys: reply.memory.preferenceKeys ?? [],
+            },
+            reply.planner,
+          ),
+        });
+      }
 
       if (reply.actions && reply.actions.length > 0) {
         for (const action of reply.actions) {
@@ -957,7 +1134,7 @@ export function SiteChatbot() {
         setShowLeadCapture(true);
       }
     },
-    [appendMessage, emitChatbotTelemetry],
+    [appendMessage, emitChatbotTelemetry, updateMessageById],
   );
 
   const sendChatRequest = async (params: {
@@ -1019,6 +1196,9 @@ export function SiteChatbot() {
     let timeoutId: number | undefined;
     let hardUnlockId: number | undefined;
 
+    let streamedPlaceholderId: string | undefined;
+    let usedStreaming = false;
+
     try {
       const timeoutPromise = new Promise<never>((_, reject) => {
         timeoutId = window.setTimeout(() => {
@@ -1034,16 +1214,73 @@ export function SiteChatbot() {
         toast.error("Le chatbot met trop de temps à répondre. Vous pouvez relancer votre question.");
       }, CHATBOT_HARD_UNLOCK_MS);
 
-      const reply = await Promise.race([
-        askAgencyChatbot({
-          question: text,
-          chatHistory,
-          conversationState,
-          actionRequest: params.actionRequest,
-          signal: controller.signal,
-        }),
-        timeoutPromise,
-      ]);
+      const shouldUseStreaming = CHATBOT_STREAMING_ENABLED && isEdgeChatStreamingEligible(params.actionRequest);
+      usedStreaming = shouldUseStreaming;
+      if (shouldUseStreaming) {
+        trackEvent("chatbot_stream_started", {
+          source: "site_chatbot",
+          routeHint: params.actionRequest ? "edge_tools" : "edge_rag_or_general",
+        });
+        emitChatbotTelemetry("stream_started", {
+          source: "edge",
+          routeCategory: params.actionRequest ? "edge_tools" : undefined,
+          requestChars: text.length,
+        });
+      }
+
+      const requestPromise = shouldUseStreaming
+        ? (async () => {
+            streamedPlaceholderId = createMessageId();
+            appendMessage({
+              id: streamedPlaceholderId,
+              role: "assistant",
+              content: "",
+              source: "edge",
+            });
+            let streamedContent = "";
+
+            const reply = await askAgencyChatbotStream(
+              {
+                question: text,
+                chatHistory,
+                conversationState,
+                actionRequest: params.actionRequest,
+                sessionId: sessionIdRef.current,
+                capabilities: {
+                  stream: true,
+                  multimodalCards: CHATBOT_MULTIMODAL_CARDS_ENABLED,
+                },
+                signal: controller.signal,
+              },
+              {
+                onTextDelta: (delta) => {
+                  streamedContent += delta;
+                  if (!streamedPlaceholderId) return;
+                  updateMessageById(streamedPlaceholderId, (current) => ({
+                    ...current,
+                    role: "assistant",
+                    content: streamedContent,
+                    source: "edge",
+                  }));
+                },
+              },
+            );
+            return reply;
+          })()
+        : askAgencyChatbot({
+            question: text,
+            chatHistory,
+            conversationState,
+            actionRequest: params.actionRequest,
+            sessionId: sessionIdRef.current,
+            capabilities: {
+              stream: false,
+              multimodalCards: CHATBOT_MULTIMODAL_CARDS_ENABLED,
+            },
+            signal: controller.signal,
+          });
+
+      const reply = await Promise.race([requestPromise, timeoutPromise]);
 
       const elapsedMs = performance.now() - requestStartedAt;
       const minDelayMs = computeReplyDelayMs(text);
@@ -1059,13 +1296,39 @@ export function SiteChatbot() {
       pushAssistantReply(reply, {
         responseLatencyMs: Math.round(performance.now() - requestStartedAt),
         requestChars: text.length,
+        replaceMessageId: streamedPlaceholderId,
       });
+
+      if (usedStreaming) {
+        trackEvent("chatbot_stream_completed", {
+          source: "site_chatbot",
+          durationMs: Math.round(performance.now() - requestStartedAt),
+        });
+        emitChatbotTelemetry("stream_completed", {
+          requestId: reply.requestId,
+          source: "edge",
+          edgeProvider: reply.edgeProvider,
+          routeDecision: reply.routeDecision,
+          routeCategory: reply.routeCategory,
+          responseLatencyMs: Math.round(performance.now() - requestStartedAt),
+          metadata: mergeTelemetryMetadata(
+            {
+              streamDurationMs: Math.round(performance.now() - requestStartedAt),
+            },
+            reply.planner,
+          ),
+        });
+      }
     } catch (error) {
       if (requestSequenceRef.current !== nextRequestId) {
         return;
       }
 
       const aborted = error instanceof DOMException && error.name === "AbortError";
+
+      if (usedStreaming && streamedPlaceholderId) {
+        removeMessageById(streamedPlaceholderId);
+      }
 
       toast.error(
         aborted
@@ -1076,6 +1339,22 @@ export function SiteChatbot() {
         source: "site_chatbot",
         aborted,
       });
+      if (usedStreaming) {
+        trackEvent("chatbot_stream_failed", {
+          source: "site_chatbot",
+          aborted,
+        });
+        emitChatbotTelemetry("stream_failed", {
+          source: "edge",
+          routeCategory: params.actionRequest ? "edge_tools" : undefined,
+          routeDecision: aborted ? "stream_timeout" : "stream_error",
+          responseLatencyMs: Math.round(performance.now() - requestStartedAt),
+          requestChars: text.length,
+          metadata: {
+            aborted,
+          },
+        });
+      }
       emitChatbotTelemetry("request_failed", {
         source: "local",
         routeCategory: "fallback",
@@ -1141,6 +1420,53 @@ export function SiteChatbot() {
     unlockRequestState();
   };
 
+  const buildLeadChatbotContext = useCallback(() => {
+    const lastAssistant = [...messages].reverse().find((message) => message.role === "assistant");
+    const selectedProperties = Array.from(
+      new Set([
+        ...(conversationState.selectedPropertyIds ?? []),
+        ...(conversationState.recentSearch?.resultIds ?? []).slice(0, 5),
+      ]),
+    ).slice(0, 8);
+
+    const toolSummary = lastAssistant
+      ? {
+          actionKinds: lastAssistant.actions?.map((action) => action.kind).slice(0, 8),
+          requestId: lastAssistant.requestId,
+          routeCategory: lastAssistant.routeCategory,
+          edgeProvider: lastAssistant.edgeProvider,
+        }
+      : undefined;
+
+    const multimodalHighlights = lastAssistant?.analysisCards?.slice(0, 4).map((card) => ({
+      kind: card.kind,
+      propertyId: card.propertyId,
+      title: card.title,
+      confidence: card.confidence,
+    }));
+
+    return {
+      sessionId: sessionIdRef.current,
+      conversationId: conversationIdRef.current,
+      preferences: conversationState.preferences,
+      qualification: {
+        leadFormVisible: showLeadCapture,
+        memorySummary: lastAssistant?.memory?.summary,
+      },
+      selectedProperties: selectedProperties.length > 0 ? selectedProperties : undefined,
+      planner: lastAssistant?.planner,
+      toolSummary,
+      multimodalHighlights: multimodalHighlights && multimodalHighlights.length > 0 ? multimodalHighlights : undefined,
+      sourceMetadata: {
+        latestRequestId: lastAssistant?.requestId,
+        latestRouteDecision: lastAssistant?.routeDecision,
+        latestRouteCategory: lastAssistant?.routeCategory,
+        latestRetrievalMode: lastAssistant?.retrievalMode,
+        latestAgentMode: lastAssistant?.agentMode,
+      },
+    } satisfies NonNullable<Parameters<typeof submitLead>[0]["chatbotContext"]>;
+  }, [conversationState, messages, showLeadCapture]);
+
   const handleLeadSubmit = async (event: FormEvent) => {
     event.preventDefault();
 
@@ -1159,6 +1485,7 @@ export function SiteChatbot() {
         email: leadForm.email,
         message: `Demande chatbot - aucun bien trouvé\n\nCritères: ${leadForm.criteria}`,
         consent: true,
+        chatbotContext: buildLeadChatbotContext(),
       });
 
       appendMessage({
@@ -1298,6 +1625,39 @@ export function SiteChatbot() {
       handleInternalPathClick(event, path);
     },
     [emitChatbotTelemetry, handleInternalPathClick],
+  );
+
+  const handleAnalysisEvidenceClick = useCallback(
+    (
+      message: ChatMessage,
+      card: ChatbotAnalysisCard,
+      evidence: NonNullable<ChatbotAnalysisCard["evidence"]>[number],
+    ) => {
+      const targetUrl = evidence.sourceUrl || evidence.thumbnailUrl;
+      if (!targetUrl) return;
+      trackEvent("chatbot_multimodal_analysis_clicked", {
+        kind: card.kind,
+        propertyId: card.propertyId,
+        routeCategory: message.routeCategory,
+      });
+      emitChatbotTelemetry("multimodal_analysis_clicked", {
+        messageId: message.id,
+        requestId: message.requestId,
+        source: message.source ?? "edge",
+        edgeProvider: message.edgeProvider,
+        routeDecision: message.routeDecision,
+        routeCategory: message.routeCategory,
+        metadata: mergeTelemetryMetadata(
+          {
+            multimodalKind: card.kind,
+            propertyId: card.propertyId,
+            evidenceUrl: targetUrl,
+          },
+          message.planner,
+        ),
+      });
+    },
+    [emitChatbotTelemetry],
   );
 
   const toggleSelectedPropertyId = useCallback((propertyId: number) => {
@@ -1688,6 +2048,81 @@ export function SiteChatbot() {
     ],
   );
 
+  const renderAnalysisCard = useCallback(
+    (message: ChatMessage, card: ChatbotAnalysisCard) => {
+      const kindLabel =
+        card.kind === "property_photo_insights"
+          ? "Photos"
+          : card.kind === "property_plan_insights"
+            ? "Plan"
+            : card.kind === "property_document_summary"
+              ? "Document"
+              : "Points de vigilance";
+
+      return (
+        <div key={`${message.id}-analysis-${card.id}`} className="mt-3 rounded-lg border border-border/70 bg-background/60 px-3 py-2 text-xs">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="rounded-full border border-border bg-background px-2 py-0.5 text-[10px] font-medium">
+              {kindLabel}
+            </span>
+            <span className="text-[10px] text-muted-foreground">Bien #{card.propertyId}</span>
+            {typeof card.confidence === "number" && (
+              <span className="text-[10px] text-muted-foreground">
+                Confiance: {Math.round(card.confidence * 100)}%
+              </span>
+            )}
+            {card.stale && (
+              <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] text-amber-700">
+                Données à rafraîchir
+              </span>
+            )}
+          </div>
+          <p className="mt-2 font-medium">{card.title}</p>
+          <p className="mt-1 whitespace-pre-line text-foreground/90">{card.summary}</p>
+          {card.evidence && card.evidence.length > 0 && (
+            <div className="mt-2 rounded-md border border-border/60 bg-card/80 px-2 py-2">
+              <p className="mb-1 text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+                Éléments de preuve
+              </p>
+              <div className="space-y-1">
+                {card.evidence.map((evidence, index) => {
+                  const href = evidence.sourceUrl || evidence.thumbnailUrl;
+                  const label =
+                    evidence.label ||
+                    (evidence.page ? `Page ${evidence.page}` : href ? `Source ${index + 1}` : `Élément ${index + 1}`);
+                  if (!href) {
+                    return (
+                      <div key={`${card.id}-evidence-${index}`} className="text-[11px] text-muted-foreground">
+                        {label}
+                      </div>
+                    );
+                  }
+                  return (
+                    <a
+                      key={`${card.id}-evidence-${index}`}
+                      href={href}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={() => handleAnalysisEvidenceClick(message, card, evidence)}
+                      className="block rounded-md px-1.5 py-1 text-[11px] text-foreground hover:bg-muted"
+                    >
+                      <span className="font-medium">{label}</span>
+                      {evidence.page ? <span className="ml-1 text-muted-foreground">(p.{evidence.page})</span> : null}
+                    </a>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          <p className="mt-2 text-[10px] text-muted-foreground">
+            Synthèse IA informative: vérifiez toujours les documents officiels.
+          </p>
+        </div>
+      );
+    },
+    [handleAnalysisEvidenceClick],
+  );
+
   const openChatWithGreeting = () => {
     if (open) {
       closeChat();
@@ -1763,6 +2198,61 @@ export function SiteChatbot() {
               </div>
             </header>
 
+            {CHATBOT_PERSISTENT_MEMORY_ENABLED &&
+              (conversationState.preferences?.city ||
+              conversationState.preferences?.transaction ||
+              conversationState.preferences?.type ||
+              typeof conversationState.preferences?.bedroomsMin === "number" ||
+              typeof conversationState.preferences?.priceMax === "number") && (
+              <div className="border-b border-border/70 px-4 py-2">
+                <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
+                  <span className="text-muted-foreground">Contexte mémorisé:</span>
+                  {conversationState.preferences?.transaction && (
+                    <span className="rounded-full border border-border bg-background px-2 py-0.5">
+                      {conversationState.preferences.transaction === "vente" ? "Achat" : "Location"}
+                    </span>
+                  )}
+                  {conversationState.preferences?.type && (
+                    <span className="rounded-full border border-border bg-background px-2 py-0.5">
+                      {conversationState.preferences.type === "maison_villa"
+                        ? "Maison"
+                        : conversationState.preferences.type === "appartement"
+                          ? "Appartement"
+                          : "Autre"}
+                    </span>
+                  )}
+                  {conversationState.preferences?.city && (
+                    <span className="rounded-full border border-border bg-background px-2 py-0.5">
+                      {conversationState.preferences.city}
+                    </span>
+                  )}
+                  {typeof conversationState.preferences?.bedroomsMin === "number" && (
+                    <span className="rounded-full border border-border bg-background px-2 py-0.5">
+                      {conversationState.preferences.bedroomsMin}+ ch.
+                    </span>
+                  )}
+                  {typeof conversationState.preferences?.priceMax === "number" && (
+                    <span className="rounded-full border border-border bg-background px-2 py-0.5">
+                      Budget max {formatCompactPrice(conversationState.preferences.priceMax, "EUR")}
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setConversationState((current) =>
+                        mergeConversationState(current, {
+                          preferences: {},
+                          selectedPropertyIds: [],
+                        }),
+                      )}
+                    className="rounded-full border border-dashed border-border bg-background px-2 py-0.5 text-muted-foreground hover:bg-muted"
+                  >
+                    Effacer
+                  </button>
+                </div>
+              </div>
+            )}
+
             <div ref={scrollRef} className="max-h-[52vh] space-y-3 overflow-y-auto px-4 py-4 sm:max-h-[56vh]">
               {messages.map((message) => (
                 <article
@@ -1825,6 +2315,15 @@ export function SiteChatbot() {
                       ))}
                     </div>
                   )}
+
+                  {CHATBOT_MULTIMODAL_CARDS_ENABLED &&
+                    message.role === "assistant" &&
+                    message.analysisCards &&
+                    message.analysisCards.length > 0 && (
+                      <div>
+                        {message.analysisCards.map((card) => renderAnalysisCard(message, card))}
+                      </div>
+                    )}
 
                   {message.role === "assistant" && !isOpeningGreetingMessage(message) && (
                     <div className="mt-3">

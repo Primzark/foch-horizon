@@ -3,7 +3,7 @@ import { leHavreDistrictHistory, leHavreFaq } from "@/features/content/data/leHa
 import { agencyReviewsFallbackSnapshot } from "@/features/content/api/googleReviews.service";
 import { properties } from "@/features/listings/data/properties";
 import { formatPrice, normalizeKeyword, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
-import { apiJson, isEdgeApiEnabled } from "@/lib/api/client";
+import { apiBaseUrl, apiJson, isEdgeApiEnabled } from "@/lib/api/client";
 
 export interface ChatbotPropertySuggestion {
   id: number;
@@ -92,7 +92,14 @@ export type ChatbotActionRequest =
     };
 
 export type ChatbotToolTrace = {
-  tool: "search_properties" | "get_properties" | "compare_properties" | "prepare_handoff";
+  tool:
+    | "search_properties"
+    | "get_properties"
+    | "compare_properties"
+    | "prepare_handoff"
+    | "get_property_media_context"
+    | "get_property_document_context"
+    | "retrieve_site_context";
   status: "ok" | "error" | "skipped";
   latencyMs: number;
   resultCount?: number;
@@ -102,11 +109,35 @@ export type ChatbotToolTrace = {
 export interface ChatbotPlannerMeta {
   provider: "gemini" | "fallback";
   mode: "disabled" | "gemini" | "deterministic_fallback";
-  decisionType: "tool_call" | "clarify" | "none";
-  toolName?: "search_properties" | "compare_properties" | "prepare_handoff";
+  decisionType: "tool_call" | "clarify" | "plan" | "none";
+  toolName?:
+    | "search_properties"
+    | "get_properties"
+    | "compare_properties"
+    | "prepare_handoff"
+    | "get_property_media_context"
+    | "get_property_document_context"
+    | "retrieve_site_context";
   reasonCode?: string;
   confidence?: number;
 }
+
+export type ChatbotAnalysisCard =
+  | {
+      id: string;
+      kind: "property_photo_insights" | "property_plan_insights" | "property_document_summary" | "property_risks_notice";
+      propertyId: number;
+      title: string;
+      summary: string;
+      confidence?: number;
+      stale?: boolean;
+      evidence?: Array<{
+        sourceUrl?: string;
+        thumbnailUrl?: string;
+        page?: number;
+        label?: string;
+      }>;
+    };
 
 interface ChatbotUiActionBase {
   id: string;
@@ -207,6 +238,18 @@ export interface ChatbotReply {
   requestId?: string;
   agentMode?: "tool" | "rag" | "fallback";
   planner?: ChatbotPlannerMeta;
+  analysisCards?: ChatbotAnalysisCard[];
+  memory?: {
+    updated: boolean;
+    preferenceKeys?: string[];
+    summary?: string;
+  };
+  costHints?: {
+    route: string;
+    multimodalUsed?: boolean;
+    estimatedClass?: "low" | "medium" | "high";
+  };
+  streamSupported?: boolean;
   source: "local" | "edge";
 }
 
@@ -215,7 +258,21 @@ export interface ChatbotRequest {
   chatHistory?: Array<{ role: "user" | "assistant"; content: string }>;
   conversationState?: ChatbotConversationState;
   actionRequest?: ChatbotActionRequest;
+  sessionId?: string;
+  capabilities?: {
+    stream?: boolean;
+    multimodalCards?: boolean;
+  };
   signal?: AbortSignal;
+}
+
+export interface ChatbotStreamHandlers {
+  onMeta?: (payload: Record<string, unknown>) => void;
+  onStatus?: (payload: Record<string, unknown>) => void;
+  onTextDelta?: (delta: string) => void;
+  onActions?: (actions: ChatbotUiAction[]) => void;
+  onCitations?: (citations: ChatbotCitation[]) => void;
+  onAnalysisCards?: (analysisCards: ChatbotAnalysisCard[]) => void;
 }
 
 export type ChatbotIntent =
@@ -1763,7 +1820,10 @@ function sanitizeToolTrace(raw: unknown): ChatbotToolTrace[] | undefined {
         trace.tool === "search_properties" ||
         trace.tool === "get_properties" ||
         trace.tool === "compare_properties" ||
-        trace.tool === "prepare_handoff"
+        trace.tool === "prepare_handoff" ||
+        trace.tool === "get_property_media_context" ||
+        trace.tool === "get_property_document_context" ||
+        trace.tool === "retrieve_site_context"
           ? trace.tool
           : null;
       const status = trace.status === "ok" || trace.status === "error" || trace.status === "skipped" ? trace.status : null;
@@ -1799,7 +1859,10 @@ function sanitizePlannerMeta(raw: unknown): ChatbotPlannerMeta | undefined {
       ? candidate.mode
       : null;
   const decisionType =
-    candidate.decisionType === "tool_call" || candidate.decisionType === "clarify" || candidate.decisionType === "none"
+    candidate.decisionType === "tool_call" ||
+    candidate.decisionType === "clarify" ||
+    candidate.decisionType === "plan" ||
+    candidate.decisionType === "none"
       ? candidate.decisionType
       : null;
   if (!provider || !mode || !decisionType) return undefined;
@@ -1810,8 +1873,12 @@ function sanitizePlannerMeta(raw: unknown): ChatbotPlannerMeta | undefined {
     decisionType,
     toolName:
       candidate.toolName === "search_properties" ||
+      candidate.toolName === "get_properties" ||
       candidate.toolName === "compare_properties" ||
-      candidate.toolName === "prepare_handoff"
+      candidate.toolName === "prepare_handoff" ||
+      candidate.toolName === "get_property_media_context" ||
+      candidate.toolName === "get_property_document_context" ||
+      candidate.toolName === "retrieve_site_context"
         ? candidate.toolName
         : undefined,
     reasonCode:
@@ -1821,6 +1888,91 @@ function sanitizePlannerMeta(raw: unknown): ChatbotPlannerMeta | undefined {
     confidence:
       typeof candidate.confidence === "number" && Number.isFinite(candidate.confidence)
         ? Math.max(0, Math.min(1, candidate.confidence))
+        : undefined,
+  };
+}
+
+function sanitizeAnalysisCards(raw: unknown): ChatbotAnalysisCard[] | undefined {
+  if (!Array.isArray(raw)) return undefined;
+  const cards = raw
+    .filter((value): value is Record<string, unknown> => Boolean(value && typeof value === "object"))
+    .map((card) => {
+      const kind =
+        card.kind === "property_photo_insights" ||
+        card.kind === "property_plan_insights" ||
+        card.kind === "property_document_summary" ||
+        card.kind === "property_risks_notice"
+          ? card.kind
+          : null;
+      const id = typeof card.id === "string" ? card.id.trim().slice(0, 120) : "";
+      const propertyId = typeof card.propertyId === "number" ? card.propertyId : Number(card.propertyId);
+      const title = typeof card.title === "string" ? card.title.trim().slice(0, 160) : "";
+      const summary = typeof card.summary === "string" ? card.summary.trim().slice(0, 1200) : "";
+      if (!kind || !id || !Number.isInteger(propertyId) || propertyId <= 0 || !title || !summary) return null;
+      return {
+        id,
+        kind,
+        propertyId,
+        title,
+        summary,
+        confidence:
+          typeof card.confidence === "number" && Number.isFinite(card.confidence)
+            ? Math.max(0, Math.min(1, card.confidence))
+            : undefined,
+        stale: typeof card.stale === "boolean" ? card.stale : undefined,
+        evidence: Array.isArray(card.evidence)
+          ? card.evidence
+              .filter((value): value is Record<string, unknown> => Boolean(value && typeof value === "object"))
+              .map((evidence) => ({
+                sourceUrl: typeof evidence.sourceUrl === "string" ? evidence.sourceUrl.trim().slice(0, 1000) : undefined,
+                thumbnailUrl:
+                  typeof evidence.thumbnailUrl === "string" ? evidence.thumbnailUrl.trim().slice(0, 1000) : undefined,
+                page:
+                  typeof evidence.page === "number" && Number.isFinite(evidence.page)
+                    ? Math.max(1, Math.floor(evidence.page))
+                    : undefined,
+                label: typeof evidence.label === "string" ? evidence.label.trim().slice(0, 120) : undefined,
+              }))
+              .slice(0, 6)
+          : undefined,
+      } satisfies ChatbotAnalysisCard;
+    })
+    .filter((card): card is ChatbotAnalysisCard => Boolean(card))
+    .slice(0, 8);
+  return cards.length > 0 ? cards : undefined;
+}
+
+function sanitizeMemoryMeta(raw: unknown): ChatbotReply["memory"] | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const candidate = raw as Record<string, unknown>;
+  if (typeof candidate.updated !== "boolean") return undefined;
+  return {
+    updated: candidate.updated,
+    preferenceKeys: Array.isArray(candidate.preferenceKeys)
+      ? candidate.preferenceKeys
+          .filter((v): v is string => typeof v === "string")
+          .map((v) => v.trim().slice(0, 80))
+          .filter(Boolean)
+          .slice(0, 20)
+      : undefined,
+    summary:
+      typeof candidate.summary === "string" && candidate.summary.trim().length > 0
+        ? candidate.summary.trim().slice(0, 500)
+        : undefined,
+  };
+}
+
+function sanitizeCostHints(raw: unknown): ChatbotReply["costHints"] | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const candidate = raw as Record<string, unknown>;
+  const route = typeof candidate.route === "string" ? candidate.route.trim().slice(0, 80) : "";
+  if (!route) return undefined;
+  return {
+    route,
+    multimodalUsed: typeof candidate.multimodalUsed === "boolean" ? candidate.multimodalUsed : undefined,
+    estimatedClass:
+      candidate.estimatedClass === "low" || candidate.estimatedClass === "medium" || candidate.estimatedClass === "high"
+        ? candidate.estimatedClass
         : undefined,
   };
 }
@@ -2088,6 +2240,10 @@ function normalizeReplyOutput(reply: ChatbotReply): ChatbotReply {
   const conversationStatePatch = sanitizeConversationStatePatch(reply.conversationStatePatch);
   const toolTrace = sanitizeToolTrace(reply.toolTrace);
   const planner = sanitizePlannerMeta(reply.planner);
+  const analysisCards = sanitizeAnalysisCards(reply.analysisCards);
+  const memory = sanitizeMemoryMeta(reply.memory);
+  const costHints = sanitizeCostHints(reply.costHints);
+  const streamSupported = typeof reply.streamSupported === "boolean" ? reply.streamSupported : undefined;
 
   return {
     ...reply,
@@ -2103,6 +2259,10 @@ function normalizeReplyOutput(reply: ChatbotReply): ChatbotReply {
     conversationStatePatch,
     toolTrace,
     planner,
+    analysisCards,
+    memory,
+    costHints,
+    streamSupported,
   };
 }
 
@@ -2188,6 +2348,176 @@ export async function askAgencyChatbot(request: ChatbotRequest): Promise<Chatbot
         target: "local",
         category: "fallback",
         reason: "edge_request_failed",
+      }),
+    );
+  }
+}
+
+function streamEndpointUrl(): string {
+  const path = "/api/chatbot-assistant-stream";
+  return isEdgeApiEnabled() && apiBaseUrl ? `${apiBaseUrl}${path}` : path;
+}
+
+async function parseSseResponseStream(
+  response: Response,
+  handlers?: ChatbotStreamHandlers,
+): Promise<ChatbotReply> {
+  if (!response.ok || !response.body) {
+    const text = await response.text().catch(() => "");
+    throw new Error(text || `Stream request failed (${response.status})`);
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let currentEvent = "message";
+  let currentData = "";
+  let finalReply: ChatbotReply | null = null;
+
+  const dispatchEvent = () => {
+    if (!currentData) {
+      currentEvent = "message";
+      return;
+    }
+    let payload: unknown;
+    try {
+      payload = JSON.parse(currentData);
+    } catch {
+      payload = { raw: currentData };
+    }
+
+    if (currentEvent === "meta" && handlers?.onMeta && payload && typeof payload === "object") {
+      handlers.onMeta(payload as Record<string, unknown>);
+    } else if (currentEvent === "status" && handlers?.onStatus && payload && typeof payload === "object") {
+      handlers.onStatus(payload as Record<string, unknown>);
+    } else if (currentEvent === "text_delta" && handlers?.onTextDelta && payload && typeof payload === "object") {
+      const delta = (payload as Record<string, unknown>).delta;
+      if (typeof delta === "string") handlers.onTextDelta(delta);
+    } else if (currentEvent === "citation" && handlers?.onCitations && payload && typeof payload === "object") {
+      const citations = sanitizeCitations((payload as Record<string, unknown>).citations);
+      if (citations) handlers.onCitations(citations);
+    } else if (currentEvent === "action" && payload && typeof payload === "object") {
+      if (handlers?.onActions) {
+        const actions = sanitizeActions((payload as Record<string, unknown>).actions);
+        if (actions) handlers.onActions(actions);
+      }
+      if (handlers?.onAnalysisCards) {
+        const analysisCards = sanitizeAnalysisCards((payload as Record<string, unknown>).analysisCards);
+        if (analysisCards) handlers.onAnalysisCards(analysisCards);
+      }
+    } else if (currentEvent === "done" && payload && typeof payload === "object") {
+      const replyCandidate = (payload as Record<string, unknown>).reply;
+      if (replyCandidate && typeof replyCandidate === "object") {
+        const maybeReply = replyCandidate as ChatbotReply;
+        if (isEdgeReplyUsable(maybeReply)) {
+          finalReply = normalizeReplyOutput({
+            ...maybeReply,
+            source: "edge",
+            edgeProvider:
+              maybeReply.edgeProvider ??
+              ((maybeReply as Partial<ChatbotReply> & { source?: unknown }).source === "gemini" ||
+              (maybeReply as Partial<ChatbotReply> & { source?: unknown }).source === "openai" ||
+              (maybeReply as Partial<ChatbotReply> & { source?: unknown }).source === "fallback"
+                ? ((maybeReply as Partial<ChatbotReply> & { source?: "gemini" | "openai" | "fallback" }).source ?? undefined)
+                : undefined),
+          });
+        }
+      }
+    } else if (currentEvent === "error" && payload && typeof payload === "object") {
+      const message = (payload as Record<string, unknown>).message;
+      if (typeof message === "string" && message.trim().length > 0) {
+        throw new Error(message);
+      }
+    }
+    currentEvent = "message";
+    currentData = "";
+  };
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    let delimiterIndex = buffer.indexOf("\n\n");
+    while (delimiterIndex !== -1) {
+      const rawEvent = buffer.slice(0, delimiterIndex);
+      buffer = buffer.slice(delimiterIndex + 2);
+      currentEvent = "message";
+      currentData = "";
+      for (const rawLine of rawEvent.split(/\r?\n/)) {
+        const line = rawLine.trimEnd();
+        if (!line) continue;
+        if (line.startsWith("event:")) {
+          currentEvent = line.slice(6).trim();
+          continue;
+        }
+        if (line.startsWith("data:")) {
+          const dataLine = line.slice(5).trim();
+          currentData = currentData ? `${currentData}\n${dataLine}` : dataLine;
+        }
+      }
+      dispatchEvent();
+      delimiterIndex = buffer.indexOf("\n\n");
+    }
+  }
+
+  if (!finalReply) {
+    throw new Error("Streaming response completed without final reply.");
+  }
+  return finalReply;
+}
+
+export async function askAgencyChatbotStream(
+  request: ChatbotRequest,
+  handlers?: ChatbotStreamHandlers,
+): Promise<ChatbotReply> {
+  const context = buildConversationContext(request.question, request.chatHistory);
+  const edgeRagForWebsiteQuestionsEnabled =
+    (import.meta.env.VITE_CHATBOT_ENABLE_EDGE_RAG as string | undefined)?.toLowerCase() === "true";
+  const edgeAgentToolsEnabled =
+    ((import.meta.env.VITE_CHATBOT_ENABLE_EDGE_AGENT_TOOLS as string | undefined) ?? "false").toLowerCase() === "true";
+  const routerV2Enabled = ((import.meta.env.VITE_CHATBOT_ROUTER_V2 as string | undefined) ?? "true").toLowerCase() !== "false";
+  const routeDecision = decideChatbotRoute(context, {
+    edgeApiEnabled: isEdgeApiEnabled(),
+    edgeRagForWebsiteQuestionsEnabled,
+    edgeAgentToolsEnabled,
+    routerV2Enabled,
+  }, {
+    actionRequest: request.actionRequest,
+    conversationState: request.conversationState,
+  });
+
+  let localReplyCache: ChatbotReply | null = null;
+  const getLocalReply = () => {
+    if (!localReplyCache) {
+      localReplyCache = normalizeReplyOutput(buildLocalReply(request.question, context));
+    }
+    return localReplyCache;
+  };
+
+  if (routeDecision.target === "local") {
+    return normalizeReplyOutput(applyRouteMetadata(getLocalReply(), routeDecision));
+  }
+
+  const { signal, ...requestPayload } = request;
+  const response = await fetch(streamEndpointUrl(), {
+    method: "POST",
+    signal,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(requestPayload),
+  });
+
+  try {
+    const streamedReply = await parseSseResponseStream(response, handlers);
+    return normalizeReplyOutput(applyRouteMetadata(streamedReply, routeDecision));
+  } catch {
+    return normalizeReplyOutput(
+      applyRouteMetadata(getLocalReply(), {
+        ...routeDecision,
+        target: "local",
+        category: "fallback",
+        reason: "edge_stream_failed",
       }),
     );
   }

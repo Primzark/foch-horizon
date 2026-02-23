@@ -20,7 +20,15 @@ export type AnalyticsEventName =
   | "chatbot_tool_action_clicked"
   | "chatbot_tool_orchestration_result"
   | "chatbot_tool_compare_requested"
-  | "chatbot_tool_handoff_prefill_opened";
+  | "chatbot_tool_handoff_prefill_opened"
+  | "chatbot_stream_started"
+  | "chatbot_stream_completed"
+  | "chatbot_stream_failed"
+  | "chatbot_multimodal_analysis_rendered"
+  | "chatbot_multimodal_analysis_clicked"
+  | "chatbot_memory_updated"
+  | "chatbot_planner_v2_plan_executed"
+  | "chatbot_planner_v2_clarify";
 
 export function trackEvent(name: AnalyticsEventName, payload?: Record<string, unknown>): void {
   if (typeof window === "undefined") {

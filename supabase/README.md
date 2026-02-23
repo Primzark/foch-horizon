@@ -99,6 +99,46 @@ Notes:
 - Invalid planner JSON, timeout, or missing Gemini key automatically falls back to the deterministic tool path.
 - Planner metadata is returned in edge responses and forwarded to telemetry metadata, but not shown in the chat UI.
 
+### Gemini Max (phased foundations)
+
+This repo now includes the Phase 1/2 foundation scaffolding for a larger Gemini-powered chatbot upgrade:
+
+- `functions/chatbot-assistant-stream`: SSE wrapper endpoint for streaming-compatible chat UX
+- Planner v2 scaffolding (multi-step validated plans, feature-flagged)
+- Persistent memory table scaffolding (structured preferences only)
+- Multimodal cache table scaffolding (property images/documents analysis)
+- Eval/ops tables + dashboard views scaffolding
+- Worker/script stubs for multimodal analysis and eval execution
+
+Recommended rollout order:
+
+1. Apply the new migrations.
+2. Deploy `chatbot-assistant` and `chatbot-assistant-stream`.
+3. Keep all new flags disabled first (`CHATBOT_GEMINI_PLANNER_V2_ENABLED=false`, `CHATBOT_MEMORY_ENABLED=false`, `CHATBOT_MULTIMODAL_ENABLED=false`, `CHATBOT_STREAM_ENABLED=false`).
+4. Enable streaming in staging, then planner v2, then memory, then multimodal cache reads.
+
+### New runtime flags (Gemini Max foundations)
+
+- `CHATBOT_GEMINI_PLANNER_V2_ENABLED=false`
+- `CHATBOT_GEMINI_PLANNER_MAX_STEPS=3`
+- `CHATBOT_MEMORY_ENABLED=false`
+- `CHATBOT_MEMORY_MODEL=gemini-2.5-flash-lite`
+- `CHATBOT_MULTIMODAL_ENABLED=false`
+- `CHATBOT_MULTIMODAL_MODEL=gemini-2.5-flash`
+- `CHATBOT_MULTIMODAL_ON_DEMAND_ENABLED=true`
+- `CHATBOT_MULTIMODAL_MAX_IMAGES_PER_PROPERTY=6`
+- `CHATBOT_MULTIMODAL_MAX_PDF_PAGES=20`
+- `CHATBOT_MULTIMODAL_FETCH_TIMEOUT_MS=5000`
+- `CHATBOT_STREAM_ENABLED=false`
+- `CHATBOT_EVALS_ENABLED=false`
+- `CHATBOT_ALERTS_WEBHOOK_URL` (optional ops alerts webhook)
+
+### Frontend feature flags (Gemini Max foundations)
+
+- `VITE_CHATBOT_STREAMING_ENABLED=true` enables SSE chat path with JSON fallback
+- `VITE_CHATBOT_MULTIMODAL_CARDS_ENABLED=true` renders multimodal insight cards if returned
+- `VITE_CHATBOT_PERSISTENT_MEMORY_ENABLED=true` reserves UI affordances for memory-aware flows (backend memory can still remain disabled)
+
 ### Automated re-index (GitHub Actions)
 
 The workflow `\.github/workflows/chatbot-rag-reindex.yml` runs:

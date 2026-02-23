@@ -14,6 +14,38 @@ const payloadSchema = z.object({
   consent: z.literal(true),
   callbackWindow: z.string().optional(),
   financingStatus: z.enum(["cash", "mortgage_in_progress", "needs_financing"]).optional(),
+  chatbotContext: z
+    .object({
+      sessionId: z.string().min(1).max(120).optional(),
+      conversationId: z.string().min(1).max(120).optional(),
+      preferences: z.record(z.string(), z.unknown()).optional(),
+      qualification: z.record(z.string(), z.unknown()).optional(),
+      selectedProperties: z.array(z.number().int().positive()).max(10).optional(),
+      planner: z.record(z.string(), z.unknown()).optional(),
+      toolSummary: z
+        .object({
+          actionKinds: z.array(z.string().min(1).max(60)).max(12).optional(),
+          requestId: z.string().min(1).max(120).optional(),
+          routeCategory: z.string().min(1).max(80).optional(),
+          edgeProvider: z.string().min(1).max(80).optional(),
+        })
+        .partial()
+        .optional(),
+      multimodalHighlights: z
+        .array(
+          z.object({
+            kind: z.string().min(1).max(80),
+            propertyId: z.number().int().positive().optional(),
+            title: z.string().min(1).max(200).optional(),
+            confidence: z.number().min(0).max(1).optional(),
+          }),
+        )
+        .max(8)
+        .optional(),
+      sourceMetadata: z.record(z.string(), z.unknown()).optional(),
+    })
+    .strict()
+    .optional(),
 });
 
 function getClientIp(request: Request): string | null {
@@ -48,6 +80,7 @@ async function sendWebhookNotification(payload: z.infer<typeof payloadSchema>, a
       assignedAgentId,
       createdAt: new Date().toISOString(),
       lead: payload,
+      chatbotContext: payload.chatbotContext ?? null,
     }),
   });
 
@@ -67,6 +100,12 @@ async function sendResendNotification(payload: z.infer<typeof payloadSchema>, as
   const subject = `[Lead ${payload.source}] ${payload.firstName} ${payload.lastName}`;
 
   const safeMessage = escapeHtml(payload.message);
+  const chatbotContextSummary = payload.chatbotContext
+    ? `
+    <h3>Contexte chatbot (structuré)</h3>
+    <pre>${escapeHtml(JSON.stringify(payload.chatbotContext, null, 2))}</pre>
+  `
+    : "";
   const html = `
     <h2>Nouveau lead Foch Immobilier</h2>
     <p><strong>Source:</strong> ${escapeHtml(payload.source)}</p>
@@ -78,6 +117,7 @@ async function sendResendNotification(payload: z.infer<typeof payloadSchema>, as
     <p><strong>Agent assigné:</strong> ${escapeHtml(assignedAgentId ?? "non assigné")}</p>
     <p><strong>Message:</strong></p>
     <pre>${safeMessage}</pre>
+    ${chatbotContextSummary}
   `;
 
   const response = await fetch("https://api.resend.com/emails", {

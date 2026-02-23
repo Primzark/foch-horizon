@@ -78,6 +78,28 @@ export interface Property {
 
 export type LeadSource = "contact_page" | "property_page" | "estimation" | "favorites_share";
 
+export interface LeadChatbotContext {
+  sessionId?: string;
+  conversationId?: string;
+  preferences?: Record<string, unknown>;
+  qualification?: Record<string, unknown>;
+  selectedProperties?: number[];
+  planner?: Record<string, unknown>;
+  toolSummary?: {
+    actionKinds?: string[];
+    requestId?: string;
+    routeCategory?: string;
+    edgeProvider?: string;
+  };
+  multimodalHighlights?: Array<{
+    kind: string;
+    propertyId?: number;
+    title?: string;
+    confidence?: number;
+  }>;
+  sourceMetadata?: Record<string, unknown>;
+}
+
 export interface LeadInput {
   source: LeadSource;
   propertyId?: number;
@@ -91,6 +113,7 @@ export interface LeadInput {
   preferredDates?: string[];
   callbackWindow?: string;
   financingStatus?: "not_defined" | "cash" | "mortgage_in_progress" | "needs_financing";
+  chatbotContext?: LeadChatbotContext;
 }
 
 export interface LeadRecord extends LeadInput {

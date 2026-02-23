@@ -1,0 +1,34 @@
+name: Chatbot Evals
+
+on:
+  schedule:
+    - cron: '15 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  evals:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run chatbot evals
+        env:
+          EDGE_API_BASE_URL: ${{ secrets.EDGE_API_BASE_URL }}
+          EDGE_ANON_KEY: ${{ secrets.EDGE_ANON_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          CHATBOT_ALERTS_WEBHOOK_URL: ${{ secrets.CHATBOT_ALERTS_WEBHOOK_URL }}
+          CHATBOT_EVAL_ENV: github_actions
+          GIT_SHA: ${{ github.sha }}
+        run: npm run chatbot:evals -- --suite=core

@@ -12,7 +12,15 @@ export type ChatbotTelemetryEventType =
   | "tool_action_clicked"
   | "tool_orchestration_result"
   | "tool_compare_requested"
-  | "tool_handoff_prefill_opened";
+  | "tool_handoff_prefill_opened"
+  | "multimodal_analysis_rendered"
+  | "multimodal_analysis_clicked"
+  | "memory_updated"
+  | "planner_v2_plan_executed"
+  | "planner_v2_clarify"
+  | "stream_started"
+  | "stream_completed"
+  | "stream_failed";
 
 export interface ChatbotTelemetryEvent {
   eventId: string;

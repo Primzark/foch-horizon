@@ -42,6 +42,19 @@ interface ProviderImageInput {
   alt_text?: string;
 }
 
+interface ProviderDocumentInput {
+  sourceUrl?: string;
+  source_url?: string;
+  url?: string;
+  href?: string;
+  kind?: string;
+  type?: string;
+  mimeType?: string;
+  mime_type?: string;
+  label?: string;
+  name?: string;
+}
+
 interface ProviderProperty {
   id: number;
   title: string;
@@ -73,6 +86,7 @@ interface ProviderProperty {
   isFeatured?: boolean;
   imageUrls?: string[];
   images?: ProviderImageInput[];
+  documents?: ProviderDocumentInput[];
   features?: Array<string | ProviderFeatureInput>;
 }
 
@@ -92,7 +106,9 @@ interface SyncSummary {
   cityCount: number;
   propertyUpserts: number;
   imageRows: number;
+  documentRows: number;
   featureRows: number;
+  mediaAnalysisJobs: number;
   offMarketReconciled: number;
   startedAt: string;
   finishedAt: string;
@@ -388,6 +404,41 @@ function normalizeFeatures(row: JsonObject): Array<string | ProviderFeatureInput
   return output;
 }
 
+function normalizeDocuments(row: JsonObject): ProviderDocumentInput[] {
+  const candidateArrays = [
+    readArrayCandidate(pickFirst(row.documents, row.files, row.attachments, row.pdfs, row.brochures, row.plans)),
+    readArrayCandidate(getAtPath(row, "documents.items")),
+    readArrayCandidate(getAtPath(row, "attachments.items")),
+  ].filter((value): value is unknown[] => Array.isArray(value));
+
+  const output: ProviderDocumentInput[] = [];
+  const seen = new Set<string>();
+
+  for (const list of candidateArrays) {
+    for (const item of list) {
+      if (typeof item === "string") {
+        const sourceUrl = pickString(item);
+        if (!sourceUrl || seen.has(sourceUrl)) continue;
+        seen.add(sourceUrl);
+        output.push({ sourceUrl });
+        continue;
+      }
+      if (!isRecord(item)) continue;
+      const sourceUrl = pickString(item.sourceUrl, item.source_url, item.url, item.href);
+      if (!sourceUrl || seen.has(sourceUrl)) continue;
+      seen.add(sourceUrl);
+      output.push({
+        sourceUrl,
+        kind: pickString(item.kind, item.type),
+        mimeType: pickString(item.mimeType, item.mime_type, item.contentType, item.content_type),
+        label: pickString(item.label, item.name, item.title),
+      });
+    }
+  }
+
+  return output;
+}
+
 function coerceProviderProperty(raw: unknown): ProviderProperty | null {
   if (!isRecord(raw)) return null;
 
@@ -419,6 +470,7 @@ function coerceProviderProperty(raw: unknown): ProviderProperty | null {
 
   const images = normalizeImages(raw, title);
   const features = normalizeFeatures(raw);
+  const documents = normalizeDocuments(raw);
 
   return {
     id,
@@ -451,6 +503,7 @@ function coerceProviderProperty(raw: unknown): ProviderProperty | null {
     isFeatured: Boolean(pickFirst(raw.isFeatured, raw.is_featured) ?? false),
     images,
     imageUrls: images.map((image) => image.sourceUrl ?? "").filter(Boolean),
+    documents,
     features,
   };
 }
@@ -801,6 +854,43 @@ function buildFeatureRows(properties: ProviderProperty[]): Array<Record<string, 
   return rows;
 }
 
+function inferDocumentKind(input: ProviderDocumentInput): "dpe_pdf" | "diagnostic_pdf" | "floor_plan_pdf" | "brochure_pdf" | "other" {
+  const raw = normalizeKey(
+    pickString(input.kind, input.type, input.label, input.name, input.mimeType, input.mime_type, input.sourceUrl, input.url) ?? "",
+  );
+  if (raw.includes("dpe")) return "dpe_pdf";
+  if (raw.includes("diagnostic")) return "diagnostic_pdf";
+  if (raw.includes("plan") || raw.includes("floor")) return "floor_plan_pdf";
+  if (raw.includes("brochure") || raw.includes("plaquette")) return "brochure_pdf";
+  return "other";
+}
+
+function buildDocumentRows(properties: ProviderProperty[]): Array<Record<string, unknown>> {
+  const now = new Date().toISOString();
+  const rows: Array<Record<string, unknown>> = [];
+  for (const property of properties) {
+    const seen = new Set<string>();
+    for (const document of property.documents ?? []) {
+      const sourceUrl = pickString(document.sourceUrl, document.source_url, document.url, document.href);
+      if (!sourceUrl || seen.has(sourceUrl)) continue;
+      seen.add(sourceUrl);
+      rows.push({
+        property_id: property.id,
+        kind: inferDocumentKind(document),
+        source_url: sourceUrl,
+        mime_type: pickString(document.mimeType, document.mime_type) ?? null,
+        status: "pending",
+        metadata: {
+          label: pickString(document.label, document.name) ?? null,
+          provider_discovered: true,
+        },
+        updated_at: now,
+      });
+    }
+  }
+  return rows;
+}
+
 async function replaceChildCollections(
   supabase: ReturnType<typeof createClient>,
   propertyIds: number[],
@@ -827,6 +917,71 @@ async function replaceChildCollections(
     if (batch.length === 0) continue;
     const { error } = await supabase.from("property_features").insert(batch);
     if (error) throw error;
+  }
+}
+
+async function upsertPropertyDocumentsAndQueueAnalysisJobs(
+  supabase: ReturnType<typeof createClient>,
+  properties: ProviderProperty[],
+): Promise<{ documentRows: number; queuedJobs: number }> {
+  const documentRows = buildDocumentRows(properties);
+  if (documentRows.length === 0) {
+    return { documentRows: 0, queuedJobs: 0 };
+  }
+
+  const propertyIds = Array.from(new Set(documentRows.map((row) => Number(row.property_id)).filter((id) => Number.isInteger(id) && id > 0)));
+  let queuedJobs = 0;
+
+  try {
+    for (const batch of chunk(documentRows, 200)) {
+      const { error } = await supabase.from("property_documents").upsert(batch, { onConflict: "property_id,kind,source_url" });
+      if (error) throw error;
+    }
+
+    const jobRows = propertyIds.map((propertyId) => ({
+      property_id: propertyId,
+      job_type: "analyze_documents",
+      status: "queued",
+      priority: 60,
+      payload: { trigger: "provider_sync" },
+    }));
+
+    for (const batch of chunk(jobRows, 200)) {
+      const { error } = await supabase.from("property_media_analysis_jobs").insert(batch);
+      if (error) throw error;
+      queuedJobs += batch.length;
+    }
+  } catch (error) {
+    console.warn("provider_sync_documents_skipped", getErrorMessage(error));
+    return { documentRows: 0, queuedJobs: 0 };
+  }
+
+  return { documentRows: documentRows.length, queuedJobs };
+}
+
+async function queueImageAnalysisJobs(
+  supabase: ReturnType<typeof createClient>,
+  propertyIds: number[],
+): Promise<number> {
+  if (propertyIds.length === 0) return 0;
+  try {
+    let queuedJobs = 0;
+    const rows = propertyIds.map((propertyId) => ({
+      property_id: propertyId,
+      job_type: "analyze_images",
+      status: "queued",
+      priority: 55,
+      payload: { trigger: "provider_sync" },
+    }));
+    for (const batch of chunk(rows, 200)) {
+      const { error } = await supabase.from("property_media_analysis_jobs").insert(batch);
+      if (error) throw error;
+      queuedJobs += batch.length;
+    }
+    return queuedJobs;
+  } catch (error) {
+    console.warn("provider_sync_image_analysis_jobs_skipped", getErrorMessage(error));
+    return 0;
   }
 }
 
@@ -879,9 +1034,11 @@ async function runSync(options: CliOptions): Promise<SyncSummary> {
 
   const imageRows = buildImageRows(properties);
   const featureRows = buildFeatureRows(properties);
+  const documentRows = buildDocumentRows(properties);
   const sourceIds = new Set(properties.map((property) => property.id));
 
   let offMarketReconciled = 0;
+  let mediaAnalysisJobs = 0;
 
   if (!options.dryRun && properties.length > 0) {
     if (!supabase) {
@@ -898,6 +1055,11 @@ async function runSync(options: CliOptions): Promise<SyncSummary> {
     }
 
     await replaceChildCollections(supabase, Array.from(sourceIds), imageRows, featureRows);
+
+    mediaAnalysisJobs += await queueImageAnalysisJobs(supabase, Array.from(sourceIds));
+
+    const documentsSync = await upsertPropertyDocumentsAndQueueAnalysisJobs(supabase, properties);
+    mediaAnalysisJobs += documentsSync.queuedJobs;
 
     const shouldReconcile =
       options.mode === "full" || (options.mode === "incremental" && options.reconcileMissing);
@@ -919,7 +1081,9 @@ async function runSync(options: CliOptions): Promise<SyncSummary> {
     cityCount: new Set(properties.map((property) => property.citySlug)).size,
     propertyUpserts: options.dryRun ? 0 : properties.length,
     imageRows: imageRows.length,
+    documentRows: documentRows.length,
     featureRows: featureRows.length,
+    mediaAnalysisJobs,
     offMarketReconciled,
     startedAt,
     finishedAt,

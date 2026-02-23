@@ -13,6 +13,7 @@
     "sync:annonces": "node scripts/sync-fochimmobilier-properties.mjs",
     "chatbot:index:site": "node scripts/chatbot/index-site-rag.mjs",
     "chatbot:index:site:headless": "node scripts/chatbot/index-site-rag.mjs --headless",
+    "chatbot:evals": "node scripts/chatbot/run-evals.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:edge": "RUN_EDGE_INTEGRATION=true vitest run src/test/edge-endpoints.integration.test.ts",

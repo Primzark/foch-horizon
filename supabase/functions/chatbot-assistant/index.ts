@@ -67,6 +67,13 @@ const payloadSchema = z.object({
     .optional(),
   conversationState: conversationStateSchema.optional(),
   actionRequest: actionRequestSchema.optional(),
+  sessionId: z.string().min(1).max(120).optional(),
+  capabilities: z
+    .object({
+      stream: z.boolean().optional(),
+      multimodalCards: z.boolean().optional(),
+    })
+    .optional(),
 });
 
 const systemPrompt = `You are the assistant for Foch Immobilier in Le Havre, France.
@@ -176,7 +183,14 @@ interface ToolCompareProperty {
 }
 
 interface ToolTraceItem {
-  tool: "search_properties" | "get_properties" | "compare_properties" | "prepare_handoff";
+  tool:
+    | "search_properties"
+    | "get_properties"
+    | "compare_properties"
+    | "prepare_handoff"
+    | "get_property_media_context"
+    | "get_property_document_context"
+    | "retrieve_site_context";
   status: "ok" | "error" | "skipped";
   latencyMs: number;
   resultCount?: number;
@@ -242,6 +256,42 @@ type ToolUiAction =
   | ToolUiActionLeadHandoffDraft
   | ToolUiActionNotice;
 
+type AnalysisCardKind =
+  | "property_photo_insights"
+  | "property_plan_insights"
+  | "property_document_summary"
+  | "property_risks_notice";
+
+interface AnalysisCardEvidenceItem {
+  sourceUrl?: string;
+  thumbnailUrl?: string;
+  page?: number;
+  label?: string;
+}
+
+interface AnalysisCard {
+  id: string;
+  kind: AnalysisCardKind;
+  propertyId: number;
+  title: string;
+  summary: string;
+  confidence?: number;
+  stale?: boolean;
+  evidence?: AnalysisCardEvidenceItem[];
+}
+
+interface MemoryResponseMeta {
+  updated: boolean;
+  preferenceKeys?: string[];
+  summary?: string;
+}
+
+interface CostHints {
+  route: string;
+  multimodalUsed?: boolean;
+  estimatedClass?: "low" | "medium" | "high";
+}
+
 interface ToolOrchestrationResult {
   answer: string;
   suggestedPrompts: string[];
@@ -250,10 +300,20 @@ interface ToolOrchestrationResult {
   toolTrace: ToolTraceItem[];
   agentMode: AgentMode;
   planner?: PlannerMeta;
+  analysisCards?: AnalysisCard[];
+  memory?: MemoryResponseMeta;
+  costHints?: CostHints;
 }
 
-type PlannerToolName = "search_properties" | "compare_properties" | "prepare_handoff";
-type PlannerDecisionType = "tool_call" | "clarify" | "none";
+type PlannerToolName =
+  | "search_properties"
+  | "get_properties"
+  | "compare_properties"
+  | "prepare_handoff"
+  | "get_property_media_context"
+  | "get_property_document_context"
+  | "retrieve_site_context";
+type PlannerDecisionType = "tool_call" | "clarify" | "plan" | "none";
 type PlannerMode = "disabled" | "gemini" | "deterministic_fallback";
 
 interface PlannerMeta {
@@ -271,10 +331,20 @@ interface PlannerClarification {
   options?: string[];
 }
 
+interface PlannerStep {
+  tool: PlannerToolName;
+  args?: Record<string, unknown>;
+  purpose?: string;
+}
+
 type PlannerToolArgs =
   | ({ tool: "search_properties"; args: ToolSearchParams })
+  | ({ tool: "get_properties"; args?: { propertyIds?: number[] } })
   | ({ tool: "compare_properties"; args?: { propertyIds?: number[] } })
-  | ({ tool: "prepare_handoff"; args?: { propertyIds?: number[] } });
+  | ({ tool: "prepare_handoff"; args?: { propertyIds?: number[] } })
+  | ({ tool: "get_property_media_context"; args?: { propertyIds?: number[] } })
+  | ({ tool: "get_property_document_context"; args?: { propertyIds?: number[] } })
+  | ({ tool: "retrieve_site_context"; args?: { query?: string } });
 
 type PlannerDecision =
   | {
@@ -290,6 +360,14 @@ type PlannerDecision =
       confidence?: number;
       reasonCode?: string;
       clarification: PlannerClarification;
+    }
+  | {
+      version: 2;
+      decisionType: "plan";
+      confidence?: number;
+      reasonCode?: string;
+      steps: PlannerStep[];
+      finalResponseMode?: "tool_summary" | "tool_plus_multimodal_summary";
     };
 
 const plannerRawToolCallSchema = z.object({
@@ -310,6 +388,16 @@ const plannerRawDecisionSchema = z.object({
   reasonCode: z.string().optional(),
   toolCall: plannerRawToolCallSchema.optional(),
   clarification: plannerRawClarificationSchema.optional(),
+  steps: z
+    .array(
+      z.object({
+        tool: z.string().min(1),
+        args: z.unknown().optional(),
+        purpose: z.string().optional(),
+      }),
+    )
+    .optional(),
+  finalResponseMode: z.string().optional(),
 });
 
 interface RAGMatchRow {
@@ -1028,6 +1116,8 @@ interface GeminiPlannerConfig {
   includeHistoryTurns: number;
   maxQuestionChars: number;
   temperature: number;
+  v2Enabled: boolean;
+  maxSteps: number;
 }
 
 function resolveGeminiPlannerConfig(): GeminiPlannerConfig | null {
@@ -1045,6 +1135,8 @@ function resolveGeminiPlannerConfig(): GeminiPlannerConfig | null {
     includeHistoryTurns: clamp(Math.floor(parseNumberEnv("CHATBOT_GEMINI_PLANNER_INCLUDE_HISTORY_TURNS", 4)), 0, 6),
     maxQuestionChars: clamp(Math.floor(parseNumberEnv("CHATBOT_GEMINI_PLANNER_MAX_QUESTION_CHARS", 700)), 80, 1200),
     temperature: clamp(parseNumberEnv("CHATBOT_GEMINI_PLANNER_TEMPERATURE", 0), 0, 1),
+    v2Enabled: parseBooleanEnv("CHATBOT_GEMINI_PLANNER_V2_ENABLED", false),
+    maxSteps: clamp(Math.floor(parseNumberEnv("CHATBOT_GEMINI_PLANNER_MAX_STEPS", 3)), 1, 3),
   };
 }
 
@@ -1149,19 +1241,24 @@ function normalizePlannerRawInput(raw: unknown): unknown {
     const v = value.trim().toLowerCase();
     if (v === "tool_call" || v === "toolcall" || v === "tool" || v === "call_tool") return "tool_call";
     if (v === "clarify" || v === "clarification" || v === "ask_clarification" || v === "question") return "clarify";
+    if (v === "plan" || v === "tool_plan" || v === "multi_step_plan") return "plan";
     return value;
   };
   const normalizeToolName = (value: unknown): string | undefined => {
     if (typeof value !== "string") return undefined;
     const v = value.trim().toLowerCase();
     if (v === "search_properties" || v === "search" || v === "property_search") return "search_properties";
+    if (v === "get_properties" || v === "get_property" || v === "fetch_properties") return "get_properties";
     if (v === "compare_properties" || v === "compare" || v === "comparison") return "compare_properties";
     if (v === "prepare_handoff" || v === "handoff" || v === "contact" || v === "prepare_contact") return "prepare_handoff";
+    if (v === "get_property_media_context" || v === "property_media" || v === "media_context") return "get_property_media_context";
+    if (v === "get_property_document_context" || v === "property_documents" || v === "document_context") return "get_property_document_context";
+    if (v === "retrieve_site_context" || v === "site_context") return "retrieve_site_context";
     return value;
   };
 
   const normalized: Record<string, unknown> = {
-    version: root.version === 1 ? 1 : 1,
+    version: root.version === 2 ? 2 : 1,
     decisionType: normalizeDecisionType(root.decisionType ?? root.decision_type ?? root.type),
     confidence:
       typeof root.confidence === "number"
@@ -1217,9 +1314,42 @@ function normalizePlannerRawInput(raw: unknown): unknown {
     };
   }
 
+  const stepArray = Array.isArray(root.steps)
+    ? root.steps
+    : Array.isArray(root.plan)
+      ? root.plan
+      : Array.isArray((root as Record<string, unknown>).toolPlan)
+        ? ((root as Record<string, unknown>).toolPlan as unknown[])
+        : null;
+  if (stepArray) {
+    normalized.steps = stepArray
+      .filter((step) => step && typeof step === "object")
+      .map((step) => {
+        const candidate = step as Record<string, unknown>;
+        const functionObj =
+          candidate.function && typeof candidate.function === "object" && !Array.isArray(candidate.function)
+            ? (candidate.function as Record<string, unknown>)
+            : null;
+        return {
+          tool: normalizeToolName(
+            candidate.tool ?? candidate.name ?? candidate.toolName ?? candidate.tool_name ?? functionObj?.name,
+          ),
+          args: maybeParseJsonString(
+            candidate.args ?? candidate.arguments ?? candidate.parameters ?? functionObj?.args ?? functionObj?.arguments,
+          ),
+          purpose: typeof candidate.purpose === "string" ? candidate.purpose : undefined,
+        };
+      });
+  }
+
+  if (root.finalResponseMode || (root as Record<string, unknown>).final_response_mode) {
+    normalized.finalResponseMode = root.finalResponseMode ?? (root as Record<string, unknown>).final_response_mode;
+  }
+
   if (!normalized.decisionType) {
     if (normalized.toolCall) normalized.decisionType = "tool_call";
     else if (normalized.clarification) normalized.decisionType = "clarify";
+    else if (Array.isArray(normalized.steps)) normalized.decisionType = "plan";
   }
 
   return normalized;
@@ -1231,7 +1361,7 @@ function sanitizePlannerDecision(raw: unknown): PlannerDecision | null {
 
   const candidate = parsed.data;
   const decisionType = String(candidate.decisionType).trim().toLowerCase();
-  if (decisionType !== "tool_call" && decisionType !== "clarify") return null;
+  if (decisionType !== "tool_call" && decisionType !== "clarify" && decisionType !== "plan") return null;
   const confidence = typeof candidate.confidence === "number" ? clamp01(candidate.confidence) : undefined;
   const reasonCode = typeof candidate.reasonCode === "string" ? candidate.reasonCode.trim().slice(0, 80) : undefined;
 
@@ -1261,6 +1391,62 @@ function sanitizePlannerDecision(raw: unknown): PlannerDecision | null {
         missingFields,
         options: candidate.clarification.options?.map((option) => option.trim().slice(0, 120)).filter(Boolean).slice(0, 4),
       },
+    };
+  }
+
+  if (decisionType === "plan") {
+    const allowedTools = new Set<PlannerToolName>([
+      "search_properties",
+      "get_properties",
+      "compare_properties",
+      "prepare_handoff",
+      "get_property_media_context",
+      "get_property_document_context",
+      "retrieve_site_context",
+    ]);
+    const steps = (candidate.steps ?? [])
+      .map((step) => {
+        const tool = typeof step.tool === "string" ? step.tool.trim() : "";
+        if (!allowedTools.has(tool as PlannerToolName)) return null;
+        const argsRaw =
+          step.args && typeof step.args === "object" && !Array.isArray(step.args)
+            ? (step.args as Record<string, unknown>)
+            : {};
+        let args: Record<string, unknown> = {};
+        if (tool === "search_properties") {
+          args = sanitizePlannerSearchArgs(argsRaw) as unknown as Record<string, unknown>;
+        } else if (
+          tool === "compare_properties" ||
+          tool === "prepare_handoff" ||
+          tool === "get_properties" ||
+          tool === "get_property_media_context" ||
+          tool === "get_property_document_context"
+        ) {
+          const propertyIds = uniqueNumberList(
+            Array.isArray(argsRaw.propertyIds)
+              ? (argsRaw.propertyIds as unknown[]).map((value) => (typeof value === "number" ? value : Number(value)))
+              : [],
+            3,
+          );
+          args = propertyIds.length > 0 ? { propertyIds } : {};
+        } else if (tool === "retrieve_site_context") {
+          const query = typeof argsRaw.query === "string" ? argsRaw.query.trim().slice(0, 240) : "";
+          args = query ? { query } : {};
+        }
+        const purpose = typeof step.purpose === "string" ? step.purpose.trim().slice(0, 120) : undefined;
+        return { tool: tool as PlannerToolName, args, purpose } satisfies PlannerStep;
+      })
+      .filter((step): step is PlannerStep => Boolean(step))
+      .slice(0, 3);
+    if (steps.length === 0) return null;
+    return {
+      version: 2,
+      decisionType: "plan",
+      confidence,
+      reasonCode,
+      steps,
+      finalResponseMode:
+        candidate.finalResponseMode === "tool_plus_multimodal_summary" ? "tool_plus_multimodal_summary" : "tool_summary",
     };
   }
 
@@ -1359,6 +1545,8 @@ function buildGeminiPlannerPrompt(input: {
   conversationState?: ToolConversationState;
   includeHistoryTurns: number;
   maxQuestionChars: number;
+  v2Enabled?: boolean;
+  maxSteps?: number;
 }) {
   const normalizedHistory = normalizeHistoryForModel(input.chatHistory, input.question)
     .slice(-input.includeHistoryTurns)
@@ -1422,22 +1610,42 @@ function buildGeminiPlannerPrompt(input: {
           propertyIds: "optional number[] (focused properties)",
         },
       },
+      get_properties: {
+        args: {
+          propertyIds: "optional number[] (for compare/handoff context)",
+        },
+      },
+      get_property_media_context: {
+        args: {
+          propertyIds: "optional number[] (top 1-3)",
+        },
+      },
+      get_property_document_context: {
+        args: {
+          propertyIds: "optional number[] (top 1-3)",
+        },
+      },
     },
   };
 
+  const v2Enabled = Boolean(input.v2Enabled);
   const systemInstruction = [
     "You are a strict property-tool planner for a French real-estate chatbot (Foch Immobilier, Le Havre).",
     "You are planning only for PROPERTY flows (search / compare / handoff).",
     "Return JSON only. No markdown. No prose outside JSON.",
-    "Allowed decision types: tool_call or clarify.",
-    "Choose at most one tool call.",
+    v2Enabled ? "Allowed decision types: plan or clarify." : "Allowed decision types: tool_call or clarify.",
+    v2Enabled
+      ? `If tool execution is needed, return a plan with 1 to ${Math.max(1, Math.min(3, input.maxSteps ?? 3))} steps.`
+      : "Choose at most one tool call.",
     "If request is vague or key criteria are missing, ask ONE clarification question instead of guessing.",
     "Never produce side effects. Never claim a tool result.",
     "Prefer clarify for ambiguous investment requests without city or transaction.",
     "Use French for clarification.question and options.",
-    "Use exact tool names: search_properties, compare_properties, prepare_handoff.",
+    v2Enabled
+      ? "Use exact tool names from the allowed tools and keep steps minimal."
+      : "Use exact tool names: search_properties, compare_properties, prepare_handoff.",
     "For compare, use compare_properties only when the user clearly asks to compare or a selection exists.",
-    "Output schema version must be 1.",
+    v2Enabled ? "Output schema version must be 2." : "Output schema version must be 1.",
   ].join(" ");
 
   return {
@@ -1460,6 +1668,8 @@ async function generateGeminiPlannerDecision(
     conversationState: input.conversationState,
     includeHistoryTurns: config.includeHistoryTurns,
     maxQuestionChars: config.maxQuestionChars,
+    v2Enabled: config.v2Enabled,
+    maxSteps: config.maxSteps,
   });
 
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${config.model}:generateContent`;
@@ -2109,16 +2319,202 @@ function buildLeadCriteriaFromState(
   };
 }
 
+interface PersistentMemoryRecord {
+  sessionId: string;
+  preferences?: ToolConversationState["preferences"];
+  selectedPropertyIds?: number[];
+  summary?: string;
+}
+
+function mergeConversationStateWithPersistentMemory(
+  state: ToolConversationState | undefined,
+  memory: PersistentMemoryRecord | null,
+): ToolConversationState | undefined {
+  if (!memory) return state;
+  return {
+    ...state,
+    preferences: {
+      ...(memory.preferences ?? {}),
+      ...(state?.preferences ?? {}),
+    },
+    selectedPropertyIds:
+      state?.selectedPropertyIds && state.selectedPropertyIds.length > 0
+        ? state.selectedPropertyIds.slice(0, 3)
+        : (memory.selectedPropertyIds ?? []).slice(0, 3),
+    leadDraft: {
+      ...(state?.leadDraft ?? {}),
+      criteriaSummary: state?.leadDraft?.criteriaSummary ?? memory.summary,
+    },
+  };
+}
+
+async function loadPersistentMemoryRecord(sessionId: string | undefined): Promise<PersistentMemoryRecord | null> {
+  if (!parseBooleanEnv("CHATBOT_MEMORY_ENABLED", false)) return null;
+  const sid = typeof sessionId === "string" ? sessionId.trim() : "";
+  if (!sid) return null;
+
+  let supabase: ReturnType<typeof createServiceClient>;
+  try {
+    supabase = createServiceClient();
+  } catch {
+    return null;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("chatbot_memory_sessions")
+      .select("session_id,preferences,selected_property_ids,summary")
+      .eq("session_id", sid)
+      .maybeSingle();
+    if (error || !data) return null;
+
+    const selectedPropertyIds = uniqueNumberList(
+      Array.isArray((data as Record<string, unknown>).selected_property_ids)
+        ? ((data as Record<string, unknown>).selected_property_ids as unknown[]).map((value) =>
+            typeof value === "number" ? value : Number(value)
+          )
+        : [],
+      3,
+    );
+    const preferences =
+      (data as Record<string, unknown>).preferences &&
+        typeof (data as Record<string, unknown>).preferences === "object" &&
+        !Array.isArray((data as Record<string, unknown>).preferences)
+        ? (sanitizePlannerSearchArgs((data as Record<string, unknown>).preferences) as ToolConversationState["preferences"])
+        : undefined;
+    const summary =
+      typeof (data as Record<string, unknown>).summary === "string"
+        ? truncateText(((data as Record<string, unknown>).summary as string).trim(), 500)
+        : undefined;
+    return { sessionId: sid, preferences, selectedPropertyIds, summary };
+  } catch {
+    return null;
+  }
+}
+
+async function persistStructuredMemory(input: {
+  sessionId?: string;
+  baseState?: ToolConversationState;
+  patch?: Partial<ToolConversationState>;
+  question: string;
+}): Promise<MemoryResponseMeta | undefined> {
+  if (!parseBooleanEnv("CHATBOT_MEMORY_ENABLED", false)) return undefined;
+  const sid = typeof input.sessionId === "string" ? input.sessionId.trim() : "";
+  if (!sid) return undefined;
+
+  let supabase: ReturnType<typeof createServiceClient>;
+  try {
+    supabase = createServiceClient();
+  } catch {
+    return undefined;
+  }
+
+  const preferences = {
+    ...(input.baseState?.preferences ?? {}),
+    ...(input.patch?.preferences ?? {}),
+  };
+  const selectedPropertyIds = uniqueNumberList(
+    [...(input.patch?.selectedPropertyIds ?? []), ...(input.baseState?.selectedPropertyIds ?? [])],
+    3,
+  );
+  const preferenceKeys = Object.entries(preferences)
+    .filter(([, value]) => value != null && value !== "")
+    .map(([key]) => key)
+    .slice(0, 12);
+  const summary =
+    truncateText(
+      (
+        input.patch?.leadDraft?.criteriaSummary ??
+        input.patch?.recentSearch?.params?.city ??
+        input.baseState?.leadDraft?.criteriaSummary ??
+        input.question
+      ).toString(),
+      500,
+    ) || undefined;
+
+  try {
+    const { error } = await supabase.from("chatbot_memory_sessions").upsert(
+      {
+        session_id: sid,
+        last_seen_at: new Date().toISOString(),
+        memory_version: "v1",
+        summary: summary ?? null,
+        preferences,
+        qualification: {},
+        selected_property_ids: selectedPropertyIds,
+        metadata: {},
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "session_id" },
+    );
+    if (error) return undefined;
+    return { updated: true, preferenceKeys, summary };
+  } catch {
+    return undefined;
+  }
+}
+
+async function getCachedPropertyAnalysisCards(
+  supabase: ReturnType<typeof createServiceClient>,
+  propertyIds: number[],
+  sourceKind: "image" | "document",
+): Promise<AnalysisCard[]> {
+  if (!parseBooleanEnv("CHATBOT_MULTIMODAL_ENABLED", false)) return [];
+  const ids = uniqueNumberList(propertyIds, 3);
+  if (ids.length === 0) return [];
+  try {
+    const { data, error } = await supabase
+      .from("property_media_analysis")
+      .select("id,property_id,summary_short,summary_long,structured_facts,evidence,status")
+      .in("property_id", ids)
+      .eq("source_kind", sourceKind)
+      .eq("status", "ready")
+      .order("updated_at", { ascending: false })
+      .limit(6);
+    if (error || !Array.isArray(data)) return [];
+    return data
+      .map((row) => {
+        if (!row || typeof row !== "object") return null;
+        const r = row as Record<string, unknown>;
+        const propertyId = typeof r.property_id === "number" ? r.property_id : Number(r.property_id);
+        const summaryShort = typeof r.summary_short === "string" ? r.summary_short.trim() : "";
+        const summaryLong = typeof r.summary_long === "string" ? r.summary_long.trim() : "";
+        const summary = summaryShort || summaryLong;
+        if (!Number.isInteger(propertyId) || propertyId <= 0 || !summary) return null;
+        const facts = r.structured_facts && typeof r.structured_facts === "object" && !Array.isArray(r.structured_facts)
+          ? (r.structured_facts as Record<string, unknown>)
+          : {};
+        const confidence = typeof facts.confidence === "number" ? clamp01(facts.confidence) : undefined;
+        return {
+          id: `analysis-${String(r.id ?? buildToolActionId("analysis"))}`,
+          kind: sourceKind === "image" ? "property_photo_insights" : "property_document_summary",
+          propertyId,
+          title: sourceKind === "image" ? "Analyse visuelle du bien" : "Résumé document du bien",
+          summary: truncateText(summary, 800),
+          confidence,
+          stale: false,
+        } satisfies AnalysisCard;
+      })
+      .filter((card): card is AnalysisCard => Boolean(card));
+  } catch {
+    return [];
+  }
+}
+
 async function orchestrateToolRequest(input: {
   question: string;
   actionRequest?: ToolActionRequest;
   conversationState?: ToolConversationState;
   chatHistory?: Array<{ role: "user" | "assistant"; content: string }>;
+  sessionId?: string;
 }): Promise<ToolOrchestrationResult | null> {
   const toolsEnabled = parseBooleanEnv("CHATBOT_AGENT_TOOLS_ENABLED", false);
   if (!toolsEnabled) return null;
 
-  const agentMode = detectAgentMode(input.question, input.actionRequest, input.conversationState);
+  const persistentMemory = await loadPersistentMemoryRecord(input.sessionId);
+  const mergedConversationState = mergeConversationStateWithPersistentMemory(input.conversationState, persistentMemory);
+
+  const agentMode = detectAgentMode(input.question, input.actionRequest, mergedConversationState);
   if (agentMode !== "tool") return null;
 
   let supabase: ReturnType<typeof createServiceClient>;
@@ -2141,7 +2537,7 @@ async function orchestrateToolRequest(input: {
   const runSearch = async (): Promise<ToolOrchestrationResult> => {
     const startedAt = Date.now();
     try {
-      const params = extractSearchParamsFromQuestion(input.question, input.conversationState, effectiveActionRequest);
+      const params = extractSearchParamsFromQuestion(input.question, mergedConversationState, effectiveActionRequest);
       const result = await executeSearchPropertiesTool(supabase, params);
       toolTrace.push({
         tool: "search_properties",
@@ -2217,22 +2613,23 @@ async function orchestrateToolRequest(input: {
             generatedAt: new Date().toISOString(),
           },
           recentPropertyIds: uniqueNumberList(
-            [...result.items.map((item) => item.id), ...(input.conversationState?.recentPropertyIds ?? [])],
+            [...result.items.map((item) => item.id), ...(mergedConversationState?.recentPropertyIds ?? [])],
             20,
           ),
           preferences: {
-            ...input.conversationState?.preferences,
-            transaction: result.searchParams.transaction ?? input.conversationState?.preferences?.transaction,
-            type: result.searchParams.type ?? input.conversationState?.preferences?.type,
-            city: result.searchParams.city ?? input.conversationState?.preferences?.city,
+            ...mergedConversationState?.preferences,
+            transaction: result.searchParams.transaction ?? mergedConversationState?.preferences?.transaction,
+            type: result.searchParams.type ?? mergedConversationState?.preferences?.type,
+            city: result.searchParams.city ?? mergedConversationState?.preferences?.city,
             bedroomsMin:
-              result.searchParams.bedroomsMin ?? input.conversationState?.preferences?.bedroomsMin,
-            priceMin: result.searchParams.priceMin ?? input.conversationState?.preferences?.priceMin,
-            priceMax: result.searchParams.priceMax ?? input.conversationState?.preferences?.priceMax,
+              result.searchParams.bedroomsMin ?? mergedConversationState?.preferences?.bedroomsMin,
+            priceMin: result.searchParams.priceMin ?? mergedConversationState?.preferences?.priceMin,
+            priceMax: result.searchParams.priceMax ?? mergedConversationState?.preferences?.priceMax,
           },
         },
         toolTrace,
         agentMode: "tool",
+        costHints: { route: "edge_tools", estimatedClass: "low" },
       };
     } catch {
       toolTrace.push({
@@ -2290,7 +2687,7 @@ async function orchestrateToolRequest(input: {
         };
       }
 
-      const { summary, recommendedPropertyId } = buildCompareSummaryText(properties, input.conversationState);
+      const { summary, recommendedPropertyId } = buildCompareSummaryText(properties, mergedConversationState);
       const comparisonRows = buildCompareRows(properties);
       const action: ToolUiActionCompareSummary = {
         id: buildToolActionId("compare"),
@@ -2314,12 +2711,14 @@ async function orchestrateToolRequest(input: {
         conversationStatePatch: {
           selectedPropertyIds: properties.map((property) => property.id).slice(0, compareLimit),
           recentPropertyIds: uniqueNumberList(
-            [...properties.map((property) => property.id), ...(input.conversationState?.recentPropertyIds ?? [])],
+            [...properties.map((property) => property.id), ...(mergedConversationState?.recentPropertyIds ?? [])],
             20,
           ),
         },
         toolTrace,
         agentMode: "tool",
+        analysisCards: (await getCachedPropertyAnalysisCards(supabase, properties.map((property) => property.id), "image")) || undefined,
+        costHints: { route: "edge_tools", estimatedClass: "medium" },
       };
     } catch {
       toolTrace.push({
@@ -2343,7 +2742,7 @@ async function orchestrateToolRequest(input: {
       [
         ...(propertyIds ?? []),
         ...normalizePropertyIdsFromAction(effectiveActionRequest),
-        ...(input.conversationState?.selectedPropertyIds ?? []),
+        ...(mergedConversationState?.selectedPropertyIds ?? []),
       ],
       compareLimit,
     );
@@ -2369,7 +2768,7 @@ async function orchestrateToolRequest(input: {
     }
 
     const startedAt = Date.now();
-    const lead = buildLeadCriteriaFromState(input.question, input.conversationState, selectedProperties);
+    const lead = buildLeadCriteriaFromState(input.question, mergedConversationState, selectedProperties);
     toolTrace.push({
       tool: "prepare_handoff",
       status: "ok",
@@ -2405,13 +2804,189 @@ async function orchestrateToolRequest(input: {
       conversationStatePatch: {
         leadDraft: {
           propertyId: lead.propertyId,
-          citySlug: input.conversationState?.preferences?.city,
+          citySlug: mergedConversationState?.preferences?.city,
           criteriaSummary: lead.contextSummary,
         },
       },
       toolTrace,
       agentMode: "tool",
+      costHints: { route: "edge_tools", estimatedClass: "low" },
     };
+  };
+
+  const runPlannerV2Plan = async (decision: Extract<PlannerDecision, { decisionType: "plan" }>): Promise<ToolOrchestrationResult | null> => {
+    const maxSteps = clamp(Math.floor(parseNumberEnv("CHATBOT_GEMINI_PLANNER_MAX_STEPS", 3)), 1, 3);
+    const seenStepKeys = new Set<string>();
+    let prefetchedProperties: ToolCompareProperty[] = [];
+    let collectedAnalysisCards: AnalysisCard[] = [];
+
+    for (const step of decision.steps.slice(0, maxSteps)) {
+      const stepKey = `${step.tool}:${JSON.stringify(step.args ?? {})}`;
+      if (seenStepKeys.has(stepKey)) {
+        toolTrace.push({
+          tool: step.tool === "retrieve_site_context" ? "retrieve_site_context" : (step.tool as ToolTraceItem["tool"]),
+          status: "skipped",
+          latencyMs: 0,
+          errorCode: "duplicate_planner_step",
+        });
+        continue;
+      }
+      seenStepKeys.add(stepKey);
+
+      if (step.tool === "get_properties") {
+        const startedAt = Date.now();
+        try {
+          const propertyIds = uniqueNumberList(
+            Array.isArray(step.args?.propertyIds)
+              ? (step.args.propertyIds as unknown[]).map((value) => (typeof value === "number" ? value : Number(value)))
+              : [],
+            compareLimit,
+          );
+          prefetchedProperties = await executeGetPropertiesTool(supabase, propertyIds);
+          toolTrace.push({
+            tool: "get_properties",
+            status: "ok",
+            latencyMs: Date.now() - startedAt,
+            resultCount: prefetchedProperties.length,
+          });
+        } catch {
+          toolTrace.push({
+            tool: "get_properties",
+            status: "error",
+            latencyMs: Date.now() - startedAt,
+            errorCode: "planner_get_properties_failed",
+          });
+        }
+        continue;
+      }
+
+      if (step.tool === "get_property_media_context" || step.tool === "get_property_document_context") {
+        const startedAt = Date.now();
+        const propertyIds = uniqueNumberList(
+          [
+            ...(Array.isArray(step.args?.propertyIds)
+              ? (step.args.propertyIds as unknown[]).map((value) => (typeof value === "number" ? value : Number(value)))
+              : []),
+            ...prefetchedProperties.map((property) => property.id),
+            ...(mergedConversationState?.selectedPropertyIds ?? []),
+          ],
+          compareLimit,
+        );
+        const sourceKind = step.tool === "get_property_media_context" ? "image" : "document";
+        const cards = await getCachedPropertyAnalysisCards(supabase, propertyIds, sourceKind);
+        collectedAnalysisCards = [...collectedAnalysisCards, ...cards].slice(0, 8);
+        toolTrace.push({
+          tool: step.tool,
+          status: "ok",
+          latencyMs: Date.now() - startedAt,
+          resultCount: cards.length,
+        });
+        continue;
+      }
+
+      if (step.tool === "retrieve_site_context") {
+        const startedAt = Date.now();
+        try {
+          const query = typeof step.args?.query === "string" && step.args.query.trim().length > 0
+            ? step.args.query.trim()
+            : input.question;
+          const rag = await retrieveWebsiteContext(query);
+          toolTrace.push({
+            tool: "retrieve_site_context",
+            status: rag.contextBlock ? "ok" : "skipped",
+            latencyMs: Date.now() - startedAt,
+            resultCount: rag.citations.length,
+            errorCode: rag.contextBlock ? undefined : "planner_no_site_context",
+          });
+        } catch {
+          toolTrace.push({
+            tool: "retrieve_site_context",
+            status: "error",
+            latencyMs: Date.now() - startedAt,
+            errorCode: "planner_site_context_failed",
+          });
+        }
+        continue;
+      }
+
+      if (step.tool === "search_properties") {
+        effectiveActionRequest = {
+          type: "search_refine",
+          payload: {
+            searchParams: (step.args ?? {}) as Record<string, unknown>,
+          },
+        };
+        const result = await runSearch();
+        if (collectedAnalysisCards.length > 0) {
+          result.analysisCards = [...(result.analysisCards ?? []), ...collectedAnalysisCards].slice(0, 8);
+          result.costHints = {
+            route: "edge_tools",
+            multimodalUsed: true,
+            estimatedClass: "medium",
+          };
+        }
+        return result;
+      }
+
+      if (step.tool === "compare_properties") {
+        const ids = uniqueNumberList(
+          [
+            ...(Array.isArray(step.args?.propertyIds)
+              ? (step.args.propertyIds as unknown[]).map((value) => (typeof value === "number" ? value : Number(value)))
+              : []),
+            ...prefetchedProperties.map((property) => property.id),
+            ...(mergedConversationState?.selectedPropertyIds ?? []),
+          ],
+          compareLimit,
+        );
+        const result = await runCompare(ids);
+        if (collectedAnalysisCards.length > 0) {
+          result.analysisCards = [...(result.analysisCards ?? []), ...collectedAnalysisCards].slice(0, 8);
+          result.costHints = {
+            route: "edge_tools",
+            multimodalUsed: true,
+            estimatedClass: "medium",
+          };
+        }
+        return result;
+      }
+
+      if (step.tool === "prepare_handoff") {
+        const ids = uniqueNumberList(
+          [
+            ...(Array.isArray(step.args?.propertyIds)
+              ? (step.args.propertyIds as unknown[]).map((value) => (typeof value === "number" ? value : Number(value)))
+              : []),
+            ...prefetchedProperties.map((property) => property.id),
+          ],
+          compareLimit,
+        );
+        const result = await runPrepareHandoff(ids);
+        if (collectedAnalysisCards.length > 0) {
+          result.analysisCards = [...(result.analysisCards ?? []), ...collectedAnalysisCards].slice(0, 8);
+          result.costHints = {
+            route: "edge_tools",
+            multimodalUsed: true,
+            estimatedClass: "medium",
+          };
+        }
+        return result;
+      }
+    }
+
+    if (collectedAnalysisCards.length > 0) {
+      return {
+        answer: "J’ai récupéré des éléments d’analyse (photos/documents) mais il me manque l’action finale à exécuter. Dites-moi si vous voulez comparer, poursuivre la recherche, ou préparer un contact.",
+        suggestedPrompts: ["Comparer la sélection", "Voir plus de résultats", "Préremplir le formulaire de contact"],
+        actions: [buildNoticeAction("Plan incomplet", "Le plan a chargé du contexte mais pas d’action finale.", "planner_plan_incomplete")],
+        toolTrace,
+        agentMode: "tool",
+        analysisCards: collectedAnalysisCards.slice(0, 8),
+        costHints: { route: "edge_tools", multimodalUsed: true, estimatedClass: "medium" },
+      };
+    }
+
+    return null;
   };
 
   if (!input.actionRequest && plannerFeatureEnabled) {
@@ -2427,7 +3002,7 @@ async function orchestrateToolRequest(input: {
       const plannerResult = await generateGeminiPlannerDecision(plannerConfig, {
         question: input.question,
         chatHistory: input.chatHistory,
-        conversationState: input.conversationState,
+        conversationState: mergedConversationState,
       });
 
       if (plannerResult.decision?.decisionType === "clarify") {
@@ -2449,7 +3024,29 @@ async function orchestrateToolRequest(input: {
           actions: [buildNoticeAction("Précision nécessaire", missingFieldsLabel, "planner_clarify")],
           toolTrace,
           agentMode: "tool",
+          costHints: { route: "edge_tools", estimatedClass: "low" },
         });
+      }
+
+      if (plannerResult.decision?.decisionType === "plan") {
+        plannerMeta = {
+          provider: "gemini",
+          mode: "gemini",
+          decisionType: "plan",
+          toolName: plannerResult.decision.steps[0]?.tool,
+          reasonCode: plannerResult.decision.reasonCode,
+          confidence: plannerResult.decision.confidence,
+        };
+        const plannedResult = await runPlannerV2Plan(plannerResult.decision);
+        if (plannedResult) {
+          return applyPlannerMeta(plannedResult);
+        }
+        plannerMeta = {
+          provider: "fallback",
+          mode: "deterministic_fallback",
+          decisionType: "none",
+          reasonCode: "planner_plan_not_executable",
+        };
       }
 
       if (plannerResult.decision?.decisionType === "tool_call") {
@@ -2536,11 +3133,11 @@ async function orchestrateToolRequest(input: {
     }
   }
 
-  if (isLikelyCompareQuestion(input.question) && (input.conversationState?.selectedPropertyIds?.length ?? 0) >= 2) {
-    return applyPlannerMeta(await runCompare(input.conversationState?.selectedPropertyIds ?? []));
+  if (isLikelyCompareQuestion(input.question) && (mergedConversationState?.selectedPropertyIds?.length ?? 0) >= 2) {
+    return applyPlannerMeta(await runCompare(mergedConversationState?.selectedPropertyIds ?? []));
   }
 
-  if (isLikelyHandoffQuestion(input.question) && (input.conversationState?.recentSearch || input.conversationState?.selectedPropertyIds?.length)) {
+  if (isLikelyHandoffQuestion(input.question) && (mergedConversationState?.recentSearch || mergedConversationState?.selectedPropertyIds?.length)) {
     return applyPlannerMeta(await runPrepareHandoff());
   }
 
@@ -2572,12 +3169,21 @@ Deno.serve(async (request) => {
         actionRequest: payload.actionRequest as ToolActionRequest | undefined,
         conversationState: payload.conversationState as ToolConversationState | undefined,
         chatHistory: payload.chatHistory,
+        sessionId: payload.sessionId,
       });
     } catch {
       toolResult = null;
     }
 
     if (toolResult) {
+      const memoryMeta =
+        toolResult.memory ??
+        await persistStructuredMemory({
+          sessionId: payload.sessionId,
+          baseState: payload.conversationState as ToolConversationState | undefined,
+          patch: toolResult.conversationStatePatch,
+          question: payload.question,
+        });
       return jsonResponse({
         source: "fallback",
         edgeProvider: "fallback",
@@ -2591,6 +3197,10 @@ Deno.serve(async (request) => {
         conversationStatePatch: toolResult.conversationStatePatch,
         toolTrace: toolResult.toolTrace,
         planner: toolResult.planner,
+        analysisCards: toolResult.analysisCards,
+        memory: memoryMeta,
+        costHints: toolResult.costHints,
+        streamSupported: parseBooleanEnv("CHATBOT_STREAM_ENABLED", false),
       });
     }
 
@@ -2601,6 +3211,7 @@ Deno.serve(async (request) => {
         retrievalMode: "none",
         requestId,
         agentMode: "fallback",
+        streamSupported: parseBooleanEnv("CHATBOT_STREAM_ENABLED", false),
         ...buildFallback(payload.question),
       });
     }
@@ -2623,10 +3234,19 @@ Deno.serve(async (request) => {
         retrievalMode: ragContext.retrievalMode,
         requestId,
         agentMode: "fallback",
+        streamSupported: parseBooleanEnv("CHATBOT_STREAM_ENABLED", false),
         ...fallback,
       });
     }
     const citationPrompts = buildSuggestedPromptsFromCitations(ragContext.citations);
+
+    const ragConversationPatch: Partial<ToolConversationState> | undefined = undefined;
+    const memoryMeta = await persistStructuredMemory({
+      sessionId: payload.sessionId,
+      baseState: payload.conversationState as ToolConversationState | undefined,
+      patch: ragConversationPatch,
+      question: payload.question,
+    });
 
     return jsonResponse({
       source: generationResult.provider,
@@ -2649,6 +3269,9 @@ Deno.serve(async (request) => {
       retrievalMode: ragContext.retrievalMode,
       agentMode: "rag",
       requestId,
+      memory: memoryMeta,
+      costHints: { route: "edge_rag", estimatedClass: ragContext.contextBlock ? "medium" : "low" },
+      streamSupported: parseBooleanEnv("CHATBOT_STREAM_ENABLED", false),
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Internal error";

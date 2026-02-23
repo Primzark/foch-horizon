@@ -80,6 +80,11 @@ function buildSupabaseApiProxy(env: Record<string, string>): Record<string, Prox
       () => "/functions/v1/chatbot-assistant",
       anonKey,
     ),
+    "^/api/chatbot-assistant-stream$": createSupabaseFunctionProxy(
+      projectUrl,
+      () => "/functions/v1/chatbot-assistant-stream",
+      anonKey,
+    ),
     "^/api/chatbot-feedback$": createSupabaseFunctionProxy(
       projectUrl,
       () => "/functions/v1/chatbot-feedback",
