@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Clock3, ExternalLink, MapPin, MessageSquareQuote, Navigation, ShieldCheck, Star } from "lucide-react";
 import { GoogleGIcon } from "@/components/branding/GoogleGIcon";
 import { getAgencyReviews } from "@/features/content/api/googleReviews.service";
+import { heroScenicImages } from "@/features/content/data/heroScenicImages";
 import { getSiteUrl, useSeo } from "@/lib/seo/useSeo";
 import { cn } from "@/lib/utils";
 import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
@@ -13,6 +14,16 @@ const AGENCY_MAP_EMBED_URL =
   "https://maps.google.com/maps?q=109%20Avenue%20Foch%2C%20Le%20Havre&t=&z=14&ie=UTF8&iwloc=&output=embed";
 const AGENCY_GOOGLE_MAPS_URL = "https://www.google.com/maps/place/?q=place_id:ChIJVdXdwSMv4EcRDvxTc8oRcnI";
 const REVIEW_COLLAPSE_CHAR_THRESHOLD = 250;
+
+type ReviewCardVisualPreset = {
+  accentImageUrl: string;
+  accentLabel: string;
+  accentHeightClass: string;
+  accentPositionClass: string;
+  wrapperOffsetClass: string;
+  cardHeightHintClass: string;
+  textureStyle: CSSProperties;
+};
 
 function formatDate(value?: string): string | null {
   if (!value) return null;
@@ -83,6 +94,57 @@ function getReviewCardAccentClass(index: number) {
 
 function isExpandableReviewText(value: string): boolean {
   return value.trim().length > REVIEW_COLLAPSE_CHAR_THRESHOLD;
+}
+
+function hashString(value: string): number {
+  let hash = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 31 + value.charCodeAt(index)) >>> 0;
+  }
+  return hash;
+}
+
+function buildTextureStyle(seed: number): CSSProperties {
+  const hueA = 140 + (seed % 18);
+  const hueB = 190 + (seed % 14);
+  const angleA = 110 + (seed % 28);
+  const angleB = 20 + (seed % 42);
+  const stripeGap = 9 + (seed % 6);
+
+  return {
+    backgroundImage: [
+      `linear-gradient(${angleA}deg, hsla(${hueA}, 44%, 61%, 0.18), transparent 52%)`,
+      `radial-gradient(circle at 82% 14%, hsla(${hueB}, 55%, 72%, 0.14), transparent 54%)`,
+      `repeating-linear-gradient(${angleB}deg, rgba(255,255,255,0.14) 0 1px, transparent 1px ${stripeGap}px)`,
+    ].join(", "),
+  };
+}
+
+function getReviewCardVisualPreset(reviewId: string, index: number): ReviewCardVisualPreset {
+  const seed = hashString(`${reviewId}:${index}`);
+  const scenic = heroScenicImages[seed % heroScenicImages.length];
+  const accentHeightClass = ["h-20", "h-24", "h-28"][seed % 3] ?? "h-24";
+  const accentPositionClass = ["bg-center", "bg-[center_32%]", "bg-[center_58%]"][seed % 3] ?? "bg-center";
+  const wrapperOffsetClass =
+    index === 0
+      ? "md:mt-0"
+      : (["md:mt-0 xl:mt-0", "md:mt-4 xl:mt-8", "md:mt-6 xl:mt-3", "md:mt-2 xl:mt-10"][seed % 4] ?? "md:mt-0");
+  const cardHeightHintClass =
+    index === 0
+      ? "md:min-h-[22rem]"
+      : (["md:min-h-[16rem]", "md:min-h-[18rem]", "md:min-h-[19rem]"][seed % 3] ?? "md:min-h-[17rem]");
+
+  const accentLabel = scenic.title.replace(/,?\s*Le Havre$/i, "");
+
+  return {
+    accentImageUrl: scenic.imageUrl,
+    accentLabel,
+    accentHeightClass,
+    accentPositionClass,
+    wrapperOffsetClass,
+    cardHeightHintClass,
+    textureStyle: buildTextureStyle(seed),
+  };
 }
 
 export default function ReviewsPage() {
@@ -318,106 +380,122 @@ export default function ReviewsPage() {
             </div>
 
             <section className="columns-1 [column-gap:1rem] md:columns-2 xl:columns-3">
-              {payload.reviews.map((review, index) => (
-                <motion.div
-                  key={review.id}
-                  className="mb-4 break-inside-avoid"
-                  initial={reducedMotion ? false : { opacity: 0, y: 18, scale: 0.988 }}
-                  whileInView={reducedMotion ? undefined : { opacity: 1, y: 0, scale: 1 }}
-                  viewport={{ once: true, amount: 0.18 }}
-                  transition={
-                    reducedMotion
-                      ? undefined
-                      : {
-                          duration: 0.38,
-                          ease: [0.22, 1, 0.36, 1],
-                          delay: Math.min(index * 0.06, 0.28),
-                        }
-                  }
-                >
-                  <article
-                    className={cn(
-                      "group relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-card via-card p-5 shadow-card transition-all duration-300 hover:-translate-y-1 hover:border-brand-border hover:shadow-card-hover h-review",
-                      getReviewCardAccentClass(index),
-                      index === 0 && "md:min-h-[20rem]",
-                      index % 3 === 1 && "md:min-h-[16rem]",
-                    )}
-                  >
-                    <div className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-gold-light/35 blur-2xl" />
-                    <div className="pointer-events-none absolute right-4 top-4 inline-flex h-8 w-8 items-center justify-center rounded-full border border-border/80 bg-background/80 text-gold-dark">
-                      <MessageSquareQuote className="h-4 w-4" />
-                    </div>
+              {payload.reviews.map((review, index) => {
+                const visual = getReviewCardVisualPreset(review.id, index);
+                const isExpandable = isExpandableReviewText(review.text);
+                const isExpanded = Boolean(expandedReviewIds[review.id]);
 
-                    <div className="relative flex h-full flex-col">
-                      <div className="pr-10">
-                        <div className="flex flex-wrap items-start justify-between gap-2">
-                          <div>
-                            <p className="font-medium leading-snug p-author h-card">{review.authorName}</p>
-                            <div className="mt-1 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-                              <GoogleGIcon size={12} decorative />
-                              <span>{review.relativePublishTimeDescription ?? formatDate(review.publishTime) ?? "Avis Google"}</span>
+                return (
+                  <motion.div
+                    key={review.id}
+                    className={cn("mb-4 break-inside-avoid", visual.wrapperOffsetClass)}
+                    initial={reducedMotion ? false : { opacity: 0, y: 18, scale: 0.988 }}
+                    whileInView={reducedMotion ? undefined : { opacity: 1, y: 0, scale: 1 }}
+                    viewport={{ once: true, amount: 0.18 }}
+                    transition={
+                      reducedMotion
+                        ? undefined
+                        : {
+                            duration: 0.38,
+                            ease: [0.22, 1, 0.36, 1],
+                            delay: Math.min(index * 0.06, 0.28),
+                          }
+                    }
+                  >
+                    <article
+                      className={cn(
+                        "group relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-card via-card p-5 shadow-card transition-all duration-300 hover:-translate-y-1 hover:border-brand-border hover:shadow-card-hover h-review",
+                        getReviewCardAccentClass(index),
+                        visual.cardHeightHintClass,
+                      )}
+                    >
+                      <div className="pointer-events-none absolute inset-0 opacity-60" style={visual.textureStyle} />
+                      <div className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-gold-light/35 blur-2xl" />
+                      <div className="pointer-events-none absolute right-4 top-4 inline-flex h-8 w-8 items-center justify-center rounded-full border border-border/80 bg-background/85 text-gold-dark backdrop-blur-sm">
+                        <MessageSquareQuote className="h-4 w-4" />
+                      </div>
+
+                      <div className="relative flex h-full flex-col">
+                        <div className="mb-4 overflow-hidden rounded-2xl border border-border/80 bg-background/70 shadow-[0_10px_20px_-18px_hsl(var(--foreground)/0.3)]">
+                          <div className={cn("relative overflow-hidden", visual.accentHeightClass)}>
+                            <div
+                              className={cn(
+                                "absolute inset-0 bg-cover bg-no-repeat transition-transform duration-500 group-hover:scale-[1.04]",
+                                visual.accentPositionClass,
+                              )}
+                              style={{ backgroundImage: `url(${visual.accentImageUrl})` }}
+                              aria-hidden="true"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-[hsl(var(--foreground)/0.55)] via-[hsl(var(--foreground)/0.1)] to-transparent" />
+                            <div className="absolute inset-0 opacity-50" style={visual.textureStyle} />
+                            <div className="absolute bottom-2 left-2 inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-black/35 px-2.5 py-1 text-[10px] font-medium tracking-[0.12em] text-white backdrop-blur-sm">
+                              <MapPin className="h-3 w-3" />
+                              {visual.accentLabel}
                             </div>
-                          </div>
-                          <div className="rounded-full border border-border bg-background/80 px-2 py-1">
-                            <StarRating rating={review.rating} />
                           </div>
                         </div>
-                      </div>
 
-                      {(() => {
-                        const isExpandable = isExpandableReviewText(review.text);
-                        const isExpanded = Boolean(expandedReviewIds[review.id]);
-
-                        return (
-                          <>
-                            <div className="relative mt-4">
-                              <p
-                                className={cn(
-                                  "text-sm leading-relaxed text-muted-foreground p-name whitespace-pre-line",
-                                  !isExpanded && isExpandable && "max-h-[8.25rem] overflow-hidden",
-                                )}
-                              >
-                                {review.text}
-                              </p>
-                              {!isExpanded && isExpandable && (
-                                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-card via-card/95 to-transparent" />
-                              )}
+                        <div className="pr-10">
+                          <div className="flex flex-wrap items-start justify-between gap-2">
+                            <div>
+                              <p className="font-medium leading-snug p-author h-card">{review.authorName}</p>
+                              <div className="mt-1 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                                <GoogleGIcon size={12} decorative />
+                                <span>{review.relativePublishTimeDescription ?? formatDate(review.publishTime) ?? "Avis Google"}</span>
+                              </div>
                             </div>
+                            <div className="rounded-full border border-border bg-background/85 px-2 py-1 backdrop-blur-sm">
+                              <StarRating rating={review.rating} />
+                            </div>
+                          </div>
+                        </div>
 
-                            {isExpandable && (
-                              <button
-                                type="button"
-                                onClick={() => toggleReviewExpanded(review.id)}
-                                className="mt-3 inline-flex w-fit items-center gap-1 rounded-full border border-border bg-background/85 px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-brand-border hover:bg-brand-soft/40"
-                              >
-                                {isExpanded ? "Réduire" : "Lire la suite"}
-                              </button>
+                        <div className="relative mt-4">
+                          <p
+                            className={cn(
+                              "text-sm leading-relaxed text-muted-foreground p-name whitespace-pre-line",
+                              !isExpanded && isExpandable && "max-h-[8.25rem] overflow-hidden",
                             )}
-                          </>
-                        );
-                      })()}
-
-                      <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
-                        <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-border bg-brand-soft/70 px-2.5 py-1 text-[11px] font-medium text-brand-strong">
-                          <GoogleGIcon size={11} decorative />
-                          Google
-                        </span>
-                        {review.authorUrl && (
-                          <a
-                            href={review.authorUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
                           >
-                            Profil Google
-                            <ExternalLink className="h-3.5 w-3.5" />
-                          </a>
+                            {review.text}
+                          </p>
+                          {!isExpanded && isExpandable && (
+                            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-card via-card/95 to-transparent" />
+                          )}
+                        </div>
+
+                        {isExpandable && (
+                          <button
+                            type="button"
+                            onClick={() => toggleReviewExpanded(review.id)}
+                            className="mt-3 inline-flex w-fit items-center gap-1 rounded-full border border-border bg-background/85 px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-brand-border hover:bg-brand-soft/40"
+                          >
+                            {isExpanded ? "Réduire" : "Lire la suite"}
+                          </button>
                         )}
+
+                        <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+                          <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-border bg-brand-soft/70 px-2.5 py-1 text-[11px] font-medium text-brand-strong">
+                            <GoogleGIcon size={11} decorative />
+                            Google
+                          </span>
+                          {review.authorUrl && (
+                            <a
+                              href={review.authorUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                            >
+                              Profil Google
+                              <ExternalLink className="h-3.5 w-3.5" />
+                            </a>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </article>
-                </motion.div>
-              ))}
+                    </article>
+                  </motion.div>
+                );
+              })}
             </section>
           </section>
         </>
