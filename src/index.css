@@ -184,6 +184,47 @@
     animation: glass-sweep var(--glass-sweep-duration, 5.8s) ease-in-out infinite;
   }
 
+  .paper-grain {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .paper-grain::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: var(--paper-grain-opacity, 0.045);
+    mix-blend-mode: var(--paper-grain-blend, multiply);
+    background-image:
+      radial-gradient(circle at 18% 20%, rgba(255, 255, 255, 0.34) 0 0.7px, transparent 1px),
+      radial-gradient(circle at 76% 28%, rgba(16, 18, 20, 0.22) 0 0.8px, transparent 1.15px),
+      radial-gradient(circle at 36% 82%, rgba(255, 255, 255, 0.22) 0 0.9px, transparent 1.25px),
+      repeating-linear-gradient(18deg, rgba(15, 18, 22, 0.045) 0 1px, transparent 1px 10px),
+      repeating-linear-gradient(112deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 13px);
+    background-size:
+      128px 96px,
+      154px 124px,
+      172px 138px,
+      12px 12px,
+      16px 16px;
+    background-position:
+      0 0,
+      24px 12px,
+      -18px 10px,
+      0 0,
+      3px -2px;
+  }
+
+  .paper-grain-soft {
+    --paper-grain-opacity: 0.03;
+  }
+
+  .paper-grain-rich {
+    --paper-grain-opacity: 0.065;
+  }
+
   .font-display {
     font-family: var(--font-display);
   }
