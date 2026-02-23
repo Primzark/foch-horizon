@@ -267,6 +267,7 @@ interface AnalysisCardEvidenceItem {
   thumbnailUrl?: string;
   page?: number;
   label?: string;
+  kind?: string;
 }
 
 interface AnalysisCard {
@@ -277,6 +278,9 @@ interface AnalysisCard {
   summary: string;
   confidence?: number;
   stale?: boolean;
+  cacheHit?: boolean;
+  sourceKind?: "image" | "document";
+  documentKind?: "dpe_pdf" | "diagnostic_pdf" | "floor_plan_pdf" | "brochure_pdf" | "other";
   evidence?: AnalysisCardEvidenceItem[];
 }
 
@@ -284,6 +288,11 @@ interface MemoryResponseMeta {
   updated: boolean;
   preferenceKeys?: string[];
   summary?: string;
+  source?: "state_merge" | "gemini_extractor" | "none";
+  ttlDays?: number;
+  updatedKeys?: string[];
+  confidence?: number;
+  cleared?: boolean;
 }
 
 interface CostHints {
@@ -434,10 +443,19 @@ interface RAGCitation {
   similarity?: number;
 }
 
+interface PageContextMeta {
+  used: boolean;
+  fetchMode?: "http" | "headless";
+  cacheHit?: boolean;
+  route?: string;
+  source?: "http" | "headless";
+}
+
 interface RAGContextResult {
   contextBlock: string | null;
   citations: RAGCitation[];
   retrievalMode: RAGRetrievalMode;
+  pageContextMeta?: PageContextMeta;
 }
 
 function parseProviderEnv(name: string): AIProvider | null {
@@ -531,6 +549,10 @@ function extractPathMentions(question: string): string[] {
 
 function clamp01(value: number): number {
   return clamp(value, 0, 1);
+}
+
+function sanitizeJsonObject(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
 }
 
 function createRequestId(): string {
@@ -938,6 +960,482 @@ async function retrieveWebsiteContext(question: string): Promise<RAGContextResul
 
   const merged = mergeAndRerankCandidates(question, vectorRows, keywordRows);
   return buildRagContextBlock(merged.rows, merged.retrievalMode);
+}
+
+const pageFallbackQuestionPattern =
+  /(^|\s)(resume|résume|explique|expliquer|ou trouver|où trouver|page|rubrique|mentions legales|mentions légales|confidentialite|confidentialité|cookies|histoire|services?)(\s|$)/i;
+
+interface PageHtmlFetchResult {
+  html: string;
+  status: number;
+  url: string;
+}
+
+interface ExtractedPageText {
+  title: string | null;
+  text: string;
+  headings: string[];
+  isThin: boolean;
+  hints: string[];
+}
+
+interface PageSnapshotCacheRow {
+  path: string;
+  source_url: string;
+  fetch_mode: "http" | "headless";
+  status: "ready" | "error" | "thin" | "skipped";
+  title?: string | null;
+  content_text?: string | null;
+  word_count?: number | null;
+  last_error?: string | null;
+  metadata?: Record<string, unknown> | null;
+}
+
+interface OnDemandPageContextResult {
+  contextBlock: string | null;
+  citations: RAGCitation[];
+  meta?: PageContextMeta;
+}
+
+function parseDurationSecondsEnv(name: string, fallbackSeconds: number, minSeconds: number, maxSeconds: number): number {
+  return clamp(Math.floor(parseNumberEnv(name, fallbackSeconds)), minSeconds, maxSeconds);
+}
+
+function normalizeRoutePath(raw: string): string | null {
+  const trimmed = raw.trim();
+  if (!trimmed.startsWith("/")) return null;
+  if (!/^\/[a-z0-9/_-]+(?:\?[a-z0-9=&_-]+)?$/i.test(trimmed)) return null;
+  if (/^\/(?:api|admin|functions)\b/i.test(trimmed)) return null;
+  return trimmed.split("#")[0];
+}
+
+function extractRequestedRoute(question: string): string | null {
+  const pathMentions = extractPathMentions(question);
+  for (const path of pathMentions) {
+    const normalized = normalizeRoutePath(path);
+    if (normalized) return normalized;
+  }
+  return null;
+}
+
+function resolvePageFallbackCandidate(question: string, ragCitations: RAGCitation[]): { path: string; reason: string } | null {
+  const explicit = extractRequestedRoute(question);
+  if (explicit) return { path: explicit, reason: "explicit_route" };
+  if (!pageFallbackQuestionPattern.test(question)) return null;
+  if (ragCitations.length === 1 && normalizeRoutePath(ragCitations[0].path)) {
+    return { path: ragCitations[0].path, reason: "single_rag_citation" };
+  }
+  return null;
+}
+
+function resolvePageFetchBaseUrl(): string | null {
+  const explicit = (Deno.env.get("CHATBOT_PAGE_FETCH_BASE_URL") ?? "").trim();
+  const fallback = (Deno.env.get("RAG_INDEX_BASE_URL") ?? "").trim();
+  const base = explicit || fallback;
+  if (!base) return null;
+  try {
+    const url = new URL(base);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+    return `${url.origin}${url.pathname.replace(/\/$/, "")}`;
+  } catch {
+    return null;
+  }
+}
+
+function buildPageUrl(path: string): URL | null {
+  const baseUrl = resolvePageFetchBaseUrl();
+  if (!baseUrl) return null;
+  try {
+    const url = new URL(path, baseUrl);
+    const baseOrigin = new URL(baseUrl).origin;
+    if (url.origin !== baseOrigin) return null;
+    return url;
+  } catch {
+    return null;
+  }
+}
+
+function looksLikePublicPagePath(path: string): boolean {
+  const normalized = normalizeRoutePath(path);
+  if (!normalized) return false;
+  if (/\.(?:pdf|xml|json|txt|png|jpe?g|webp|svg)$/i.test(normalized)) return false;
+  return true;
+}
+
+function stripHtmlTags(html: string): string {
+  return html
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ")
+    .replace(/<noscript\b[^>]*>[\s\S]*?<\/noscript>/gi, " ")
+    .replace(/<svg\b[^>]*>[\s\S]*?<\/svg>/gi, " ")
+    .replace(/<[^>]+>/g, " ");
+}
+
+function decodeHtmlEntitiesBasic(text: string): string {
+  return text
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, "\"")
+    .replace(/&#39;|&apos;/gi, "'")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&#(\d+);/g, (_, code) => {
+      const n = Number(code);
+      return Number.isFinite(n) ? String.fromCharCode(n) : "";
+    });
+}
+
+function extractReadableTextFromHtml(html: string, path: string): ExtractedPageText {
+  const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+  const title = titleMatch ? decodeHtmlEntitiesBasic(titleMatch[1]).replace(/\s+/g, " ").trim().slice(0, 200) : null;
+  const headingMatches = [...html.matchAll(/<h[1-3][^>]*>([\s\S]*?)<\/h[1-3]>/gi)]
+    .map((m) => decodeHtmlEntitiesBasic(stripHtmlTags(m[1])).replace(/\s+/g, " ").trim())
+    .filter(Boolean)
+    .slice(0, 8);
+  const text = decodeHtmlEntitiesBasic(stripHtmlTags(html)).replace(/\s+/g, " ").trim();
+  const hints: string[] = [];
+  if (text.length < clamp(Math.floor(parseNumberEnv("CHATBOT_PAGE_FETCH_MIN_TEXT_CHARS", 500)), 120, 4000)) {
+    hints.push("too_short");
+  }
+  const lower = text.toLowerCase();
+  if (/edit with lovable|vite|react app|loading/.test(lower)) hints.push("spa_shell_marker");
+  const repeatedBoilerplate =
+    ["mentions légales", "confidentialité", "cookies", "contact", "accueil"].filter((token) => lower.includes(token)).length;
+  if (repeatedBoilerplate >= 4 && text.length < 2000) hints.push("boilerplate_heavy");
+  if (headingMatches.length === 0) hints.push("no_headings");
+  return {
+    title,
+    text: truncateText(text, 12000),
+    headings: headingMatches,
+    isThin: hints.length > 0,
+    hints,
+  };
+}
+
+async function sha256HexText(text: string): Promise<string> {
+  const bytes = new TextEncoder().encode(text);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function fetchPageHtmlSameOrigin(path: string): Promise<PageHtmlFetchResult | null> {
+  const url = buildPageUrl(path);
+  if (!url) return null;
+  const timeoutMs = clamp(Math.floor(parseNumberEnv("CHATBOT_PAGE_FETCH_TIMEOUT_MS", 3000)), 500, 12000);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(url.toString(), {
+      method: "GET",
+      headers: {
+        "User-Agent": "FochChatbotPageFallback/1.0",
+        Accept: "text/html,application/xhtml+xml",
+      },
+      signal: controller.signal,
+    });
+    if (!response.ok) return null;
+    const contentType = (response.headers.get("content-type") ?? "").toLowerCase();
+    if (contentType && !contentType.includes("text/html")) return null;
+    const html = await response.text();
+    return { html, status: response.status, url: response.url };
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+interface RenderedPageResponse {
+  ok: boolean;
+  path?: string;
+  finalUrl?: string;
+  title?: string;
+  text?: string;
+  headings?: string[];
+  error?: string;
+  code?: string;
+}
+
+async function fetchRenderedPageViaRenderer(path: string): Promise<RenderedPageResponse | null> {
+  const rendererUrl = (Deno.env.get("CHATBOT_PAGE_RENDERER_URL") ?? "").trim();
+  if (!rendererUrl) return null;
+  const baseUrl = resolvePageFetchBaseUrl();
+  if (!baseUrl) return null;
+  const timeoutMs = clamp(Math.floor(parseNumberEnv("CHATBOT_PAGE_RENDERER_TIMEOUT_MS", 4000)), 800, 15000);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(rendererUrl.replace(/\/$/, "") + "/render", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ path, baseUrl, timeoutMs }),
+      signal: controller.signal,
+    });
+    if (!response.ok) return null;
+    const data = await response.json();
+    return data && typeof data === "object" ? (data as RenderedPageResponse) : null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+function buildPageContextBlock(snapshot: {
+  path: string;
+  title?: string | null;
+  text: string;
+  fetchMode: "http" | "headless";
+  sourceUrl?: string;
+}): { contextBlock: string | null; citations: RAGCitation[] } {
+  const text = truncateText(snapshot.text.trim(), 5000);
+  if (!text) return { contextBlock: null, citations: [] };
+  const contextBlock = [
+    "WEBSITE_PAGE_FALLBACK_CONTEXT",
+    "Use this fallback page context when indexed website context is weak or missing.",
+    `path: ${snapshot.path}`,
+    `fetch_mode: ${snapshot.fetchMode}`,
+    `title: ${snapshot.title?.trim() || "Sans titre"}`,
+    `excerpt: ${text}`,
+  ].join("\n");
+  return {
+    contextBlock,
+    citations: [{
+      path: snapshot.path,
+      title: snapshot.title ?? undefined,
+      sourceUrl: snapshot.sourceUrl,
+    }],
+  };
+}
+
+async function readCachedPageSnapshot(
+  supabase: ReturnType<typeof createServiceClient>,
+  path: string,
+): Promise<PageSnapshotCacheRow | null> {
+  try {
+    const { data, error } = await supabase
+      .from("chatbot_page_snapshot_cache")
+      .select("path,source_url,fetch_mode,status,title,content_text,word_count,last_error,metadata,expires_at")
+      .eq("path", path)
+      .maybeSingle();
+    if (error || !data) return null;
+    const expiresAt = typeof (data as Record<string, unknown>).expires_at === "string"
+      ? Date.parse((data as Record<string, unknown>).expires_at as string)
+      : NaN;
+    if (!Number.isFinite(expiresAt) || expiresAt <= Date.now()) return null;
+    return {
+      path: String((data as Record<string, unknown>).path),
+      source_url: String((data as Record<string, unknown>).source_url),
+      fetch_mode: (((data as Record<string, unknown>).fetch_mode === "headless") ? "headless" : "http"),
+      status: (((data as Record<string, unknown>).status === "ready" ||
+        (data as Record<string, unknown>).status === "error" ||
+        (data as Record<string, unknown>).status === "thin" ||
+        (data as Record<string, unknown>).status === "skipped")
+        ? (data as Record<string, unknown>).status
+        : "error") as PageSnapshotCacheRow["status"],
+      title: typeof (data as Record<string, unknown>).title === "string" ? (data as Record<string, unknown>).title as string : null,
+      content_text: typeof (data as Record<string, unknown>).content_text === "string"
+        ? (data as Record<string, unknown>).content_text as string
+        : null,
+      word_count: typeof (data as Record<string, unknown>).word_count === "number"
+        ? (data as Record<string, unknown>).word_count as number
+        : null,
+      last_error: typeof (data as Record<string, unknown>).last_error === "string"
+        ? (data as Record<string, unknown>).last_error as string
+        : null,
+      metadata: (data as Record<string, unknown>).metadata && typeof (data as Record<string, unknown>).metadata === "object"
+        ? ((data as Record<string, unknown>).metadata as Record<string, unknown>)
+        : null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function upsertPageSnapshotCache(
+  supabase: ReturnType<typeof createServiceClient>,
+  row: {
+    path: string;
+    sourceUrl: string;
+    fetchMode: "http" | "headless";
+    status: "ready" | "error" | "thin" | "skipped";
+    title?: string | null;
+    contentText?: string | null;
+    lastError?: string | null;
+    metadata?: Record<string, unknown>;
+  },
+): Promise<void> {
+  const readyTtlSeconds = parseDurationSecondsEnv("CHATBOT_PAGE_FETCH_CACHE_TTL_SECONDS", 86_400, 60, 604_800);
+  const errorTtlSeconds = parseDurationSecondsEnv("CHATBOT_PAGE_FETCH_ERROR_TTL_SECONDS", 900, 60, 86_400);
+  const ttlSeconds = row.status === "ready" ? readyTtlSeconds : errorTtlSeconds;
+  const contentText = row.contentText?.trim() ?? null;
+  const wordCount = contentText ? contentText.split(/\s+/).filter(Boolean).length : 0;
+  const contentHash = contentText ? await sha256HexText(contentText) : null;
+  try {
+    await supabase.from("chatbot_page_snapshot_cache").upsert({
+      path: row.path,
+      source_url: row.sourceUrl,
+      fetch_mode: row.fetchMode,
+      status: row.status,
+      title: row.title ?? null,
+      content_text: contentText,
+      content_hash: contentHash,
+      word_count: wordCount,
+      last_fetched_at: new Date().toISOString(),
+      expires_at: new Date(Date.now() + ttlSeconds * 1000).toISOString(),
+      last_error: row.lastError ?? null,
+      metadata: row.metadata ?? {},
+      updated_at: new Date().toISOString(),
+    }, { onConflict: "path" });
+  } catch {
+    // Ignore cache persistence failures.
+  }
+}
+
+function mergeRagContexts(base: RAGContextResult, page: OnDemandPageContextResult | null): RAGContextResult {
+  if (!page || !page.contextBlock) return base;
+  const mergedCitations = [...base.citations];
+  for (const citation of page.citations) {
+    if (!mergedCitations.some((existing) => existing.path === citation.path)) {
+      mergedCitations.push(citation);
+    }
+  }
+  const contextBlock = [base.contextBlock, page.contextBlock].filter(Boolean).join("\n\n");
+  return {
+    contextBlock: contextBlock || null,
+    citations: mergedCitations,
+    retrievalMode: base.retrievalMode,
+    pageContextMeta: page.meta ?? { used: true },
+  };
+}
+
+function shouldAttemptPageFallback(question: string, rag: RAGContextResult): boolean {
+  if (!parseBooleanEnv("CHATBOT_PAGE_FALLBACK_ENABLED", true)) return false;
+  const explicitRoute = extractRequestedRoute(question);
+  if (explicitRoute) return true;
+  const pageLike = pageFallbackQuestionPattern.test(normalizeText(question));
+  if (!pageLike) return false;
+  if (!rag.contextBlock || rag.retrievalMode === "none") return true;
+  const weakThreshold = clamp(Math.floor(parseNumberEnv("CHATBOT_PAGE_FALLBACK_WEAK_CONTEXT_CHARS", 1200)), 200, 6000);
+  return rag.contextBlock.length < weakThreshold || rag.citations.length === 0;
+}
+
+async function retrieveOnDemandPageContext(question: string, ragContext: RAGContextResult): Promise<OnDemandPageContextResult | null> {
+  if (!shouldAttemptPageFallback(question, ragContext)) return null;
+  const candidate = resolvePageFallbackCandidate(question, ragContext.citations);
+  if (!candidate || !looksLikePublicPagePath(candidate.path)) return null;
+  const path = candidate.path;
+
+  let supabase: ReturnType<typeof createServiceClient> | null = null;
+  try {
+    supabase = createServiceClient();
+  } catch {
+    supabase = null;
+  }
+
+  if (supabase) {
+    const cached = await readCachedPageSnapshot(supabase, path);
+    if (cached && cached.status !== "ready") {
+      return null;
+    }
+    if (cached?.status === "ready" && typeof cached.content_text === "string" && cached.content_text.trim().length > 0) {
+      const built = buildPageContextBlock({
+        path,
+        title: cached.title ?? undefined,
+        text: cached.content_text,
+        fetchMode: cached.fetch_mode,
+        sourceUrl: cached.source_url,
+      });
+      if (built.contextBlock) {
+        return {
+          ...built,
+          meta: {
+            used: true,
+            fetchMode: cached.fetch_mode,
+            source: cached.fetch_mode,
+            cacheHit: true,
+            route: path,
+          },
+        };
+      }
+    }
+  }
+
+  const htmlFetch = await fetchPageHtmlSameOrigin(path);
+  if (!htmlFetch) {
+    if (supabase) {
+      await upsertPageSnapshotCache(supabase, {
+        path,
+        sourceUrl: buildPageUrl(path)?.toString() ?? path,
+        fetchMode: "http",
+        status: "error",
+        lastError: "http_fetch_failed",
+        metadata: { reason: candidate.reason },
+      });
+    }
+    return null;
+  }
+
+  const extracted = extractReadableTextFromHtml(htmlFetch.html, path);
+  let snapshotText = extracted.text;
+  let snapshotTitle = extracted.title;
+  let fetchMode: "http" | "headless" = "http";
+  let status: "ready" | "thin" = extracted.isThin ? "thin" : "ready";
+  let metadata: Record<string, unknown> = { hints: extracted.hints, reason: candidate.reason };
+
+  if (extracted.isThin) {
+    const rendered = await fetchRenderedPageViaRenderer(path);
+    if (rendered?.ok && typeof rendered.text === "string" && rendered.text.trim().length > 0) {
+      snapshotText = truncateText(rendered.text.replace(/\s+/g, " ").trim(), 12000);
+      snapshotTitle = typeof rendered.title === "string" ? rendered.title.trim().slice(0, 200) : snapshotTitle;
+      fetchMode = "headless";
+      status = "ready";
+      metadata = {
+        ...metadata,
+        rendererUsed: true,
+        renderHeadings: Array.isArray(rendered.headings) ? rendered.headings.slice(0, 8) : undefined,
+      };
+    }
+  }
+
+  if (supabase) {
+    await upsertPageSnapshotCache(supabase, {
+      path,
+      sourceUrl: htmlFetch.url,
+      fetchMode,
+      status,
+      title: snapshotTitle,
+      contentText: snapshotText,
+      metadata,
+      lastError: status === "ready" ? null : "thin_page_content",
+    });
+  }
+
+  if (!snapshotText || status !== "ready") return null;
+  const built = buildPageContextBlock({
+    path,
+    title: snapshotTitle,
+    text: snapshotText,
+    fetchMode,
+    sourceUrl: htmlFetch.url,
+  });
+  if (!built.contextBlock) return null;
+  return {
+    ...built,
+    meta: {
+      used: true,
+      fetchMode,
+      source: fetchMode,
+      cacheHit: false,
+      route: path,
+    },
+  };
+}
+
+async function retrieveWebsiteContextWithPageFallback(question: string): Promise<RAGContextResult> {
+  const rag = await retrieveWebsiteContext(question);
+  const page = await retrieveOnDemandPageContext(question, rag);
+  return mergeRagContexts(rag, page);
 }
 
 function extractOutputText(payload: unknown): string {
@@ -2322,6 +2820,7 @@ function buildLeadCriteriaFromState(
 interface PersistentMemoryRecord {
   sessionId: string;
   preferences?: ToolConversationState["preferences"];
+  qualification?: Record<string, unknown>;
   selectedPropertyIds?: number[];
   summary?: string;
 }
@@ -2363,10 +2862,14 @@ async function loadPersistentMemoryRecord(sessionId: string | undefined): Promis
   try {
     const { data, error } = await supabase
       .from("chatbot_memory_sessions")
-      .select("session_id,preferences,selected_property_ids,summary")
+      .select("session_id,preferences,qualification,selected_property_ids,summary,expires_at")
       .eq("session_id", sid)
       .maybeSingle();
     if (error || !data) return null;
+    const expiresAtMs = typeof (data as Record<string, unknown>).expires_at === "string"
+      ? Date.parse((data as Record<string, unknown>).expires_at as string)
+      : NaN;
+    if (Number.isFinite(expiresAtMs) && expiresAtMs <= Date.now()) return null;
 
     const selectedPropertyIds = uniqueNumberList(
       Array.isArray((data as Record<string, unknown>).selected_property_ids)
@@ -2386,9 +2889,168 @@ async function loadPersistentMemoryRecord(sessionId: string | undefined): Promis
       typeof (data as Record<string, unknown>).summary === "string"
         ? truncateText(((data as Record<string, unknown>).summary as string).trim(), 500)
         : undefined;
-    return { sessionId: sid, preferences, selectedPropertyIds, summary };
+    const qualification =
+      (data as Record<string, unknown>).qualification &&
+        typeof (data as Record<string, unknown>).qualification === "object" &&
+        !Array.isArray((data as Record<string, unknown>).qualification)
+        ? sanitizeJsonObject((data as Record<string, unknown>).qualification)
+        : undefined;
+    return { sessionId: sid, preferences, qualification, selectedPropertyIds, summary };
   } catch {
     return null;
+  }
+}
+
+const memoryExtractorSchema = z.object({
+  preferences: z.object({
+    transaction: z.enum(["vente", "location"]).optional(),
+    type: z.enum(["appartement", "maison_villa", "autre"]).optional(),
+    city: z.string().trim().min(1).max(80).optional(),
+    bedroomsMin: z.number().int().min(0).max(12).optional(),
+    priceMin: z.number().int().min(0).max(50_000_000).optional(),
+    priceMax: z.number().int().min(0).max(50_000_000).optional(),
+  }).partial().optional(),
+  qualification: z.object({
+    district: z.string().trim().min(1).max(80).optional(),
+    timeline: z.string().trim().min(1).max(120).optional(),
+    project: z.string().trim().min(1).max(120).optional(),
+    financingStatus: z.string().trim().min(1).max(120).optional(),
+    urgency: z.string().trim().min(1).max(120).optional(),
+    occupancyPurpose: z.string().trim().min(1).max(120).optional(),
+    amenities: z.array(z.string().trim().min(1).max(40)).max(12).optional(),
+  }).partial().optional(),
+  selectedPropertyIds: z.array(z.number().int().positive()).max(3).optional(),
+  summary: z.string().trim().min(1).max(500).optional(),
+  updatedKeys: z.array(z.string().trim().min(1).max(80)).max(20).optional(),
+  confidence: z.number().min(0).max(1).optional(),
+}).strict();
+
+interface GeminiMemoryExtractorConfig {
+  apiKey: string;
+  model: string;
+  timeoutMs: number;
+  confidenceThreshold: number;
+  retentionDays: number;
+}
+
+function resolveGeminiMemoryExtractorConfig(): GeminiMemoryExtractorConfig | null {
+  if (!parseBooleanEnv("CHATBOT_MEMORY_ENABLED", false)) return null;
+  if (!parseBooleanEnv("CHATBOT_MEMORY_EXTRACTOR_ENABLED", false)) return null;
+  const apiKey = (Deno.env.get("GEMINI_API_KEY") ?? "").trim();
+  if (!apiKey) return null;
+  return {
+    apiKey,
+    model: (Deno.env.get("CHATBOT_MEMORY_MODEL") ?? "gemini-2.5-flash-lite").trim() || "gemini-2.5-flash-lite",
+    timeoutMs: clamp(Math.floor(parseNumberEnv("CHATBOT_MEMORY_EXTRACTOR_TIMEOUT_MS", 1500)), 500, 8000),
+    confidenceThreshold: clamp(parseNumberEnv("CHATBOT_MEMORY_EXTRACTOR_CONFIDENCE_THRESHOLD", 0.65), 0, 1),
+    retentionDays: clamp(Math.floor(parseNumberEnv("CHATBOT_MEMORY_RETENTION_DAYS", 90)), 1, 3650),
+  };
+}
+
+function stripJsonCodeFence(value: string): string {
+  const trimmed = value.trim();
+  const match = trimmed.match(/^```(?:json)?\s*([\s\S]+?)\s*```$/i);
+  return match ? match[1].trim() : trimmed;
+}
+
+function extractGeminiTextPayload(payload: unknown): string | null {
+  const data = payload as Record<string, unknown> | null;
+  const candidates = Array.isArray(data?.candidates) ? data.candidates : [];
+  for (const candidate of candidates) {
+    const content = candidate && typeof candidate === "object" ? (candidate as Record<string, unknown>).content : null;
+    const parts = content && typeof content === "object" && Array.isArray((content as Record<string, unknown>).parts)
+      ? ((content as Record<string, unknown>).parts as unknown[])
+      : [];
+    for (const part of parts) {
+      if (part && typeof part === "object" && typeof (part as Record<string, unknown>).text === "string") {
+        const text = ((part as Record<string, unknown>).text as string).trim();
+        if (text) return text;
+      }
+    }
+  }
+  return null;
+}
+
+function memoryFieldExplicitlyMentioned(question: string, field: string): boolean {
+  const q = normalizeText(question);
+  if (field === "transaction") return /\b(vente|vendre|achat|acheter|location|louer)\b/.test(q);
+  if (field === "type") return /\b(appartement|maison|villa|studio)\b/.test(q);
+  if (field === "city") return /\b(havre|sainte adresse|montivilliers|gainneville|harfleur)\b/.test(q);
+  if (field === "bedroomsMin") return /\b(t[1-9]|chambre|chambres|pieces|pi[eè]ces?)\b/.test(q);
+  if (field === "priceMin" || field === "priceMax") return /\b(eur|euro|€|budget|\d{4,})\b/.test(q);
+  return false;
+}
+
+async function extractStructuredMemoryWithGemini(input: {
+  config: GeminiMemoryExtractorConfig;
+  question: string;
+  chatHistory?: Array<{ role: "user" | "assistant"; content: string }>;
+  currentPreferences?: ToolConversationState["preferences"];
+  currentSummary?: string;
+}): Promise<z.infer<typeof memoryExtractorSchema> | null> {
+  const history = (input.chatHistory ?? []).slice(-4).map((m) => ({
+    role: m.role,
+    content: truncateText(m.content, 300),
+  }));
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(input.config.model)}:generateContent`;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), input.config.timeoutMs);
+  try {
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": input.config.apiKey,
+      },
+      signal: controller.signal,
+      body: JSON.stringify({
+        generationConfig: {
+          temperature: 0,
+          responseMimeType: "application/json",
+          maxOutputTokens: 320,
+        },
+        contents: [{
+          role: "user",
+          parts: [{
+            text: [
+              "Extract structured real-estate preference memory for a French property chatbot.",
+              "Return JSON only. No markdown.",
+              "Do not include raw transcript text.",
+              "Only extract facts the user likely stated or implied clearly.",
+              "Schema keys: preferences, qualification, selectedPropertyIds, summary, updatedKeys, confidence.",
+              "preferences keys: transaction, type, city, bedroomsMin, priceMin, priceMax.",
+              "qualification keys: district, timeline, project, financingStatus, urgency, occupancyPurpose, amenities (array).",
+              `Current preferences: ${JSON.stringify(input.currentPreferences ?? {})}`,
+              `Current summary: ${JSON.stringify(input.currentSummary ?? null)}`,
+              `Recent history: ${JSON.stringify(history)}`,
+              `Current user question: ${input.question}`,
+            ].join("\n"),
+          }],
+        }],
+      }),
+    });
+    if (!response.ok) return null;
+    const raw = await response.json();
+    const text = extractGeminiTextPayload(raw);
+    if (!text) return null;
+    const parsedJson = JSON.parse(stripJsonCodeFence(text));
+    const parsed = memoryExtractorSchema.safeParse(parsedJson);
+    if (!parsed.success) return null;
+    if (
+      parsed.data.preferences?.priceMin != null &&
+      parsed.data.preferences?.priceMax != null &&
+      parsed.data.preferences.priceMin > parsed.data.preferences.priceMax
+    ) {
+      [parsed.data.preferences.priceMin, parsed.data.preferences.priceMax] = [
+        parsed.data.preferences.priceMax,
+        parsed.data.preferences.priceMin,
+      ];
+    }
+    return parsed.data;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 
@@ -2397,6 +3059,7 @@ async function persistStructuredMemory(input: {
   baseState?: ToolConversationState;
   patch?: Partial<ToolConversationState>;
   question: string;
+  chatHistory?: Array<{ role: "user" | "assistant"; content: string }>;
 }): Promise<MemoryResponseMeta | undefined> {
   if (!parseBooleanEnv("CHATBOT_MEMORY_ENABLED", false)) return undefined;
   const sid = typeof input.sessionId === "string" ? input.sessionId.trim() : "";
@@ -2409,28 +3072,128 @@ async function persistStructuredMemory(input: {
     return undefined;
   }
 
-  const preferences = {
+  let existingPreferences: ToolConversationState["preferences"] = {};
+  let existingQualification: Record<string, unknown> = {};
+  let existingSummary: string | undefined;
+  try {
+    const { data } = await supabase
+      .from("chatbot_memory_sessions")
+      .select("preferences,qualification,summary,selected_property_ids")
+      .eq("session_id", sid)
+      .maybeSingle();
+    if (data && typeof data === "object") {
+      existingPreferences = sanitizePlannerSearchArgs((data as Record<string, unknown>).preferences) as ToolConversationState["preferences"];
+      existingQualification = sanitizeJsonObject((data as Record<string, unknown>).qualification);
+      existingSummary =
+        typeof (data as Record<string, unknown>).summary === "string"
+          ? truncateText(((data as Record<string, unknown>).summary as string).trim(), 500)
+          : undefined;
+      const existingSelected = uniqueNumberList(
+        Array.isArray((data as Record<string, unknown>).selected_property_ids)
+          ? ((data as Record<string, unknown>).selected_property_ids as unknown[]).map((value) =>
+              typeof value === "number" ? value : Number(value)
+            )
+          : [],
+        3,
+      );
+      if (existingSelected.length > 0) {
+        input.baseState = {
+          ...(input.baseState ?? {}),
+          selectedPropertyIds: uniqueNumberList([...(input.baseState?.selectedPropertyIds ?? []), ...existingSelected], 3),
+        };
+      }
+    }
+  } catch {
+    // Ignore read failure; write path can still proceed.
+  }
+
+  let preferences: ToolConversationState["preferences"] = {
+    ...existingPreferences,
     ...(input.baseState?.preferences ?? {}),
     ...(input.patch?.preferences ?? {}),
   };
-  const selectedPropertyIds = uniqueNumberList(
+  let qualification: Record<string, unknown> = {
+    ...existingQualification,
+  };
+  let selectedPropertyIds = uniqueNumberList(
     [...(input.patch?.selectedPropertyIds ?? []), ...(input.baseState?.selectedPropertyIds ?? [])],
     3,
   );
-  const preferenceKeys = Object.entries(preferences)
-    .filter(([, value]) => value != null && value !== "")
-    .map(([key]) => key)
-    .slice(0, 12);
-  const summary =
+  let summary =
     truncateText(
       (
         input.patch?.leadDraft?.criteriaSummary ??
         input.patch?.recentSearch?.params?.city ??
         input.baseState?.leadDraft?.criteriaSummary ??
+        existingSummary ??
         input.question
       ).toString(),
       500,
     ) || undefined;
+  let memorySource: MemoryResponseMeta["source"] = "state_merge";
+  let memoryConfidence: number | undefined;
+  let updatedKeys: string[] | undefined;
+
+  const extractorConfig = resolveGeminiMemoryExtractorConfig();
+  if (extractorConfig) {
+    const extracted = await extractStructuredMemoryWithGemini({
+      config: extractorConfig,
+      question: input.question,
+      chatHistory: input.chatHistory,
+      currentPreferences: preferences,
+      currentSummary: summary,
+    });
+    if (extracted) {
+      const confidence = typeof extracted.confidence === "number" ? clamp01(extracted.confidence) : undefined;
+      const canApplyAll = typeof confidence === "number" && confidence >= extractorConfig.confidenceThreshold;
+      const nextPreferences = { ...preferences };
+      for (const [key, value] of Object.entries(extracted.preferences ?? {})) {
+        if (value == null || value === "") continue;
+        if (canApplyAll || memoryFieldExplicitlyMentioned(input.question, key)) {
+          (nextPreferences as Record<string, unknown>)[key] = value;
+        }
+      }
+      preferences = nextPreferences;
+      qualification = {
+        ...qualification,
+        ...sanitizeJsonObject(extracted.qualification),
+      };
+      if (Array.isArray(extracted.selectedPropertyIds) && extracted.selectedPropertyIds.length > 0) {
+        selectedPropertyIds = uniqueNumberList([...extracted.selectedPropertyIds, ...selectedPropertyIds], 3);
+      }
+      if (typeof extracted.summary === "string" && extracted.summary.trim().length > 0) {
+        summary = truncateText(extracted.summary.trim(), 500);
+      }
+      memorySource = "gemini_extractor";
+      memoryConfidence = confidence;
+      updatedKeys = (extracted.updatedKeys ?? []).slice(0, 20);
+      try {
+        await supabase.from("chatbot_memory_events").insert({
+          session_id: sid,
+          event_type: "memory_extractor",
+          delta: {
+            preferences: extracted.preferences ?? {},
+            qualification: sanitizeJsonObject(extracted.qualification),
+            selectedPropertyIds: extracted.selectedPropertyIds ?? [],
+          },
+          metadata: {
+            confidence,
+            source: "gemini_extractor",
+            updatedKeys: updatedKeys ?? [],
+          },
+        });
+      } catch {
+        // Ignore memory event insert failures.
+      }
+    }
+  }
+
+  const preferenceKeys = Object.entries(preferences)
+    .filter(([, value]) => value != null && value !== "")
+    .map(([key]) => key)
+    .slice(0, 12);
+  const retentionDays = extractorConfig?.retentionDays ?? clamp(Math.floor(parseNumberEnv("CHATBOT_MEMORY_RETENTION_DAYS", 90)), 1, 3650);
+  const expiresAt = new Date(Date.now() + retentionDays * 24 * 60 * 60 * 1000).toISOString();
 
   try {
     const { error } = await supabase.from("chatbot_memory_sessions").upsert(
@@ -2440,15 +3203,28 @@ async function persistStructuredMemory(input: {
         memory_version: "v1",
         summary: summary ?? null,
         preferences,
-        qualification: {},
+        qualification,
         selected_property_ids: selectedPropertyIds,
-        metadata: {},
+        metadata: {
+          source: memorySource ?? "none",
+          confidence: memoryConfidence ?? null,
+          updatedKeys: updatedKeys ?? [],
+        },
+        expires_at: expiresAt,
         updated_at: new Date().toISOString(),
       },
       { onConflict: "session_id" },
     );
     if (error) return undefined;
-    return { updated: true, preferenceKeys, summary };
+    return {
+      updated: true,
+      preferenceKeys,
+      summary,
+      source: memorySource ?? "none",
+      ttlDays: retentionDays,
+      updatedKeys,
+      confidence: memoryConfidence,
+    };
   } catch {
     return undefined;
   }
@@ -2465,13 +3241,45 @@ async function getCachedPropertyAnalysisCards(
   try {
     const { data, error } = await supabase
       .from("property_media_analysis")
-      .select("id,property_id,summary_short,summary_long,structured_facts,evidence,status")
+      .select("id,property_id,source_id,source_kind,summary_short,summary_long,structured_facts,evidence,status,updated_at,metadata")
       .in("property_id", ids)
       .eq("source_kind", sourceKind)
       .eq("status", "ready")
       .order("updated_at", { ascending: false })
-      .limit(6);
+      .limit(12);
     if (error || !Array.isArray(data)) return [];
+    const documentSourceIds = sourceKind === "document"
+      ? ((data as Array<Record<string, unknown>>)
+        .map((row) => (typeof row.source_id === "string" ? row.source_id : ""))
+        .filter(Boolean))
+      : [];
+    const documentKindById = new Map<string, "dpe_pdf" | "diagnostic_pdf" | "floor_plan_pdf" | "brochure_pdf" | "other">();
+    if (documentSourceIds.length > 0) {
+      try {
+        const { data: docs } = await supabase
+          .from("property_documents")
+          .select("id,kind")
+          .in("id", [...new Set(documentSourceIds)].slice(0, 24));
+        for (const doc of (docs ?? []) as Array<Record<string, unknown>>) {
+          const id = typeof doc.id === "string" ? doc.id : "";
+          const kind = doc.kind;
+          if (!id) continue;
+          if (
+            kind === "dpe_pdf" ||
+            kind === "diagnostic_pdf" ||
+            kind === "floor_plan_pdf" ||
+            kind === "brochure_pdf" ||
+            kind === "other"
+          ) {
+            documentKindById.set(id, kind);
+          }
+        }
+      } catch {
+        // Ignore document kind enrichment failures.
+      }
+    }
+    const staleHours = clamp(Math.floor(parseNumberEnv("CHATBOT_MULTIMODAL_STALE_HOURS", 168)), 1, 24 * 365);
+    const staleMs = staleHours * 60 * 60 * 1000;
     return data
       .map((row) => {
         if (!row || typeof row !== "object") return null;
@@ -2481,21 +3289,356 @@ async function getCachedPropertyAnalysisCards(
         const summaryLong = typeof r.summary_long === "string" ? r.summary_long.trim() : "";
         const summary = summaryShort || summaryLong;
         if (!Number.isInteger(propertyId) || propertyId <= 0 || !summary) return null;
-        const facts = r.structured_facts && typeof r.structured_facts === "object" && !Array.isArray(r.structured_facts)
-          ? (r.structured_facts as Record<string, unknown>)
-          : {};
+        const facts = sanitizeJsonObject(r.structured_facts);
         const confidence = typeof facts.confidence === "number" ? clamp01(facts.confidence) : undefined;
+        const metadata = sanitizeJsonObject(r.metadata);
+        const updatedAtMs = typeof r.updated_at === "string" ? Date.parse(r.updated_at) : NaN;
+        const inferredDocumentKind =
+          sourceKind === "document" && typeof r.source_id === "string"
+            ? documentKindById.get(r.source_id as string)
+            : undefined;
+        const evidence = Array.isArray(r.evidence)
+          ? (r.evidence as unknown[])
+              .filter((value): value is Record<string, unknown> => Boolean(value && typeof value === "object"))
+              .map((item) => ({
+                sourceUrl: typeof item.sourceUrl === "string" ? item.sourceUrl.slice(0, 1000) : undefined,
+                thumbnailUrl: typeof item.thumbnailUrl === "string" ? item.thumbnailUrl.slice(0, 1000) : undefined,
+                page: typeof item.page === "number" && Number.isFinite(item.page) ? Math.max(1, Math.floor(item.page)) : undefined,
+                label: typeof item.label === "string" ? truncateText(item.label, 120) : undefined,
+                kind: typeof item.kind === "string" ? truncateText(item.kind, 60) : sourceKind,
+              }))
+              .slice(0, 8)
+          : undefined;
         return {
           id: `analysis-${String(r.id ?? buildToolActionId("analysis"))}`,
-          kind: sourceKind === "image" ? "property_photo_insights" : "property_document_summary",
+          kind:
+            sourceKind === "image"
+              ? "property_photo_insights"
+              : inferredDocumentKind === "floor_plan_pdf"
+                ? "property_plan_insights"
+                : "property_document_summary",
           propertyId,
-          title: sourceKind === "image" ? "Analyse visuelle du bien" : "Résumé document du bien",
+          title:
+            sourceKind === "image"
+              ? "Analyse visuelle du bien"
+              : inferredDocumentKind === "floor_plan_pdf"
+                ? "Analyse du plan"
+                : inferredDocumentKind === "dpe_pdf"
+                  ? "Résumé DPE"
+                  : inferredDocumentKind === "diagnostic_pdf"
+                    ? "Résumé diagnostics"
+                    : "Résumé document du bien",
           summary: truncateText(summary, 800),
           confidence,
-          stale: false,
+          stale: Number.isFinite(updatedAtMs) ? (Date.now() - updatedAtMs) > staleMs : undefined,
+          cacheHit: true,
+          sourceKind,
+          documentKind: inferredDocumentKind,
+          evidence: evidence && evidence.length > 0 ? evidence : [{
+            sourceUrl: typeof metadata.sourceUrl === "string" ? metadata.sourceUrl : undefined,
+            label: typeof metadata.label === "string" ? truncateText(metadata.label, 120) : undefined,
+            kind: sourceKind,
+          }],
         } satisfies AnalysisCard;
       })
       .filter((card): card is AnalysisCard => Boolean(card));
+  } catch {
+    return [];
+  }
+}
+
+const multimodalOutputSchema = z.object({
+  observations: z.array(z.string()).optional(),
+  uncertainties: z.array(z.string()).optional(),
+  facts: z.record(z.string(), z.unknown()).optional(),
+  riskFlags: z.array(z.string()).optional(),
+  userSafeSummary: z.string().optional(),
+  agentNotes: z.union([z.string(), z.null()]).optional(),
+  confidence: z.number().min(0).max(1).optional(),
+  evidence: z.array(z.unknown()).optional(),
+});
+
+function normalizeInlineSourceMimeType(sourceKind: "image" | "document", mimeType: string | null | undefined): string {
+  const raw = (mimeType ?? "").trim().toLowerCase();
+  if (raw) return raw;
+  return sourceKind === "image" ? "image/jpeg" : "application/pdf";
+}
+
+function isAllowedInlineSourceMimeType(sourceKind: "image" | "document", mimeType: string): boolean {
+  if (sourceKind === "image") return ["image/jpeg", "image/png", "image/webp"].includes(mimeType);
+  return mimeType === "application/pdf";
+}
+
+async function sha256HexBytes(bytes: Uint8Array): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+function bytesToBase64(bytes: Uint8Array): string {
+  let binary = "";
+  const step = 0x8000;
+  for (let i = 0; i < bytes.length; i += step) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + step));
+  }
+  return btoa(binary);
+}
+
+function estimatePdfPagesFromBytes(bytes: Uint8Array): number | null {
+  try {
+    const sample = new TextDecoder("latin1").decode(bytes.subarray(0, Math.min(bytes.length, 2_500_000)));
+    const matches = sample.match(/\/Type\s*\/Page\b/g);
+    return matches?.length ? matches.length : null;
+  } catch {
+    return null;
+  }
+}
+
+async function getOnDemandPropertySource(
+  supabase: ReturnType<typeof createServiceClient>,
+  propertyId: number,
+  sourceKind: "image" | "document",
+): Promise<{
+  sourceUrl: string;
+  mimeType?: string | null;
+  sourceId?: string;
+  documentKind?: "dpe_pdf" | "diagnostic_pdf" | "floor_plan_pdf" | "brochure_pdf" | "other";
+  label?: string;
+}> {
+  if (sourceKind === "image") {
+    const { data, error } = await supabase
+      .from("property_images")
+      .select("source_url")
+      .eq("property_id", propertyId)
+      .order("sort_order", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    if (error || !data || typeof (data as Record<string, unknown>).source_url !== "string") return {};
+    return { sourceUrl: (data as Record<string, unknown>).source_url as string };
+  }
+  const { data, error } = await supabase
+    .from("property_documents")
+    .select("id,source_url,mime_type,kind,metadata,status")
+    .eq("property_id", propertyId)
+    .in("status", ["ready", "pending", "error"])
+    .order("updated_at", { ascending: false })
+    .limit(6);
+  if (error || !Array.isArray(data)) return {};
+  const preferred = (data as Array<Record<string, unknown>>)
+    .filter((row) => typeof row.source_url === "string")
+    .sort((a, b) => {
+      const rank = (kind: unknown) =>
+        kind === "floor_plan_pdf" ? 0 : kind === "dpe_pdf" ? 1 : kind === "diagnostic_pdf" ? 2 : kind === "brochure_pdf" ? 3 : 4;
+      return rank(a.kind) - rank(b.kind);
+    })[0];
+  if (!preferred) return {};
+  const metadata = sanitizeJsonObject(preferred.metadata);
+  return {
+    sourceId: typeof preferred.id === "string" ? preferred.id : undefined,
+    sourceUrl: preferred.source_url as string,
+    mimeType: typeof preferred.mime_type === "string" ? preferred.mime_type : null,
+    documentKind:
+      preferred.kind === "dpe_pdf" ||
+      preferred.kind === "diagnostic_pdf" ||
+      preferred.kind === "floor_plan_pdf" ||
+      preferred.kind === "brochure_pdf" ||
+      preferred.kind === "other"
+        ? (preferred.kind as "dpe_pdf" | "diagnostic_pdf" | "floor_plan_pdf" | "brochure_pdf" | "other")
+        : undefined,
+    label: typeof metadata.label === "string" ? metadata.label : undefined,
+  };
+}
+
+async function fetchInlineSourceBytes(sourceUrl: string, timeoutMs: number, maxBytes: number): Promise<{ bytes: Uint8Array; mimeType: string }> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(sourceUrl, {
+      headers: { "User-Agent": "FochChatbot/1.0" },
+      signal: controller.signal,
+    });
+    if (!response.ok) throw new Error(`inline_fetch_${response.status}`);
+    const mimeType = (response.headers.get("content-type") ?? "").split(";")[0].trim().toLowerCase();
+    const arrayBuffer = await response.arrayBuffer();
+    const bytes = new Uint8Array(arrayBuffer);
+    if (bytes.byteLength > maxBytes) throw new Error("inline_source_too_large");
+    return { bytes, mimeType };
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+async function getPropertyAnalysisCards(
+  supabase: ReturnType<typeof createServiceClient>,
+  propertyIds: number[],
+  sourceKind: "image" | "document",
+): Promise<AnalysisCard[]> {
+  const ids = uniqueNumberList(propertyIds, 3);
+  const cached = await getCachedPropertyAnalysisCards(supabase, ids, sourceKind);
+  if (cached.length > 0) return cached;
+  if (!parseBooleanEnv("CHATBOT_MULTIMODAL_ON_DEMAND_ENABLED", true)) return [];
+  if (ids.length !== 1) return [];
+
+  const propertyId = ids[0];
+  const source = await getOnDemandPropertySource(supabase, propertyId, sourceKind);
+  if (!source.sourceUrl) return [];
+
+  const timeoutMs = clamp(Math.floor(parseNumberEnv("CHATBOT_MULTIMODAL_ON_DEMAND_TIMEOUT_MS", 2500)), 600, 10000);
+  const maxBytes = clamp(Math.floor(parseNumberEnv("CHATBOT_MULTIMODAL_MAX_FILE_BYTES", 8 * 1024 * 1024)), 200_000, 50 * 1024 * 1024);
+  const model = (Deno.env.get("CHATBOT_MULTIMODAL_MODEL") ?? "gemini-2.5-flash").trim() || "gemini-2.5-flash";
+  const apiKey = (Deno.env.get("GEMINI_API_KEY") ?? "").trim();
+  if (!apiKey) return [];
+
+  try {
+    const { bytes, mimeType: fetchedMime } = await fetchInlineSourceBytes(source.sourceUrl, timeoutMs, maxBytes);
+    const mimeType = normalizeInlineSourceMimeType(sourceKind, source.mimeType ?? fetchedMime);
+    if (!isAllowedInlineSourceMimeType(sourceKind, mimeType)) return [];
+    const pageCount = sourceKind === "document" && mimeType === "application/pdf" ? estimatePdfPagesFromBytes(bytes) : null;
+    const maxPdfPages = clamp(Math.floor(parseNumberEnv("CHATBOT_MULTIMODAL_MAX_PDF_PAGES", 20)), 1, 200);
+    if (sourceKind === "document" && typeof pageCount === "number" && pageCount > maxPdfPages) return [];
+    const sourceHash = await sha256HexBytes(bytes);
+
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": apiKey,
+      },
+      body: JSON.stringify({
+        generationConfig: {
+          temperature: 0,
+          responseMimeType: "application/json",
+          maxOutputTokens: 700,
+        },
+        contents: [{
+          role: "user",
+          parts: [
+            {
+              text: [
+                "Analyse ce contenu immobilier et réponds uniquement en JSON valide.",
+                "Inclure: observations, uncertainties, facts, riskFlags, userSafeSummary, agentNotes, confidence, evidence.",
+                "Ne pas inventer. Pour documents DPE/diagnostics, rester prudent et informatif.",
+              ].join("\n"),
+            },
+            {
+              inlineData: {
+                mimeType,
+                data: bytesToBase64(bytes),
+              },
+            },
+          ],
+        }],
+      }),
+    });
+    if (!response.ok) return [];
+    const raw = await response.json();
+    const text = extractGeminiTextPayload(raw);
+    if (!text) return [];
+    const parsedRaw = JSON.parse(stripJsonCodeFence(text));
+    const parsed = multimodalOutputSchema.safeParse(parsedRaw);
+    if (!parsed.success) return [];
+    const value = parsed.data;
+    const facts = sanitizeJsonObject(value.facts);
+    const confidence = typeof value.confidence === "number" ? clamp01(value.confidence) : undefined;
+    const summary = truncateText(
+      (typeof value.userSafeSummary === "string" && value.userSafeSummary.trim()) ||
+        (Array.isArray(value.observations) ? value.observations.filter((v) => typeof v === "string").slice(0, 2).join(" • ") : ""),
+      800,
+    );
+    if (!summary) return [];
+    const evidence = Array.isArray(value.evidence)
+      ? value.evidence
+          .filter((e): e is Record<string, unknown> => Boolean(e && typeof e === "object"))
+          .map((e) => ({
+            sourceUrl: typeof e.sourceUrl === "string" ? e.sourceUrl : source.sourceUrl,
+            page: typeof e.page === "number" ? Math.max(1, Math.floor(e.page)) : undefined,
+            label: typeof e.label === "string" ? truncateText(e.label, 120) : source.label,
+            kind: typeof e.kind === "string" ? truncateText(e.kind, 60) : sourceKind,
+          }))
+          .slice(0, 8)
+      : [{ sourceUrl: source.sourceUrl, label: source.label, kind: sourceKind }];
+
+    // Best-effort cache write so future turns hit the multimodal cache path.
+    try {
+      await supabase.from("property_media_analysis").upsert({
+        property_id: propertyId,
+        source_kind: sourceKind,
+        source_id: source.sourceId ?? null,
+        source_url: source.sourceUrl,
+        model,
+        analysis_version: (Deno.env.get("CHATBOT_MULTIMODAL_ANALYSIS_VERSION") ?? "v2").trim() || "v2",
+        status: "ready",
+        summary_short: truncateText(summary, 280),
+        summary_long: truncateText(summary, 4000),
+        structured_facts: { ...facts, confidence },
+        safety_flags: {
+          riskFlags: Array.isArray(value.riskFlags) ? value.riskFlags.slice(0, 20) : [],
+          uncertainties: Array.isArray(value.uncertainties) ? value.uncertainties.slice(0, 12) : [],
+          onDemand: true,
+        },
+        evidence,
+        cost_estimate_usd: null,
+        latency_ms: null,
+        metadata: {
+          onDemand: true,
+          mimeType,
+          fileSizeBytes: bytes.byteLength,
+          pageCount,
+        },
+        source_hash: sourceHash,
+        cache_key: `${sourceKind}:${source.sourceUrl}:${sourceHash}`,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "source_kind,source_url,analysis_version" });
+    } catch {
+      // Ignore cache write failures.
+    }
+
+    const kind =
+      sourceKind === "image"
+        ? "property_photo_insights"
+        : source.documentKind === "floor_plan_pdf"
+          ? "property_plan_insights"
+          : "property_document_summary";
+    const title =
+      sourceKind === "image"
+        ? "Analyse visuelle du bien"
+        : source.documentKind === "floor_plan_pdf"
+          ? "Analyse du plan"
+          : source.documentKind === "dpe_pdf"
+            ? "Résumé DPE"
+            : source.documentKind === "diagnostic_pdf"
+              ? "Résumé diagnostics"
+              : "Résumé document du bien";
+    const cards: AnalysisCard[] = [{
+      id: `analysis-ondemand-${propertyId}-${sourceKind}`,
+      kind,
+      propertyId,
+      title,
+      summary,
+      confidence,
+      stale: false,
+      cacheHit: false,
+      sourceKind,
+      documentKind: source.documentKind,
+      evidence,
+    }];
+    const riskFlags = Array.isArray(value.riskFlags) ? value.riskFlags.filter((v): v is string => typeof v === "string").slice(0, 6) : [];
+    if (riskFlags.length > 0) {
+      cards.push({
+        id: `analysis-risk-${propertyId}-${sourceKind}`,
+        kind: "property_risks_notice",
+        propertyId,
+        title: "Points de vigilance (IA)",
+        summary: truncateText(riskFlags.join(" • "), 800),
+        confidence,
+        stale: false,
+        cacheHit: false,
+        sourceKind,
+        documentKind: source.documentKind,
+        evidence,
+      });
+    }
+    return cards;
   } catch {
     return [];
   }
@@ -2704,6 +3847,10 @@ async function orchestrateToolRequest(input: {
         },
       };
 
+      const imageCards = await getPropertyAnalysisCards(supabase, properties.map((property) => property.id), "image");
+      const documentCards = await getPropertyAnalysisCards(supabase, properties.map((property) => property.id), "document");
+      const analysisCards = [...imageCards, ...documentCards].slice(0, 8);
+
       return {
         answer: summary,
         suggestedPrompts: ["Ouvrir le bien recommandé", "Préremplir le formulaire de contact", "Voir plus de résultats"],
@@ -2717,8 +3864,12 @@ async function orchestrateToolRequest(input: {
         },
         toolTrace,
         agentMode: "tool",
-        analysisCards: (await getCachedPropertyAnalysisCards(supabase, properties.map((property) => property.id), "image")) || undefined,
-        costHints: { route: "edge_tools", estimatedClass: "medium" },
+        analysisCards: analysisCards.length > 0 ? analysisCards : undefined,
+        costHints: {
+          route: "edge_tools",
+          multimodalUsed: analysisCards.length > 0 ? true : undefined,
+          estimatedClass: "medium",
+        },
       };
     } catch {
       toolTrace.push({
@@ -2796,6 +3947,11 @@ async function orchestrateToolRequest(input: {
       },
     };
 
+    const handoffPropertyIds = selectedProperties.map((property) => property.id);
+    const imageCards = handoffPropertyIds.length > 0 ? await getPropertyAnalysisCards(supabase, handoffPropertyIds, "image") : [];
+    const documentCards = handoffPropertyIds.length > 0 ? await getPropertyAnalysisCards(supabase, handoffPropertyIds, "document") : [];
+    const analysisCards = [...imageCards, ...documentCards].slice(0, 8);
+
     return {
       answer:
         "Je peux préremplir le formulaire avec votre sélection et vos critères. Vérifiez les informations puis envoyez la demande quand vous êtes prêt.",
@@ -2810,7 +3966,12 @@ async function orchestrateToolRequest(input: {
       },
       toolTrace,
       agentMode: "tool",
-      costHints: { route: "edge_tools", estimatedClass: "low" },
+      analysisCards: analysisCards.length > 0 ? analysisCards : undefined,
+      costHints: {
+        route: "edge_tools",
+        multimodalUsed: analysisCards.length > 0 ? true : undefined,
+        estimatedClass: analysisCards.length > 0 ? "medium" : "low",
+      },
     };
   };
 
@@ -2873,7 +4034,7 @@ async function orchestrateToolRequest(input: {
           compareLimit,
         );
         const sourceKind = step.tool === "get_property_media_context" ? "image" : "document";
-        const cards = await getCachedPropertyAnalysisCards(supabase, propertyIds, sourceKind);
+        const cards = await getPropertyAnalysisCards(supabase, propertyIds, sourceKind);
         collectedAnalysisCards = [...collectedAnalysisCards, ...cards].slice(0, 8);
         toolTrace.push({
           tool: step.tool,
@@ -2890,7 +4051,7 @@ async function orchestrateToolRequest(input: {
           const query = typeof step.args?.query === "string" && step.args.query.trim().length > 0
             ? step.args.query.trim()
             : input.question;
-          const rag = await retrieveWebsiteContext(query);
+          const rag = await retrieveWebsiteContextWithPageFallback(query);
           toolTrace.push({
             tool: "retrieve_site_context",
             status: rag.contextBlock ? "ok" : "skipped",
@@ -3183,6 +4344,7 @@ Deno.serve(async (request) => {
           baseState: payload.conversationState as ToolConversationState | undefined,
           patch: toolResult.conversationStatePatch,
           question: payload.question,
+          chatHistory: payload.chatHistory,
         });
       return jsonResponse({
         source: "fallback",
@@ -3218,7 +4380,7 @@ Deno.serve(async (request) => {
 
     let ragContext: RAGContextResult = { contextBlock: null, citations: [], retrievalMode: "none" };
     try {
-      ragContext = await retrieveWebsiteContext(payload.question);
+      ragContext = await retrieveWebsiteContextWithPageFallback(payload.question);
     } catch {
       ragContext = { contextBlock: null, citations: [], retrievalMode: "none" };
     }
@@ -3234,6 +4396,9 @@ Deno.serve(async (request) => {
         retrievalMode: ragContext.retrievalMode,
         requestId,
         agentMode: "fallback",
+        pageContextUsed: ragContext.pageContextMeta?.used,
+        pageContextMode: ragContext.pageContextMeta?.fetchMode,
+        pageContextCacheHit: ragContext.pageContextMeta?.cacheHit,
         streamSupported: parseBooleanEnv("CHATBOT_STREAM_ENABLED", false),
         ...fallback,
       });
@@ -3246,6 +4411,7 @@ Deno.serve(async (request) => {
       baseState: payload.conversationState as ToolConversationState | undefined,
       patch: ragConversationPatch,
       question: payload.question,
+      chatHistory: payload.chatHistory,
     });
 
     return jsonResponse({
@@ -3269,6 +4435,9 @@ Deno.serve(async (request) => {
       retrievalMode: ragContext.retrievalMode,
       agentMode: "rag",
       requestId,
+      pageContextUsed: ragContext.pageContextMeta?.used,
+      pageContextMode: ragContext.pageContextMeta?.fetchMode,
+      pageContextCacheHit: ragContext.pageContextMeta?.cacheHit,
       memory: memoryMeta,
       costHints: { route: "edge_rag", estimatedClass: ragContext.contextBlock ? "medium" : "low" },
       streamSupported: parseBooleanEnv("CHATBOT_STREAM_ENABLED", false),

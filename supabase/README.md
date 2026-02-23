@@ -126,12 +126,51 @@ Recommended rollout order:
 - `CHATBOT_MULTIMODAL_ENABLED=false`
 - `CHATBOT_MULTIMODAL_MODEL=gemini-2.5-flash`
 - `CHATBOT_MULTIMODAL_ON_DEMAND_ENABLED=true`
+- `CHATBOT_MULTIMODAL_ON_DEMAND_TIMEOUT_MS=2500`
 - `CHATBOT_MULTIMODAL_MAX_IMAGES_PER_PROPERTY=6`
 - `CHATBOT_MULTIMODAL_MAX_PDF_PAGES=20`
+- `CHATBOT_MULTIMODAL_MAX_FILE_BYTES=8388608`
+- `CHATBOT_MULTIMODAL_WORKER_MAX_ATTEMPTS=3`
+- `CHATBOT_MULTIMODAL_STALE_HOURS=168`
 - `CHATBOT_MULTIMODAL_FETCH_TIMEOUT_MS=5000`
+- `CHATBOT_MULTIMODAL_ANALYSIS_VERSION=v2`
+- `CHATBOT_PAGE_FALLBACK_ENABLED=true`
+- `CHATBOT_PAGE_FETCH_BASE_URL=https://your-site.example`
+- `CHATBOT_PAGE_FETCH_CACHE_TTL_SECONDS=86400`
+- `CHATBOT_PAGE_FETCH_ERROR_TTL_SECONDS=900`
+- `CHATBOT_PAGE_FETCH_TIMEOUT_MS=3000`
+- `CHATBOT_PAGE_FETCH_MIN_TEXT_CHARS=500`
+- `CHATBOT_PAGE_FETCH_WEAK_CONTEXT_CHARS=1200`
+- `CHATBOT_PAGE_RENDERER_URL` (optional external Playwright renderer, `POST /render`)
+- `CHATBOT_PAGE_RENDERER_TIMEOUT_MS=4000`
+- `CHATBOT_MEMORY_EXTRACTOR_ENABLED=true`
+- `CHATBOT_MEMORY_EXTRACTOR_TIMEOUT_MS=1500`
+- `CHATBOT_MEMORY_EXTRACTOR_CONFIDENCE_THRESHOLD=0.65`
+- `CHATBOT_MEMORY_RETENTION_DAYS=90`
 - `CHATBOT_STREAM_ENABLED=false`
+- `CHATBOT_STREAM_PROXY_TIMEOUT_MS=20000`
 - `CHATBOT_EVALS_ENABLED=false`
 - `CHATBOT_ALERTS_WEBHOOK_URL` (optional ops alerts webhook)
+
+### New backend endpoints / scripts (major upgrade extensions)
+
+- `functions/chatbot-memory-reset`: clears persistent structured chatbot memory for a session (`POST { sessionId }`)
+- `scripts/chatbot/page-renderer-server.mjs`: optional Playwright renderer for on-demand page fallback when HTTP fetch is too thin (SPA shell)
+- `scripts/chatbot/cleanup-memory.mjs`: deletes expired `chatbot_memory_sessions` (90-day TTL by default)
+- `.github/workflows/chatbot-memory-cleanup.yml`: daily cleanup workflow (requires `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` repo secrets)
+
+### On-demand page fallback behavior (RAG coverage boost)
+
+- When hybrid RAG returns weak/missing context, `chatbot-assistant` can fetch the requested page route on demand (same-origin only).
+- Fast path: direct HTTP HTML fetch + readable text extraction.
+- Fallback path: optional external headless renderer (`CHATBOT_PAGE_RENDERER_URL`) when the HTTP page looks like a thin SPA shell.
+- Cached snapshots are stored in `chatbot_page_snapshot_cache` with configurable TTLs for ready/error states.
+
+### Persistent memory extractor behavior
+
+- `CHATBOT_MEMORY_ENABLED=true` enables structured memory persistence (`chatbot_memory_sessions`).
+- `CHATBOT_MEMORY_EXTRACTOR_ENABLED=true` runs a Gemini JSON extractor after replies and merges memory with confidence gating.
+- If the extractor fails or returns invalid JSON, the backend falls back to state-merge persistence (no user-facing error).
 
 ### Frontend feature flags (Gemini Max foundations)
 

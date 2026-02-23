@@ -19,6 +19,7 @@ import {
   type ChatbotPropertySuggestion,
   type ChatbotReply,
   type ToolSearchParams,
+  resetAgencyChatbotMemory,
 } from "@/features/content/api/chatbot.service";
 import { flushChatbotTelemetryQueue, queueChatbotTelemetryEvent } from "@/features/content/api/chatbotFeedback.service";
 import { submitLead } from "@/features/leads/api/leads.service";
@@ -48,6 +49,9 @@ interface ChatMessage {
   planner?: ChatbotPlannerMeta;
   analysisCards?: ChatbotAnalysisCard[];
   memory?: ChatbotReply["memory"];
+  pageContextUsed?: boolean;
+  pageContextMode?: "http" | "headless";
+  pageContextCacheHit?: boolean;
   costHints?: ChatbotReply["costHints"];
   latencyMs?: number;
   feedback?: {
@@ -406,12 +410,25 @@ function plannerTelemetryMetadata(planner?: ChatbotPlannerMeta): Record<string, 
 function mergeTelemetryMetadata(
   base: Record<string, unknown> | undefined,
   planner?: ChatbotPlannerMeta,
+  replyMeta?: Pick<ChatbotReply, "pageContextUsed" | "pageContextMode" | "pageContextCacheHit" | "memory">,
 ): Record<string, unknown> | undefined {
   const plannerMeta = plannerTelemetryMetadata(planner);
-  if (!base && !plannerMeta) return undefined;
+  const replyTelemetry =
+    replyMeta && (replyMeta.pageContextUsed != null || replyMeta.pageContextMode || replyMeta.pageContextCacheHit != null || replyMeta.memory)
+      ? {
+          pageContextUsed: replyMeta.pageContextUsed,
+          pageContextMode: replyMeta.pageContextMode,
+          pageContextCacheHit: replyMeta.pageContextCacheHit,
+          memorySource: replyMeta.memory?.source,
+          memoryUpdatedKeys: replyMeta.memory?.updatedKeys ?? replyMeta.memory?.preferenceKeys,
+          memoryConfidence: replyMeta.memory?.confidence,
+        }
+      : undefined;
+  if (!base && !plannerMeta && !replyTelemetry) return undefined;
   return {
     ...(base ?? {}),
     ...(plannerMeta ?? {}),
+    ...(replyTelemetry ?? {}),
   };
 }
 
@@ -442,6 +459,9 @@ function sanitizeStoredMessages(raw: unknown): ChatMessage[] {
       planner?: unknown;
       analysisCards?: unknown;
       memory?: unknown;
+      pageContextUsed?: unknown;
+      pageContextMode?: unknown;
+      pageContextCacheHit?: unknown;
       costHints?: unknown;
       latencyMs?: unknown;
       feedback?: unknown;
@@ -507,8 +527,37 @@ function sanitizeStoredMessages(raw: unknown): ChatMessage[] {
                 typeof (candidate.memory as { summary?: unknown }).summary === "string"
                   ? ((candidate.memory as { summary?: string }).summary ?? "").trim().slice(0, 500) || undefined
                   : undefined,
+              source:
+                (candidate.memory as { source?: unknown }).source === "state_merge" ||
+                (candidate.memory as { source?: unknown }).source === "gemini_extractor" ||
+                (candidate.memory as { source?: unknown }).source === "none"
+                  ? ((candidate.memory as { source: "state_merge" | "gemini_extractor" | "none" }).source)
+                  : undefined,
+              ttlDays:
+                typeof (candidate.memory as { ttlDays?: unknown }).ttlDays === "number" &&
+                  Number.isFinite((candidate.memory as { ttlDays: number }).ttlDays)
+                  ? clampNumber(Math.floor((candidate.memory as { ttlDays: number }).ttlDays), 1, 3650)
+                  : undefined,
+              updatedKeys: Array.isArray((candidate.memory as { updatedKeys?: unknown }).updatedKeys)
+                ? ((candidate.memory as { updatedKeys?: unknown[] }).updatedKeys ?? [])
+                    .filter((v): v is string => typeof v === "string")
+                    .map((v) => v.trim().slice(0, 80))
+                    .slice(0, 20)
+                : undefined,
+              confidence:
+                typeof (candidate.memory as { confidence?: unknown }).confidence === "number" &&
+                  Number.isFinite((candidate.memory as { confidence: number }).confidence)
+                  ? clampNumber((candidate.memory as { confidence: number }).confidence, 0, 1)
+                  : undefined,
+              cleared:
+                typeof (candidate.memory as { cleared?: unknown }).cleared === "boolean"
+                  ? (candidate.memory as { cleared: boolean }).cleared
+                  : undefined,
             }
           : undefined,
+      pageContextUsed: typeof candidate.pageContextUsed === "boolean" ? candidate.pageContextUsed : undefined,
+      pageContextMode: candidate.pageContextMode === "http" || candidate.pageContextMode === "headless" ? candidate.pageContextMode : undefined,
+      pageContextCacheHit: typeof candidate.pageContextCacheHit === "boolean" ? candidate.pageContextCacheHit : undefined,
       costHints:
         candidate.costHints && typeof candidate.costHints === "object"
           ? {
@@ -798,6 +847,15 @@ export function SiteChatbot() {
         | "tool_handoff_prefill_opened"
         | "multimodal_analysis_rendered"
         | "multimodal_analysis_clicked"
+        | "page_fallback_used"
+        | "page_fallback_failed"
+        | "multimodal_cache_hit"
+        | "multimodal_cache_miss"
+        | "multimodal_on_demand_attempt"
+        | "multimodal_on_demand_timeout"
+        | "memory_extractor_used"
+        | "memory_extractor_fallback"
+        | "memory_cleared"
         | "memory_updated"
         | "planner_v2_plan_executed"
         | "planner_v2_clarify"
@@ -858,6 +916,17 @@ export function SiteChatbot() {
     setMessages([nextOpeningGreetingMessage()]);
     trackEvent("chatbot_reset", { source: "site_chatbot" });
     emitChatbotTelemetry("chatbot_reset", { source: "local" });
+    void resetAgencyChatbotMemory(sessionIdRef.current).then((cleared) => {
+      if (!cleared) return;
+      emitChatbotTelemetry("memory_cleared", {
+        source: "edge",
+        routeCategory: "edge_general",
+        metadata: {
+          cleared: true,
+          memorySource: "reset_endpoint",
+        },
+      });
+    });
     toast.success("Nouvelle conversation initialisée.");
   }, [emitChatbotTelemetry, nextOpeningGreetingMessage, unlockRequestState]);
 
@@ -949,6 +1018,9 @@ export function SiteChatbot() {
         planner: reply.planner,
         analysisCards: reply.analysisCards,
         memory: reply.memory,
+        pageContextUsed: reply.pageContextUsed,
+        pageContextMode: reply.pageContextMode,
+        pageContextCacheHit: reply.pageContextCacheHit,
         costHints: reply.costHints,
         latencyMs: telemetry?.responseLatencyMs,
       };
@@ -989,8 +1061,28 @@ export function SiteChatbot() {
             multimodalUsed: reply.costHints?.multimodalUsed,
           },
           reply.planner,
+          reply,
         ),
       });
+
+      if (reply.pageContextUsed) {
+        emitChatbotTelemetry("page_fallback_used", {
+          messageId,
+          requestId: reply.requestId,
+          source: reply.source,
+          edgeProvider: reply.edgeProvider,
+          routeDecision: reply.routeDecision,
+          routeCategory: reply.routeCategory,
+          metadata: mergeTelemetryMetadata(
+            {
+              pageContextMode: reply.pageContextMode,
+              pageContextCacheHit: reply.pageContextCacheHit,
+            },
+            reply.planner,
+            reply,
+          ),
+        });
+      }
 
       if (reply.planner?.mode === "gemini" && reply.planner.decisionType === "plan") {
         trackEvent("chatbot_planner_v2_plan_executed", {
@@ -1044,11 +1136,31 @@ export function SiteChatbot() {
           metadata: mergeTelemetryMetadata(
             {
               multimodalKinds: reply.analysisCards.map((card) => card.kind),
-              analysisCacheHit: true,
+              analysisCacheHit: reply.analysisCards.every((card) => card.cacheHit !== false),
             },
             reply.planner,
+            reply,
           ),
         });
+        emitChatbotTelemetry(
+          reply.analysisCards.some((card) => card.cacheHit === false) ? "multimodal_cache_miss" : "multimodal_cache_hit",
+          {
+            messageId,
+            requestId: reply.requestId,
+            source: reply.source,
+            edgeProvider: reply.edgeProvider,
+            routeDecision: reply.routeDecision,
+            routeCategory: reply.routeCategory,
+            metadata: mergeTelemetryMetadata(
+              {
+                analysisSourceKinds: reply.analysisCards.map((card) => card.sourceKind).filter(Boolean),
+                analysisCacheHit: reply.analysisCards.every((card) => card.cacheHit !== false),
+              },
+              reply.planner,
+              reply,
+            ),
+          },
+        );
       }
 
       if (reply.memory?.updated) {
@@ -1066,11 +1178,33 @@ export function SiteChatbot() {
           routeCategory: reply.routeCategory,
           metadata: mergeTelemetryMetadata(
             {
-              memoryUpdatedKeys: reply.memory.preferenceKeys ?? [],
+              memoryUpdatedKeys: reply.memory.updatedKeys ?? reply.memory.preferenceKeys ?? [],
             },
             reply.planner,
+            reply,
           ),
         });
+        if (reply.memory.source === "gemini_extractor") {
+          emitChatbotTelemetry("memory_extractor_used", {
+            messageId,
+            requestId: reply.requestId,
+            source: reply.source,
+            edgeProvider: reply.edgeProvider,
+            routeDecision: reply.routeDecision,
+            routeCategory: reply.routeCategory,
+            metadata: mergeTelemetryMetadata(undefined, reply.planner, reply),
+          });
+        } else if (reply.memory.source === "state_merge") {
+          emitChatbotTelemetry("memory_extractor_fallback", {
+            messageId,
+            requestId: reply.requestId,
+            source: reply.source,
+            edgeProvider: reply.edgeProvider,
+            routeDecision: reply.routeDecision,
+            routeCategory: reply.routeCategory,
+            metadata: mergeTelemetryMetadata(undefined, reply.planner, reply),
+          });
+        }
       }
 
       if (reply.actions && reply.actions.length > 0) {

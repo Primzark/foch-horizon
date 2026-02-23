@@ -24,6 +24,8 @@ interface WorkerConfig {
   maxJobs: number;
   maxImagesPerProperty: number;
   maxPdfPages: number;
+  maxFileBytes: number;
+  maxAttempts: number;
   fetchTimeoutMs: number;
   analysisVersion: string;
   model: string;
@@ -62,6 +64,11 @@ function binaryToBase64(bytes: Uint8Array): string {
   return btoa(binary);
 }
 
+async function sha256Hex(bytes: Uint8Array): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 function sanitizeJsonObject(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
 }
@@ -70,6 +77,32 @@ function normalizeMimeType(input: string | null | undefined, sourceKind: SourceK
   const raw = (input ?? "").trim().toLowerCase();
   if (raw) return raw;
   return sourceKind === "image" ? "image/jpeg" : "application/pdf";
+}
+
+function allowedMimeType(sourceKind: SourceKind, mimeType: string): boolean {
+  const normalized = mimeType.toLowerCase();
+  if (sourceKind === "image") {
+    return ["image/jpeg", "image/png", "image/webp"].includes(normalized);
+  }
+  return normalized === "application/pdf";
+}
+
+function estimatePdfPageCount(bytes: Uint8Array): number | null {
+  try {
+    const sample = new TextDecoder("latin1").decode(bytes.subarray(0, Math.min(bytes.length, 2_500_000)));
+    const matches = sample.match(/\/Type\s*\/Page\b/g);
+    if (!matches || matches.length === 0) return null;
+    return matches.length;
+  } catch {
+    return null;
+  }
+}
+
+function estimateAnalysisCostUsd(source: SourceItem, bytesLength: number, pageCount?: number | null): number {
+  const base = source.kind === "image" ? 0.0008 : 0.0015;
+  const sizeFactor = Math.min(0.008, (bytesLength / 1_000_000) * 0.0008);
+  const pageFactor = source.kind === "document" ? Math.min(0.02, Math.max(0, (pageCount ?? 1) - 1) * 0.00025) : 0;
+  return Number((base + sizeFactor + pageFactor).toFixed(6));
 }
 
 function classifyDocumentKindFromUrl(url: string): string {
@@ -84,8 +117,9 @@ function classifyDocumentKindFromUrl(url: string): string {
 async function claimJobs(supabase: ReturnType<typeof createClient>, maxJobs: number): Promise<AnalysisJob[]> {
   const { data, error } = await supabase
     .from("property_media_analysis_jobs")
-    .select("id,property_id,job_type,payload,attempts,status")
+    .select("id,property_id,job_type,payload,attempts,status,next_attempt_at")
     .eq("status", "queued")
+    .or(`next_attempt_at.is.null,next_attempt_at.lte.${new Date().toISOString()}`)
     .order("priority", { ascending: false })
     .order("created_at", { ascending: true })
     .limit(maxJobs);
@@ -162,7 +196,42 @@ async function listDocumentSources(
   }));
 }
 
-async function fetchSourceBytes(source: SourceItem, timeoutMs: number): Promise<{ bytes: Uint8Array; mimeType: string }> {
+async function headPreflight(
+  source: SourceItem,
+  timeoutMs: number,
+): Promise<{ mimeType?: string; contentLength?: number; etag?: string | null; lastModified?: string | null }> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(source.sourceUrl, {
+      method: "HEAD",
+      headers: { "User-Agent": "FochMultimodalWorker/1.0" },
+      signal: controller.signal,
+    });
+    if (!response.ok) return {};
+    const contentLength = Number.parseInt(response.headers.get("content-length") ?? "", 10);
+    return {
+      mimeType: response.headers.get("content-type") ?? undefined,
+      contentLength: Number.isFinite(contentLength) && contentLength > 0 ? contentLength : undefined,
+      etag: response.headers.get("etag"),
+      lastModified: response.headers.get("last-modified"),
+    };
+  } catch {
+    return {};
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+async function fetchSourceBytes(
+  source: SourceItem,
+  timeoutMs: number,
+  maxFileBytes: number,
+): Promise<{ bytes: Uint8Array; mimeType: string; fileSizeBytes: number; etag?: string | null; lastModified?: string | null; pageCount?: number | null; sourceHash: string }> {
+  const preflight = await headPreflight(source, Math.min(timeoutMs, 2500));
+  if (typeof preflight.contentLength === "number" && preflight.contentLength > maxFileBytes) {
+    throw new Error(`Source too large (${preflight.contentLength} bytes > ${maxFileBytes})`);
+  }
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -173,11 +242,26 @@ async function fetchSourceBytes(source: SourceItem, timeoutMs: number): Promise<
     if (!response.ok) {
       throw new Error(`Source fetch failed (${response.status})`);
     }
-    const contentType = response.headers.get("content-type") ?? source.mimeType ?? undefined;
+    const contentType = response.headers.get("content-type") ?? preflight.mimeType ?? source.mimeType ?? undefined;
     const arrayBuffer = await response.arrayBuffer();
+    const bytes = new Uint8Array(arrayBuffer);
+    if (bytes.byteLength > maxFileBytes) {
+      throw new Error(`Source too large (${bytes.byteLength} bytes > ${maxFileBytes})`);
+    }
+    const mimeType = normalizeMimeType(contentType, source.kind);
+    if (!allowedMimeType(source.kind, mimeType)) {
+      throw new Error(`Unsupported mime type: ${mimeType}`);
+    }
+    const pageCount = source.kind === "document" && mimeType === "application/pdf" ? estimatePdfPageCount(bytes) : null;
+    const sourceHash = await sha256Hex(bytes);
     return {
-      bytes: new Uint8Array(arrayBuffer),
-      mimeType: normalizeMimeType(contentType, source.kind),
+      bytes,
+      mimeType,
+      fileSizeBytes: bytes.byteLength,
+      etag: response.headers.get("etag") ?? preflight.etag ?? null,
+      lastModified: response.headers.get("last-modified") ?? preflight.lastModified ?? null,
+      pageCount,
+      sourceHash,
     };
   } finally {
     clearTimeout(timeoutId);
@@ -211,6 +295,7 @@ function extractJsonFromGeminiText(text: string): Record<string, unknown> {
 async function analyzeSourceWithGemini(
   source: SourceItem,
   config: WorkerConfig,
+  supabase?: ReturnType<typeof createClient>,
 ): Promise<{
   status: "ready" | "error";
   summaryShort?: string;
@@ -219,7 +304,15 @@ async function analyzeSourceWithGemini(
   safetyFlags?: Record<string, unknown>;
   evidence?: unknown[];
   confidence?: number;
+  costEstimateUsd?: number | null;
   latencyMs: number;
+  sourceHash?: string;
+  fileSizeBytes?: number;
+  pageCount?: number | null;
+  mimeType?: string;
+  etag?: string | null;
+  lastModified?: string | null;
+  cacheHit?: boolean;
 }> {
   const apiKey = (Deno.env.get("GEMINI_API_KEY") ?? "").trim();
   if (!config.multimodalEnabled) {
@@ -248,7 +341,74 @@ async function analyzeSourceWithGemini(
   }
 
   const startedAt = Date.now();
-  const { bytes, mimeType } = await fetchSourceBytes(source, config.fetchTimeoutMs);
+  const { bytes, mimeType, fileSizeBytes, pageCount, sourceHash, etag, lastModified } = await fetchSourceBytes(
+    source,
+    config.fetchTimeoutMs,
+    config.maxFileBytes,
+  );
+  if (supabase) {
+    try {
+      const { data } = await supabase
+        .from("property_media_analysis")
+        .select("status,summary_short,summary_long,structured_facts,safety_flags,evidence,cost_estimate_usd,latency_ms")
+        .eq("source_kind", source.kind)
+        .eq("source_url", source.sourceUrl)
+        .eq("analysis_version", config.analysisVersion)
+        .eq("source_hash", sourceHash)
+        .eq("status", "ready")
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (data && typeof data === "object") {
+        const existing = data as Record<string, unknown>;
+        return {
+          status: "ready",
+          summaryShort: typeof existing.summary_short === "string" ? existing.summary_short : undefined,
+          summaryLong: typeof existing.summary_long === "string" ? existing.summary_long : undefined,
+          structuredFacts: sanitizeJsonObject(existing.structured_facts),
+          safetyFlags: sanitizeJsonObject(existing.safety_flags),
+          evidence: Array.isArray(existing.evidence) ? existing.evidence : [],
+          confidence:
+            typeof sanitizeJsonObject(existing.structured_facts).confidence === "number"
+              ? Math.max(0, Math.min(1, Number(sanitizeJsonObject(existing.structured_facts).confidence)))
+              : undefined,
+          costEstimateUsd:
+            typeof existing.cost_estimate_usd === "number" ? existing.cost_estimate_usd : estimateAnalysisCostUsd(source, fileSizeBytes, pageCount),
+          latencyMs: 0,
+          sourceHash,
+          fileSizeBytes,
+          pageCount,
+          mimeType,
+          etag,
+          lastModified,
+          cacheHit: true,
+        };
+      }
+    } catch {
+      // Ignore cache lookup failures and continue with live analysis.
+    }
+  }
+
+  if (source.kind === "document" && mimeType === "application/pdf" && typeof pageCount === "number" && pageCount > config.maxPdfPages) {
+    return {
+      status: "error",
+      summaryShort: `PDF trop volumineux (${pageCount} pages)`,
+      summaryLong: `Le document dépasse la limite configurée de ${config.maxPdfPages} pages.`,
+      structuredFacts: {},
+      safetyFlags: { pageLimitExceeded: true, pageCount, maxPdfPages: config.maxPdfPages },
+      evidence: [{ sourceUrl: source.sourceUrl, pageCount }],
+      confidence: 0,
+      costEstimateUsd: 0,
+      latencyMs: Date.now() - startedAt,
+      sourceHash,
+      fileSizeBytes,
+      pageCount,
+      mimeType,
+      etag,
+      lastModified,
+      cacheHit: false,
+    };
+  }
   const base64 = binaryToBase64(bytes);
   const model = encodeURIComponent(config.model);
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
@@ -318,7 +478,15 @@ async function analyzeSourceWithGemini(
     },
     evidence,
     confidence,
+    costEstimateUsd: estimateAnalysisCostUsd(source, fileSizeBytes, pageCount),
     latencyMs,
+    sourceHash,
+    fileSizeBytes,
+    pageCount,
+    mimeType,
+    etag,
+    lastModified,
+    cacheHit: false,
   };
 }
 
@@ -341,8 +509,17 @@ async function upsertAnalysis(
     structured_facts: analysis.structuredFacts ?? {},
     safety_flags: analysis.safetyFlags ?? {},
     evidence: Array.isArray(analysis.evidence) ? analysis.evidence : [],
-    cost_estimate_usd: null,
+    cost_estimate_usd: typeof analysis.costEstimateUsd === "number" ? analysis.costEstimateUsd : null,
     latency_ms: analysis.latencyMs,
+    metadata: {
+      fileSizeBytes: analysis.fileSizeBytes ?? null,
+      pageCount: analysis.pageCount ?? null,
+      mimeType: analysis.mimeType ?? null,
+      etag: analysis.etag ?? null,
+      lastModified: analysis.lastModified ?? null,
+    },
+    source_hash: analysis.sourceHash ?? null,
+    cache_key: analysis.sourceHash ? `${source.kind}:${source.sourceUrl}:${config.analysisVersion}:${analysis.sourceHash}` : null,
     updated_at: nowIso(),
   };
 
@@ -356,7 +533,12 @@ async function upsertAnalysis(
       .from("property_documents")
       .update({
         status: analysis.status === "ready" ? "ready" : "error",
-        mime_type: source.mimeType ?? null,
+        mime_type: analysis.mimeType ?? source.mimeType ?? null,
+        sha256: analysis.sourceHash ?? null,
+        file_size_bytes: analysis.fileSizeBytes ?? null,
+        page_count: analysis.pageCount ?? null,
+        http_etag: analysis.etag ?? null,
+        http_last_modified: analysis.lastModified ?? null,
         last_fetch_at: nowIso(),
         last_error: analysis.status === "ready" ? null : analysis.summaryShort ?? "analysis_failed",
         updated_at: nowIso(),
@@ -403,21 +585,34 @@ async function processJob(
 
   let analyzed = 0;
   for (const source of sources) {
-    try {
-      const analysis = await analyzeSourceWithGemini(source, config);
-      await upsertAnalysis(supabase, source, config, analysis);
-      analyzed += 1;
-    } catch (error) {
-      const message = getErrorMessage(error);
-      await upsertAnalysis(supabase, source, config, {
-        status: "error",
-        summaryShort: message,
-        summaryLong: message,
-        structuredFacts: {},
-        safetyFlags: { workerError: true },
-        evidence: source.kind === "document" ? [{ sourceUrl: source.sourceUrl }] : [{ sourceUrl: source.sourceUrl }],
-        latencyMs: 0,
-      });
+    let lastErrorMessage = "";
+    for (let attempt = 1; attempt <= config.maxAttempts; attempt += 1) {
+      try {
+        const analysis = await analyzeSourceWithGemini(source, config, supabase);
+        await upsertAnalysis(supabase, source, config, analysis);
+        analyzed += 1;
+        lastErrorMessage = "";
+        break;
+      } catch (error) {
+        lastErrorMessage = getErrorMessage(error);
+        const isLastAttempt = attempt >= config.maxAttempts;
+        const transient = /(429|5\d\d|timeout|fetch failed|network|temporar)/i.test(lastErrorMessage);
+        if (!isLastAttempt && transient) {
+          await new Promise((resolve) => setTimeout(resolve, attempt * 300));
+          continue;
+        }
+        await upsertAnalysis(supabase, source, config, {
+          status: "error",
+          summaryShort: lastErrorMessage,
+          summaryLong: lastErrorMessage,
+          structuredFacts: {},
+          safetyFlags: { workerError: true, attempts: attempt },
+          evidence: [{ sourceUrl: source.sourceUrl, kind: source.kind }],
+          latencyMs: 0,
+          costEstimateUsd: 0,
+        });
+        break;
+      }
     }
   }
 
@@ -435,6 +630,8 @@ async function main(): Promise<void> {
     maxJobs: parsePositiveInt(Deno.env.get("CHATBOT_MULTIMODAL_WORKER_MAX_JOBS"), 5),
     maxImagesPerProperty: parsePositiveInt(Deno.env.get("CHATBOT_MULTIMODAL_MAX_IMAGES_PER_PROPERTY"), 6),
     maxPdfPages: parsePositiveInt(Deno.env.get("CHATBOT_MULTIMODAL_MAX_PDF_PAGES"), 20),
+    maxFileBytes: parsePositiveInt(Deno.env.get("CHATBOT_MULTIMODAL_MAX_FILE_BYTES"), 8 * 1024 * 1024),
+    maxAttempts: parsePositiveInt(Deno.env.get("CHATBOT_MULTIMODAL_WORKER_MAX_ATTEMPTS"), 3),
     fetchTimeoutMs: parsePositiveInt(Deno.env.get("CHATBOT_MULTIMODAL_FETCH_TIMEOUT_MS"), 5000),
     analysisVersion: (Deno.env.get("CHATBOT_MULTIMODAL_ANALYSIS_VERSION") ?? "v1").trim() || "v1",
     model: (Deno.env.get("CHATBOT_MULTIMODAL_MODEL") ?? "gemini-2.5-flash").trim() || "gemini-2.5-flash",

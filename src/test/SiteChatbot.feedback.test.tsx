@@ -1,12 +1,19 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
-import { SiteChatbot } from "@/features/content/components/SiteChatbot";
-
-const askAgencyChatbotMock = vi.fn();
-const queueTelemetryMock = vi.fn();
-const flushTelemetryMock = vi.fn().mockResolvedValue(undefined);
-const trackEventMock = vi.fn();
+const {
+  askAgencyChatbotMock,
+  askAgencyChatbotStreamMock,
+  queueTelemetryMock,
+  flushTelemetryMock,
+  trackEventMock,
+} = vi.hoisted(() => ({
+  askAgencyChatbotMock: vi.fn(),
+  askAgencyChatbotStreamMock: vi.fn(),
+  queueTelemetryMock: vi.fn(),
+  flushTelemetryMock: vi.fn().mockResolvedValue(undefined),
+  trackEventMock: vi.fn(),
+}));
 
 vi.mock("@/features/content/api/chatbot.service", async () => {
   const actual = await vi.importActual<typeof import("@/features/content/api/chatbot.service")>(
@@ -15,6 +22,7 @@ vi.mock("@/features/content/api/chatbot.service", async () => {
   return {
     ...actual,
     askAgencyChatbot: (...args: unknown[]) => askAgencyChatbotMock(...args),
+    askAgencyChatbotStream: (...args: unknown[]) => askAgencyChatbotStreamMock(...args),
     chatbotExamplePrompts: ["Prompt test A", "Prompt test B"],
   };
 });
@@ -32,7 +40,8 @@ vi.mock("@/features/leads/api/leads.service", () => ({
   submitLead: vi.fn(),
 }));
 
-function renderChatbot() {
+async function renderChatbot() {
+  const { SiteChatbot } = await import("@/features/content/components/SiteChatbot");
   return render(
     <MemoryRouter>
       <SiteChatbot />
@@ -44,6 +53,9 @@ describe("SiteChatbot feedback and telemetry hooks", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     window.localStorage.clear();
+    vi.stubEnv("VITE_CHATBOT_STREAMING_ENABLED", "false");
+    vi.stubEnv("VITE_API_MODE", "edge");
+    vi.stubEnv("VITE_CHATBOT_ENABLE_EDGE_RAG", "true");
 
     let current = 0;
     vi.spyOn(performance, "now").mockImplementation(() => {
@@ -63,14 +75,91 @@ describe("SiteChatbot feedback and telemetry hooks", () => {
       citations: [{ path: "/honoraires", title: "Honoraires" }],
       suggestedPrompts: ["Ouvrir /honoraires"],
     });
+    askAgencyChatbotStreamMock.mockResolvedValue({
+      source: "edge",
+      edgeProvider: "gemini",
+      retrievalMode: "hybrid",
+      ragUsed: true,
+      routeCategory: "edge_rag",
+      routeDecision: "website_content_rag",
+      requestId: "req-test-1",
+      answer: "Les honoraires sont sur /honoraires.",
+      citations: [{ path: "/honoraires", title: "Honoraires" }],
+      suggestedPrompts: ["Ouvrir /honoraires"],
+    });
+
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (input: RequestInfo | URL) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+
+      if (url.includes("/api/chatbot-assistant-stream")) {
+        const replyPayload = {
+          source: "gemini",
+          edgeProvider: "gemini",
+          retrievalMode: "hybrid",
+          ragUsed: true,
+          routeCategory: "edge_rag",
+          routeDecision: "website_content_rag",
+          requestId: "req-test-1",
+          answer: "Les honoraires sont sur /honoraires.",
+          citations: [{ path: "/honoraires", title: "Honoraires" }],
+          suggestedPrompts: ["Ouvrir /honoraires"],
+        };
+        const sseBody = [
+          `event: text_delta\ndata: ${JSON.stringify({ delta: "Les honoraires sont sur /honoraires." })}\n\n`,
+          `event: citation\ndata: ${JSON.stringify({ citations: replyPayload.citations })}\n\n`,
+          `event: done\ndata: ${JSON.stringify({ reply: replyPayload })}\n\n`,
+        ].join("");
+        const stream = new ReadableStream<Uint8Array>({
+          start(controller) {
+            controller.enqueue(new TextEncoder().encode(sseBody));
+            controller.close();
+          },
+        });
+        return new Response(stream, {
+          status: 200,
+          headers: { "Content-Type": "text/event-stream" },
+        });
+      }
+
+      if (url.includes("/api/chatbot-assistant")) {
+        return new Response(
+          JSON.stringify({
+            source: "gemini",
+            edgeProvider: "gemini",
+            retrievalMode: "hybrid",
+            ragUsed: true,
+            routeCategory: "edge_rag",
+            routeDecision: "website_content_rag",
+            requestId: "req-test-1",
+            answer: "Les honoraires sont sur /honoraires.",
+            citations: [{ path: "/honoraires", title: "Honoraires" }],
+            suggestedPrompts: ["Ouvrir /honoraires"],
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+
+      if (url.includes("/api/chatbot-memory/reset")) {
+        return new Response(JSON.stringify({ ok: true, cleared: true }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      return new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    });
   });
 
   afterEach(() => {
+    vi.unstubAllEnvs();
     vi.restoreAllMocks();
   });
 
   it("renders thumbs feedback on assistant replies and submits downvote with reason", async () => {
-    renderChatbot();
+    await renderChatbot();
 
     fireEvent.click(screen.getByRole("button", { name: /assistant/i }));
     const input = screen.getByPlaceholderText(/posez une question/i);
@@ -102,7 +191,7 @@ describe("SiteChatbot feedback and telemetry hooks", () => {
   });
 
   it("emits citation click telemetry and does not include raw question text in telemetry payloads", async () => {
-    renderChatbot();
+    await renderChatbot();
 
     fireEvent.click(screen.getByRole("button", { name: /assistant/i }));
     const input = screen.getByPlaceholderText(/posez une question/i);

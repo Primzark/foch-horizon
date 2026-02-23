@@ -933,9 +933,68 @@ async function upsertPropertyDocumentsAndQueueAnalysisJobs(
   let queuedJobs = 0;
 
   try {
+    const expectedUrlsByProperty = new Map<number, Set<string>>();
+    for (const row of documentRows) {
+      const propertyId = Number(row.property_id);
+      const sourceUrl = String(row.source_url ?? "");
+      if (!expectedUrlsByProperty.has(propertyId)) expectedUrlsByProperty.set(propertyId, new Set<string>());
+      if (sourceUrl) expectedUrlsByProperty.get(propertyId)!.add(sourceUrl);
+    }
+
     for (const batch of chunk(documentRows, 200)) {
       const { error } = await supabase.from("property_documents").upsert(batch, { onConflict: "property_id,kind,source_url" });
       if (error) throw error;
+    }
+
+    // Mark provider-discovered documents that disappeared from the latest feed as skipped.
+    for (const batch of chunk(propertyIds, 200)) {
+      const { data, error } = await supabase
+        .from("property_documents")
+        .select("id,property_id,source_url,metadata")
+        .in("property_id", batch);
+      if (error) throw error;
+      const toSkipIds = ((data ?? []) as Array<Record<string, unknown>>)
+        .filter((row) => {
+          const propertyId = Number(row.property_id);
+          const sourceUrl = typeof row.source_url === "string" ? row.source_url : "";
+          const metadata = row.metadata && typeof row.metadata === "object" && !Array.isArray(row.metadata)
+            ? (row.metadata as Record<string, unknown>)
+            : {};
+          const providerDiscovered = metadata.provider_discovered === true;
+          if (!providerDiscovered || !sourceUrl || !Number.isInteger(propertyId)) return false;
+          return !expectedUrlsByProperty.get(propertyId)?.has(sourceUrl);
+        })
+        .map((row) => String(row.id ?? ""))
+        .filter(Boolean);
+
+      for (const skipBatch of chunk(toSkipIds, 200)) {
+        if (skipBatch.length === 0) continue;
+        const { error: updateError } = await supabase
+          .from("property_documents")
+          .update({
+            status: "skipped",
+            last_error: "provider_document_missing_in_latest_sync",
+            updated_at: new Date().toISOString(),
+          })
+          .in("id", skipBatch);
+        if (updateError) throw updateError;
+      }
+    }
+
+    const existingQueued = new Set<string>();
+    for (const batch of chunk(propertyIds, 500)) {
+      const { data, error } = await supabase
+        .from("property_media_analysis_jobs")
+        .select("property_id,job_type")
+        .in("property_id", batch)
+        .eq("status", "queued")
+        .in("job_type", ["analyze_documents", "refresh_property_media"]);
+      if (error) throw error;
+      for (const row of (data ?? []) as Array<Record<string, unknown>>) {
+        const propertyId = Number(row.property_id);
+        const jobType = typeof row.job_type === "string" ? row.job_type : "";
+        if (Number.isInteger(propertyId) && jobType) existingQueued.add(`${propertyId}:${jobType}`);
+      }
     }
 
     const jobRows = propertyIds.map((propertyId) => ({
@@ -944,9 +1003,10 @@ async function upsertPropertyDocumentsAndQueueAnalysisJobs(
       status: "queued",
       priority: 60,
       payload: { trigger: "provider_sync" },
-    }));
+    })).filter((row) => !existingQueued.has(`${row.property_id}:${row.job_type}`));
 
     for (const batch of chunk(jobRows, 200)) {
+      if (batch.length === 0) continue;
       const { error } = await supabase.from("property_media_analysis_jobs").insert(batch);
       if (error) throw error;
       queuedJobs += batch.length;
@@ -966,14 +1026,31 @@ async function queueImageAnalysisJobs(
   if (propertyIds.length === 0) return 0;
   try {
     let queuedJobs = 0;
+    const existingQueued = new Set<string>();
+    for (const batch of chunk(propertyIds, 500)) {
+      const { data, error } = await supabase
+        .from("property_media_analysis_jobs")
+        .select("property_id,job_type")
+        .in("property_id", batch)
+        .eq("status", "queued")
+        .in("job_type", ["analyze_images", "refresh_property_media"]);
+      if (error) throw error;
+      for (const row of (data ?? []) as Array<Record<string, unknown>>) {
+        const propertyId = Number(row.property_id);
+        const jobType = typeof row.job_type === "string" ? row.job_type : "";
+        if (Number.isInteger(propertyId) && jobType) existingQueued.add(`${propertyId}:${jobType}`);
+      }
+    }
+
     const rows = propertyIds.map((propertyId) => ({
       property_id: propertyId,
       job_type: "analyze_images",
       status: "queued",
       priority: 55,
       payload: { trigger: "provider_sync" },
-    }));
+    })).filter((row) => !existingQueued.has(`${row.property_id}:${row.job_type}`));
     for (const batch of chunk(rows, 200)) {
+      if (batch.length === 0) continue;
       const { error } = await supabase.from("property_media_analysis_jobs").insert(batch);
       if (error) throw error;
       queuedJobs += batch.length;

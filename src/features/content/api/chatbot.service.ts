@@ -131,11 +131,15 @@ export type ChatbotAnalysisCard =
       summary: string;
       confidence?: number;
       stale?: boolean;
+      cacheHit?: boolean;
+      sourceKind?: "image" | "document";
+      documentKind?: "dpe_pdf" | "diagnostic_pdf" | "floor_plan_pdf" | "brochure_pdf" | "other";
       evidence?: Array<{
         sourceUrl?: string;
         thumbnailUrl?: string;
         page?: number;
         label?: string;
+        kind?: string;
       }>;
     };
 
@@ -243,7 +247,15 @@ export interface ChatbotReply {
     updated: boolean;
     preferenceKeys?: string[];
     summary?: string;
+    source?: "state_merge" | "gemini_extractor" | "none";
+    ttlDays?: number;
+    updatedKeys?: string[];
+    confidence?: number;
+    cleared?: boolean;
   };
+  pageContextUsed?: boolean;
+  pageContextMode?: "http" | "headless";
+  pageContextCacheHit?: boolean;
   costHints?: {
     route: string;
     multimodalUsed?: boolean;
@@ -1948,6 +1960,16 @@ function sanitizeAnalysisCards(raw: unknown): ChatbotAnalysisCard[] | undefined 
             ? Math.max(0, Math.min(1, card.confidence))
             : undefined,
         stale: typeof card.stale === "boolean" ? card.stale : undefined,
+        cacheHit: typeof card.cacheHit === "boolean" ? card.cacheHit : undefined,
+        sourceKind: card.sourceKind === "image" || card.sourceKind === "document" ? card.sourceKind : undefined,
+        documentKind:
+          card.documentKind === "dpe_pdf" ||
+          card.documentKind === "diagnostic_pdf" ||
+          card.documentKind === "floor_plan_pdf" ||
+          card.documentKind === "brochure_pdf" ||
+          card.documentKind === "other"
+            ? card.documentKind
+            : undefined,
         evidence: Array.isArray(card.evidence)
           ? card.evidence
               .filter((value): value is Record<string, unknown> => Boolean(value && typeof value === "object"))
@@ -1960,8 +1982,9 @@ function sanitizeAnalysisCards(raw: unknown): ChatbotAnalysisCard[] | undefined 
                     ? Math.max(1, Math.floor(evidence.page))
                     : undefined,
                 label: typeof evidence.label === "string" ? evidence.label.trim().slice(0, 120) : undefined,
+                kind: typeof evidence.kind === "string" ? evidence.kind.trim().slice(0, 60) : undefined,
               }))
-              .slice(0, 6)
+              .slice(0, 8)
           : undefined,
       } satisfies ChatbotAnalysisCard;
     })
@@ -1987,6 +2010,26 @@ function sanitizeMemoryMeta(raw: unknown): ChatbotReply["memory"] | undefined {
       typeof candidate.summary === "string" && candidate.summary.trim().length > 0
         ? candidate.summary.trim().slice(0, 500)
         : undefined,
+    source:
+      candidate.source === "state_merge" || candidate.source === "gemini_extractor" || candidate.source === "none"
+        ? candidate.source
+        : undefined,
+    ttlDays:
+      typeof candidate.ttlDays === "number" && Number.isFinite(candidate.ttlDays)
+        ? Math.max(1, Math.min(3650, Math.floor(candidate.ttlDays)))
+        : undefined,
+    updatedKeys: Array.isArray(candidate.updatedKeys)
+      ? candidate.updatedKeys
+          .filter((v): v is string => typeof v === "string")
+          .map((v) => v.trim().slice(0, 80))
+          .filter(Boolean)
+          .slice(0, 20)
+      : undefined,
+    confidence:
+      typeof candidate.confidence === "number" && Number.isFinite(candidate.confidence)
+        ? Math.max(0, Math.min(1, candidate.confidence))
+        : undefined,
+    cleared: typeof candidate.cleared === "boolean" ? candidate.cleared : undefined,
   };
 }
 
@@ -2272,6 +2315,9 @@ function normalizeReplyOutput(reply: ChatbotReply): ChatbotReply {
   const memory = sanitizeMemoryMeta(reply.memory);
   const costHints = sanitizeCostHints(reply.costHints);
   const streamSupported = typeof reply.streamSupported === "boolean" ? reply.streamSupported : undefined;
+  const pageContextUsed = typeof reply.pageContextUsed === "boolean" ? reply.pageContextUsed : undefined;
+  const pageContextMode = reply.pageContextMode === "http" || reply.pageContextMode === "headless" ? reply.pageContextMode : undefined;
+  const pageContextCacheHit = typeof reply.pageContextCacheHit === "boolean" ? reply.pageContextCacheHit : undefined;
 
   return {
     ...reply,
@@ -2289,6 +2335,9 @@ function normalizeReplyOutput(reply: ChatbotReply): ChatbotReply {
     planner,
     analysisCards,
     memory,
+    pageContextUsed,
+    pageContextMode,
+    pageContextCacheHit,
     costHints,
     streamSupported,
   };
@@ -2378,6 +2427,22 @@ export async function askAgencyChatbot(request: ChatbotRequest): Promise<Chatbot
         reason: "edge_request_failed",
       }),
     );
+  }
+}
+
+export async function resetAgencyChatbotMemory(sessionId: string, signal?: AbortSignal): Promise<boolean> {
+  const normalizedSessionId = sessionId.trim();
+  if (!normalizedSessionId) return false;
+  if (!isEdgeApiEnabled()) return false;
+  try {
+    const response = await apiJson<{ ok?: boolean; cleared?: boolean }>("/api/chatbot-memory/reset", {
+      method: "POST",
+      body: JSON.stringify({ sessionId: normalizedSessionId }),
+      signal,
+    });
+    return response.ok === true && response.cleared === true;
+  } catch {
+    return false;
   }
 }
 

@@ -90,6 +90,11 @@ function buildSupabaseApiProxy(env: Record<string, string>): Record<string, Prox
       () => "/functions/v1/chatbot-feedback",
       anonKey,
     ),
+    "^/api/chatbot-memory/reset$": createSupabaseFunctionProxy(
+      projectUrl,
+      () => "/functions/v1/chatbot-memory-reset",
+      anonKey,
+    ),
   };
 }
 
