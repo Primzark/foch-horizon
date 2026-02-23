@@ -882,7 +882,7 @@ export default function HomePage() {
             <ScrollReveal key={card.title} mood={heroMood} delay={Math.min(index * heroMotionDirector.revealStagger, 0.24)}>
               <Link
                 to={card.href}
-                className="paper-grain paper-grain-soft group block h-full rounded-2xl border border-border bg-card p-6 transition-all duration-300 hover:-translate-y-1 hover:border-brand-border hover:shadow-[0_18px_44px_-30px_hsl(var(--brand)/0.35)]"
+                className="paper-grain paper-grain-soft [--paper-grain-mobile-reduction:0.014] group block h-full rounded-2xl border border-border bg-card p-6 transition-all duration-300 hover:-translate-y-1 hover:border-brand-border hover:shadow-[0_18px_44px_-30px_hsl(var(--brand)/0.35)]"
               >
                 <card.icon className="h-5 w-5 transition-transform duration-300 group-hover:scale-110 group-hover:text-brand-strong" />
                 <h3 className="mt-4 font-display text-2xl">{card.title}</h3>
