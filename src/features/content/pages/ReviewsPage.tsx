@@ -24,6 +24,20 @@ function StarRating({ rating }: { rating: number }) {
   );
 }
 
+function ReviewsStatusBadge({ live }: { live: boolean }) {
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${
+        live
+          ? "border border-brand-primary/20 bg-brand-primary/10 text-brand-strong"
+          : "border border-border bg-muted/40 text-muted-foreground"
+      }`}
+    >
+      {live ? "Google en direct" : "Instantané local"}
+    </span>
+  );
+}
+
 export default function ReviewsPage() {
   const siteUrl = getSiteUrl();
   const reviewsQuery = useQuery({ queryKey: ["agency-google-reviews"], queryFn: getAgencyReviews });
@@ -108,6 +122,9 @@ export default function ReviewsPage() {
               <div>
                 <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Source</p>
                 <p className="mt-1 text-lg font-medium">{payload.placeName}</p>
+                <div className="mt-2">
+                  <ReviewsStatusBadge live={payload.live} />
+                </div>
               </div>
               <div className="text-right">
                 <p className="font-display text-4xl">{payload.rating.toFixed(1)}</p>
@@ -118,7 +135,7 @@ export default function ReviewsPage() {
 
             {!payload.live && (
               <p className="mt-4 rounded-xl border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
-                Les avis affichés sont issus de notre dernière mise à jour disponible.
+                Vous consultez un instantané local de secours. Les avis Google en direct ne sont pas disponibles pour cette session.
               </p>
             )}
 

@@ -1,11 +1,12 @@
 import { apiJson, isEdgeApiEnabled } from "@/lib/api/client";
 
+const DEFAULT_SUPABASE_PROJECT_URL = "https://rcrulfdobtmfxzpuyryn.supabase.co";
 const directApiKey =
   (import.meta.env.VITE_GOOGLE_PLACES_API_KEY as string | undefined) ??
   (import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined);
 const directPlaceId = import.meta.env.VITE_GOOGLE_PLACE_ID as string | undefined;
 const supabaseProjectUrl =
-  (import.meta.env.VITE_SUPABASE_PROJECT_URL as string | undefined)?.replace(/\/$/, "") ?? "";
+  (import.meta.env.VITE_SUPABASE_PROJECT_URL as string | undefined)?.replace(/\/$/, "") ?? DEFAULT_SUPABASE_PROJECT_URL;
 const supabaseAnonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined)?.trim() ?? "";
 
 export interface AgencyReview {
@@ -114,6 +115,7 @@ function normalizeDirectPlaceResponse(payload: GooglePlaceDetailsResponse): Agen
 
 async function fetchDirectGoogleReviews(apiKey: string, placeId: string): Promise<AgencyReviewsResponse> {
   const response = await fetch(`https://places.googleapis.com/v1/places/${placeId}?languageCode=fr&regionCode=FR`, {
+    cache: "no-store",
     headers: {
       "X-Goog-Api-Key": apiKey,
       "X-Goog-FieldMask": "displayName,rating,userRatingCount,reviews",
@@ -143,6 +145,7 @@ async function fetchSupabaseGoogleReviews(): Promise<AgencyReviewsResponse> {
   }
 
   const response = await fetch(`${supabaseProjectUrl}/functions/v1/google-reviews`, {
+    cache: "no-store",
     headers,
   });
 
