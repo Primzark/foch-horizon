@@ -1,6 +1,6 @@
 import { cities, cityById } from "@/features/cities/data/cities";
 import { leHavreDistrictHistory, leHavreFaq } from "@/features/content/data/leHavreHistoryContent";
-import { agencyReviewsFallbackSnapshot } from "@/features/content/api/googleReviews.service";
+import { agencyReviewsFallbackSnapshot, getAgencyReviews } from "@/features/content/api/googleReviews.service";
 import { properties } from "@/features/listings/data/properties";
 import { formatPrice, normalizeKeyword, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
 import { apiBaseUrl, apiJson, isEdgeApiEnabled } from "@/lib/api/client";
@@ -1067,10 +1067,12 @@ function buildContactAnswer(): ChatbotReply {
   };
 }
 
-function buildReviewsAnswer(): ChatbotReply {
-  const rating = `${agencyReviewsFallbackSnapshot.rating.toFixed(1)} / 5`;
-  const count = `${agencyReviewsFallbackSnapshot.userRatingCount} avis`;
-  const highlights = agencyReviewsFallbackSnapshot.reviews
+function buildReviewsAnswerFromSnapshot(
+  snapshot: Pick<typeof agencyReviewsFallbackSnapshot, "rating" | "userRatingCount" | "reviews">,
+): ChatbotReply {
+  const rating = `${snapshot.rating.toFixed(1)} / 5`;
+  const count = `${snapshot.userRatingCount} avis`;
+  const highlights = snapshot.reviews
     .slice(0, 2)
     .map((review) => `${review.authorName}: ${review.text}`)
     .join(" | ");
@@ -1086,6 +1088,33 @@ function buildReviewsAnswer(): ChatbotReply {
       "Quels services sont cites dans les avis ?",
     ]),
   };
+}
+
+async function buildReviewsAnswer(): Promise<ChatbotReply> {
+  let timeoutHandle: number | undefined;
+  try {
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timeoutHandle = window.setTimeout(() => reject(new Error("reviews_fetch_timeout")), 1500);
+    });
+    const liveReviews = await Promise.race([getAgencyReviews(), timeoutPromise]);
+    return buildReviewsAnswerFromSnapshot(liveReviews);
+  } catch {
+    return {
+      source: "local",
+      answer:
+        "Oui. La page /avis affiche la note Google actuelle et les retours clients avec mise a jour sur le site. Ouvrez /avis pour consulter les derniers avis et la note la plus recente.",
+      suggestedPrompts: normalizePromptList([
+        "Ouvrir /avis",
+        "Quelle est la note Google actuelle ?",
+        "Je veux contacter un conseiller apres lecture des avis",
+        "Quels services sont cites dans les avis ?",
+      ]),
+    };
+  } finally {
+    if (typeof timeoutHandle === "number") {
+      window.clearTimeout(timeoutHandle);
+    }
+  }
 }
 
 function buildFeesAnswer(): ChatbotReply {
@@ -1516,7 +1545,7 @@ function buildFallbackReply(): ChatbotReply {
   };
 }
 
-function buildLocalReply(question: string, context: ConversationContext): ChatbotReply {
+async function buildLocalReply(question: string, context: ConversationContext): Promise<ChatbotReply> {
   if (pageSummaryPattern.test(context.normalizedQuestion)) {
     const pageSummaryReply = buildPageSummaryAnswer(context);
     if (pageSummaryReply) return pageSummaryReply;
@@ -1526,7 +1555,7 @@ function buildLocalReply(question: string, context: ConversationContext): Chatbo
   if (context.inferredIntent === "lead_capture") return buildLeadCaptureAnswer(context);
   if (context.inferredIntent === "process") return buildProcessAnswer();
   if (context.inferredIntent === "contact") return buildContactAnswer();
-  if (context.inferredIntent === "reviews") return buildReviewsAnswer();
+  if (context.inferredIntent === "reviews") return await buildReviewsAnswer();
   if (context.inferredIntent === "fees") return buildFeesAnswer();
   if (legalIntentPattern.test(context.normalizedQuestion)) return buildLegalAnswer(context);
   if (selectionIntentPattern.test(context.normalizedQuestion)) return buildSelectionAnswer();
@@ -1677,7 +1706,6 @@ export function decideChatbotRoute(
   const needsEdgeRag =
     context.inferredIntent === "navigation" ||
     context.inferredIntent === "fees" ||
-    context.inferredIntent === "reviews" ||
     context.inferredIntent === "history" ||
     context.inferredIntent === "about" ||
     context.inferredIntent === "contact" ||
@@ -2292,15 +2320,15 @@ export async function askAgencyChatbot(request: ChatbotRequest): Promise<Chatbot
   });
 
   let localReplyCache: ChatbotReply | null = null;
-  const getLocalReply = () => {
+  const getLocalReply = async () => {
     if (!localReplyCache) {
-      localReplyCache = normalizeReplyOutput(buildLocalReply(request.question, context));
+      localReplyCache = normalizeReplyOutput(await buildLocalReply(request.question, context));
     }
     return localReplyCache;
   };
 
   if (routeDecision.target === "local") {
-    return normalizeReplyOutput(applyRouteMetadata(getLocalReply(), routeDecision));
+    return normalizeReplyOutput(applyRouteMetadata(await getLocalReply(), routeDecision));
   }
 
   const { signal, ...requestPayload } = request;
@@ -2314,7 +2342,7 @@ export async function askAgencyChatbot(request: ChatbotRequest): Promise<Chatbot
 
     if (!isEdgeReplyUsable(responsePayload)) {
       return normalizeReplyOutput(
-        applyRouteMetadata(getLocalReply(), {
+        applyRouteMetadata(await getLocalReply(), {
           ...routeDecision,
           target: "local",
           category: "fallback",
@@ -2343,7 +2371,7 @@ export async function askAgencyChatbot(request: ChatbotRequest): Promise<Chatbot
     );
   } catch {
     return normalizeReplyOutput(
-      applyRouteMetadata(getLocalReply(), {
+      applyRouteMetadata(await getLocalReply(), {
         ...routeDecision,
         target: "local",
         category: "fallback",
@@ -2487,15 +2515,15 @@ export async function askAgencyChatbotStream(
   });
 
   let localReplyCache: ChatbotReply | null = null;
-  const getLocalReply = () => {
+  const getLocalReply = async () => {
     if (!localReplyCache) {
-      localReplyCache = normalizeReplyOutput(buildLocalReply(request.question, context));
+      localReplyCache = normalizeReplyOutput(await buildLocalReply(request.question, context));
     }
     return localReplyCache;
   };
 
   if (routeDecision.target === "local") {
-    return normalizeReplyOutput(applyRouteMetadata(getLocalReply(), routeDecision));
+    return normalizeReplyOutput(applyRouteMetadata(await getLocalReply(), routeDecision));
   }
 
   const { signal, ...requestPayload } = request;
@@ -2513,7 +2541,7 @@ export async function askAgencyChatbotStream(
     return normalizeReplyOutput(applyRouteMetadata(streamedReply, routeDecision));
   } catch {
     return normalizeReplyOutput(
-      applyRouteMetadata(getLocalReply(), {
+      applyRouteMetadata(await getLocalReply(), {
         ...routeDecision,
         target: "local",
         category: "fallback",
