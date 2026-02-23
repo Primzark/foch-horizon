@@ -32,6 +32,29 @@ interface OpeningGreetingVariant {
   prompts: string[];
 }
 
+function GeminiLogo({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      focusable="false"
+      className={cn("h-3.5 w-3.5", className)}
+    >
+      <defs>
+        <linearGradient id="gemini-chatbot-logo-gradient" x1="4" y1="20" x2="20" y2="4" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="#1A73E8" />
+          <stop offset="0.48" stopColor="#8E63FF" />
+          <stop offset="1" stopColor="#34A853" />
+        </linearGradient>
+      </defs>
+      <path
+        fill="url(#gemini-chatbot-logo-gradient)"
+        d="M12 2.5c.39 3.7 1.2 5.41 2.3 6.57 1.16 1.1 2.87 1.91 6.57 2.3-3.7.39-5.41 1.2-6.57 2.3-1.1 1.16-1.91 2.87-2.3 6.57-.39-3.7-1.2-5.41-2.3-6.57-1.16-1.1-2.87-1.91-6.57-2.3 3.7-.39 5.41-1.2 6.57-2.3 1.1-1.16 1.91-2.87 2.3-6.57Z"
+      />
+    </svg>
+  );
+}
+
 const initialMessage: ChatMessage = {
   id: "init-assistant",
   role: "assistant",
@@ -863,17 +886,38 @@ export function SiteChatbot() {
               </section>
             )}
 
-            <form onSubmit={handleSubmit} className="flex items-center gap-2 border-t border-border px-4 py-3">
-              <Input
-                value={input}
-                onChange={(event) => setInput(event.target.value)}
-                placeholder="Posez une question sur les biens, les quartiers ou les étapes de votre projet..."
-                disabled={loading}
-              />
-              <Button type="submit" size="icon" disabled={loading || input.trim().length === 0}>
-                <Send className="h-4 w-4" />
-              </Button>
-            </form>
+            <div className="border-t border-border px-4 py-3">
+              <form onSubmit={handleSubmit} className="flex items-center gap-2">
+                <Input
+                  value={input}
+                  onChange={(event) => setInput(event.target.value)}
+                  placeholder="Posez une question sur les biens, les quartiers ou les étapes de votre projet..."
+                  disabled={loading}
+                />
+                <Button type="submit" size="icon" disabled={loading || input.trim().length === 0}>
+                  <Send className="h-4 w-4" />
+                </Button>
+              </form>
+
+              <div className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[10px] leading-4 text-muted-foreground">
+                <span>AI can make mistakes, so double-check it.</span>
+                <a
+                  href="https://support.google.com/gemini/answer/13594961?hl=en"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline underline-offset-2 hover:text-foreground"
+                >
+                  Learn more
+                </a>
+                <span aria-hidden="true" className="text-border">
+                  •
+                </span>
+                <span className="inline-flex items-center gap-1 font-medium text-foreground/80">
+                  <GeminiLogo />
+                  Made with Gemini
+                </span>
+              </div>
+            </div>
         </motion.section>
       )}
 
