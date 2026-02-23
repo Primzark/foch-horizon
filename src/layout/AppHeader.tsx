@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { ExternalLink, Heart, Menu, Phone, Search } from "lucide-react";
+import { GoogleGIcon } from "@/components/branding/GoogleGIcon";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useFavoritesStore } from "@/features/favorites/useFavoritesStore";
@@ -13,7 +14,7 @@ const primaryLinks = [
   { to: "/vendre", label: "Vendre" },
   { to: "/biens?transaction=location", label: "Louer" },
   { to: "/histoire-immobilier-le-havre", label: "Histoire" },
-  { to: "/avis", label: "Avis" },
+  { to: "/avis", label: "Avis", google: true },
   { to: "/apropos", label: "Agence" },
   { to: "/contact", label: "Contact" },
 ];
@@ -23,11 +24,13 @@ const legacyLogoUrl = "https://www.fochimmobilier.com/static/img/logo_unis.png";
 function LinkItem({
   to,
   label,
+  google,
   onClick,
   className,
 }: {
   to: string;
   label: string;
+  google?: boolean;
   onClick?: () => void;
   className?: string;
 }) {
@@ -37,12 +40,17 @@ function LinkItem({
       onClick={onClick}
       className={({ isActive }) =>
         cn(
-          "group relative px-2 py-1 text-sm font-medium text-foreground/80 transition-colors hover:text-foreground",
+          "group relative inline-flex items-center gap-1.5 px-2 py-1 text-sm font-medium text-foreground/80 transition-colors hover:text-foreground",
           isActive && "text-brand-strong",
           className,
         )
       }
     >
+      {google && (
+        <span className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-border/80 bg-background/80">
+          <GoogleGIcon size={12} decorative />
+        </span>
+      )}
       {label}
       <span className="absolute -bottom-0.5 left-2 h-px w-0 bg-brand transition-all duration-200 group-hover:w-[calc(100%-1rem)]" />
     </NavLink>
@@ -167,7 +175,7 @@ export function AppHeader() {
 
           <nav className="hidden items-center gap-5 lg:flex">
             {primaryLinks.map((item) => (
-              <LinkItem key={item.to} to={item.to} label={item.label} />
+              <LinkItem key={item.to} to={item.to} label={item.label} google={item.google} />
             ))}
           </nav>
 
@@ -248,7 +256,14 @@ export function AppHeader() {
                       )
                     }
                   >
-                    {item.label}
+                    <span className="inline-flex items-center gap-2">
+                      {item.google && (
+                        <span className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-border bg-background/80">
+                          <GoogleGIcon size={13} decorative />
+                        </span>
+                      )}
+                      {item.label}
+                    </span>
                   </NavLink>
                 </SheetClose>
               ))}

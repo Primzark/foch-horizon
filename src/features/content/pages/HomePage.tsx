@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Building2, Compass, Handshake, Search } from "lucide-react";
+import { GoogleGIcon } from "@/components/branding/GoogleGIcon";
 import { Button } from "@/components/ui/button";
 import { getFeaturedProperties } from "@/features/listings/api/properties.service";
 import { ListingCard } from "@/features/listings/components/ListingCard";
@@ -862,7 +863,8 @@ export default function HomePage() {
             <Link to="/histoire-immobilier-le-havre" className="rounded-full border border-border px-4 py-2 text-sm hover:bg-card">
               Le Havre & patrimoine immobilier
             </Link>
-            <Link to="/avis" className="rounded-full border border-border px-4 py-2 text-sm hover:bg-card">
+            <Link to="/avis" className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm hover:bg-card">
+              <GoogleGIcon size={14} decorative />
               Lire les avis clients
             </Link>
           </div>
@@ -891,12 +893,18 @@ export default function HomePage() {
           <ScrollReveal mood={heroMood}>
             <div className="mb-6 flex items-end justify-between gap-4">
               <div>
-                <h2 className="font-display text-3xl">Avis Google</h2>
+                <div className="inline-flex items-center gap-2">
+                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-border bg-background/80 shadow-sm">
+                    <GoogleGIcon size={16} decorative />
+                  </span>
+                  <h2 className="font-display text-3xl">Avis Google</h2>
+                </div>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Note moyenne {reviewsQuery.data.rating.toFixed(1)} / 5 ({reviewsQuery.data.userRatingCount} avis).
                 </p>
               </div>
-              <Link to="/avis" className="inline-flex items-center gap-1 text-sm hover:underline">
+              <Link to="/avis" className="inline-flex items-center gap-1.5 text-sm hover:underline">
+                <GoogleGIcon size={14} decorative />
                 Consulter tous les avis
                 <ArrowRight className="h-4 w-4" />
               </Link>
@@ -907,7 +915,12 @@ export default function HomePage() {
             {reviewsQuery.data.reviews.slice(0, 3).map((review, index) => (
               <ScrollReveal key={review.id} mood={heroMood} delay={Math.min(index * heroMotionDirector.revealStagger, 0.24)}>
                 <article className="rounded-2xl border border-border bg-card p-5 transition-all duration-300 hover:-translate-y-1 hover:border-brand-border hover:shadow-[0_18px_40px_-34px_hsl(var(--brand)/0.3)]">
-                  <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">{review.authorName}</p>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">{review.authorName}</p>
+                    <span className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-border bg-background/80">
+                      <GoogleGIcon size={11} decorative />
+                    </span>
+                  </div>
                   <p className="mt-2 text-sm text-muted-foreground">{review.text}</p>
                 </article>
               </ScrollReveal>

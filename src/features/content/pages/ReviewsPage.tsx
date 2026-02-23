@@ -1,13 +1,18 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { motion } from "framer-motion";
 import { Clock3, ExternalLink, MapPin, MessageSquareQuote, Navigation, ShieldCheck, Star } from "lucide-react";
+import { GoogleGIcon } from "@/components/branding/GoogleGIcon";
 import { getAgencyReviews } from "@/features/content/api/googleReviews.service";
 import { getSiteUrl, useSeo } from "@/lib/seo/useSeo";
 import { cn } from "@/lib/utils";
+import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
 
 const AGENCY_ADDRESS_LABEL = "109 Av. Foch, 76600 Le Havre";
 const AGENCY_MAP_EMBED_URL =
   "https://maps.google.com/maps?q=109%20Avenue%20Foch%2C%20Le%20Havre&t=&z=14&ie=UTF8&iwloc=&output=embed";
 const AGENCY_GOOGLE_MAPS_URL = "https://www.google.com/maps/place/?q=place_id:ChIJVdXdwSMv4EcRDvxTc8oRcnI";
+const REVIEW_COLLAPSE_CHAR_THRESHOLD = 250;
 
 function formatDate(value?: string): string | null {
   if (!value) return null;
@@ -52,27 +57,48 @@ function ReviewsStatusBadge({ live }: { live: boolean }) {
 }
 
 function ReviewsSourceBadge({ source }: { source: "google_places" | "edge" | "fallback" }) {
-  const label = source === "fallback" ? "Source de secours" : "Google Places";
+  const isFallback = source === "fallback";
+  const label = isFallback ? "Source de secours" : "Google Reviews";
 
   return (
     <span className="inline-flex items-center rounded-full border border-border bg-background/70 px-3 py-1 text-xs text-muted-foreground">
-      <ShieldCheck className="mr-1.5 h-3.5 w-3.5" />
+      {isFallback ? <ShieldCheck className="mr-1.5 h-3.5 w-3.5" /> : <GoogleGIcon className="mr-1.5" size={13} decorative />}
       {label}
     </span>
   );
 }
 
-function getReviewCardLayoutClass(index: number, total: number) {
-  if (index === 0 && total >= 3) return "md:col-span-2 xl:col-span-3";
-  if (index === 1 && total >= 4) return "xl:col-span-3";
-  return "xl:col-span-2";
+function getReviewCardAccentClass(index: number) {
+  switch (index % 4) {
+    case 0:
+      return "to-brand-soft/25";
+    case 1:
+      return "to-gold-light/30";
+    case 2:
+      return "to-muted/30";
+    default:
+      return "to-brand-soft/20";
+  }
+}
+
+function isExpandableReviewText(value: string): boolean {
+  return value.trim().length > REVIEW_COLLAPSE_CHAR_THRESHOLD;
 }
 
 export default function ReviewsPage() {
   const siteUrl = getSiteUrl();
+  const { reducedMotion } = useMotionPreference();
   const reviewsQuery = useQuery({ queryKey: ["agency-google-reviews"], queryFn: getAgencyReviews });
+  const [expandedReviewIds, setExpandedReviewIds] = useState<Record<string, boolean>>({});
 
   const payload = reviewsQuery.data;
+
+  const toggleReviewExpanded = (reviewId: string) => {
+    setExpandedReviewIds((current) => ({
+      ...current,
+      [reviewId]: !current[reviewId],
+    }));
+  };
 
   useSeo({
     title: "Avis clients | Foch Immobilier Le Havre",
@@ -125,7 +151,12 @@ export default function ReviewsPage() {
     <section className="container mx-auto px-4 py-10 h-feed">
       <header className="max-w-3xl">
         <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Réputation</p>
-        <h1 className="mt-2 font-display text-4xl">Avis clients Foch Immobilier</h1>
+        <div className="mt-2 inline-flex items-center gap-2.5">
+          <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background/85 shadow-sm">
+            <GoogleGIcon size={18} decorative />
+          </span>
+          <h1 className="font-display text-4xl">Avis clients Foch Immobilier</h1>
+        </div>
         <p className="mt-3 text-sm text-muted-foreground">
           Notes et retours vérifiés sur nos services immobiliers au Havre: vente, achat, location et gestion locative.
         </p>
@@ -154,7 +185,12 @@ export default function ReviewsPage() {
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
                     <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Source</p>
-                    <p className="mt-1 font-display text-3xl leading-tight">{payload.placeName}</p>
+                    <div className="mt-1 inline-flex items-center gap-2">
+                      <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-border bg-background/85">
+                        <GoogleGIcon size={14} decorative />
+                      </span>
+                      <p className="font-display text-3xl leading-tight">{payload.placeName}</p>
+                    </div>
                     <div className="mt-3 flex flex-wrap items-center gap-2">
                       <ReviewsStatusBadge live={payload.live} />
                       <ReviewsSourceBadge source={payload.source} />
@@ -222,6 +258,7 @@ export default function ReviewsPage() {
                         rel="noreferrer"
                         className="inline-flex items-center gap-1.5 rounded-full bg-brand px-4 py-2 text-xs font-medium text-white shadow-[0_12px_24px_-16px_hsl(var(--brand)/0.35)] transition-colors hover:bg-brand/90"
                       >
+                        <GoogleGIcon size={13} decorative />
                         Voir sur Google Maps
                         <ExternalLink className="h-3.5 w-3.5" />
                       </a>
@@ -266,7 +303,10 @@ export default function ReviewsPage() {
             <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
               <div>
                 <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Retours clients</p>
-                <h2 className="mt-1 font-display text-3xl">Luxury Card Grid</h2>
+                <div className="mt-1 inline-flex items-center gap-2">
+                  <GoogleGIcon size={18} decorative />
+                  <h2 className="font-display text-3xl">Luxury Card Grid</h2>
+                </div>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Extraits Google récents ou représentatifs liés à l'activité locale de l'agence.
                 </p>
@@ -277,57 +317,106 @@ export default function ReviewsPage() {
               </div>
             </div>
 
-            <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
+            <section className="columns-1 [column-gap:1rem] md:columns-2 xl:columns-3">
               {payload.reviews.map((review, index) => (
-                <article
+                <motion.div
                   key={review.id}
-                  className={cn(
-                    "group relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-card via-card to-brand-soft/20 p-5 shadow-card transition-all duration-300 hover:-translate-y-1 hover:border-brand-border hover:shadow-card-hover h-review",
-                    getReviewCardLayoutClass(index, payload.reviews.length),
-                  )}
+                  className="mb-4 break-inside-avoid"
+                  initial={reducedMotion ? false : { opacity: 0, y: 18, scale: 0.988 }}
+                  whileInView={reducedMotion ? undefined : { opacity: 1, y: 0, scale: 1 }}
+                  viewport={{ once: true, amount: 0.18 }}
+                  transition={
+                    reducedMotion
+                      ? undefined
+                      : {
+                          duration: 0.38,
+                          ease: [0.22, 1, 0.36, 1],
+                          delay: Math.min(index * 0.06, 0.28),
+                        }
+                  }
                 >
-                  <div className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-gold-light/35 blur-2xl" />
-                  <div className="pointer-events-none absolute right-4 top-4 inline-flex h-8 w-8 items-center justify-center rounded-full border border-border/80 bg-background/80 text-gold-dark">
-                    <MessageSquareQuote className="h-4 w-4" />
-                  </div>
+                  <article
+                    className={cn(
+                      "group relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-card via-card p-5 shadow-card transition-all duration-300 hover:-translate-y-1 hover:border-brand-border hover:shadow-card-hover h-review",
+                      getReviewCardAccentClass(index),
+                      index === 0 && "md:min-h-[20rem]",
+                      index % 3 === 1 && "md:min-h-[16rem]",
+                    )}
+                  >
+                    <div className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-gold-light/35 blur-2xl" />
+                    <div className="pointer-events-none absolute right-4 top-4 inline-flex h-8 w-8 items-center justify-center rounded-full border border-border/80 bg-background/80 text-gold-dark">
+                      <MessageSquareQuote className="h-4 w-4" />
+                    </div>
 
-                  <div className="relative flex h-full flex-col">
-                    <div className="pr-10">
-                      <div className="flex flex-wrap items-start justify-between gap-2">
-                        <div>
-                          <p className="font-medium leading-snug p-author h-card">{review.authorName}</p>
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            {review.relativePublishTimeDescription ?? formatDate(review.publishTime) ?? "Avis Google"}
-                          </p>
-                        </div>
-                        <div className="rounded-full border border-border bg-background/80 px-2 py-1">
-                          <StarRating rating={review.rating} />
+                    <div className="relative flex h-full flex-col">
+                      <div className="pr-10">
+                        <div className="flex flex-wrap items-start justify-between gap-2">
+                          <div>
+                            <p className="font-medium leading-snug p-author h-card">{review.authorName}</p>
+                            <div className="mt-1 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                              <GoogleGIcon size={12} decorative />
+                              <span>{review.relativePublishTimeDescription ?? formatDate(review.publishTime) ?? "Avis Google"}</span>
+                            </div>
+                          </div>
+                          <div className="rounded-full border border-border bg-background/80 px-2 py-1">
+                            <StarRating rating={review.rating} />
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <p className="mt-4 flex-1 text-sm leading-relaxed text-muted-foreground p-name">
-                      {review.text}
-                    </p>
+                      {(() => {
+                        const isExpandable = isExpandableReviewText(review.text);
+                        const isExpanded = Boolean(expandedReviewIds[review.id]);
 
-                    <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
-                      <span className="inline-flex items-center rounded-full border border-brand-border bg-brand-soft/70 px-2.5 py-1 text-[11px] font-medium text-brand-strong">
-                        Google
-                      </span>
-                      {review.authorUrl && (
-                        <a
-                          href={review.authorUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
-                        >
-                          Profil Google
-                          <ExternalLink className="h-3.5 w-3.5" />
-                        </a>
-                      )}
+                        return (
+                          <>
+                            <div className="relative mt-4">
+                              <p
+                                className={cn(
+                                  "text-sm leading-relaxed text-muted-foreground p-name whitespace-pre-line",
+                                  !isExpanded && isExpandable && "max-h-[8.25rem] overflow-hidden",
+                                )}
+                              >
+                                {review.text}
+                              </p>
+                              {!isExpanded && isExpandable && (
+                                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-card via-card/95 to-transparent" />
+                              )}
+                            </div>
+
+                            {isExpandable && (
+                              <button
+                                type="button"
+                                onClick={() => toggleReviewExpanded(review.id)}
+                                className="mt-3 inline-flex w-fit items-center gap-1 rounded-full border border-border bg-background/85 px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-brand-border hover:bg-brand-soft/40"
+                              >
+                                {isExpanded ? "Réduire" : "Lire la suite"}
+                              </button>
+                            )}
+                          </>
+                        );
+                      })()}
+
+                      <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-border bg-brand-soft/70 px-2.5 py-1 text-[11px] font-medium text-brand-strong">
+                          <GoogleGIcon size={11} decorative />
+                          Google
+                        </span>
+                        {review.authorUrl && (
+                          <a
+                            href={review.authorUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                          >
+                            Profil Google
+                            <ExternalLink className="h-3.5 w-3.5" />
+                          </a>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </article>
+                  </article>
+                </motion.div>
               ))}
             </section>
           </section>
