@@ -110,7 +110,7 @@ export default function LeHavreHistoryPage() {
         </p>
       </header>
 
-      <section className="mt-8 rounded-2xl border border-border bg-card p-6" aria-label="Navigation quartiers">
+      <section className="paper-grain paper-grain-soft mt-8 rounded-2xl border border-border bg-card p-6" aria-label="Navigation quartiers">
         <h2 className="font-display text-2xl">Quartiers clés de l'immobilier au Havre</h2>
         <div className="mt-4 flex flex-wrap gap-2">
           {leHavreDistrictHistory.map((district) => (
@@ -127,7 +127,7 @@ export default function LeHavreHistoryPage() {
 
       <section className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         {leHavreHistoryTimeline.map((entry) => (
-          <article key={entry.period} className="rounded-2xl border border-border bg-card p-4">
+          <article key={entry.period} className="paper-grain paper-grain-soft rounded-2xl border border-border bg-card p-4">
             <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">{entry.period}</p>
             <h2 className="mt-2 font-display text-2xl">{entry.title}</h2>
             <p className="mt-2 text-sm text-muted-foreground">{entry.description}</p>
@@ -146,7 +146,7 @@ export default function LeHavreHistoryPage() {
             <article
               id={district.id}
               key={district.id}
-              className="scroll-mt-24 rounded-2xl border border-border bg-card p-6"
+              className="paper-grain paper-grain-rich scroll-mt-24 rounded-2xl border border-border bg-card p-6"
               itemScope
               itemType="https://schema.org/Neighborhood"
             >
@@ -164,7 +164,7 @@ export default function LeHavreHistoryPage() {
               </header>
 
               <div className="mt-5 grid gap-4 lg:grid-cols-2">
-                <article className="rounded-xl border border-border bg-muted/20 p-4">
+                <article className="paper-grain paper-grain-soft rounded-xl border border-border bg-muted/20 p-4">
                   <h3 className="inline-flex items-center gap-1 font-display text-2xl">
                     <Building2 className="h-5 w-5" /> Lecture du marché
                   </h3>
@@ -172,7 +172,7 @@ export default function LeHavreHistoryPage() {
                   <p className="mt-3 text-sm text-muted-foreground">{district.investmentAngle}</p>
                 </article>
 
-                <article className="rounded-xl border border-border bg-muted/20 p-4">
+                <article className="paper-grain paper-grain-soft rounded-xl border border-border bg-muted/20 p-4">
                   <h3 className="inline-flex items-center gap-1 font-display text-2xl">
                     <Landmark className="h-5 w-5" /> Repères historiques
                   </h3>
@@ -259,11 +259,11 @@ export default function LeHavreHistoryPage() {
       </section>
 
       <section className="mt-10">
-        <article className="rounded-2xl border border-border bg-card p-6">
+        <article className="paper-grain paper-grain-soft rounded-2xl border border-border bg-card p-6">
           <h2 className="font-display text-3xl">Questions fréquentes</h2>
           <div className="mt-4 space-y-4">
             {leHavreFaq.map((item) => (
-              <article key={item.question} className="rounded-xl border border-border p-4">
+              <article key={item.question} className="paper-grain paper-grain-soft rounded-xl border border-border p-4">
                 <h3 className="font-medium">{item.question}</h3>
                 <p className="mt-2 text-sm text-muted-foreground">{item.answer}</p>
               </article>

@@ -21,9 +21,10 @@ interface ListingCardProps {
   item: PropertySearchItem;
   viewMode?: "grid" | "list";
   revealIndex?: number;
+  className?: string;
 }
 
-export function ListingCard({ item, viewMode = "grid", revealIndex = 0 }: ListingCardProps) {
+export function ListingCard({ item, viewMode = "grid", revealIndex = 0, className }: ListingCardProps) {
   const toggleFavorite = useFavoritesStore((state) => state.toggle);
   const isFavorite = useFavoritesStore((state) => state.isFavorite(item.id));
   const { reducedMotion } = useMotionPreference();
@@ -51,7 +52,7 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0 }: Listin
       <motion.article
         {...revealProps}
         whileHover={cardHoverMotion}
-        className="overflow-hidden rounded-2xl border border-border bg-card"
+        className={cn("overflow-hidden rounded-2xl border border-border bg-card", className)}
         itemScope
         itemType="https://schema.org/RealEstateListing"
       >
@@ -148,7 +149,7 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0 }: Listin
     <motion.article
       {...revealProps}
       whileHover={cardHoverMotion}
-      className="group overflow-hidden rounded-2xl border border-border bg-card transition-all duration-200"
+      className={cn("group overflow-hidden rounded-2xl border border-border bg-card transition-all duration-200", className)}
       itemScope
       itemType="https://schema.org/RealEstateListing"
     >
