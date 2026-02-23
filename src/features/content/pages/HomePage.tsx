@@ -841,7 +841,7 @@ export default function HomePage() {
               key={property.id}
               item={toSearchItem(property)}
               revealIndex={index}
-              className="paper-grain [--paper-grain-opacity:0.032]"
+              className="paper-grain [--paper-grain-opacity:0.032] [--paper-grain-mobile-reduction:0.018]"
             />
           ))}
         </div>

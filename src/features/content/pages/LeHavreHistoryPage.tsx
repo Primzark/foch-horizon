@@ -146,7 +146,7 @@ export default function LeHavreHistoryPage() {
             <article
               id={district.id}
               key={district.id}
-              className="paper-grain paper-grain-rich scroll-mt-24 rounded-2xl border border-border bg-card p-6"
+              className="paper-grain paper-grain-rich [--paper-grain-mobile-reduction:0.004] scroll-mt-24 rounded-2xl border border-border bg-card p-6"
               itemScope
               itemType="https://schema.org/Neighborhood"
             >
