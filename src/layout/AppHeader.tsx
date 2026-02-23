@@ -205,7 +205,7 @@ export function AppHeader() {
               <Phone className="h-4 w-4" />
             </a>
             <a
-              href="https://extranet2.ics.fr"
+              href="https://extranet2.ics.fr/V5/connexion-wolh.html"
               target="_blank"
               rel="noreferrer noopener"
               className="hidden items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground lg:inline-flex"
@@ -285,7 +285,7 @@ export function AppHeader() {
 
               <SheetClose asChild>
                 <a
-                  href="https://extranet2.ics.fr"
+                  href="https://extranet2.ics.fr/V5/connexion-wolh.html"
                   target="_blank"
                   rel="noreferrer noopener"
                   className="mt-1 inline-flex items-center gap-2 rounded-lg border border-border px-3 py-3 text-[1rem] font-medium text-foreground transition-colors hover:bg-muted"

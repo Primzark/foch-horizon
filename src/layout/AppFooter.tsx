@@ -37,7 +37,7 @@ export function AppFooter() {
             Immobilier résidentiel haut de gamme, location et gestion locative au Havre et sur le littoral.
           </p>
           <a
-            href="https://extranet2.ics.fr"
+            href="https://extranet2.ics.fr/V5/connexion-wolh.html"
             target="_blank"
             rel="noreferrer noopener"
             className="mt-4 inline-flex items-center gap-1 text-sm hover:underline"
