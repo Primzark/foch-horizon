@@ -5,6 +5,192 @@ import type { Property } from "@/types/domain";
 
 export const properties: Property[] = [
   {
+    "id": 5159,
+    "title": "NOUVEAUTE Place de l'hôtel de ville",
+    "slug": "nouveaute-place-de-l-hotel-de-ville",
+    "transactionType": "vente",
+    "propertyType": "appartement",
+    "status": "active",
+    "priceAmount": 315000,
+    "priceCurrency": "EUR",
+    "surfaceM2": 96,
+    "terrainM2": null,
+    "rooms": 4,
+    "bedrooms": 3,
+    "bathrooms": 1,
+    "parkingCount": 0,
+    "garageCount": 0,
+    "dpeLabel": "D",
+    "dpeValue": 200,
+    "gesLabel": "D",
+    "gesValue": 40,
+    "description": "Appartement Perret de 96m2, idéalement situé avec une triple exposition, lumineux, offrant une entrée, une cuisine aménagée et équipée avec une arrière cuisine, un séjour salon, 3 chambres, une salle de bains, une douche, un toilette séparé. Une cave Charges de copropriété annuelles 3920EUR (chauffage et eau chaude) Agent co Emma Vasselin",
+    "cityId": "city-le-havre",
+    "postalCode": "76600",
+    "lat": null,
+    "lng": null,
+    "agentId": "agent-lucas-bernard",
+    "publishedAt": "2026-02-24T07:47:00.991Z",
+    "updatedAt": "2026-02-24T07:47:00.991Z",
+    "isFeatured": true,
+    "images": [
+      {
+        "id": "5159-1",
+        "propertyId": 5159,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/b6ba6e0330e347f92ee3cb0b80ec4ef6/photo_0979b94472201d9f2c6372a46c6c66d8_Inc_0.jpg",
+        "sortOrder": 0,
+        "altText": "NOUVEAUTE Place de l'hôtel de ville - photo 1"
+      },
+      {
+        "id": "5159-2",
+        "propertyId": 5159,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/b6ba6e0330e347f92ee3cb0b80ec4ef6/photo_da0ad62031eb8e139c125afba7f2e068_Inc_0.jpg",
+        "sortOrder": 1,
+        "altText": "NOUVEAUTE Place de l'hôtel de ville - photo 2"
+      },
+      {
+        "id": "5159-3",
+        "propertyId": 5159,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/b6ba6e0330e347f92ee3cb0b80ec4ef6/photo_4c7d16a975a23d0c514b17e6e990fcaf_Inc_0.jpg",
+        "sortOrder": 2,
+        "altText": "NOUVEAUTE Place de l'hôtel de ville - photo 3"
+      },
+      {
+        "id": "5159-4",
+        "propertyId": 5159,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/b6ba6e0330e347f92ee3cb0b80ec4ef6/photo_1085118d59a8fcb3e4c94a00471aec65.jpg",
+        "sortOrder": 3,
+        "altText": "NOUVEAUTE Place de l'hôtel de ville - photo 4"
+      },
+      {
+        "id": "5159-5",
+        "propertyId": 5159,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/b6ba6e0330e347f92ee3cb0b80ec4ef6/photo_c44293f1f1239e569b7db3f447e3da58.jpg",
+        "sortOrder": 4,
+        "altText": "NOUVEAUTE Place de l'hôtel de ville - photo 5"
+      }
+    ],
+    "features": [
+      {
+        "propertyId": 5159,
+        "featureKey": "chauffage",
+        "labelFr": "Chauffage"
+      },
+      {
+        "propertyId": 5159,
+        "featureKey": "cave",
+        "labelFr": "Cave"
+      },
+      {
+        "propertyId": 5159,
+        "featureKey": "ascenseur",
+        "labelFr": "Ascenseur"
+      }
+    ]
+  },
+  {
+    "id": 5158,
+    "title": "EXCLUSIVITE LES ORMEAUX",
+    "slug": "exclusivite-les-ormeaux",
+    "transactionType": "vente",
+    "propertyType": "maison_villa",
+    "status": "active",
+    "priceAmount": 298000,
+    "priceCurrency": "EUR",
+    "surfaceM2": 100,
+    "terrainM2": null,
+    "rooms": 5,
+    "bedrooms": 3,
+    "bathrooms": 1,
+    "parkingCount": 0,
+    "garageCount": 1,
+    "dpeLabel": "D",
+    "dpeValue": 180,
+    "gesLabel": "B",
+    "gesValue": 7,
+    "description": "EXCLUSIVITE SUPERBE MAISON DE CARACTERE PLEINE DE CACHET ET D'AUTHENTICITE OFFRANT UNE ENTREE SPACIEUSE - UNE CUISINE AMENAGEE OUVERTE SUR UN SEJOUR/SALON ACCES TERRASSE POUR LES BEAUX JOURS. UNE BELLE SUITE PARENTALE TRES COSY AVEC SDBAINS ET DOUCHES - UNE CHAMBRE - UN BUREAU - 1 SDDCHES - WC. A CELA S'AJOUTE UN GRAND GARAGE ET UNE CAVE. LE CHARME FOU DE L'ANCIEN - UNE AMBIANCE CHALEUREUSE ET ELEGANTE POUR CE BIEN D'EXCEPTION. Agent Co Véronique FOGT",
+    "cityId": "city-le-havre",
+    "postalCode": "76600",
+    "lat": null,
+    "lng": null,
+    "agentId": "agent-clara-durand",
+    "publishedAt": "2026-02-24T07:46:01.247Z",
+    "updatedAt": "2026-02-24T07:46:01.247Z",
+    "isFeatured": true,
+    "images": [
+      {
+        "id": "5158-1",
+        "propertyId": 5158,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/770b06ddc81e17ed2ba2667629e676c5/photo_882451e157e9859b61cc6988ae8e1ccf.jpg",
+        "sortOrder": 0,
+        "altText": "EXCLUSIVITE LES ORMEAUX - photo 1"
+      },
+      {
+        "id": "5158-2",
+        "propertyId": 5158,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/770b06ddc81e17ed2ba2667629e676c5/photo_a3e88330b60eb6827a11e7bc8b51ccf5.jpg",
+        "sortOrder": 1,
+        "altText": "EXCLUSIVITE LES ORMEAUX - photo 2"
+      },
+      {
+        "id": "5158-3",
+        "propertyId": 5158,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/770b06ddc81e17ed2ba2667629e676c5/photo_6d3b57df5f0198fe50f6e0a0dbb47361.jpg",
+        "sortOrder": 2,
+        "altText": "EXCLUSIVITE LES ORMEAUX - photo 3"
+      },
+      {
+        "id": "5158-4",
+        "propertyId": 5158,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/770b06ddc81e17ed2ba2667629e676c5/photo_3e61d141e666fd82a5b50410ea8d9502.jpg",
+        "sortOrder": 3,
+        "altText": "EXCLUSIVITE LES ORMEAUX - photo 4"
+      },
+      {
+        "id": "5158-5",
+        "propertyId": 5158,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/770b06ddc81e17ed2ba2667629e676c5/photo_8184939d8224f6f01a8d7b27ce531b0c.jpg",
+        "sortOrder": 4,
+        "altText": "EXCLUSIVITE LES ORMEAUX - photo 5"
+      },
+      {
+        "id": "5158-6",
+        "propertyId": 5158,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/770b06ddc81e17ed2ba2667629e676c5/photo_cdac97b3b900b14d9ce3c5af0f26c578.jpg",
+        "sortOrder": 5,
+        "altText": "EXCLUSIVITE LES ORMEAUX - photo 6"
+      },
+      {
+        "id": "5158-7",
+        "propertyId": 5158,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/770b06ddc81e17ed2ba2667629e676c5/photo_a342f4312da71e4c4b59c3f5c3639b65.jpg",
+        "sortOrder": 6,
+        "altText": "EXCLUSIVITE LES ORMEAUX - photo 7"
+      },
+      {
+        "id": "5158-8",
+        "propertyId": 5158,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/770b06ddc81e17ed2ba2667629e676c5/photo_23bac1be7ef37909531c0247f4387fd1.jpg",
+        "sortOrder": 7,
+        "altText": "EXCLUSIVITE LES ORMEAUX - photo 8"
+      },
+      {
+        "id": "5158-9",
+        "propertyId": 5158,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/770b06ddc81e17ed2ba2667629e676c5/photo_10fc5175d9565d350758ce4100c342ae.jpg",
+        "sortOrder": 8,
+        "altText": "EXCLUSIVITE LES ORMEAUX - photo 9"
+      }
+    ],
+    "features": [
+      {
+        "propertyId": 5158,
+        "featureKey": "maison",
+        "labelFr": "Maison"
+      }
+    ]
+  },
+  {
     "id": 5157,
     "title": "NOUVEAUTE LES ACCACIAS",
     "slug": "nouveaute-les-accacias",
@@ -30,8 +216,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-clara-durand",
-    "publishedAt": "2026-02-16T17:46:08.543Z",
-    "updatedAt": "2026-02-16T17:46:08.543Z",
+    "publishedAt": "2026-02-24T07:45:01.250Z",
+    "updatedAt": "2026-02-24T07:45:01.250Z",
     "isFeatured": true,
     "images": [
       {
@@ -90,8 +276,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-clara-durand",
-    "publishedAt": "2026-02-16T17:45:10.016Z",
-    "updatedAt": "2026-02-16T17:45:10.016Z",
+    "publishedAt": "2026-02-24T07:44:01.156Z",
+    "updatedAt": "2026-02-24T07:44:01.156Z",
     "isFeatured": true,
     "images": [
       {
@@ -190,8 +376,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-16T17:44:09.077Z",
-    "updatedAt": "2026-02-16T17:44:09.077Z",
+    "publishedAt": "2026-02-24T07:43:01.323Z",
+    "updatedAt": "2026-02-24T07:43:01.323Z",
     "isFeatured": true,
     "images": [
       {
@@ -246,6 +432,94 @@ export const properties: Property[] = [
     ]
   },
   {
+    "id": 5152,
+    "title": "SANVIC EGLISE",
+    "slug": "sanvic-eglise",
+    "transactionType": "vente",
+    "propertyType": "autre",
+    "status": "active",
+    "priceAmount": 337000,
+    "priceCurrency": "EUR",
+    "surfaceM2": 54,
+    "terrainM2": null,
+    "rooms": null,
+    "bedrooms": 0,
+    "bathrooms": 0,
+    "parkingCount": 0,
+    "garageCount": 0,
+    "dpeLabel": "E",
+    "dpeValue": 289,
+    "gesLabel": "B",
+    "gesValue": 9,
+    "description": "Ensemble immobilier comprenant ,a l'etage, un appartement traversant est /ouest de type T2 d'une surface de 48m2 carrez ainsi qu'un entrepot de 130 m2 au rdc. Le batiment dispose d'une couverture en bac acier et laine de roche. L'ensemble est dilligemment entretenue et isolé.",
+    "cityId": "city-le-havre",
+    "postalCode": "76620",
+    "lat": null,
+    "lng": null,
+    "agentId": "agent-jeanne-morel",
+    "publishedAt": "2026-02-24T07:42:01.339Z",
+    "updatedAt": "2026-02-24T07:42:01.339Z",
+    "isFeatured": true,
+    "images": [
+      {
+        "id": "5152-1",
+        "propertyId": 5152,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/247c85f8dfd737263661f13394a623a3/photo_e6058316736576e668bdec9f7566b258.jpg",
+        "sortOrder": 0,
+        "altText": "SANVIC EGLISE - photo 1"
+      },
+      {
+        "id": "5152-2",
+        "propertyId": 5152,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/247c85f8dfd737263661f13394a623a3/photo_5a92bccee84842b9868023ab3d3feb21.jpg",
+        "sortOrder": 1,
+        "altText": "SANVIC EGLISE - photo 2"
+      },
+      {
+        "id": "5152-3",
+        "propertyId": 5152,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/247c85f8dfd737263661f13394a623a3/photo_8621ac3e0d31c11cdafa7d24a2569fb2.jpg",
+        "sortOrder": 2,
+        "altText": "SANVIC EGLISE - photo 3"
+      },
+      {
+        "id": "5152-4",
+        "propertyId": 5152,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/247c85f8dfd737263661f13394a623a3/photo_8468aa314864a64eeed21392ae45830e.jpg",
+        "sortOrder": 3,
+        "altText": "SANVIC EGLISE - photo 4"
+      },
+      {
+        "id": "5152-5",
+        "propertyId": 5152,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/247c85f8dfd737263661f13394a623a3/photo_ee5507b7fee9069d1146f935f592c2e5.jpg",
+        "sortOrder": 4,
+        "altText": "SANVIC EGLISE - photo 5"
+      },
+      {
+        "id": "5152-6",
+        "propertyId": 5152,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/247c85f8dfd737263661f13394a623a3/photo_687d69d7a466c3be545c4d5dab6b45a2.jpg",
+        "sortOrder": 5,
+        "altText": "SANVIC EGLISE - photo 6"
+      },
+      {
+        "id": "5152-7",
+        "propertyId": 5152,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/247c85f8dfd737263661f13394a623a3/photo_f61ed58575addefbb825e3721bd1d9b6.jpg",
+        "sortOrder": 6,
+        "altText": "SANVIC EGLISE - photo 7"
+      }
+    ],
+    "features": [
+      {
+        "propertyId": 5152,
+        "featureKey": "maison",
+        "labelFr": "Maison"
+      }
+    ]
+  },
+  {
     "id": 5150,
     "title": "EXCLUSIVITE - NOUVEAUTE SAINTE ADRESSE",
     "slug": "exclusivite-nouveaute-sainte-adresse",
@@ -271,8 +545,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-16T17:43:09.097Z",
-    "updatedAt": "2026-02-16T17:43:09.097Z",
+    "publishedAt": "2026-02-24T07:41:01.425Z",
+    "updatedAt": "2026-02-24T07:41:01.425Z",
     "isFeatured": true,
     "images": [
       {
@@ -359,8 +633,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-clara-durand",
-    "publishedAt": "2026-02-16T17:42:09.825Z",
-    "updatedAt": "2026-02-16T17:42:09.825Z",
+    "publishedAt": "2026-02-24T07:40:01.555Z",
+    "updatedAt": "2026-02-24T07:40:01.555Z",
     "isFeatured": true,
     "images": [
       {
@@ -419,8 +693,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-16T17:41:09.314Z",
-    "updatedAt": "2026-02-16T17:41:09.314Z",
+    "publishedAt": "2026-02-24T07:39:01.650Z",
+    "updatedAt": "2026-02-24T07:39:01.650Z",
     "isFeatured": true,
     "images": [
       {
@@ -463,7 +737,7 @@ export const properties: Property[] = [
   {
     "id": 5145,
     "title": "Sanvic Eglise",
-    "slug": "sanvic-eglise",
+    "slug": "sanvic-eglise-5145",
     "transactionType": "vente",
     "propertyType": "maison_villa",
     "status": "active",
@@ -486,9 +760,9 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-16T17:40:09.772Z",
-    "updatedAt": "2026-02-16T17:40:09.772Z",
-    "isFeatured": true,
+    "publishedAt": "2026-02-24T07:38:01.656Z",
+    "updatedAt": "2026-02-24T07:38:01.656Z",
+    "isFeatured": false,
     "images": [
       {
         "id": "5145-1",
@@ -567,9 +841,9 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-16T17:39:10.266Z",
-    "updatedAt": "2026-02-16T17:39:10.266Z",
-    "isFeatured": true,
+    "publishedAt": "2026-02-24T07:37:01.736Z",
+    "updatedAt": "2026-02-24T07:37:01.736Z",
+    "isFeatured": false,
     "images": [
       {
         "id": "5144-1",
@@ -634,9 +908,9 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-02-16T17:38:09.496Z",
-    "updatedAt": "2026-02-16T17:38:09.496Z",
-    "isFeatured": true,
+    "publishedAt": "2026-02-24T07:36:01.746Z",
+    "updatedAt": "2026-02-24T07:36:01.746Z",
+    "isFeatured": false,
     "images": [
       {
         "id": "5143-1",
@@ -713,8 +987,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-02-16T17:37:09.707Z",
-    "updatedAt": "2026-02-16T17:37:09.707Z",
+    "publishedAt": "2026-02-24T07:35:01.841Z",
+    "updatedAt": "2026-02-24T07:35:01.841Z",
     "isFeatured": false,
     "images": [
       {
@@ -764,8 +1038,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-02-16T17:36:10.749Z",
-    "updatedAt": "2026-02-16T17:36:10.749Z",
+    "publishedAt": "2026-02-24T07:34:01.948Z",
+    "updatedAt": "2026-02-24T07:34:01.948Z",
     "isFeatured": false,
     "images": [
       {
@@ -831,8 +1105,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-02-16T17:35:10.097Z",
-    "updatedAt": "2026-02-16T17:35:10.097Z",
+    "publishedAt": "2026-02-24T07:33:02.045Z",
+    "updatedAt": "2026-02-24T07:33:02.045Z",
     "isFeatured": false,
     "images": [
       {
@@ -912,8 +1186,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-16T17:34:11.078Z",
-    "updatedAt": "2026-02-16T17:34:11.078Z",
+    "publishedAt": "2026-02-24T07:32:02.069Z",
+    "updatedAt": "2026-02-24T07:32:02.069Z",
     "isFeatured": false,
     "images": [
       {
@@ -1000,8 +1274,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-16T17:33:11.229Z",
-    "updatedAt": "2026-02-16T17:33:11.229Z",
+    "publishedAt": "2026-02-24T07:31:02.145Z",
+    "updatedAt": "2026-02-24T07:31:02.145Z",
     "isFeatured": false,
     "images": [
       {
@@ -1095,8 +1369,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-16T17:32:11.309Z",
-    "updatedAt": "2026-02-16T17:32:11.309Z",
+    "publishedAt": "2026-02-24T07:30:02.152Z",
+    "updatedAt": "2026-02-24T07:30:02.152Z",
     "isFeatured": false,
     "images": [
       {
@@ -1176,8 +1450,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-16T17:31:11.322Z",
-    "updatedAt": "2026-02-16T17:31:11.322Z",
+    "publishedAt": "2026-02-24T07:29:02.339Z",
+    "updatedAt": "2026-02-24T07:29:02.339Z",
     "isFeatured": false,
     "images": [
       {
@@ -1243,8 +1517,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-02-16T17:30:11.496Z",
-    "updatedAt": "2026-02-16T17:30:11.496Z",
+    "publishedAt": "2026-02-24T07:28:02.327Z",
+    "updatedAt": "2026-02-24T07:28:02.327Z",
     "isFeatured": false,
     "images": [
       {
@@ -1310,8 +1584,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-02-16T17:29:11.252Z",
-    "updatedAt": "2026-02-16T17:29:11.252Z",
+    "publishedAt": "2026-02-24T07:27:03.208Z",
+    "updatedAt": "2026-02-24T07:27:03.208Z",
     "isFeatured": false,
     "images": [
       {
@@ -1375,8 +1649,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-clara-durand",
-    "publishedAt": "2026-02-16T17:28:12.245Z",
-    "updatedAt": "2026-02-16T17:28:12.245Z",
+    "publishedAt": "2026-02-24T07:26:02.460Z",
+    "updatedAt": "2026-02-24T07:26:02.460Z",
     "isFeatured": false,
     "images": [
       {
@@ -1477,8 +1751,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-clara-durand",
-    "publishedAt": "2026-02-16T17:27:11.644Z",
-    "updatedAt": "2026-02-16T17:27:11.644Z",
+    "publishedAt": "2026-02-24T07:25:02.526Z",
+    "updatedAt": "2026-02-24T07:25:02.526Z",
     "isFeatured": false,
     "images": [
       {
@@ -1558,8 +1832,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-16T17:26:11.659Z",
-    "updatedAt": "2026-02-16T17:26:11.659Z",
+    "publishedAt": "2026-02-24T07:24:02.540Z",
+    "updatedAt": "2026-02-24T07:24:02.540Z",
     "isFeatured": false,
     "images": [
       {
@@ -1632,8 +1906,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-16T17:25:11.717Z",
-    "updatedAt": "2026-02-16T17:25:11.717Z",
+    "publishedAt": "2026-02-24T07:23:02.723Z",
+    "updatedAt": "2026-02-24T07:23:02.723Z",
     "isFeatured": false,
     "images": [
       {
@@ -1720,8 +1994,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-16T17:24:12.629Z",
-    "updatedAt": "2026-02-16T17:24:12.629Z",
+    "publishedAt": "2026-02-24T07:22:02.726Z",
+    "updatedAt": "2026-02-24T07:22:02.726Z",
     "isFeatured": false,
     "images": [
       {
@@ -1794,8 +2068,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-02-16T17:23:11.890Z",
-    "updatedAt": "2026-02-16T17:23:11.890Z",
+    "publishedAt": "2026-02-24T07:21:02.838Z",
+    "updatedAt": "2026-02-24T07:21:02.838Z",
     "isFeatured": false,
     "images": [
       {
@@ -1847,8 +2121,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-16T17:22:12.849Z",
-    "updatedAt": "2026-02-16T17:22:12.849Z",
+    "publishedAt": "2026-02-24T07:20:02.902Z",
+    "updatedAt": "2026-02-24T07:20:02.902Z",
     "isFeatured": false,
     "images": [
       {
@@ -1942,8 +2216,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-02-16T17:21:12.049Z",
-    "updatedAt": "2026-02-16T17:21:12.049Z",
+    "publishedAt": "2026-02-24T07:19:02.944Z",
+    "updatedAt": "2026-02-24T07:19:02.944Z",
     "isFeatured": false,
     "images": [
       {
@@ -2002,8 +2276,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-16T17:20:12.098Z",
-    "updatedAt": "2026-02-16T17:20:12.098Z",
+    "publishedAt": "2026-02-24T07:18:03.109Z",
+    "updatedAt": "2026-02-24T07:18:03.109Z",
     "isFeatured": false,
     "images": [
       {
@@ -2090,8 +2364,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-16T17:19:13.047Z",
-    "updatedAt": "2026-02-16T17:19:13.047Z",
+    "publishedAt": "2026-02-24T07:17:03.106Z",
+    "updatedAt": "2026-02-24T07:17:03.106Z",
     "isFeatured": false,
     "images": [
       {
@@ -2176,8 +2450,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-16T17:18:13.242Z",
-    "updatedAt": "2026-02-16T17:18:13.242Z",
+    "publishedAt": "2026-02-24T07:16:04.165Z",
+    "updatedAt": "2026-02-24T07:16:04.165Z",
     "isFeatured": false,
     "images": [
       {
@@ -2222,8 +2496,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-16T17:17:12.636Z",
-    "updatedAt": "2026-02-16T17:17:12.636Z",
+    "publishedAt": "2026-02-24T07:15:03.286Z",
+    "updatedAt": "2026-02-24T07:15:03.286Z",
     "isFeatured": false,
     "images": [
       {
@@ -2301,8 +2575,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-clara-durand",
-    "publishedAt": "2026-02-16T17:16:13.429Z",
-    "updatedAt": "2026-02-16T17:16:13.429Z",
+    "publishedAt": "2026-02-24T07:14:03.335Z",
+    "updatedAt": "2026-02-24T07:14:03.335Z",
     "isFeatured": false,
     "images": [
       {
@@ -2356,12 +2630,12 @@ export const properties: Property[] = [
   },
   {
     "id": 5086,
-    "title": "NOUVEAUTE",
-    "slug": "nouveaute-5086",
+    "title": "Charme de l'ancien",
+    "slug": "charme-de-l-ancien",
     "transactionType": "vente",
     "propertyType": "maison_villa",
     "status": "active",
-    "priceAmount": 780000,
+    "priceAmount": 750000,
     "priceCurrency": "EUR",
     "surfaceM2": 250,
     "terrainM2": null,
@@ -2380,44 +2654,44 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-16T17:15:13.066Z",
-    "updatedAt": "2026-02-16T17:15:13.066Z",
+    "publishedAt": "2026-02-24T07:13:03.510Z",
+    "updatedAt": "2026-02-24T07:13:03.510Z",
     "isFeatured": false,
     "images": [
       {
         "id": "5086-1",
         "propertyId": 5086,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/a8755957eba6f6846a45ceaa79367a7d/photo_9ccda58191a0f53049ccc6bed0fc5b41.jpg",
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/a8755957eba6f6846a45ceaa79367a7d/photo_4d43ec07fb1fb0e5fc397c928b9f20ed.jpg",
         "sortOrder": 0,
-        "altText": "NOUVEAUTE - photo 1"
+        "altText": "Charme de l'ancien - photo 1"
       },
       {
         "id": "5086-2",
         "propertyId": 5086,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/a8755957eba6f6846a45ceaa79367a7d/photo_4d43ec07fb1fb0e5fc397c928b9f20ed.jpg",
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/a8755957eba6f6846a45ceaa79367a7d/photo_9ccda58191a0f53049ccc6bed0fc5b41.jpg",
         "sortOrder": 1,
-        "altText": "NOUVEAUTE - photo 2"
+        "altText": "Charme de l'ancien - photo 2"
       },
       {
         "id": "5086-3",
         "propertyId": 5086,
         "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/a8755957eba6f6846a45ceaa79367a7d/photo_aaf01083cdc83fbd7b15b3ab5f1169c1.jpg",
         "sortOrder": 2,
-        "altText": "NOUVEAUTE - photo 3"
+        "altText": "Charme de l'ancien - photo 3"
       },
       {
         "id": "5086-4",
         "propertyId": 5086,
         "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/a8755957eba6f6846a45ceaa79367a7d/photo_e0af5fde310b9af16fab9c12050992b2.jpg",
         "sortOrder": 3,
-        "altText": "NOUVEAUTE - photo 4"
+        "altText": "Charme de l'ancien - photo 4"
       },
       {
         "id": "5086-5",
         "propertyId": 5086,
         "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/a8755957eba6f6846a45ceaa79367a7d/photo_c409ee24d48868cf739af58fb0ee68a2.jpg",
         "sortOrder": 4,
-        "altText": "NOUVEAUTE - photo 5"
+        "altText": "Charme de l'ancien - photo 5"
       }
     ],
     "features": [
@@ -2454,8 +2728,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-02-16T17:14:13.838Z",
-    "updatedAt": "2026-02-16T17:14:13.838Z",
+    "publishedAt": "2026-02-24T07:12:03.499Z",
+    "updatedAt": "2026-02-24T07:12:03.499Z",
     "isFeatured": false,
     "images": [
       {
@@ -2538,8 +2812,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-16T17:13:14.107Z",
-    "updatedAt": "2026-02-16T17:13:14.107Z",
+    "publishedAt": "2026-02-24T07:11:03.592Z",
+    "updatedAt": "2026-02-24T07:11:03.592Z",
     "isFeatured": false,
     "images": [
       {
@@ -2626,8 +2900,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-02-16T17:12:14.230Z",
-    "updatedAt": "2026-02-16T17:12:14.230Z",
+    "publishedAt": "2026-02-24T07:10:03.665Z",
+    "updatedAt": "2026-02-24T07:10:03.665Z",
     "isFeatured": false,
     "images": [
       {
@@ -2731,42 +3005,42 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-16T17:11:13.463Z",
-    "updatedAt": "2026-02-16T17:11:13.463Z",
+    "publishedAt": "2026-02-24T07:09:03.724Z",
+    "updatedAt": "2026-02-24T07:09:03.724Z",
     "isFeatured": false,
     "images": [
       {
         "id": "5063-1",
         "propertyId": 5063,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/d1dab1aad7da837c472eee1c3fb3e113/photo_ad87c99becfce1b702ddfde33241c6ba.jpg",
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/d1dab1aad7da837c472eee1c3fb3e113/photo_774f74586b1f06c6f0386c8e9e80e362.jpg",
         "sortOrder": 0,
         "altText": "Entre le square Saint Roch et la plage - photo 1"
       },
       {
         "id": "5063-2",
         "propertyId": 5063,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/d1dab1aad7da837c472eee1c3fb3e113/photo_54101d7cd3bbe2026f0e410c02e83469.jpg",
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/d1dab1aad7da837c472eee1c3fb3e113/photo_ad87c99becfce1b702ddfde33241c6ba.jpg",
         "sortOrder": 1,
         "altText": "Entre le square Saint Roch et la plage - photo 2"
       },
       {
         "id": "5063-3",
         "propertyId": 5063,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/d1dab1aad7da837c472eee1c3fb3e113/photo_5cebb2db593c950dba02a6eae78c6328.png",
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/d1dab1aad7da837c472eee1c3fb3e113/photo_54101d7cd3bbe2026f0e410c02e83469.jpg",
         "sortOrder": 2,
         "altText": "Entre le square Saint Roch et la plage - photo 3"
       },
       {
         "id": "5063-4",
         "propertyId": 5063,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/d1dab1aad7da837c472eee1c3fb3e113/photo_ba5a618e7a7176f47ce6a14ec1e982b5.jpg",
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/d1dab1aad7da837c472eee1c3fb3e113/photo_5cebb2db593c950dba02a6eae78c6328.png",
         "sortOrder": 3,
         "altText": "Entre le square Saint Roch et la plage - photo 4"
       },
       {
         "id": "5063-5",
         "propertyId": 5063,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/d1dab1aad7da837c472eee1c3fb3e113/photo_a7ae00074118036c1f22a92eb2c18f46.png",
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/d1dab1aad7da837c472eee1c3fb3e113/photo_ba5a618e7a7176f47ce6a14ec1e982b5.jpg",
         "sortOrder": 4,
         "altText": "Entre le square Saint Roch et la plage - photo 5"
       }
@@ -2810,8 +3084,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-02-16T17:10:13.633Z",
-    "updatedAt": "2026-02-16T17:10:13.633Z",
+    "publishedAt": "2026-02-24T07:08:03.881Z",
+    "updatedAt": "2026-02-24T07:08:03.881Z",
     "isFeatured": false,
     "images": [
       {
@@ -2889,8 +3163,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-02-16T17:09:13.833Z",
-    "updatedAt": "2026-02-16T17:09:13.833Z",
+    "publishedAt": "2026-02-24T07:07:03.896Z",
+    "updatedAt": "2026-02-24T07:07:03.896Z",
     "isFeatured": false,
     "images": [
       {
@@ -2992,8 +3266,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-02-16T17:08:13.876Z",
-    "updatedAt": "2026-02-16T17:08:13.876Z",
+    "publishedAt": "2026-02-24T07:06:04.749Z",
+    "updatedAt": "2026-02-24T07:06:04.749Z",
     "isFeatured": false,
     "images": [
       {
@@ -3066,8 +3340,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-16T17:07:14.093Z",
-    "updatedAt": "2026-02-16T17:07:14.093Z",
+    "publishedAt": "2026-02-24T07:05:04.060Z",
+    "updatedAt": "2026-02-24T07:05:04.060Z",
     "isFeatured": false,
     "images": [
       {
@@ -3154,8 +3428,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-02-16T17:06:14.233Z",
-    "updatedAt": "2026-02-16T17:06:14.233Z",
+    "publishedAt": "2026-02-24T07:04:04.173Z",
+    "updatedAt": "2026-02-24T07:04:04.173Z",
     "isFeatured": false,
     "images": [
       {
@@ -3242,8 +3516,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-02-16T17:05:15.081Z",
-    "updatedAt": "2026-02-16T17:05:15.081Z",
+    "publishedAt": "2026-02-24T07:03:04.259Z",
+    "updatedAt": "2026-02-24T07:03:04.259Z",
     "isFeatured": false,
     "images": [
       {
@@ -3326,8 +3600,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-16T17:04:14.300Z",
-    "updatedAt": "2026-02-16T17:04:14.300Z",
+    "publishedAt": "2026-02-24T07:02:04.337Z",
+    "updatedAt": "2026-02-24T07:02:04.337Z",
     "isFeatured": false,
     "images": [
       {
@@ -3386,8 +3660,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-16T17:03:14.496Z",
-    "updatedAt": "2026-02-16T17:03:14.496Z",
+    "publishedAt": "2026-02-24T07:01:04.480Z",
+    "updatedAt": "2026-02-24T07:01:04.480Z",
     "isFeatured": false,
     "images": [
       {
@@ -3453,8 +3727,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-clara-durand",
-    "publishedAt": "2026-02-16T17:02:15.276Z",
-    "updatedAt": "2026-02-16T17:02:15.276Z",
+    "publishedAt": "2026-02-24T07:00:04.537Z",
+    "updatedAt": "2026-02-24T07:00:04.537Z",
     "isFeatured": false,
     "images": [
       {

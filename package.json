@@ -11,6 +11,7 @@
     "preview": "vite preview",
     "gallery:extract": "node scripts/extract-legacy-gallery.mjs",
     "sync:annonces": "node scripts/sync-fochimmobilier-properties.mjs",
+    "import:annonces:edge": "node scripts/import-local-properties-to-supabase.mjs",
     "chatbot:index:site": "node scripts/chatbot/index-site-rag.mjs",
     "chatbot:index:site:headless": "node scripts/chatbot/index-site-rag.mjs --headless",
     "chatbot:evals": "node scripts/chatbot/run-evals.mjs",

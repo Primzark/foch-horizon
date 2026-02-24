@@ -26,6 +26,22 @@ function createSupabaseFunctionProxy(
   };
 }
 
+function routePattern(pathPattern: string): string {
+  return `${pathPattern.replace(/\$$/, "")}(?:\\?.*)?$`;
+}
+
+function splitPathAndQuery(requestPath: string): { pathname: string; query: string } {
+  const queryStart = requestPath.indexOf("?");
+  if (queryStart < 0) {
+    return { pathname: requestPath, query: "" };
+  }
+
+  return {
+    pathname: requestPath.slice(0, queryStart),
+    query: requestPath.slice(queryStart),
+  };
+}
+
 function buildSupabaseApiProxy(env: Record<string, string>): Record<string, ProxyOptions> | undefined {
   const projectUrl = (env.VITE_SUPABASE_PROJECT_URL ?? "").trim();
   if (!projectUrl) {
@@ -35,62 +51,76 @@ function buildSupabaseApiProxy(env: Record<string, string>): Record<string, Prox
   const anonKey = (env.VITE_SUPABASE_ANON_KEY ?? env.EDGE_ANON_KEY ?? "").trim();
 
   return {
-    "^/api/cities$": createSupabaseFunctionProxy(
+    [routePattern("^/api/cities$")]: createSupabaseFunctionProxy(
       projectUrl,
       () => "/functions/v1/cities-list",
       anonKey,
     ),
-    "^/api/cities/[^/]+/properties$": createSupabaseFunctionProxy(
+    [routePattern("^/api/cities/[^/]+/properties$")]: createSupabaseFunctionProxy(
       projectUrl,
-      (requestPath) => requestPath.replace(/^\/api\/cities\/([^/]+)\/properties$/, "/functions/v1/city-properties/$1"),
+      (requestPath) => {
+        const { pathname, query } = splitPathAndQuery(requestPath);
+        return (
+          pathname.replace(/^\/api\/cities\/([^/]+)\/properties$/, "/functions/v1/city-properties/$1") + query
+        );
+      },
       anonKey,
     ),
-    "^/api/cities/[^/]+$": createSupabaseFunctionProxy(
+    [routePattern("^/api/cities/[^/]+$")]: createSupabaseFunctionProxy(
       projectUrl,
-      (requestPath) => requestPath.replace(/^\/api\/cities\/([^/]+)$/, "/functions/v1/city-detail/$1"),
+      (requestPath) => {
+        const { pathname, query } = splitPathAndQuery(requestPath);
+        return pathname.replace(/^\/api\/cities\/([^/]+)$/, "/functions/v1/city-detail/$1") + query;
+      },
       anonKey,
     ),
-    "^/api/properties/stats$": createSupabaseFunctionProxy(
+    [routePattern("^/api/properties/stats$")]: createSupabaseFunctionProxy(
       projectUrl,
       () => "/functions/v1/properties-stats",
       anonKey,
     ),
-    "^/api/properties/[^/]+$": createSupabaseFunctionProxy(
+    [routePattern("^/api/properties/[^/]+$")]: createSupabaseFunctionProxy(
       projectUrl,
-      (requestPath) => requestPath.replace(/^\/api\/properties\/([^/]+)$/, "/functions/v1/property-detail/$1"),
+      (requestPath) => {
+        const { pathname, query } = splitPathAndQuery(requestPath);
+        return pathname.replace(/^\/api\/properties\/([^/]+)$/, "/functions/v1/property-detail/$1") + query;
+      },
       anonKey,
     ),
-    "^/api/properties$": createSupabaseFunctionProxy(
+    [routePattern("^/api/properties$")]: createSupabaseFunctionProxy(
       projectUrl,
-      () => "/functions/v1/properties-search",
+      (requestPath) => {
+        const { query } = splitPathAndQuery(requestPath);
+        return `/functions/v1/properties-search${query}`;
+      },
       anonKey,
     ),
-    "^/api/leads$": createSupabaseFunctionProxy(
+    [routePattern("^/api/leads$")]: createSupabaseFunctionProxy(
       projectUrl,
       () => "/functions/v1/leads-create",
       anonKey,
     ),
-    "^/api/google-reviews$": createSupabaseFunctionProxy(
+    [routePattern("^/api/google-reviews$")]: createSupabaseFunctionProxy(
       projectUrl,
       () => "/functions/v1/google-reviews",
       anonKey,
     ),
-    "^/api/chatbot-assistant$": createSupabaseFunctionProxy(
+    [routePattern("^/api/chatbot-assistant$")]: createSupabaseFunctionProxy(
       projectUrl,
       () => "/functions/v1/chatbot-assistant",
       anonKey,
     ),
-    "^/api/chatbot-assistant-stream$": createSupabaseFunctionProxy(
+    [routePattern("^/api/chatbot-assistant-stream$")]: createSupabaseFunctionProxy(
       projectUrl,
       () => "/functions/v1/chatbot-assistant-stream",
       anonKey,
     ),
-    "^/api/chatbot-feedback$": createSupabaseFunctionProxy(
+    [routePattern("^/api/chatbot-feedback$")]: createSupabaseFunctionProxy(
       projectUrl,
       () => "/functions/v1/chatbot-feedback",
       anonKey,
     ),
-    "^/api/chatbot-memory/reset$": createSupabaseFunctionProxy(
+    [routePattern("^/api/chatbot-memory/reset$")]: createSupabaseFunctionProxy(
       projectUrl,
       () => "/functions/v1/chatbot-memory-reset",
       anonKey,
