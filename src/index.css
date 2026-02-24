@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Sora:wght@300;400;500;600;700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -85,15 +87,6 @@
     line-height: 1.55;
     background-image: radial-gradient(circle at 16% 12%, hsl(44 50% 96%), transparent 40%),
       radial-gradient(circle at 86% 0%, hsl(145 30% 92%), transparent 46%);
-  }
-
-  a[href*="lovable"],
-  iframe[src*="lovable"],
-  [data-lovable],
-  [id*="lovable"],
-  [class*="lovable"] {
-    display: none !important;
-    visibility: hidden !important;
   }
 
   h1,

@@ -78,13 +78,7 @@ function Counter({ label, value, icon: Icon }: { label: string; value: number; i
 }
 
 export function MarketCounters() {
-  const query = useQuery({
-    queryKey: ["market-counters"],
-    queryFn: getMarketCountersSnapshot,
-    staleTime: 1000 * 60 * 30,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-  });
+  const query = useQuery({ queryKey: ["market-counters"], queryFn: getMarketCountersSnapshot });
 
   if (query.isLoading || !query.data) {
     return (
