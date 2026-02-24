@@ -1,4 +1,5 @@
 import { cityById, cityBySlug } from "@/features/cities/data/cities";
+import { agents } from "@/features/listings/data/agents";
 import { properties, propertyById, propertyBySlug } from "@/features/listings/data/properties";
 import { normalizeKeyword } from "@/features/listings/utils/formatting";
 import { apiJson, isEdgeApiEnabled } from "@/lib/api/client";
@@ -8,6 +9,134 @@ import type { Property } from "@/types/domain";
 const DEFAULT_PAGE = 1;
 const DEFAULT_PAGE_SIZE = 12;
 const apiDelay = (ms = 120) => new Promise((resolve) => setTimeout(resolve, ms));
+
+type EdgePropertyDetailRow = {
+  id: number;
+  title: string;
+  slug: string;
+  transaction_type: Property["transactionType"];
+  property_type: Property["propertyType"];
+  status: Property["status"];
+  price_amount: number;
+  price_currency: Property["priceCurrency"];
+  surface_m2: number | null;
+  terrain_m2: number | null;
+  rooms: number | null;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  parking_count: number | null;
+  garage_count: number | null;
+  dpe_label: Property["dpeLabel"];
+  dpe_value: number | null;
+  ges_label: Property["gesLabel"];
+  ges_value: number | null;
+  description: string | null;
+  city_id: string | null;
+  postal_code: string | null;
+  lat: number | null;
+  lng: number | null;
+  agent_id: string | null;
+  published_at: string | null;
+  updated_at: string;
+  city?: {
+    id?: string | null;
+    name?: string | null;
+    slug?: string | null;
+  } | null;
+  agent?: {
+    id?: string | null;
+    full_name?: string | null;
+    email?: string | null;
+    phone?: string | null;
+  } | null;
+  images?: Array<{
+    id?: string | null;
+    property_id?: number | null;
+    source_url?: string | null;
+    sort_order?: number | null;
+    alt_text?: string | null;
+  }> | null;
+  features?: Array<{
+    property_id?: number | null;
+    feature_key?: string | null;
+    label_fr?: string | null;
+  }> | null;
+};
+
+function normalizeAgentLookupKey(value: string | null | undefined): string {
+  return (value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+const localAgentIdByName = new Map(
+  agents.map((agent) => [normalizeAgentLookupKey(agent.fullName), agent.id] as const),
+);
+
+function mapEdgePropertyDetailToDomain(row: EdgePropertyDetailRow): Property {
+  const citySlug = row.city?.slug ?? null;
+  const localCity = citySlug ? cityBySlug.get(citySlug) : undefined;
+  const cityId = localCity?.id ?? row.city_id ?? "city-le-havre";
+
+  const localAgentId =
+    localAgentIdByName.get(normalizeAgentLookupKey(row.agent?.full_name)) ??
+    (row.agent_id ?? undefined) ??
+    "agent-jeanne-morel";
+
+  const images = (row.images ?? [])
+    .filter((image) => typeof image?.source_url === "string" && image.source_url.trim().length > 0)
+    .sort((left, right) => (left.sort_order ?? 0) - (right.sort_order ?? 0))
+    .map((image, index) => ({
+      id: image.id ?? `${row.id}-${index + 1}`,
+      propertyId: row.id,
+      sourceUrl: image.source_url!.trim(),
+      sortOrder: image.sort_order ?? index,
+      altText: image.alt_text ?? `${row.title} - photo ${index + 1}`,
+    }));
+
+  const features = (row.features ?? [])
+    .filter((feature) => typeof feature?.feature_key === "string" && typeof feature?.label_fr === "string")
+    .map((feature) => ({
+      propertyId: row.id,
+      featureKey: feature.feature_key!.trim(),
+      labelFr: feature.label_fr!.trim(),
+    }));
+
+  return {
+    id: row.id,
+    title: row.title,
+    slug: row.slug,
+    transactionType: row.transaction_type,
+    propertyType: row.property_type,
+    status: row.status,
+    priceAmount: row.price_amount,
+    priceCurrency: row.price_currency ?? "EUR",
+    surfaceM2: row.surface_m2 ?? 0,
+    terrainM2: row.terrain_m2 ?? null,
+    rooms: row.rooms ?? null,
+    bedrooms: row.bedrooms ?? null,
+    bathrooms: row.bathrooms ?? null,
+    parkingCount: row.parking_count ?? null,
+    garageCount: row.garage_count ?? null,
+    dpeLabel: row.dpe_label ?? null,
+    dpeValue: row.dpe_value ?? null,
+    gesLabel: row.ges_label ?? null,
+    gesValue: row.ges_value ?? null,
+    description: row.description ?? "",
+    cityId,
+    postalCode: row.postal_code ?? "",
+    lat: row.lat ?? null,
+    lng: row.lng ?? null,
+    agentId: localAgentId,
+    publishedAt: row.published_at ?? row.updated_at,
+    updatedAt: row.updated_at,
+    isFeatured: false,
+    images,
+    features,
+  };
+}
 
 export interface MarketCountersSnapshot {
   soldCount: number;
@@ -201,7 +330,8 @@ export async function searchProperties(params: PropertySearchParams): Promise<Pr
 export async function getPropertyById(id: number): Promise<Property | null> {
   if (isEdgeApiEnabled()) {
     try {
-      return await apiJson<Property>(`/api/properties/${id}`);
+      const payload = await apiJson<EdgePropertyDetailRow>(`/api/properties/${id}`);
+      return mapEdgePropertyDetailToDomain(payload);
     } catch {
       return null;
     }
