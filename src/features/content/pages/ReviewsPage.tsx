@@ -361,25 +361,58 @@ export default function ReviewsPage() {
             </section>
           </section>
 
-          <section className="mt-8">
-            <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-              <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Retours clients</p>
-                <div className="mt-1 inline-flex items-center gap-2">
-                  <GoogleGIcon size={18} decorative />
-                  <h2 className="font-display text-3xl">Luxury Card Grid</h2>
+          <section className="mt-8 rounded-3xl border border-border bg-card/60 p-4 shadow-card sm:p-5">
+            <div className="rounded-2xl border border-border/80 bg-background/70 p-4 sm:p-5">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="max-w-2xl">
+                  <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Retours clients</p>
+                  <div className="mt-1 inline-flex items-center gap-2">
+                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-border bg-background/85">
+                      <GoogleGIcon size={15} decorative />
+                    </span>
+                    <h2 className="font-display text-2xl sm:text-3xl">Avis Google</h2>
+                  </div>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    Extraits récents et représentatifs liés à l'activité locale de l'agence au Havre.
+                  </p>
                 </div>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Extraits Google récents ou représentatifs liés à l'activité locale de l'agence.
-                </p>
+
+                <div className="flex flex-col items-stretch gap-2">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs text-muted-foreground">
+                    <Clock3 className="h-3.5 w-3.5" />
+                    Dernière collecte: {formatDateTime(payload.fetchedAt) ?? "indisponible"}
+                  </div>
+                  <div className="inline-flex items-center justify-center gap-2 rounded-full border border-brand-border bg-brand-soft/60 px-3 py-1.5 text-xs font-medium text-brand-strong">
+                    <GoogleGIcon size={12} decorative />
+                    {payload.reviews.length} avis affichés
+                  </div>
+                </div>
               </div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs text-muted-foreground">
-                <Clock3 className="h-3.5 w-3.5" />
-                Dernière collecte: {formatDateTime(payload.fetchedAt) ?? "indisponible"}
+
+              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                <div className="rounded-2xl border border-border bg-background/80 p-4">
+                  <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Note moyenne</p>
+                  <div className="mt-2 flex items-center gap-2">
+                    <p className="text-2xl font-semibold leading-none">{payload.rating.toFixed(1)}</p>
+                    <StarRating rating={payload.rating} />
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-border bg-background/80 p-4">
+                  <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Volume Google</p>
+                  <p className="mt-2 text-2xl font-semibold leading-none">{payload.userRatingCount}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Avis totaux sur la fiche agence</p>
+                </div>
+                <div className="rounded-2xl border border-border bg-background/80 p-4">
+                  <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Flux</p>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <ReviewsStatusBadge live={payload.live} />
+                    <ReviewsSourceBadge source={payload.source} />
+                  </div>
+                </div>
               </div>
             </div>
 
-            <section className="columns-1 [column-gap:1rem] md:columns-2 xl:columns-3">
+            <section className="mt-5 columns-1 [column-gap:1rem] md:columns-2 xl:columns-3">
               {payload.reviews.map((review, index) => {
                 const visual = getReviewCardVisualPreset(review.id, index);
                 const isExpandable = isExpandableReviewText(review.text);
