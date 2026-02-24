@@ -87,6 +87,15 @@
       radial-gradient(circle at 86% 0%, hsl(145 30% 92%), transparent 46%);
   }
 
+  a[href*="lovable"],
+  iframe[src*="lovable"],
+  [data-lovable],
+  [id*="lovable"],
+  [class*="lovable"] {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
   h1,
   h2,
   h3,
