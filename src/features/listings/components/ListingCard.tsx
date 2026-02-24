@@ -67,6 +67,7 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, classNam
                   imageMotionPreset.hoverClassName,
                 )}
                 loading="lazy"
+                decoding="async"
                 itemProp="image"
               />
             </ContextAwareParallax>
@@ -163,6 +164,7 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, classNam
               imageMotionPreset.hoverClassName,
             )}
             loading="lazy"
+            decoding="async"
             itemProp="image"
           />
         </ContextAwareParallax>

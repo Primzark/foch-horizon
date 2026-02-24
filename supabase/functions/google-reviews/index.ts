@@ -21,6 +21,10 @@ interface PlaceDetailsResponse {
   reviews?: GoogleReview[];
 }
 
+const reviewsCacheHeaders = {
+  "Cache-Control": "public, max-age=900, s-maxage=3600, stale-while-revalidate=86400",
+};
+
 async function resolvePlaceId(apiKey: string, textQuery: string): Promise<string | null> {
   const response = await fetch("https://places.googleapis.com/v1/places:searchText", {
     method: "POST",
@@ -73,7 +77,7 @@ Deno.serve(async (request) => {
   const defaultQuery = Deno.env.get("GOOGLE_PLACE_QUERY") ?? "Foch Immobilier Le Havre";
 
   if (!apiKey) {
-    return jsonResponse({ ok: false, error: "GOOGLE_PLACES_API_KEY is missing" }, 503);
+    return jsonResponse({ ok: false, error: "GOOGLE_PLACES_API_KEY is missing" }, 503, reviewsCacheHeaders);
   }
 
   try {
@@ -84,7 +88,7 @@ Deno.serve(async (request) => {
     }
 
     if (!placeId) {
-      return jsonResponse({ ok: false, error: "Unable to resolve Google place id" }, 404);
+      return jsonResponse({ ok: false, error: "Unable to resolve Google place id" }, 404, reviewsCacheHeaders);
     }
 
     const details = await fetchPlaceDetails(apiKey, placeId);
@@ -99,17 +103,21 @@ Deno.serve(async (request) => {
       relativePublishTimeDescription: review.relativePublishTimeDescription,
     }));
 
-    return jsonResponse({
-      source: "google_places",
-      live: true,
-      placeName: details.displayName?.text ?? defaultQuery,
-      rating: details.rating ?? 0,
-      userRatingCount: details.userRatingCount ?? reviews.length,
-      reviews,
-      fetchedAt: new Date().toISOString(),
-    });
+    return jsonResponse(
+      {
+        source: "google_places",
+        live: true,
+        placeName: details.displayName?.text ?? defaultQuery,
+        rating: details.rating ?? 0,
+        userRatingCount: details.userRatingCount ?? reviews.length,
+        reviews,
+        fetchedAt: new Date().toISOString(),
+      },
+      200,
+      reviewsCacheHeaders,
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unexpected error";
-    return jsonResponse({ ok: false, error: message }, 500);
+    return jsonResponse({ ok: false, error: message }, 500, reviewsCacheHeaders);
   }
 });

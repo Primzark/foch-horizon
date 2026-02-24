@@ -117,5 +117,66 @@ export default defineConfig(({ mode }) => {
         "@": path.resolve(__dirname, "./src"),
       },
     },
+    build: {
+      modulePreload: {
+        resolveDependencies(_filename, deps, context) {
+          if (context.hostType !== "html") {
+            return deps;
+          }
+
+          const deferredChunkNames = ["site-chatbot-", "search-drawer-", "listing-data-"];
+          return deps.filter((dependency) => !deferredChunkNames.some((token) => dependency.includes(token)));
+        },
+      },
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            const normalizedId = id.replace(/\\/g, "/");
+
+            if (normalizedId.includes("/src/features/content/components/SiteChatbot")) {
+              return "site-chatbot";
+            }
+
+            if (normalizedId.includes("/src/features/listings/components/SearchDrawer")) {
+              return "search-drawer";
+            }
+
+            if (normalizedId.includes("/src/features/listings/data/properties")) {
+              return "listing-data";
+            }
+
+            if (!normalizedId.includes("/node_modules/")) {
+              return undefined;
+            }
+
+            if (
+              normalizedId.includes("/react-router-dom/") ||
+              normalizedId.includes("/react-dom/") ||
+              normalizedId.includes("/react/")
+            ) {
+              return "react-core";
+            }
+
+            if (normalizedId.includes("/framer-motion/")) {
+              return "motion";
+            }
+
+            if (normalizedId.includes("/@tanstack/react-query/")) {
+              return "react-query";
+            }
+
+            if (normalizedId.includes("/@radix-ui/") || normalizedId.includes("/vaul/")) {
+              return "radix";
+            }
+
+            if (normalizedId.includes("/lucide-react/")) {
+              return "icons";
+            }
+
+            return "vendor";
+          },
+        },
+      },
+    },
   };
 });

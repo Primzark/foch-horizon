@@ -1,11 +1,10 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { Suspense, lazy, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Building2, Compass, Handshake, Search } from "lucide-react";
 import { GoogleGIcon } from "@/components/branding/GoogleGIcon";
 import { Button } from "@/components/ui/button";
-import { getFeaturedProperties } from "@/features/listings/api/properties.service";
 import { ListingCard } from "@/features/listings/components/ListingCard";
 import { agents } from "@/features/listings/data/agents";
 import { toSearchItem } from "@/features/listings/utils/mappers";
@@ -19,6 +18,13 @@ import { ScrollReveal } from "@/components/visuals/ScrollReveal";
 import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
 import { getMotionDirectorProfile } from "@/lib/visuals/motionDirector";
 import { heroScenicImages } from "@/features/content/data/heroScenicImages";
+import { useIsMobile } from "@/hooks/use-mobile";
+import type { Property } from "@/types/domain";
+
+const MarketCounters = lazy(async () => {
+  const module = await import("@/features/content/components/MarketCounters");
+  return { default: module.MarketCounters };
+});
 
 const serviceCards = [
   {
@@ -46,6 +52,7 @@ const HERO_KEN_BURNS_DURATION_S = HERO_ROTATE_MS / 1000 + 0.45;
 const HERO_CROSS_FADE_DURATION_S = 1.35;
 const HERO_PRELOAD_PRIORITY_COUNT = 3;
 const HERO_FALLBACK_IMAGE_URL = "/images/le-havre-history/panorama-le-havre.jpg";
+const HERO_FALLBACK_MOBILE_IMAGE_URL = "/images/le-havre-history/panorama-le-havre-mobile.jpg";
 const HERO_EXCLUDED_IMAGE_PATTERN = /panorama-le-havre|foch\.staticlbi\.com\/original\/images\/header\/1\.jpg/i;
 const HERO_SLIDE_BLEED_CLASS = "absolute -inset-[20vw] sm:-inset-14 md:-inset-10 z-[1]";
 const HERO_MIN_DWELL_BEFORE_OVERRIDE_MS = HERO_ROTATE_MS - 600;
@@ -178,7 +185,7 @@ function interleaveHeroSlides(propertyPool: HeroSlide[], scenicPool: HeroSlide[]
   return ordered;
 }
 
-function buildHeroSlides(properties: Awaited<ReturnType<typeof getFeaturedProperties>>, seed: number): HeroSlide[] {
+function buildHeroSlides(properties: Property[], seed: number): HeroSlide[] {
   const random = createSeededRng(seed ^ 0xa5a5a5a5);
   const orderedProperties = [...properties].sort((left, right) => left.id - right.id);
 
@@ -354,19 +361,37 @@ function preloadHeroImage(url: string, priority: "high" | "low" = "low"): Promis
 
 export default function HomePage() {
   const setSearchDrawerOpen = useUiStore((state) => state.setSearchDrawerOpen);
+  const isMobile = useIsMobile();
   const featuredQuery = useQuery({
     queryKey: ["featured-properties"],
-    queryFn: () => getFeaturedProperties(24),
+    queryFn: async () => {
+      const module = await import("@/features/listings/api/properties.service");
+      return module.getFeaturedProperties(24);
+    },
     staleTime: 1000 * 60 * 20,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
   });
-  const reviewsQuery = useQuery({ queryKey: ["agency-google-reviews-home"], queryFn: getAgencyReviews });
   const { reducedMotion } = useMotionPreference();
+  const [shouldLoadReviews, setShouldLoadReviews] = useState(false);
+  const reviewsSectionTriggerRef = useRef<HTMLDivElement | null>(null);
+  const dynamicHeroEnabled = !isMobile && !reducedMotion;
+  const reviewsQuery = useQuery({
+    queryKey: ["agency-google-reviews-home"],
+    queryFn: getAgencyReviews,
+    enabled: shouldLoadReviews,
+    staleTime: 1000 * 60 * 60 * 6,
+    gcTime: 1000 * 60 * 60 * 12,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
   const siteUrl = getSiteUrl();
   const [heroSeed] = useState(() => Math.floor(Math.random() * 0x7fffffff));
   const heroRng = useMemo(() => createSeededRng(heroSeed ^ 0x243f6a88), [heroSeed]);
-  const heroSlides = useMemo(() => buildHeroSlides(featuredQuery.data ?? [], heroSeed), [featuredQuery.data, heroSeed]);
+  const heroSlides = useMemo(
+    () => (dynamicHeroEnabled ? buildHeroSlides(featuredQuery.data ?? [], heroSeed) : []),
+    [dynamicHeroEnabled, featuredQuery.data, heroSeed],
+  );
   const heroImageUrls = useMemo(() => heroSlides.map((slide) => slide.imageUrl), [heroSlides]);
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
   const [heroMotionStep, setHeroMotionStep] = useState(0);
@@ -381,6 +406,41 @@ export default function HomePage() {
   const heroSlideStartAtRef = useRef<number>(Date.now());
   const activeHeroIdentityRef = useRef<string | null>(null);
   const heroTimerIdentityRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (shouldLoadReviews || typeof window === "undefined") {
+      return;
+    }
+
+    const activateReviews = () => setShouldLoadReviews(true);
+    let timeoutId: number | null = null;
+
+    const triggerNode = reviewsSectionTriggerRef.current;
+    const observer =
+      triggerNode && typeof IntersectionObserver !== "undefined"
+        ? new IntersectionObserver(
+            (entries) => {
+              if (entries.some((entry) => entry.isIntersecting)) {
+                activateReviews();
+              }
+            },
+            { rootMargin: "520px 0px" },
+          )
+        : null;
+
+    if (triggerNode && observer) {
+      observer.observe(triggerNode);
+    } else {
+      timeoutId = window.setTimeout(activateReviews, 4500);
+    }
+
+    return () => {
+      observer?.disconnect();
+      if (timeoutId != null) {
+        window.clearTimeout(timeoutId);
+      }
+    };
+  }, [shouldLoadReviews]);
 
   useEffect(() => {
     if (heroImageUrls.length === 0) {
@@ -659,7 +719,7 @@ export default function HomePage() {
     description:
       "Depuis 1972, Foch Immobilier accompagne vos projets de vente, location et gestion locative au Havre et sur le littoral.",
     canonicalPath: "/",
-    image: heroSlides[0]?.imageUrl,
+    image: heroSlides[0]?.imageUrl ?? HERO_FALLBACK_IMAGE_URL,
     jsonLd: [
       {
         "@context": "https://schema.org",
@@ -701,14 +761,20 @@ export default function HomePage() {
     <>
       <section className="relative min-h-[68vh] overflow-hidden">
         {shouldShowHeroFallback && (
-          <img
-            src={HERO_FALLBACK_IMAGE_URL}
-            alt="Panorama du Havre"
-            className="absolute inset-0 z-0 h-full w-full object-cover"
-            loading="eager"
-            decoding="async"
-            fetchPriority="high"
-          />
+          <picture>
+            <source media="(max-width: 767px)" srcSet={HERO_FALLBACK_MOBILE_IMAGE_URL} />
+            <img
+              src={HERO_FALLBACK_IMAGE_URL}
+              alt="Panorama du Havre"
+              className="absolute inset-0 z-0 h-full w-full object-cover"
+              loading="eager"
+              decoding="async"
+              fetchPriority="high"
+              width={1800}
+              height={984}
+              sizes="100vw"
+            />
+          </picture>
         )}
         <AnimatePresence initial={false} mode="sync">
           {heroSlides.length > 0 && isActiveHeroReady && (
@@ -750,6 +816,7 @@ export default function HomePage() {
                   loading="eager"
                   decoding="async"
                   fetchPriority="high"
+                  sizes="100vw"
                   onError={(event) => {
                     const image = event.currentTarget;
                     if (image.src !== new URL(HERO_FALLBACK_IMAGE_URL, window.location.href).href) {
@@ -813,7 +880,19 @@ export default function HomePage() {
 
       <section className="pt-8 pb-4 md:py-12">
         <ScrollReveal mood={heroMood}>
-          <MarketCounters />
+          <Suspense
+            fallback={
+              <section className="container mx-auto px-4" aria-label="Statistiques immobilier Le Havre">
+                <div className="grid gap-4 md:grid-cols-3">
+                  {Array.from({ length: 3 }).map((_, index) => (
+                    <div key={index} className="h-32 animate-pulse rounded-2xl bg-muted/55" />
+                  ))}
+                </div>
+              </section>
+            }
+          >
+            <MarketCounters />
+          </Suspense>
         </ScrollReveal>
       </section>
 
@@ -893,6 +972,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      <div ref={reviewsSectionTriggerRef} className="h-px w-full" aria-hidden="true" />
       {reviewsQuery.data && (
         <section className="container mx-auto px-4 py-16">
           <ScrollReveal mood={heroMood}>
@@ -947,6 +1027,8 @@ export default function HomePage() {
                   src={agent.portraitUrl}
                   alt={agent.fullName}
                   className="h-16 w-16 rounded-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  loading="lazy"
+                  decoding="async"
                 />
                 <h3 className="mt-3 font-display text-xl">{agent.fullName}</h3>
                 <p className="text-sm text-muted-foreground">{agent.role}</p>

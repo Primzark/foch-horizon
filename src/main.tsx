@@ -2,40 +2,42 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 
-function removeLovableBadge(): void {
-  const selectors = [
-    'a[href*="lovable"]',
-    'iframe[src*="lovable"]',
-    "[data-lovable]",
-    '[id*="lovable"]',
-    '[class*="lovable"]',
-  ];
+const LOVABLE_BADGE_SELECTORS = [
+  'a[href*="lovable"]',
+  'iframe[src*="lovable"]',
+  "[data-lovable]",
+  '[id*="lovable"]',
+  '[class*="lovable"]',
+] as const;
+const LOVABLE_BADGE_TEXT = "edit with lovable";
 
-  for (const selector of selectors) {
-    document.querySelectorAll(selector).forEach((node) => node.remove());
+function removeLovableElement(node: Element): void {
+  (
+    node.closest(
+      'a[href*="lovable"],iframe[src*="lovable"],[data-lovable],[id*="lovable"],[class*="lovable"],a,button,div,span',
+    ) ?? node
+  ).remove();
+}
+
+function maybeRemoveLovableTextBadge(node: Element): void {
+  if (!/^(A|BUTTON|DIV|SPAN)$/.test(node.tagName)) {
+    return;
   }
 
-  document.querySelectorAll<HTMLElement>("a,button,div,span").forEach((node) => {
-    const text = node.textContent?.toLowerCase();
-    if (!text?.includes("edit with lovable")) {
-      return;
-    }
+  const text = node.textContent?.toLowerCase();
+  if (!text?.includes(LOVABLE_BADGE_TEXT)) {
+    return;
+  }
 
-    const computedStyle = window.getComputedStyle(node);
-    if (computedStyle.position !== "fixed") {
-      return;
-    }
+  removeLovableElement(node);
+}
 
-    const left = Number.parseFloat(computedStyle.left);
-    const bottom = Number.parseFloat(computedStyle.bottom);
-    if (!Number.isFinite(left) || !Number.isFinite(bottom)) {
-      return;
-    }
+function scanLovableBadgeInRoot(root: ParentNode): void {
+  for (const selector of LOVABLE_BADGE_SELECTORS) {
+    root.querySelectorAll(selector).forEach(removeLovableElement);
+  }
 
-    if (left <= 48 && bottom <= 48) {
-      (node.closest("a,button,div") ?? node).remove();
-    }
-  });
+  root.querySelectorAll("a,button,div,span").forEach(maybeRemoveLovableTextBadge);
 }
 
 function startLovableBadgeCleanup(): void {
@@ -47,14 +49,52 @@ function startLovableBadgeCleanup(): void {
     return;
   }
 
-  removeLovableBadge();
+  scanLovableBadgeInRoot(document);
 
-  const observer = new MutationObserver(() => {
-    removeLovableBadge();
+  let rafId: number | null = null;
+  const queuedRoots = new Set<Element>();
+
+  const flushQueuedScans = () => {
+    rafId = null;
+    queuedRoots.forEach((root) => scanLovableBadgeInRoot(root));
+    queuedRoots.clear();
+  };
+
+  const observer = new MutationObserver((records) => {
+    for (const record of records) {
+      record.addedNodes.forEach((node) => {
+        if (!(node instanceof Element)) {
+          return;
+        }
+
+        for (const selector of LOVABLE_BADGE_SELECTORS) {
+          if (node.matches(selector)) {
+            removeLovableElement(node);
+            return;
+          }
+        }
+
+        maybeRemoveLovableTextBadge(node);
+
+        if (node.childElementCount > 0) {
+          queuedRoots.add(node);
+        }
+      });
+    }
+
+    if (queuedRoots.size === 0 || rafId != null) {
+      return;
+    }
+
+    rafId = window.requestAnimationFrame(flushQueuedScans);
   });
 
   observer.observe(document.documentElement, { childList: true, subtree: true });
   window.addEventListener("beforeunload", () => {
+    if (rafId != null) {
+      window.cancelAnimationFrame(rafId);
+      rafId = null;
+    }
     observer.disconnect();
   });
 }

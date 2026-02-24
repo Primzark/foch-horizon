@@ -115,7 +115,7 @@ function normalizeDirectPlaceResponse(payload: GooglePlaceDetailsResponse): Agen
 
 async function fetchDirectGoogleReviews(apiKey: string, placeId: string): Promise<AgencyReviewsResponse> {
   const response = await fetch(`https://places.googleapis.com/v1/places/${placeId}?languageCode=fr&regionCode=FR`, {
-    cache: "no-store",
+    cache: "default",
     headers: {
       "X-Goog-Api-Key": apiKey,
       "X-Goog-FieldMask": "displayName,rating,userRatingCount,reviews",
@@ -145,7 +145,7 @@ async function fetchSupabaseGoogleReviews(): Promise<AgencyReviewsResponse> {
   }
 
   const response = await fetch(`${supabaseProjectUrl}/functions/v1/google-reviews`, {
-    cache: "no-store",
+    cache: "default",
     headers,
   });
 
@@ -167,7 +167,7 @@ export async function getAgencyReviews(): Promise<AgencyReviewsResponse> {
 
   if (isEdgeApiEnabled()) {
     try {
-      const payload = await apiJson<AgencyReviewsResponse>("/api/google-reviews");
+      const payload = await apiJson<AgencyReviewsResponse>("/api/google-reviews", { cache: "default" });
       return {
         ...payload,
         source: "edge",
