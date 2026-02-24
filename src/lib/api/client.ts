@@ -1,13 +1,40 @@
 export type ApiMode = "mock" | "edge";
 
 const rawMode = (import.meta.env.VITE_API_MODE as string | undefined)?.toLowerCase();
-const normalizedBaseUrl = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "") ?? "";
+const configuredBaseUrl = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "") ?? "";
+
+function isLocalHostname(hostname: string): boolean {
+  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
+}
+
+function shouldUseSameOriginProxy(configuredUrl: string): boolean {
+  if (!configuredUrl) {
+    return true;
+  }
+
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  try {
+    const baseUrl = new URL(configuredUrl, window.location.origin);
+    const pageUrl = new URL(window.location.href);
+
+    const pageIsTunnel = pageUrl.hostname.endsWith(".trycloudflare.com");
+    const baseIsLocal = isLocalHostname(baseUrl.hostname);
+    const mixedContentLocal = pageUrl.protocol === "https:" && baseUrl.protocol === "http:" && baseIsLocal;
+
+    return pageIsTunnel && baseIsLocal || mixedContentLocal;
+  } catch {
+    return false;
+  }
+}
 
 export const apiMode: ApiMode = rawMode === "edge" ? "edge" : "mock";
-export const apiBaseUrl = normalizedBaseUrl;
+export const apiBaseUrl = shouldUseSameOriginProxy(configuredBaseUrl) ? "" : configuredBaseUrl;
 
 export function isEdgeApiEnabled(): boolean {
-  return apiMode === "edge" && apiBaseUrl.length > 0;
+  return apiMode === "edge";
 }
 
 export async function apiJson<T>(path: string, init?: RequestInit): Promise<T> {
