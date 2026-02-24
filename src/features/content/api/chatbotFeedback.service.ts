@@ -1,4 +1,4 @@
-import { buildEdgeApiHeaders, isDirectSupabaseFunctionUrl, isEdgeApiEnabled, resolveApiUrl } from "@/lib/api/client";
+import { apiBaseUrl, isEdgeApiEnabled } from "@/lib/api/client";
 
 export type ChatbotTelemetryEventType =
   | "reply_received"
@@ -130,7 +130,7 @@ function normalizeTelemetryEvent(event: ChatbotTelemetryEvent): ChatbotTelemetry
 
 function endpointUrl(): string {
   const path = "/api/chatbot-feedback";
-  return isEdgeApiEnabled() ? resolveApiUrl(path) : path;
+  return isEdgeApiEnabled() && apiBaseUrl ? `${apiBaseUrl}${path}` : path;
 }
 
 function clearScheduledFlush(): void {
@@ -142,13 +142,11 @@ function clearScheduledFlush(): void {
 
 async function postBatch(payload: ChatbotTelemetryBatchRequest): Promise<void> {
   if (payload.events.length === 0) return;
-  const url = endpointUrl();
-  const headers = new Headers({
-    "Content-Type": "application/json",
-  });
-  await fetch(url, {
+  await fetch(endpointUrl(), {
     method: "POST",
-    headers: isDirectSupabaseFunctionUrl(url) ? buildEdgeApiHeaders(headers) : headers,
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify(payload),
     keepalive: true,
   });
@@ -159,14 +157,9 @@ function trySendBeacon(events: ChatbotTelemetryEvent[]): boolean {
     return false;
   }
   try {
-    const url = endpointUrl();
-    if (isDirectSupabaseFunctionUrl(url)) {
-      // sendBeacon cannot attach the Supabase anon-key headers required by direct function calls.
-      return false;
-    }
     const body = JSON.stringify({ events });
     const blob = new Blob([body], { type: "application/json" });
-    return navigator.sendBeacon(url, blob);
+    return navigator.sendBeacon(endpointUrl(), blob);
   } catch {
     return false;
   }

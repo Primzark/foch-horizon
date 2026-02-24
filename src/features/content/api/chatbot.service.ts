@@ -3,7 +3,7 @@ import { leHavreDistrictHistory, leHavreFaq } from "@/features/content/data/leHa
 import { agencyReviewsFallbackSnapshot, getAgencyReviews } from "@/features/content/api/googleReviews.service";
 import { properties } from "@/features/listings/data/properties";
 import { formatPrice, normalizeKeyword, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
-import { apiJson, buildEdgeApiHeaders, isDirectSupabaseFunctionUrl, isEdgeApiEnabled, resolveApiUrl } from "@/lib/api/client";
+import { apiBaseUrl, apiJson, isEdgeApiEnabled } from "@/lib/api/client";
 
 export interface ChatbotPropertySuggestion {
   id: number;
@@ -2505,7 +2505,7 @@ export async function resetAgencyChatbotMemory(sessionId: string, signal?: Abort
 
 function streamEndpointUrl(): string {
   const path = "/api/chatbot-assistant-stream";
-  return isEdgeApiEnabled() ? resolveApiUrl(path) : path;
+  return isEdgeApiEnabled() && apiBaseUrl ? `${apiBaseUrl}${path}` : path;
 }
 
 async function parseSseResponseStream(
@@ -2649,17 +2649,12 @@ export async function askAgencyChatbotStream(
   }
 
   const { signal, ...requestPayload } = request;
-  const endpoint = streamEndpointUrl();
-  const response = await fetch(endpoint, {
+  const response = await fetch(streamEndpointUrl(), {
     method: "POST",
     signal,
-    headers: (() => {
-      const headers = new Headers({ "Content-Type": "application/json" });
-      if (isDirectSupabaseFunctionUrl(endpoint)) {
-        return buildEdgeApiHeaders(headers);
-      }
-      return headers;
-    })(),
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify(requestPayload),
   });
 
