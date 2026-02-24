@@ -184,6 +184,20 @@ const chatbotFeedbackReasonOptions = [
   "Trop lent",
 ] as const;
 
+function isEdgeChatStreamingEligible(actionRequest?: ChatbotActionRequest): boolean {
+  if (!actionRequest) return true;
+
+  // The SSE endpoint emits the complete normalized reply in `done`, so streaming
+  // remains compatible with tool replies that include actions/citations.
+  return (
+    actionRequest.type === "search_refine" ||
+    actionRequest.type === "compare_selected_properties" ||
+    actionRequest.type === "open_path_confirmed" ||
+    actionRequest.type === "prepare_handoff" ||
+    actionRequest.type === "prefill_lead_form"
+  );
+}
+
 function createMessageId(): string {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
     return crypto.randomUUID();
