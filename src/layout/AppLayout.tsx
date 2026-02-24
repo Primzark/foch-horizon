@@ -5,6 +5,7 @@ import { AppFooter } from "@/layout/AppFooter";
 import { AppHeader } from "@/layout/AppHeader";
 import { SearchDrawer } from "@/features/listings/components/SearchDrawer";
 import { RouteLoadingScreen } from "@/components/ui/RouteLoadingScreen";
+import { BackToTopButton } from "@/components/ui/BackToTopButton";
 import { SiteChatbot } from "@/features/content/components/SiteChatbot";
 
 export function AppLayout({ children }: { children: ReactNode }) {
@@ -31,6 +32,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
       <main>{children}</main>
       <AppFooter />
       <SearchDrawer />
+      <BackToTopButton />
       <SiteChatbot />
     </div>
   );
