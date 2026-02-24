@@ -67,24 +67,34 @@ interface OpeningGreetingVariant {
 }
 
 function GeminiLogo({ className }: { className?: string }) {
+  const logoPath =
+    "M64 4C67.9 24.6 73.4 34.1 81.7 42.3C89.9 50.6 99.4 56.1 120 60C99.4 63.9 89.9 69.4 81.7 77.7C73.4 85.9 67.9 95.4 64 116C60.1 95.4 54.6 85.9 46.3 77.7C38.1 69.4 28.6 63.9 8 60C28.6 56.1 38.1 50.6 46.3 42.3C54.6 34.1 60.1 24.6 64 4Z";
+
   return (
     <svg
-      viewBox="0 0 24 24"
+      viewBox="0 0 128 128"
       aria-hidden="true"
       focusable="false"
       className={cn("h-3.5 w-3.5", className)}
     >
       <defs>
-        <linearGradient id="gemini-chatbot-logo-gradient" x1="4" y1="20" x2="20" y2="4" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="#1A73E8" />
-          <stop offset="0.48" stopColor="#8E63FF" />
-          <stop offset="1" stopColor="#34A853" />
-        </linearGradient>
+        <clipPath id="gemini-chatbot-logo-clip">
+          <path d={logoPath} />
+        </clipPath>
+        <filter id="gemini-chatbot-logo-blur" x="-25%" y="-25%" width="150%" height="150%">
+          <feGaussianBlur stdDeviation="7" />
+        </filter>
       </defs>
-      <path
-        fill="url(#gemini-chatbot-logo-gradient)"
-        d="M12 2.5c.39 3.7 1.2 5.41 2.3 6.57 1.16 1.1 2.87 1.91 6.57 2.3-3.7.39-5.41 1.2-6.57 2.3-1.1 1.16-1.91 2.87-2.3 6.57-.39-3.7-1.2-5.41-2.3-6.57-1.16-1.1-2.87-1.91-6.57-2.3 3.7-.39 5.41-1.2 6.57-2.3 1.1-1.16 1.91-2.87 2.3-6.57Z"
-      />
+      <g clipPath="url(#gemini-chatbot-logo-clip)">
+        <g filter="url(#gemini-chatbot-logo-blur)">
+          <circle cx="64" cy="8" r="54" fill="#ff3b44" />
+          <circle cx="8" cy="64" r="56" fill="#ffc400" />
+          <circle cx="120" cy="64" r="58" fill="#3385ff" />
+          <circle cx="64" cy="120" r="56" fill="#00c853" />
+          <circle cx="64" cy="64" r="38" fill="#3a86ff" opacity="0.75" />
+        </g>
+      </g>
+      <path d={logoPath} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
     </svg>
   );
 }
