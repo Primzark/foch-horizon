@@ -8,6 +8,16 @@ interface FavoritesState {
   isFavorite: (id: number) => boolean;
 }
 
+function sanitizeFavoriteIds(value: unknown): number[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map((item) => (typeof item === "number" ? item : Number(item)))
+    .filter((item) => Number.isInteger(item) && item > 0);
+}
+
 export const useFavoritesStore = create<FavoritesState>()(
   persist(
     (set, get) => ({
@@ -21,6 +31,11 @@ export const useFavoritesStore = create<FavoritesState>()(
     }),
     {
       name: "foch_favorites",
+      partialize: (state) => ({ ids: state.ids }),
+      merge: (persistedState, currentState) => ({
+        ...currentState,
+        ids: sanitizeFavoriteIds((persistedState as { ids?: unknown } | undefined)?.ids),
+      }),
     },
   ),
 );
