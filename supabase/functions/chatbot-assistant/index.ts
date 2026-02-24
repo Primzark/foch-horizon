@@ -91,6 +91,15 @@ interface GeminiGenerateContentResponse {
     content?: {
       parts?: Array<{ text?: string }>;
     };
+    groundingMetadata?: {
+      webSearchQueries?: Array<string | { searchQuery?: string }>;
+      groundingChunks?: Array<{
+        web?: {
+          uri?: string;
+          title?: string;
+        };
+      }>;
+    };
   }>;
 }
 
@@ -437,10 +446,23 @@ interface SanitizedRAGMatchRow {
 }
 
 interface RAGCitation {
+  kind?: "site" | "web";
   path: string;
   title?: string;
   sourceUrl?: string;
   similarity?: number;
+}
+
+interface GeminiGroundingExtractionResult {
+  used: boolean;
+  citations: RAGCitation[];
+  queries: string[];
+}
+
+interface AssistantGenerationResult {
+  provider: AIProvider;
+  answer: string;
+  webSearch?: GeminiGroundingExtractionResult;
 }
 
 interface PageContextMeta {
@@ -1512,17 +1534,187 @@ function buildGeminiContents(
   ];
 }
 
+function sanitizeHttpUrl(raw: unknown): string | null {
+  if (typeof raw !== "string") return null;
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  try {
+    const url = new URL(trimmed);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
+function shouldUseGeminiWebSearchGrounding(question: string, ragContext: RAGContextResult): boolean {
+  if (!parseBooleanEnv("CHATBOT_WEB_SEARCH_ENABLED", false)) return false;
+  const minChars = clamp(Math.floor(parseNumberEnv("CHATBOT_WEB_SEARCH_MIN_QUESTION_CHARS", 8)), 1, 200);
+  const trimmedQuestion = question.trim();
+  if (trimmedQuestion.length < minChars) return false;
+
+  if (extractRequestedRoute(trimmedQuestion)) return false;
+
+  const normalizedQuestion = normalizeText(trimmedQuestion);
+  if (
+    toolPropertyIntentPattern.test(normalizedQuestion) ||
+    toolCompareIntentPattern.test(normalizedQuestion) ||
+    toolHandoffIntentPattern.test(normalizedQuestion)
+  ) {
+    return false;
+  }
+
+  const ragWeak =
+    !ragContext.contextBlock ||
+    ragContext.retrievalMode === "none" ||
+    ragContext.citations.length === 0 ||
+    ragContext.contextBlock.length < 1200;
+
+  if (!ragContext.contextBlock || ragContext.retrievalMode === "none") {
+    return true;
+  }
+
+  const explicitWebSearchPattern =
+    /\b(search|recherche|chercher|google|web|internet|online|en ligne)\b|\b(a jour|a journee|up to date|current info|info actuelle|actualisee?)\b/;
+  if (explicitWebSearchPattern.test(normalizedQuestion)) {
+    return true;
+  }
+
+  const currentnessPattern =
+    /\b(today|todays|now|current|latest|recent|news|update|updated|actualite|actu|aujourd hui|maintenant|actuel|actuelle|actuelles|tendance|tendances|meteo|weather|taux|rate|prix|price|bourse|crypto|bitcoin|btc|eur|usd)\b/;
+  if (ragWeak && currentnessPattern.test(normalizedQuestion)) {
+    return true;
+  }
+
+  return false;
+}
+
+function extractGeminiGroundingMetadata(payload: unknown): GeminiGroundingExtractionResult {
+  const maxCitations = clamp(Math.floor(parseNumberEnv("CHATBOT_WEB_SEARCH_MAX_CITATIONS", 4)), 1, 8);
+  const queries: string[] = [];
+  const citations: RAGCitation[] = [];
+  const seenUrls = new Set<string>();
+  let sawGroundingMetadata = false;
+
+  const candidates = (payload as GeminiGenerateContentResponse | null)?.candidates;
+  if (!Array.isArray(candidates)) {
+    return { used: false, citations: [], queries: [] };
+  }
+
+  for (const candidate of candidates) {
+    const groundingMetadata = candidate?.groundingMetadata;
+    if (!groundingMetadata || typeof groundingMetadata !== "object") continue;
+    sawGroundingMetadata = true;
+
+    if (Array.isArray(groundingMetadata.webSearchQueries)) {
+      for (const entry of groundingMetadata.webSearchQueries) {
+        const query =
+          typeof entry === "string"
+            ? entry.trim()
+            : typeof entry?.searchQuery === "string"
+              ? entry.searchQuery.trim()
+              : "";
+        if (!query || queries.includes(query)) continue;
+        queries.push(query.slice(0, 240));
+        if (queries.length >= 3) break;
+      }
+    }
+
+    if (Array.isArray(groundingMetadata.groundingChunks)) {
+      for (const chunk of groundingMetadata.groundingChunks) {
+        const url = sanitizeHttpUrl(chunk?.web?.uri);
+        if (!url || seenUrls.has(url)) continue;
+        seenUrls.add(url);
+        const title = typeof chunk?.web?.title === "string" ? chunk.web.title.trim().slice(0, 240) : undefined;
+        citations.push({
+          kind: "web",
+          path: url,
+          sourceUrl: url,
+          title: title || undefined,
+        });
+        if (citations.length >= maxCitations) break;
+      }
+    }
+  }
+
+  return {
+    used: sawGroundingMetadata || citations.length > 0,
+    citations,
+    queries,
+  };
+}
+
+function mergeChatbotResponseCitations(siteCitations: RAGCitation[], webCitations: RAGCitation[] = []): RAGCitation[] {
+  const merged: RAGCitation[] = [];
+  const seen = new Set<string>();
+
+  for (const citation of siteCitations) {
+    if (merged.length >= 3) break;
+    const path = typeof citation.path === "string" ? citation.path.trim() : "";
+    if (!path || !path.startsWith("/")) continue;
+    const key = `site:${path}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    merged.push({
+      kind: "site",
+      path,
+      title: citation.title,
+      sourceUrl: citation.sourceUrl,
+      similarity: citation.similarity,
+    });
+  }
+
+  for (const citation of webCitations) {
+    if (merged.length >= 6) break;
+    const url = sanitizeHttpUrl(citation.sourceUrl ?? citation.path);
+    if (!url) continue;
+    const key = `web:${url}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    merged.push({
+      kind: "web",
+      path: url,
+      sourceUrl: url,
+      title: typeof citation.title === "string" ? citation.title.trim().slice(0, 240) : undefined,
+    });
+  }
+
+  return merged;
+}
+
 async function generateAssistantAnswer(
   question: string,
   normalizedHistory: Array<{ role: "user" | "assistant"; content: string }>,
   ragContext: RAGContextResult,
-): Promise<{ provider: AIProvider; answer: string } | null> {
+): Promise<AssistantGenerationResult | null> {
   const providerConfig = resolveGenerationProvider();
   if (!providerConfig) return null;
 
   if (providerConfig.provider === "gemini") {
     const model = Deno.env.get("GEMINI_MODEL") ?? "gemini-2.5-flash-lite";
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+    const useWebSearchGrounding = shouldUseGeminiWebSearchGrounding(question, ragContext);
+
+    const requestBody: Record<string, unknown> = {
+      systemInstruction: {
+        parts: [
+          {
+            text: [
+              systemPrompt,
+              ragContext.contextBlock ? `\n\n${ragContext.contextBlock}` : "",
+            ].join(""),
+          },
+        ],
+      },
+      contents: buildGeminiContents(question, normalizedHistory),
+      generationConfig: {
+        temperature: 0.2,
+        maxOutputTokens: 420,
+      },
+    };
+    if (useWebSearchGrounding) {
+      requestBody.tools = [{ google_search: {} }];
+    }
 
     const response = await fetch(endpoint, {
       method: "POST",
@@ -1530,23 +1722,7 @@ async function generateAssistantAnswer(
         "Content-Type": "application/json",
         "x-goog-api-key": providerConfig.apiKey,
       },
-      body: JSON.stringify({
-        systemInstruction: {
-          parts: [
-            {
-              text: [
-                systemPrompt,
-                ragContext.contextBlock ? `\n\n${ragContext.contextBlock}` : "",
-              ].join(""),
-            },
-          ],
-        },
-        contents: buildGeminiContents(question, normalizedHistory),
-        generationConfig: {
-          temperature: 0.2,
-          maxOutputTokens: 420,
-        },
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {
@@ -1554,9 +1730,11 @@ async function generateAssistantAnswer(
     }
 
     const data = await response.json();
+    const webSearch = useWebSearchGrounding ? extractGeminiGroundingMetadata(data) : undefined;
     return {
       provider: "gemini",
       answer: extractGeminiOutputText(data),
+      webSearch,
     };
   }
 
@@ -2272,6 +2450,8 @@ function buildSuggestedPromptsFromCitations(citations: RAGCitation[]): string[] 
 
   for (const citation of citations) {
     if (prompts.length >= 3) break;
+    if (citation.kind === "web") continue;
+    if (!citation.path.startsWith("/")) continue;
     const prompt = `Ouvrir ${citation.path}`;
     if (seen.has(prompt)) continue;
     seen.add(prompt);
@@ -4404,6 +4584,7 @@ Deno.serve(async (request) => {
       });
     }
     const citationPrompts = buildSuggestedPromptsFromCitations(ragContext.citations);
+    const mergedCitations = mergeChatbotResponseCitations(ragContext.citations, generationResult.webSearch?.citations ?? []);
 
     const ragConversationPatch: Partial<ToolConversationState> | undefined = undefined;
     const memoryMeta = await persistStructuredMemory({
@@ -4430,11 +4611,14 @@ Deno.serve(async (request) => {
               "Je souhaite une estimation de mon bien",
               "Je ne trouve pas de bien, je veux laisser mon email",
             ],
-      citations: ragContext.citations,
+      citations: mergedCitations,
       ragUsed: Boolean(ragContext.contextBlock),
       retrievalMode: ragContext.retrievalMode,
       agentMode: "rag",
       requestId,
+      webSearchUsed: generationResult.webSearch?.used || undefined,
+      webSearchProvider: generationResult.webSearch?.used ? "gemini_google_search" : undefined,
+      webSearchQueries: generationResult.webSearch?.queries.length ? generationResult.webSearch.queries : undefined,
       pageContextUsed: ragContext.pageContextMeta?.used,
       pageContextMode: ragContext.pageContextMeta?.fetchMode,
       pageContextCacheHit: ragContext.pageContextMeta?.cacheHit,

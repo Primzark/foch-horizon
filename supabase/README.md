@@ -71,6 +71,18 @@ npm run chatbot:index:site
 - `CHATBOT_RAG_MATCH_THRESHOLD=0.70`
 - `CHATBOT_RAG_MAX_CONTEXT_CHARS=5200`
 
+### Gemini web search grounding (edge fallback / RAG assist)
+
+- `CHATBOT_WEB_SEARCH_ENABLED=false` (default off; Gemini-only Google Search grounding for external/current questions in non-tool edge flows)
+- `CHATBOT_WEB_SEARCH_MAX_CITATIONS=4` (max grounded web citations extracted from Gemini metadata)
+- `CHATBOT_WEB_SEARCH_MIN_QUESTION_CHARS=8` (skip grounding for very short prompts)
+
+Notes:
+
+- This is Gemini-only (`tools: [{ google_search: {} }]`) and is ignored when OpenAI is the active generation provider.
+- It is only used on the non-tool fallback/RAG generation path (not planner tool execution).
+- Keep disabled first in production, enable in staging, then monitor latency/cost before rollout.
+
 ### Frontend chatbot routing flags
 
 - `VITE_CHATBOT_ENABLE_EDGE_RAG=true` to route site-content questions to the edge chatbot

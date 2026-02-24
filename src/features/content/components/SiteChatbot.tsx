@@ -334,14 +334,32 @@ function sanitizeCitations(raw: unknown): ChatbotCitation[] | undefined {
       const candidate = value as Partial<ChatbotCitation>;
       return typeof candidate.path === "string";
     })
-    .map((citation) => ({
-      path: citation.path.trim(),
-      title: typeof citation.title === "string" ? citation.title.trim() : undefined,
-      sourceUrl: typeof citation.sourceUrl === "string" ? citation.sourceUrl.trim() : undefined,
-      similarity: typeof citation.similarity === "number" ? citation.similarity : undefined,
-    }))
-    .filter((citation) => citation.path.length > 0)
-    .slice(0, 4);
+    .map((citation) => {
+      const path = citation.path.trim();
+      const inferredKind =
+        citation.kind === "site" || citation.kind === "web"
+          ? citation.kind
+          : path.startsWith("/")
+            ? "site"
+            : /^https?:\/\//i.test(path)
+              ? "web"
+              : null;
+      if (!inferredKind) return null;
+      if (inferredKind === "site" && !path.startsWith("/")) return null;
+      if (inferredKind === "web" && !/^https?:\/\//i.test(path)) return null;
+
+      const sourceUrl = typeof citation.sourceUrl === "string" ? citation.sourceUrl.trim() : undefined;
+      const safeWebSourceUrl = sourceUrl && /^https?:\/\//i.test(sourceUrl) ? sourceUrl : undefined;
+      return {
+        kind: inferredKind,
+        path,
+        title: typeof citation.title === "string" ? citation.title.trim() : undefined,
+        sourceUrl: inferredKind === "web" ? safeWebSourceUrl || path : sourceUrl,
+        similarity: typeof citation.similarity === "number" ? citation.similarity : undefined,
+      } satisfies ChatbotCitation;
+    })
+    .filter((citation): citation is ChatbotCitation => Boolean(citation))
+    .slice(0, 6);
 
   return citations.length > 0 ? citations : undefined;
 }
@@ -1747,9 +1765,14 @@ export function SiteChatbot() {
   );
 
   const handleCitationClick = useCallback(
-    (event: MouseEvent<HTMLAnchorElement>, message: ChatMessage, path: string) => {
+    (event: MouseEvent<HTMLAnchorElement>, message: ChatMessage, citation: ChatbotCitation) => {
+      const citationType = citation.kind === "web" ? "web" : "site";
+      const citationTarget =
+        citationType === "web" ? (citation.sourceUrl?.trim() || citation.path.trim()) : citation.path.trim();
       trackEvent("chatbot_citation_clicked", {
-        citationPath: path,
+        citationPath: citation.path,
+        citationType,
+        citationTarget,
         source: message.source,
         edgeProvider: message.edgeProvider,
         routeCategory: message.routeCategory,
@@ -1764,11 +1787,46 @@ export function SiteChatbot() {
         ragUsed: message.ragUsed,
         retrievalMode: message.retrievalMode,
         citationsCount: message.citations?.length ?? 0,
-        citationPath: path,
+        citationPath: citation.path,
+        metadata: {
+          citationType,
+          citationTarget,
+        },
       });
-      handleInternalPathClick(event, path);
+      handleInternalPathClick(event, citation.path);
     },
     [emitChatbotTelemetry, handleInternalPathClick],
+  );
+
+  const handleExternalCitationClick = useCallback(
+    (message: ChatMessage, citation: ChatbotCitation) => {
+      const citationTarget = citation.sourceUrl?.trim() || citation.path.trim();
+      trackEvent("chatbot_citation_clicked", {
+        citationPath: citation.path,
+        citationType: "web",
+        citationTarget,
+        source: message.source,
+        edgeProvider: message.edgeProvider,
+        routeCategory: message.routeCategory,
+      });
+      emitChatbotTelemetry("citation_clicked", {
+        messageId: message.id,
+        requestId: message.requestId,
+        source: message.source ?? "local",
+        edgeProvider: message.edgeProvider,
+        routeDecision: message.routeDecision,
+        routeCategory: message.routeCategory,
+        ragUsed: message.ragUsed,
+        retrievalMode: message.retrievalMode,
+        citationsCount: message.citations?.length ?? 0,
+        citationPath: citation.path,
+        metadata: {
+          citationType: "web",
+          citationTarget,
+        },
+      });
+    },
+    [emitChatbotTelemetry],
   );
 
   const handleAnalysisEvidenceClick = useCallback(
@@ -2432,22 +2490,56 @@ export function SiteChatbot() {
                   {message.citations && message.citations.length > 0 && message.role === "assistant" && (
                     <div className="mt-3 space-y-1 rounded-lg border border-border/70 bg-background/60 px-2.5 py-2">
                       <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
-                        Sources du site
+                        Sources
                       </p>
                       <div className="space-y-1">
-                        {message.citations.map((citation, index) => (
-                          <Link
-                            key={`${message.id}-citation-${citation.path}-${index}`}
-                            to={citation.path}
-                            onClick={(event) => handleCitationClick(event, message, citation.path)}
-                            className="block rounded-md px-1.5 py-1 text-xs text-foreground hover:bg-muted"
-                          >
-                            <span className="font-medium">{citation.title || citation.path}</span>
-                            {citation.title && (
-                              <span className="ml-1 text-muted-foreground">{citation.path}</span>
-                            )}
-                          </Link>
-                        ))}
+                        {message.citations.map((citation, index) => {
+                          const citationKind = citation.kind === "web" ? "web" : "site";
+                          const targetUrl = citationKind === "web" ? citation.sourceUrl || citation.path : citation.path;
+                          const badgeLabel = citationKind === "web" ? "Web" : "Site";
+
+                          if (citationKind === "web") {
+                            return (
+                              <a
+                                key={`${message.id}-citation-${citation.path}-${index}`}
+                                href={targetUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={() => handleExternalCitationClick(message, citation)}
+                                className="block rounded-md px-1.5 py-1 text-xs text-foreground hover:bg-muted"
+                              >
+                                <span className="inline-flex items-center gap-1.5">
+                                  <span className="font-medium">{citation.title || citation.path}</span>
+                                  <span className="rounded border border-border/70 px-1 py-0 text-[9px] uppercase tracking-[0.12em] text-muted-foreground">
+                                    {badgeLabel}
+                                  </span>
+                                </span>
+                                {citation.title && (
+                                  <span className="ml-1 break-all text-muted-foreground">{citation.path}</span>
+                                )}
+                              </a>
+                            );
+                          }
+
+                          return (
+                            <Link
+                              key={`${message.id}-citation-${citation.path}-${index}`}
+                              to={citation.path}
+                              onClick={(event) => handleCitationClick(event, message, citation)}
+                              className="block rounded-md px-1.5 py-1 text-xs text-foreground hover:bg-muted"
+                            >
+                              <span className="inline-flex items-center gap-1.5">
+                                <span className="font-medium">{citation.title || citation.path}</span>
+                                <span className="rounded border border-border/70 px-1 py-0 text-[9px] uppercase tracking-[0.12em] text-muted-foreground">
+                                  {badgeLabel}
+                                </span>
+                              </span>
+                              {citation.title && (
+                                <span className="ml-1 text-muted-foreground">{citation.path}</span>
+                              )}
+                            </Link>
+                          );
+                        })}
                       </div>
                     </div>
                   )}

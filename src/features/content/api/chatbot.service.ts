@@ -14,6 +14,7 @@ export interface ChatbotPropertySuggestion {
 }
 
 export interface ChatbotCitation {
+  kind?: "site" | "web";
   path: string;
   title?: string;
   sourceUrl?: string;
@@ -261,6 +262,9 @@ export interface ChatbotReply {
     multimodalUsed?: boolean;
     estimatedClass?: "low" | "medium" | "high";
   };
+  webSearchUsed?: boolean;
+  webSearchProvider?: "gemini_google_search";
+  webSearchQueries?: string[];
   streamSupported?: boolean;
   source: "local" | "edge";
 }
@@ -1784,6 +1788,46 @@ function sanitizeToolSearchParams(raw: unknown): ToolSearchParams | undefined {
   return Object.keys(params).length > 0 ? params : undefined;
 }
 
+function sanitizeCitations(raw: unknown): ChatbotCitation[] | undefined {
+  if (!Array.isArray(raw)) return undefined;
+
+  const citations = raw
+    .filter((value): value is Record<string, unknown> => Boolean(value && typeof value === "object"))
+    .map((citation) => {
+      const path = typeof citation.path === "string" ? citation.path.trim() : "";
+      if (!path) return null;
+
+      const inferredKind =
+        citation.kind === "site" || citation.kind === "web"
+          ? citation.kind
+          : path.startsWith("/")
+            ? "site"
+            : /^https?:\/\//i.test(path)
+              ? "web"
+              : null;
+      if (!inferredKind) return null;
+
+      if (inferredKind === "site" && !path.startsWith("/")) return null;
+      if (inferredKind === "web" && !/^https?:\/\//i.test(path)) return null;
+
+      const sourceUrlRaw = typeof citation.sourceUrl === "string" ? citation.sourceUrl.trim() : undefined;
+      return {
+        kind: inferredKind,
+        path,
+        title: typeof citation.title === "string" && citation.title.trim().length > 0 ? citation.title.trim().slice(0, 240) : undefined,
+        sourceUrl:
+          inferredKind === "web"
+            ? ((sourceUrlRaw && /^https?:\/\//i.test(sourceUrlRaw)) ? sourceUrlRaw : path)
+            : (sourceUrlRaw && sourceUrlRaw.length > 0 ? sourceUrlRaw : undefined),
+        similarity: typeof citation.similarity === "number" && Number.isFinite(citation.similarity) ? citation.similarity : undefined,
+      } satisfies ChatbotCitation;
+    })
+    .filter((citation): citation is ChatbotCitation => Boolean(citation))
+    .slice(0, 6);
+
+  return citations.length > 0 ? citations : undefined;
+}
+
 function sanitizeConversationStatePatch(raw: unknown): Partial<ChatbotConversationState> | undefined {
   if (!raw || typeof raw !== "object") return undefined;
   const candidate = raw as Record<string, unknown>;
@@ -2285,6 +2329,7 @@ function sanitizeActions(raw: unknown): ChatbotUiAction[] | undefined {
 function normalizeReplyOutput(reply: ChatbotReply): ChatbotReply {
   const answer = typeof reply.answer === "string" && reply.answer.trim().length > 0 ? reply.answer.trim() : buildFallbackReply().answer;
   const prompts = normalizePromptList(reply.suggestedPrompts ?? []);
+  const citations = sanitizeCitations(reply.citations);
   const edgeProvider =
     reply.edgeProvider === "gemini" || reply.edgeProvider === "openai" || reply.edgeProvider === "fallback"
       ? reply.edgeProvider
@@ -2318,11 +2363,20 @@ function normalizeReplyOutput(reply: ChatbotReply): ChatbotReply {
   const pageContextUsed = typeof reply.pageContextUsed === "boolean" ? reply.pageContextUsed : undefined;
   const pageContextMode = reply.pageContextMode === "http" || reply.pageContextMode === "headless" ? reply.pageContextMode : undefined;
   const pageContextCacheHit = typeof reply.pageContextCacheHit === "boolean" ? reply.pageContextCacheHit : undefined;
+  const webSearchUsed = typeof reply.webSearchUsed === "boolean" ? reply.webSearchUsed : undefined;
+  const webSearchProvider = reply.webSearchProvider === "gemini_google_search" ? reply.webSearchProvider : undefined;
+  const webSearchQueries = Array.isArray(reply.webSearchQueries)
+    ? reply.webSearchQueries
+        .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+        .map((value) => value.trim().slice(0, 240))
+        .slice(0, 3)
+    : undefined;
 
   return {
     ...reply,
     answer,
     suggestedPrompts: prompts.length > 0 ? prompts : normalizePromptList(chatbotExamplePrompts),
+    citations,
     edgeProvider,
     retrievalMode,
     routeCategory,
@@ -2339,6 +2393,9 @@ function normalizeReplyOutput(reply: ChatbotReply): ChatbotReply {
     pageContextMode,
     pageContextCacheHit,
     costHints,
+    webSearchUsed,
+    webSearchProvider,
+    webSearchQueries,
     streamSupported,
   };
 }
