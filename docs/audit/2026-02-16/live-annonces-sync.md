@@ -1,23 +1,26 @@
 # Live annonces sync report
 
-Generated: 2026-02-16T17:46:15.287Z
+Generated: 2026-02-24T08:22:05.962Z
 Source: https://www.fochimmobilier.com/biens-immobiliers
 
 ## Counts
-- Listing ids discovered: 45
-- Properties generated: 45
+- Listing ids discovered: 48
+- Properties generated: 48
 
 ## Cities
-- city-le-havre: 34
+- city-le-havre: 37
 - city-sainte-adresse: 6
 - city-montivilliers: 3
 - city-gainneville: 1
 - city-maneglise: 1
 
 ## IDs
+- 5159
+- 5158
 - 5157
 - 5155
 - 5153
+- 5152
 - 5150
 - 5149
 - 5147
