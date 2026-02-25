@@ -1,4 +1,4 @@
-import { apiBaseUrl, isEdgeApiEnabled } from "@/lib/api/client";
+import { apiBaseUrl, buildEdgeApiHeaders, isEdgeApiAuthHeadersEnabled, isEdgeApiEnabled } from "@/lib/api/client";
 
 export type ChatbotTelemetryEventType =
   | "reply_received"
@@ -144,15 +144,16 @@ async function postBatch(payload: ChatbotTelemetryBatchRequest): Promise<void> {
   if (payload.events.length === 0) return;
   await fetch(endpointUrl(), {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: buildEdgeApiHeaders(undefined, { json: true }),
     body: JSON.stringify(payload),
     keepalive: true,
   });
 }
 
 function trySendBeacon(events: ChatbotTelemetryEvent[]): boolean {
+  if (isEdgeApiAuthHeadersEnabled()) {
+    return false;
+  }
   if (typeof navigator === "undefined" || typeof navigator.sendBeacon !== "function" || events.length === 0) {
     return false;
   }

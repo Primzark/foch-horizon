@@ -1,10 +1,11 @@
 import { MapPin, Clock, Phone, Mail } from "lucide-react";
 import { LeadForm } from "@/features/leads/components/LeadForm";
-import { getSiteUrl, useSeo } from "@/lib/seo/useSeo";
+import { getConfiguredPublicSiteUrl, getSiteUrl, useSeo } from "@/lib/seo/useSeo";
 import { trackEvent } from "@/lib/analytics/events";
 
 export default function ContactPageV2() {
   const siteUrl = getSiteUrl();
+  const configuredSiteUrl = getConfiguredPublicSiteUrl();
 
   useSeo({
     title: "Contact | Foch Immobilier",
@@ -40,7 +41,7 @@ export default function ContactPageV2() {
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         <section className="rounded-2xl border border-border bg-card p-6 h-card" itemScope itemType="https://schema.org/RealEstateAgent">
           <meta itemProp="name" content="Foch Immobilier" />
-          <meta itemProp="url" content="https://fochimmobilier.lovable.app" />
+          {configuredSiteUrl ? <meta itemProp="url" content={configuredSiteUrl} /> : null}
           <h2 className="font-display text-2xl">Coordonnées de l'agence</h2>
           <ul className="mt-4 space-y-4 text-sm text-muted-foreground">
             <li className="flex items-start gap-2 p-adr h-adr" itemProp="address" itemScope itemType="https://schema.org/PostalAddress">

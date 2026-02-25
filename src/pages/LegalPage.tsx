@@ -80,7 +80,7 @@ const legalContent: Record<string, { title: string; content: React.ReactNode }> 
         <h3 className="font-display text-lg font-semibold text-foreground">Directeur de la publication</h3>
         <p>Marie Dupont</p>
         <h3 className="font-display text-lg font-semibold text-foreground">Hébergeur</h3>
-        <p>Lovable / Netlify — San Francisco, USA</p>
+        <p>Hébergement en cours de finalisation (déploiement Vercel). Informations définitives publiées avant mise en production.</p>
         <h3 className="font-display text-lg font-semibold text-foreground">Médiation</h3>
         <p>En cas de litige, vous pouvez saisir le médiateur de la consommation : Médiation Tourisme et Voyage — www.mtv.travel</p>
       </div>
