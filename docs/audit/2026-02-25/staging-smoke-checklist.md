@@ -37,39 +37,46 @@ Command family used:
 
 ## 3. Direct Supabase edge write checks (creates test leads)
 
-Status at last run: PARTIAL PASS (deployment drift detected)
+Status: PASS
 
 - Generic lead payload (`/leads-create`) -> PASS
-- City lead payload with slug `cityId` -> FAIL on currently deployed endpoint
+- City lead payload with slug `cityId` -> PASS (after `leads-create` redeploy)
 
-Interpretation:
+## 4. Vercel deployment validation (post-deploy)
 
-- Repo code supports slug-based `cityId` normalization in `supabase/functions/leads-create/index.ts`
-- Remote `leads-create` function needs redeploy before this passes
+Status: PARTIAL PASS (automated HTTP checks PASS, manual browser smoke still pending)
 
-## 4. Vercel preview validation (post-deploy) — PENDING
+Validated URL used for checks:
 
-Status: PENDING (no preview URL yet)
+- `https://foch-horizon.vercel.app`
+
+Deployment note:
+
+- `vercel` CLI aliased deployments to the project production alias (including a run with `--prod=false`), so Production env vars were mirrored from Preview and the site was redeployed before validation.
 
 ### Route serving (SPA)
 
-- `/` returns app shell
-- `/biens` returns app shell
-- `/contact` returns app shell
-- `/property/test-slug` returns app shell (legacy client redirect path tested in browser)
+- `/` -> PASS (200 HTML app shell)
+- `/biens` -> PASS (200 HTML app shell)
+- `/contact` -> PASS (200 HTML app shell)
+- `/property/test-slug` -> PASS (200 HTML app shell)
+- Canonical and `og:url` tags absent in shell HTML -> PASS (expected while `VITE_PUBLIC_SITE_URL` is unset)
 
-### `/api/*` rewrites (must return JSON, not HTML)
+### `/api/*` rewrites (JSON through Vercel + Supabase auth)
 
-- `GET /api/cities`
-- `GET /api/properties?page=1&pageSize=1`
-- `GET /api/properties/stats`
-- `POST /api/leads` invalid payload returns `400` validation error (not `401 Missing authorization header`)
+- `GET /api/cities` without auth headers -> `401` (`Missing authorization header`) [expected with current Supabase auth policy]
+- `GET /api/properties?page=1&pageSize=1` without auth headers -> `401` [expected]
+- `GET /api/properties/stats` without auth headers -> `401` [expected]
+- `GET /api/cities` with browser-style anon headers -> PASS (`200` JSON)
+- `GET /api/properties?page=1&pageSize=1` with browser-style anon headers -> PASS (`200` JSON)
+- `GET /api/properties/stats` with browser-style anon headers -> PASS (`200` JSON)
+- `POST /api/leads` invalid payload with auth headers -> PASS (`400` validation error, not `401`)
 
 ### Chatbot / telemetry (Phase 1-safe)
 
-- `POST /api/chatbot-assistant` works in edge mode (if enabled)
-- Streaming disabled by default unless specifically testing SSE on Vercel
-- Chatbot feedback telemetry does not break UX during unload/visibility changes
+- `POST /api/chatbot-assistant` invalid payload with auth headers -> PASS (`400` validation error, not `401`)
+- Streaming remains disabled by default (`VITE_CHATBOT_STREAMING_ENABLED=false`) -> configured
+- Chatbot feedback telemetry unload behavior -> PENDING manual browser check
 
 ## 5. Manual browser smoke (post-preview) — PENDING
 
@@ -85,10 +92,9 @@ Status: PENDING
 
 ## 6. Readiness summary
 
-Status: READY FOR VERCEL PREVIEW DEPLOY (with one known remote dependency)
+Status: READY FOR MANUAL BROWSER SMOKE ON VERCEL
 
-Remaining blockers before fully green preview validation:
+Remaining checks before fully green end-to-end signoff:
 
-1. Deploy updated Supabase `leads-create` function (and `properties-search` if not already deployed)
-2. Create Vercel preview deployment with required env vars
-3. Run the pending preview + manual browser checks above
+1. Run the pending manual browser smoke checks above (listings, city pages, legacy redirect, lead forms, chatbot UX)
+2. Optionally connect the GitHub repository in Vercel (CLI link succeeded, GitHub auto-connect failed)

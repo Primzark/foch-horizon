@@ -79,7 +79,18 @@ Phase 1 launch blockers in the repo were fixed and local quality gates are green
 
 - Direct Supabase read-only edge contract tests: pass
 - Direct Supabase write lead test (generic): pass
-- Direct Supabase write lead test (city slug): fails until remote `leads-create` is redeployed with the repo fix
+- Direct Supabase write lead test (city slug): pass (after redeploying `leads-create`)
+
+## Validation summary (Vercel deployment)
+
+- Vercel deployment created and aliased at `https://foch-horizon.vercel.app`
+- `vercel` CLI deployments aliased to the project production alias from this machine, so Production env vars were mirrored from Preview and the site was redeployed
+- SPA route shell checks: pass (`/`, `/biens`, `/contact`, `/property/test-slug`)
+- `VITE_PUBLIC_SITE_URL` remains unset; canonical and `og:url` are intentionally absent in shell HTML
+- `/api/*` rewrites require Supabase auth headers (anonymous headers); unauthenticated GET checks return `401`, authenticated GET checks return JSON `200`
+- `POST /api/leads` invalid payload with anon headers returns `400` (not `401`)
+- `POST /api/chatbot-assistant` invalid payload with anon headers returns `400` (auth path confirmed)
+- Manual browser smoke remains pending
 
 ## Deferred / not included in this pass
 
@@ -102,4 +113,5 @@ Recommended preview defaults until Vercel validation is complete:
 
 - Finalize legal "hébergeur" wording with definitive host/provider information
 - Set `VITE_PUBLIC_SITE_URL` before production launch so canonical/OG URLs are emitted
-- Re-run preview/manual smoke after Supabase `leads-create` redeploy
+- Complete manual browser smoke on `https://foch-horizon.vercel.app`
+- Optional: connect GitHub repository integration in Vercel (CLI project link already works)
