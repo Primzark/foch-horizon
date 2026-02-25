@@ -2548,6 +2548,63 @@ function uniqueNumberList(values: Array<number | null | undefined>, maxSize: num
   return result;
 }
 
+const toolSearchKeywordStopWords = new Set([
+  "avec",
+  "sans",
+  "dans",
+  "pour",
+  "sur",
+  "sous",
+  "chez",
+  "le",
+  "la",
+  "les",
+  "un",
+  "une",
+  "des",
+  "de",
+  "du",
+  "au",
+  "aux",
+  "et",
+  "ou",
+]);
+
+function sanitizeToolSearchKeywordFragment(value: string): string {
+  return value
+    .replace(/[%_(),]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 120);
+}
+
+function buildKeywordPhraseOrFilter(rawKeyword: string): string | null {
+  const keyword = sanitizeToolSearchKeywordFragment(rawKeyword);
+  if (!keyword) return null;
+  const pattern = `%${keyword}%`;
+  return `title.ilike.${pattern},description.ilike.${pattern}`;
+}
+
+function buildKeywordTokenOrFilter(rawKeyword: string): string | null {
+  const tokens = [...new Set(
+    tokenize(rawKeyword)
+      .filter((token) => token.length >= 3)
+      .filter((token) => !toolSearchKeywordStopWords.has(token)),
+  )]
+    .slice(0, 4)
+    .map((token) => sanitizeToolSearchKeywordFragment(token))
+    .filter((token) => token.length > 0);
+
+  if (tokens.length < 2) return null;
+
+  const clauses = tokens.flatMap((token) => {
+    const pattern = `%${token}%`;
+    return [`title.ilike.${pattern}`, `description.ilike.${pattern}`];
+  });
+
+  return clauses.length > 0 ? clauses.join(",") : null;
+}
+
 function detectTransaction(question: string): "vente" | "location" | undefined {
   const normalized = normalizeText(question);
   const hasLocation = /\blocation\b|\blouer\b|\bloyer\b|\ba louer\b/.test(normalized);
@@ -2721,6 +2778,9 @@ function buildCriteriaSummary(params: ToolSearchParams): string {
   if (typeof params.priceMin === "number") {
     parts.push(`budget min ${formatPriceValue(params.priceMin)}`);
   }
+  if (typeof params.q === "string" && params.q.trim().length > 0) {
+    parts.push(`mot-clé "${truncateText(params.q.trim(), 40)}"`);
+  }
 
   return parts.join(" · ");
 }
@@ -2796,31 +2856,52 @@ async function executeSearchPropertiesTool(
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
-  let query = supabase
-    .from("properties")
-    .select(
-      "id,title,slug,transaction_type,property_type,status,price_amount,price_currency,surface_m2,terrain_m2,bedrooms,bathrooms,garage_count,dpe_label,city:cities(name,slug),images:property_images(source_url,sort_order)",
-      { count: "exact" },
-    )
-    .neq("status", "off_market")
-    .order("published_at", { ascending: false })
-    .range(from, to);
+  const runQueryAttempt = async (keywordOrFilter: string | null) => {
+    let query = supabase
+      .from("properties")
+      .select(
+        "id,title,slug,transaction_type,property_type,status,price_amount,price_currency,surface_m2,terrain_m2,bedrooms,bathrooms,garage_count,dpe_label,city:cities(name,slug),images:property_images(source_url,sort_order)",
+        { count: "exact" },
+      )
+      .neq("status", "off_market")
+      .order("published_at", { ascending: false })
+      .range(from, to);
 
-  if (params.transaction) query = query.eq("transaction_type", params.transaction);
-  if (params.type) query = query.eq("property_type", params.type);
-  if (params.city) query = query.eq("city.slug", params.city);
-  if (typeof params.priceMin === "number") query = query.gte("price_amount", params.priceMin);
-  if (typeof params.priceMax === "number") query = query.lte("price_amount", params.priceMax);
-  if (typeof params.bedroomsMin === "number") query = query.gte("bedrooms", params.bedroomsMin);
-  if (params.q) query = query.ilike("title", `%${params.q.replace(/[%_]/g, "")}%`);
+    if (params.transaction) query = query.eq("transaction_type", params.transaction);
+    if (params.type) query = query.eq("property_type", params.type);
+    if (params.city) query = query.eq("city.slug", params.city);
+    if (typeof params.priceMin === "number") query = query.gte("price_amount", params.priceMin);
+    if (typeof params.priceMax === "number") query = query.lte("price_amount", params.priceMax);
+    if (typeof params.bedroomsMin === "number") query = query.gte("bedrooms", params.bedroomsMin);
+    if (keywordOrFilter) query = query.or(keywordOrFilter);
 
-  const { data, error, count } = await query;
-  if (error) throw error;
+    const { data, error, count } = await query;
+    if (error) throw error;
 
-  const rows = ((data as PropertySearchQueryRow[] | null) ?? []).filter((row) => row && typeof row.id === "number");
+    const rows = ((data as PropertySearchQueryRow[] | null) ?? []).filter((row) => row && typeof row.id === "number");
+    return { rows, total: count ?? rows.length };
+  };
+
+  const phraseFilter = typeof params.q === "string" ? buildKeywordPhraseOrFilter(params.q) : null;
+  const tokenFilter = typeof params.q === "string" ? buildKeywordTokenOrFilter(params.q) : null;
+  const attemptFilters = (phraseFilter || tokenFilter)
+    ? [phraseFilter, tokenFilter].filter((value, index, list): value is string =>
+        Boolean(value) && list.findIndex((candidate) => candidate === value) === index
+      )
+    : [null];
+
+  let finalRows: PropertySearchQueryRow[] = [];
+  let finalTotal = 0;
+  for (let i = 0; i < attemptFilters.length; i += 1) {
+    const attempt = await runQueryAttempt(attemptFilters[i] ?? null);
+    finalRows = attempt.rows;
+    finalTotal = attempt.total;
+    if (attempt.rows.length > 0) break;
+  }
+
   return {
-    items: rows.map(mapSearchRowToToolItem),
-    total: count ?? rows.length,
+    items: finalRows.map(mapSearchRowToToolItem),
+    total: finalTotal,
     searchParams: { ...params, page, pageSize },
   };
 }
