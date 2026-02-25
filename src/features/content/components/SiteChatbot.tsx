@@ -24,6 +24,7 @@ import {
 import { flushChatbotTelemetryQueue, queueChatbotTelemetryEvent } from "@/features/content/api/chatbotFeedback.service";
 import { submitLead } from "@/features/leads/api/leads.service";
 import { trackEvent } from "@/lib/analytics/events";
+import { useUiStore } from "@/lib/state/useUiStore";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -833,6 +834,7 @@ function readStoredMessages(): ChatMessage[] {
 export function SiteChatbot() {
   const location = useLocation();
   const navigate = useNavigate();
+  const searchDrawerOpen = useUiStore((state) => state.searchDrawerOpen);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [input, setInput] = useState("");
@@ -2369,7 +2371,7 @@ export function SiteChatbot() {
 
   return (
     <>
-      {open && (
+      {!searchDrawerOpen && open && (
         <button
           type="button"
           aria-label="Fermer le chatbot"
@@ -2378,6 +2380,7 @@ export function SiteChatbot() {
         />
       )}
 
+      {!searchDrawerOpen && (
       <div className="pointer-events-auto fixed z-[160] bottom-[max(0.75rem,env(safe-area-inset-bottom))] right-[max(0.75rem,env(safe-area-inset-right))] max-w-[calc(100vw-env(safe-area-inset-left)-env(safe-area-inset-right)-1.5rem)]">
       {open && (
         <motion.section
@@ -2763,6 +2766,7 @@ export function SiteChatbot() {
         <Sparkles className="ml-1 h-3.5 w-3.5" />
       </Button>
       </div>
+      )}
     </>
   );
 }
