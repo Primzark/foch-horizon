@@ -32,9 +32,15 @@ interface PropertyRow {
 type SortValue = "newest" | "price_asc" | "price_desc" | "surface_desc";
 
 function parsePositiveInt(value: string | null, fallback: number): number {
-  const parsed = Number(value ?? "");
+  if (value == null) return fallback;
+  const normalized = value.trim();
+  if (normalized.length === 0) return fallback;
+
+  const parsed = Number(normalized);
   if (!Number.isFinite(parsed)) return fallback;
-  return Math.max(1, Math.trunc(parsed));
+
+  const integer = Math.trunc(parsed);
+  return integer > 0 ? integer : fallback;
 }
 
 function parseNumberParam(value: string | null): number | null {
@@ -265,12 +271,15 @@ Deno.serve(async (request) => {
     const url = new URL(request.url);
     const params = url.searchParams;
 
-    const page = parsePositiveInt(params.get("page"), 1);
-    const pageSize = Math.min(100, parsePositiveInt(params.get("pageSize"), 24));
-    const from = Math.max(0, (page - 1) * pageSize);
-    const to = from + pageSize - 1;
     const sort = params.get("sort");
     const exactSlug = normalizeTerm(params.get("slug") ?? "");
+    const page = parsePositiveInt(params.get("page"), 1);
+    const requestedPageSize = parsePositiveInt(params.get("pageSize"), 24);
+    // Protect the public listings page from pathological/stale pageSize values (e.g. 1),
+    // while keeping exact slug lookups free to request a single item.
+    const pageSize = exactSlug ? Math.min(100, requestedPageSize) : Math.min(100, Math.max(12, requestedPageSize));
+    const from = Math.max(0, (page - 1) * pageSize);
+    const to = from + pageSize - 1;
     const features = params.getAll("features");
     const q = normalizeTerm(params.get("q") ?? "");
 
