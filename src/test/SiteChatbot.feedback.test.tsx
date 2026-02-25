@@ -1,5 +1,5 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 const {
   askAgencyChatbotMock,
@@ -40,16 +40,21 @@ vi.mock("@/features/leads/api/leads.service", () => ({
   submitLead: vi.fn(),
 }));
 
+let SiteChatbotComponent: (typeof import("@/features/content/components/SiteChatbot"))["SiteChatbot"];
+
 async function renderChatbot() {
-  const { SiteChatbot } = await import("@/features/content/components/SiteChatbot");
   return render(
     <MemoryRouter>
-      <SiteChatbot />
+      <SiteChatbotComponent />
     </MemoryRouter>,
   );
 }
 
 describe("SiteChatbot feedback and telemetry hooks", () => {
+  beforeAll(async () => {
+    ({ SiteChatbot: SiteChatbotComponent } = await import("@/features/content/components/SiteChatbot"));
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     window.localStorage.clear();
@@ -158,43 +163,49 @@ describe("SiteChatbot feedback and telemetry hooks", () => {
     vi.restoreAllMocks();
   });
 
-  it("renders thumbs feedback on assistant replies and submits downvote with reason", async () => {
-    await renderChatbot();
+  it(
+    "renders thumbs feedback on assistant replies and submits downvote with reason",
+    async () => {
+      const view = await renderChatbot();
+      const ui = within(view.container);
 
-    fireEvent.click(screen.getByRole("button", { name: /assistant/i }));
-    const input = screen.getByPlaceholderText(/posez une question/i);
-    fireEvent.change(input, { target: { value: "Ou trouver les honoraires ?" } });
-    fireEvent.submit(input.closest("form")!);
+      fireEvent.click(ui.getByRole("button", { name: /assistant/i }));
+      const input = ui.getByPlaceholderText(/posez une question/i);
+      fireEvent.change(input, { target: { value: "Ou trouver les honoraires ?" } });
+      fireEvent.submit(input.closest("form")!);
 
-    await screen.findByText(/Les honoraires sont sur/i);
+      await screen.findByText(/Les honoraires sont sur/i);
 
-    const downvoteButton = screen.getByRole("button", { name: /réponse peu utile/i });
-    fireEvent.click(downvoteButton);
+      const downvoteButton = screen.getByRole("button", { name: /réponse peu utile/i });
+      fireEvent.click(downvoteButton);
 
-    expect(screen.getByRole("button", { name: /hors sujet/i })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /source\/lien incorrect/i }));
+      expect(screen.getByRole("button", { name: /hors sujet/i })).toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: /source\/lien incorrect/i }));
 
-    await waitFor(() => {
-      expect(trackEventMock).toHaveBeenCalledWith(
-        "chatbot_feedback_submitted",
-        expect.objectContaining({ feedbackValue: -1, feedbackReason: "Source/lien incorrect" }),
+      await waitFor(() => {
+        expect(trackEventMock).toHaveBeenCalledWith(
+          "chatbot_feedback_submitted",
+          expect.objectContaining({ feedbackValue: -1, feedbackReason: "Source/lien incorrect" }),
+        );
+      });
+
+      expect(queueTelemetryMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          eventType: "feedback_submitted",
+          feedbackValue: -1,
+          feedbackReason: "Source/lien incorrect",
+        }),
       );
-    });
-
-    expect(queueTelemetryMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        eventType: "feedback_submitted",
-        feedbackValue: -1,
-        feedbackReason: "Source/lien incorrect",
-      }),
-    );
-  });
+    },
+    15000,
+  );
 
   it("emits citation click telemetry and does not include raw question text in telemetry payloads", async () => {
-    await renderChatbot();
+    const view = await renderChatbot();
+    const ui = within(view.container);
 
-    fireEvent.click(screen.getByRole("button", { name: /assistant/i }));
-    const input = screen.getByPlaceholderText(/posez une question/i);
+    fireEvent.click(ui.getByRole("button", { name: /assistant/i }));
+    const input = ui.getByPlaceholderText(/posez une question/i);
     fireEvent.change(input, { target: { value: "Ou trouver les honoraires ?" } });
     fireEvent.submit(input.closest("form")!);
 

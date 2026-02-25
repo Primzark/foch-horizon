@@ -21,7 +21,7 @@ This folder contains Phase 1 backend scaffolding:
 - RLS policies include service-role management and public read limitations.
 
 ## Deployment notes
-- Bind each function to your routing layer in Lovable/Supabase edge deploy config.
+- Bind each function to your hosting routing layer (for example Vercel rewrites) or call Supabase Edge Functions directly.
 - Configure secrets: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
 - Chatbot RAG edge function expects either `GEMINI_API_KEY` or `OPENAI_API_KEY` (Gemini is now the preferred provider).
 - Chatbot telemetry ingest (`chatbot-feedback`) requires `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`.

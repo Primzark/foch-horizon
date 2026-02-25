@@ -3,6 +3,8 @@ import type { PropertyType, TransactionType } from "@/types/domain";
 
 const TRANSACTION_VALUES: TransactionType[] = ["vente", "location"];
 const TYPE_VALUES: PropertyType[] = ["appartement", "maison_villa", "autre"];
+const ALLOWED_PAGE_SIZES = new Set([12, 24, 48]);
+const DEFAULT_LISTINGS_PAGE_SIZE = 12;
 
 function toNumber(value: string | null): number | undefined {
   if (!value) {
@@ -11,6 +13,19 @@ function toNumber(value: string | null): number | undefined {
 
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function toPositiveInteger(value: string | null): number | undefined {
+  const parsed = toNumber(value);
+  if (parsed == null) return undefined;
+  const integer = Math.trunc(parsed);
+  return integer > 0 ? integer : undefined;
+}
+
+function toListingsPageSize(value: string | null): number | undefined {
+  const parsed = toPositiveInteger(value);
+  if (parsed == null) return undefined;
+  return ALLOWED_PAGE_SIZES.has(parsed) ? parsed : undefined;
 }
 
 function toEnum<T extends string>(value: string | null, options: readonly T[]): T | undefined {
@@ -37,8 +52,8 @@ export function parseSearchParams(searchParams: URLSearchParams): PropertySearch
     surfaceMin: toNumber(searchParams.get("surfaceMin")),
     terrainMin: toNumber(searchParams.get("terrainMin")),
     features: features.length > 0 ? features : undefined,
-    page: toNumber(searchParams.get("page")),
-    pageSize: toNumber(searchParams.get("pageSize")),
+    page: toPositiveInteger(searchParams.get("page")),
+    pageSize: toListingsPageSize(searchParams.get("pageSize")),
     sort: (searchParams.get("sort") as PropertySearchParams["sort"]) ?? undefined,
   };
 }
@@ -60,8 +75,14 @@ export function buildSearchParams(params: PropertySearchParams): URLSearchParams
   if (params.features) {
     params.features.forEach((feature) => searchParams.append("features", feature));
   }
-  if (params.page != null) searchParams.set("page", String(params.page));
-  if (params.pageSize != null) searchParams.set("pageSize", String(params.pageSize));
+  if (params.page != null) searchParams.set("page", String(Math.max(1, Math.trunc(params.page))));
+  if (
+    params.pageSize != null &&
+    ALLOWED_PAGE_SIZES.has(Math.trunc(params.pageSize)) &&
+    Math.trunc(params.pageSize) !== DEFAULT_LISTINGS_PAGE_SIZE
+  ) {
+    searchParams.set("pageSize", String(Math.trunc(params.pageSize)));
+  }
   if (params.sort) searchParams.set("sort", params.sort);
 
   return searchParams;

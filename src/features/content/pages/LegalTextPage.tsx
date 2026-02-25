@@ -17,7 +17,9 @@ const legalContent: Record<LegalPageKey, { title: string; description: string; s
       },
       {
         heading: "Hébergement",
-        body: ["Application déployée sur infrastructure Lovable Cloud."],
+        body: [
+          "Hébergement en cours de finalisation (déploiement Vercel). Les informations définitives de l'hébergeur seront publiées avant la mise en production.",
+        ],
       },
     ],
   },

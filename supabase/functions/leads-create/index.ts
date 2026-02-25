@@ -5,7 +5,7 @@ import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 const payloadSchema = z.object({
   source: z.enum(["contact_page", "property_page", "estimation", "favorites_share"]),
   propertyId: z.number().int().positive().optional(),
-  cityId: z.string().uuid().optional(),
+  cityId: z.string().trim().min(1).max(120).optional(),
   firstName: z.string().min(1),
   lastName: z.string().min(1),
   email: z.string().email(),
@@ -47,6 +47,9 @@ const payloadSchema = z.object({
     .strict()
     .optional(),
 });
+
+const uuidPattern =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function getClientIp(request: Request): string | null {
   const forwardedFor = request.headers.get("x-forwarded-for");
@@ -160,6 +163,29 @@ Deno.serve(async (request) => {
     const supabase = createServiceClient();
     const rawPayload = await request.json();
     const payload = payloadSchema.parse(rawPayload);
+    let normalizedCityId: string | null = null;
+
+    if (payload.cityId) {
+      const cityIdCandidate = payload.cityId.trim();
+
+      if (uuidPattern.test(cityIdCandidate)) {
+        normalizedCityId = cityIdCandidate;
+      } else {
+        const citySlug = cityIdCandidate.toLowerCase();
+        const { data: cityBySlug, error: cityLookupError } = await supabase
+          .from("cities")
+          .select("id")
+          .eq("slug", citySlug)
+          .maybeSingle();
+
+        if (cityLookupError) throw cityLookupError;
+        if (!cityBySlug) {
+          return jsonResponse({ ok: false, error: `Unknown city slug: ${citySlug}` }, 400);
+        }
+
+        normalizedCityId = cityBySlug.id;
+      }
+    }
 
     let assignedAgentId: string | null = null;
 
@@ -168,7 +194,7 @@ Deno.serve(async (request) => {
       assignedAgentId = propertyData?.agent_id ?? null;
     }
 
-    if (!assignedAgentId && payload.cityId) {
+    if (!assignedAgentId && normalizedCityId) {
       const { data: cityAgentData } = await supabase.from("agents").select("id").eq("is_active", true).limit(1);
       assignedAgentId = cityAgentData?.[0]?.id ?? null;
     }
@@ -186,7 +212,7 @@ Deno.serve(async (request) => {
       .insert({
         source: payload.source,
         property_id: payload.propertyId ?? null,
-        city_id: payload.cityId ?? null,
+        city_id: normalizedCityId,
         first_name: payload.firstName,
         last_name: payload.lastName,
         email: payload.email,

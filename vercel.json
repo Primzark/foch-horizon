@@ -1,0 +1,57 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "source": "/api/cities/:slug/properties",
+      "destination": "https://rcrulfdobtmfxzpuyryn.supabase.co/functions/v1/city-properties/:slug"
+    },
+    {
+      "source": "/api/cities/:slug",
+      "destination": "https://rcrulfdobtmfxzpuyryn.supabase.co/functions/v1/city-detail/:slug"
+    },
+    {
+      "source": "/api/cities",
+      "destination": "https://rcrulfdobtmfxzpuyryn.supabase.co/functions/v1/cities-list"
+    },
+    {
+      "source": "/api/properties/stats",
+      "destination": "https://rcrulfdobtmfxzpuyryn.supabase.co/functions/v1/properties-stats"
+    },
+    {
+      "source": "/api/properties/:id",
+      "destination": "https://rcrulfdobtmfxzpuyryn.supabase.co/functions/v1/property-detail/:id"
+    },
+    {
+      "source": "/api/properties",
+      "destination": "https://rcrulfdobtmfxzpuyryn.supabase.co/functions/v1/properties-search"
+    },
+    {
+      "source": "/api/leads",
+      "destination": "https://rcrulfdobtmfxzpuyryn.supabase.co/functions/v1/leads-create"
+    },
+    {
+      "source": "/api/google-reviews",
+      "destination": "https://rcrulfdobtmfxzpuyryn.supabase.co/functions/v1/google-reviews"
+    },
+    {
+      "source": "/api/chatbot-assistant-stream",
+      "destination": "https://rcrulfdobtmfxzpuyryn.supabase.co/functions/v1/chatbot-assistant-stream"
+    },
+    {
+      "source": "/api/chatbot-assistant",
+      "destination": "https://rcrulfdobtmfxzpuyryn.supabase.co/functions/v1/chatbot-assistant"
+    },
+    {
+      "source": "/api/chatbot-feedback",
+      "destination": "https://rcrulfdobtmfxzpuyryn.supabase.co/functions/v1/chatbot-feedback"
+    },
+    {
+      "source": "/api/chatbot-memory/reset",
+      "destination": "https://rcrulfdobtmfxzpuyryn.supabase.co/functions/v1/chatbot-memory-reset"
+    },
+    {
+      "source": "/((?!api/|assets/|.*\\..*).*)",
+      "destination": "/index.html"
+    }
+  ]
+}

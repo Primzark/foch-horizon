@@ -508,7 +508,7 @@ async function mapWithConcurrency(items, concurrency, worker) {
 async function fetchHtml(url) {
   const response = await fetch(url, {
     headers: {
-      "User-Agent": "Foch-RAG-Indexer/1.0 (+https://fochimmobilier.lovable.app)",
+      "User-Agent": "Foch-RAG-Indexer/1.0",
     },
   });
 
@@ -541,7 +541,7 @@ async function createHtmlFetcher(args) {
   const { chromium } = playwrightModule;
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({
-    userAgent: "Foch-RAG-Indexer/1.0 (+https://fochimmobilier.lovable.app)",
+    userAgent: "Foch-RAG-Indexer/1.0",
   });
 
   return {
