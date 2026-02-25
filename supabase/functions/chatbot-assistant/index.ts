@@ -1120,7 +1120,7 @@ function extractReadableTextFromHtml(html: string, path: string): ExtractedPageT
     hints.push("too_short");
   }
   const lower = text.toLowerCase();
-  if (/edit with lovable|vite|react app|loading/.test(lower)) hints.push("spa_shell_marker");
+  if (/edit with ai|vite|react app|loading/.test(lower)) hints.push("spa_shell_marker");
   const repeatedBoilerplate =
     ["mentions légales", "confidentialité", "cookies", "contact", "accueil"].filter((token) => lower.includes(token)).length;
   if (repeatedBoilerplate >= 4 && text.length < 2000) hints.push("boilerplate_heavy");
@@ -2608,14 +2608,14 @@ function parsePriceHints(question: string): Pick<ToolSearchParams, "priceMin" | 
   }
 
   const maxMatch = compactQuestion.match(
-    /(budget|max(?:imum)?|moins de|jusqu(?:e|')?a)\s*[:\-]?\s*([0-9][0-9\s.,]{2,})/i,
+    /(budget|max(?:imum)?|moins de|jusqu(?:e|')?a)\s*[:-]?\s*([0-9][0-9\s.,]{2,})/i,
   );
   if (maxMatch) {
     const max = extract(maxMatch[2].replace(/[^\d]/g, ""));
     return { priceMax: Number.isFinite(max) ? max : undefined };
   }
 
-  const minMatch = compactQuestion.match(/(min(?:imum)?|au moins|a partir de|plus de)\s*[:\-]?\s*([0-9][0-9\s.,]{2,})/i);
+  const minMatch = compactQuestion.match(/(min(?:imum)?|au moins|a partir de|plus de)\s*[:-]?\s*([0-9][0-9\s.,]{2,})/i);
   if (minMatch) {
     const min = extract(minMatch[2].replace(/[^\d]/g, ""));
     return { priceMin: Number.isFinite(min) ? min : undefined };

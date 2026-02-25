@@ -468,6 +468,25 @@ export async function getPropertiesByCitySlug(citySlug: string): Promise<Propert
 }
 
 export async function resolveLegacySlugToProperty(slug: string): Promise<Property | null> {
+  if (isEdgeApiEnabled()) {
+    try {
+      const query = new URLSearchParams({
+        slug,
+        page: "1",
+        pageSize: "1",
+      });
+      const result = await apiJson<PropertySearchResponse>(`/api/properties?${query.toString()}`);
+      const item = result.items[0];
+      if (!item) {
+        return null;
+      }
+
+      return await getPropertyById(item.id);
+    } catch {
+      return null;
+    }
+  }
+
   await apiDelay();
   return propertyBySlug.get(slug) ?? null;
 }
