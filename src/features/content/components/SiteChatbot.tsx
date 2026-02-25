@@ -166,18 +166,7 @@ function ChatbotThinkingState({ onCancel }: { onCancel: () => void }) {
           </div>
 
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <span className="rounded-full border border-border/70 bg-muted/50 px-2 py-0.5 text-[9px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-                En cours
-              </span>
-              <motion.span
-                aria-hidden="true"
-                className="h-1.5 w-1.5 rounded-full bg-primary/80"
-                animate={{ opacity: [0.35, 1, 0.35], scale: [0.9, 1.1, 0.9] }}
-                transition={{ duration: 1.1, repeat: Infinity, ease: "easeInOut" }}
-              />
-            </div>
-            <p className="mt-1 font-medium text-foreground">Je cherche…</p>
+            <p className="font-medium text-foreground">je cherche</p>
           </div>
 
           <div aria-hidden="true" className="flex items-end gap-0.5">
