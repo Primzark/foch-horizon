@@ -12,7 +12,6 @@ function createSupabaseFunctionProxy(
     anonKey && anonKey.trim().length > 0
       ? {
           apikey: anonKey,
-          Authorization: `Bearer ${anonKey}`,
         }
       : undefined;
 
