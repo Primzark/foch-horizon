@@ -19,6 +19,7 @@ const LeHavreHistoryPage = lazy(() => import("@/features/content/pages/LeHavreHi
 const LegalTextPage = lazy(() => import("@/features/content/pages/LegalTextPage"));
 const SiteMapPage = lazy(() => import("@/features/content/pages/SiteMapPage"));
 const SelectionPage = lazy(() => import("@/features/favorites/pages/SelectionPage"));
+const AdminMarketCountersPage = lazy(() => import("@/features/admin/pages/AdminMarketCountersPage"));
 const NotFoundPage = lazy(() => import("@/features/content/pages/NotFoundPage"));
 
 function LayoutShell() {
@@ -34,6 +35,7 @@ export function AppRouter() {
     <BrowserRouter>
       <Suspense fallback={<RouteLoadingScreen fullscreen />}>
         <Routes>
+          <Route path="/admin" element={<AdminMarketCountersPage />} />
           <Route element={<LayoutShell />}>
             <Route path="/" element={<HomePage />} />
             <Route path="/biens" element={<ListingsIndexPage />} />

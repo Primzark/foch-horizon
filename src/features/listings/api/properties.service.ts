@@ -143,6 +143,13 @@ export interface MarketCountersSnapshot {
   underOfferCount: number;
   underContractCount: number;
   updatedAt: string;
+  source?: "automatic" | "manual";
+}
+
+export interface UpdateMarketCountersInput {
+  soldCount: number;
+  underOfferCount: number;
+  underContractCount: number;
 }
 
 function readCounterEnv(name: string): number | null {
@@ -529,4 +536,26 @@ export async function getMarketCountersSnapshot(): Promise<MarketCountersSnapsho
     underContractCount,
     updatedAt: new Date().toISOString(),
   };
+}
+
+export async function updateMarketCountersSnapshot(
+  input: UpdateMarketCountersInput,
+  accessToken: string,
+): Promise<MarketCountersSnapshot> {
+  if (!isEdgeApiEnabled()) {
+    throw new Error("Edge API mode is disabled.");
+  }
+
+  const bearerToken = accessToken.trim();
+  if (!bearerToken) {
+    throw new Error("Missing access token.");
+  }
+
+  return await apiJson<MarketCountersSnapshot>("/api/properties/stats", {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${bearerToken}`,
+    },
+    body: JSON.stringify(input),
+  });
 }

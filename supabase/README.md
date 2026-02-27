@@ -3,6 +3,7 @@
 This folder contains Phase 1 backend scaffolding:
 
 - `migrations/20260216_phase1_schema.sql`: PostgreSQL schema + RLS policies.
+- `migrations/20260228123000_market_counters_manual_override.sql`: manual homepage counters table (`market_counters`) + RLS policies.
 - `migrations/20260223_chatbot_rag.sql`: `pgvector`-backed content chunks + `match_chatbot_content_chunks(...)` RPC for chatbot RAG.
 - `migrations/20260225_chatbot_rag_hybrid_retrieval.sql`: keyword/FTS RPC `match_chatbot_content_chunks_keyword(...)` for hybrid retrieval + reranking.
 - `migrations/20260224_chatbot_quality_events.sql`: chatbot telemetry/feedback events table + dashboard views.
@@ -11,6 +12,7 @@ This folder contains Phase 1 backend scaffolding:
 - `functions/cities-list`: `GET /api/cities` contract.
 - `functions/city-detail`: `GET /api/cities/:slug` contract.
 - `functions/city-properties`: `GET /api/cities/:slug/properties` contract.
+- `functions/properties-stats`: `GET /api/properties/stats` (public snapshot) + `PUT /api/properties/stats` (admin update).
 - `functions/leads-create`: `POST /api/leads` contract.
 - `functions/chatbot-feedback`: `POST /api/chatbot-feedback` telemetry/feedback batch ingest for chatbot QA dashboards.
 - `workers/provider-sync.ts`: scheduled feed sync worker (remote/local JSON feed -> cities/properties/images/features upsert + reconciliation).
@@ -23,6 +25,7 @@ This folder contains Phase 1 backend scaffolding:
 ## Deployment notes
 - Bind each function to your hosting routing layer (for example Vercel rewrites) or call Supabase Edge Functions directly.
 - Configure secrets: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
+- For admin counter updates, also set `MARKET_COUNTERS_ADMIN_EMAILS` (comma-separated Supabase Auth emails allowed to write).
 - Chatbot RAG edge function expects either `GEMINI_API_KEY` or `OPENAI_API_KEY` (Gemini is now the preferred provider).
 - Chatbot telemetry ingest (`chatbot-feedback`) requires `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`.
 
