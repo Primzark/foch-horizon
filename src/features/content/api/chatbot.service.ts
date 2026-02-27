@@ -27,8 +27,16 @@ export interface ToolSearchParams {
   city?: string;
   q?: string;
   bedroomsMin?: number;
+  bathroomsMin?: number;
+  garagesMin?: number;
   priceMin?: number;
   priceMax?: number;
+  surfaceMin?: number;
+  surfaceMax?: number;
+  terrainMin?: number;
+  terrainMax?: number;
+  features?: string[];
+  sort?: "newest" | "price_asc" | "price_desc" | "surface_desc";
   page?: number;
   pageSize?: number;
 }
@@ -52,8 +60,16 @@ export interface ChatbotConversationState {
     type?: "appartement" | "maison_villa" | "autre";
     city?: string;
     bedroomsMin?: number;
+    bathroomsMin?: number;
+    garagesMin?: number;
     priceMin?: number;
     priceMax?: number;
+    surfaceMin?: number;
+    surfaceMax?: number;
+    terrainMin?: number;
+    terrainMax?: number;
+    features?: string[];
+    sort?: "newest" | "price_asc" | "price_desc" | "surface_desc";
   };
 }
 
@@ -64,6 +80,14 @@ export type ChatbotActionRequest =
         searchParams?: ToolSearchParams;
         page?: number;
         pageSize?: number;
+      };
+    }
+  | {
+      type: "aggregate_properties";
+      payload?: {
+        scope?: "current_filtered" | "global_active_inventory" | "selected_properties";
+        searchParams?: ToolSearchParams;
+        propertyIds?: number[];
       };
     }
   | {
@@ -95,6 +119,7 @@ export type ChatbotActionRequest =
 export type ChatbotToolTrace = {
   tool:
     | "search_properties"
+    | "aggregate_properties"
     | "get_properties"
     | "compare_properties"
     | "prepare_handoff"
@@ -113,6 +138,7 @@ export interface ChatbotPlannerMeta {
   decisionType: "tool_call" | "clarify" | "plan" | "none";
   toolName?:
     | "search_properties"
+    | "aggregate_properties"
     | "get_properties"
     | "compare_properties"
     | "prepare_handoff"
@@ -176,6 +202,69 @@ export type ChatbotUiAction =
         canCompare: boolean;
         compareSelectionLimit: number;
         nextSuggestedRefinements?: string[];
+      };
+    })
+  | (ChatbotUiActionBase & {
+      kind: "stats_summary";
+      data: {
+        scope: "current_filtered" | "global_active_inventory" | "selected_properties";
+        scopeLabel: string;
+        criteriaSummary: string;
+        searchParams?: ToolSearchParams;
+        selectedPropertyIds?: number[];
+        metrics: {
+          count: number;
+          excludedSurfaceCount?: number;
+          excludedPricePerM2Count?: number;
+          avgSurfaceM2?: number | null;
+          medianSurfaceM2?: number | null;
+          minSurfaceM2?: number | null;
+          maxSurfaceM2?: number | null;
+          avgPrice?: number | null;
+          medianPrice?: number | null;
+          minPrice?: number | null;
+          maxPrice?: number | null;
+          avgPricePerM2?: number | null;
+        };
+        breakdowns?: {
+          byTransaction?: Array<{ key: string; label: string; count: number; avgPrice?: number | null; avgSurfaceM2?: number | null }>;
+          byType?: Array<{ key: string; label: string; count: number; avgPrice?: number | null; avgSurfaceM2?: number | null }>;
+          topCities?: Array<{ key: string; label: string; count: number; avgPrice?: number | null; avgSurfaceM2?: number | null }>;
+        };
+        sampleSizeLabel: string;
+        lowSampleWarning?: string;
+      };
+    })
+  | (ChatbotUiActionBase & {
+      kind: "facet_refine";
+      data: {
+        searchParams: ToolSearchParams;
+        suggestions: Array<{
+          label: string;
+          patch: Partial<ToolSearchParams>;
+          removeKeys?: Array<keyof ToolSearchParams>;
+        }>;
+      };
+    })
+  | (ChatbotUiActionBase & {
+      kind: "apply_filter_patch";
+      data: {
+        searchParamsPatch: Partial<ToolSearchParams>;
+        removeKeys?: Array<keyof ToolSearchParams>;
+        label: string;
+        syntheticPrompt?: string;
+      };
+    })
+  | (ChatbotUiActionBase & {
+      kind: "clarify_scope";
+      data: {
+        options: Array<{
+          scope: "current_filtered" | "global_active_inventory" | "selected_properties";
+          label: string;
+          description?: string;
+          searchParams?: ToolSearchParams;
+        }>;
+        defaultScope?: "current_filtered" | "global_active_inventory" | "selected_properties";
       };
     })
   | (ChatbotUiActionBase & {
@@ -1779,11 +1868,51 @@ function sanitizeToolSearchParams(raw: unknown): ToolSearchParams | undefined {
   }
   if (typeof candidate.city === "string" && candidate.city.trim().length > 0) params.city = candidate.city.trim().slice(0, 80);
   if (typeof candidate.q === "string" && candidate.q.trim().length > 0) params.q = candidate.q.trim().slice(0, 120);
-  for (const key of ["bedroomsMin", "priceMin", "priceMax", "page", "pageSize"] as const) {
+  if (
+    candidate.sort === "newest" ||
+    candidate.sort === "price_asc" ||
+    candidate.sort === "price_desc" ||
+    candidate.sort === "surface_desc"
+  ) {
+    params.sort = candidate.sort;
+  }
+  if (Array.isArray(candidate.features)) {
+    const features = candidate.features
+      .map((value) => (typeof value === "string" ? value.trim().slice(0, 80) : ""))
+      .filter((value) => value.length > 0)
+      .slice(0, 12);
+    if (features.length > 0) {
+      params.features = Array.from(new Set(features));
+    }
+  }
+  for (
+    const key of [
+      "bedroomsMin",
+      "bathroomsMin",
+      "garagesMin",
+      "priceMin",
+      "priceMax",
+      "surfaceMin",
+      "surfaceMax",
+      "terrainMin",
+      "terrainMax",
+      "page",
+      "pageSize",
+    ] as const
+  ) {
     const value = candidate[key];
     if (typeof value === "number" && Number.isFinite(value)) {
       (params as Record<string, number>)[key] = Math.floor(value);
     }
+  }
+  if (typeof params.priceMin === "number" && typeof params.priceMax === "number" && params.priceMin > params.priceMax) {
+    [params.priceMin, params.priceMax] = [params.priceMax, params.priceMin];
+  }
+  if (typeof params.surfaceMin === "number" && typeof params.surfaceMax === "number" && params.surfaceMin > params.surfaceMax) {
+    [params.surfaceMin, params.surfaceMax] = [params.surfaceMax, params.surfaceMin];
+  }
+  if (typeof params.terrainMin === "number" && typeof params.terrainMax === "number" && params.terrainMin > params.terrainMax) {
+    [params.terrainMin, params.terrainMax] = [params.terrainMax, params.terrainMin];
   }
   return Object.keys(params).length > 0 ? params : undefined;
 }
@@ -1902,6 +2031,7 @@ function sanitizeToolTrace(raw: unknown): ChatbotToolTrace[] | undefined {
     .map((trace) => {
       const tool =
         trace.tool === "search_properties" ||
+        trace.tool === "aggregate_properties" ||
         trace.tool === "get_properties" ||
         trace.tool === "compare_properties" ||
         trace.tool === "prepare_handoff" ||
@@ -1957,6 +2087,7 @@ function sanitizePlannerMeta(raw: unknown): ChatbotPlannerMeta | undefined {
     decisionType,
     toolName:
       candidate.toolName === "search_properties" ||
+      candidate.toolName === "aggregate_properties" ||
       candidate.toolName === "get_properties" ||
       candidate.toolName === "compare_properties" ||
       candidate.toolName === "prepare_handoff" ||
@@ -2095,6 +2226,83 @@ function sanitizeCostHints(raw: unknown): ChatbotReply["costHints"] | undefined 
 function sanitizeActions(raw: unknown): ChatbotUiAction[] | undefined {
   if (!Array.isArray(raw)) return undefined;
   const actions: ChatbotUiAction[] = [];
+  type SanitizedAggregateBucket = {
+    key: string;
+    label: string;
+    count: number;
+    avgPrice: number | null;
+    avgSurfaceM2: number | null;
+  };
+  type SanitizedFacetSuggestion = {
+    label: string;
+    patch: Partial<ToolSearchParams>;
+    removeKeys?: Array<keyof ToolSearchParams>;
+  };
+  type SanitizedScopeOption = {
+    scope: "current_filtered" | "global_active_inventory" | "selected_properties";
+    label: string;
+    description?: string;
+    searchParams?: ToolSearchParams;
+  };
+  const isFilterPatchKey = (value: unknown): value is keyof ToolSearchParams =>
+    value === "transaction" ||
+    value === "type" ||
+    value === "city" ||
+    value === "q" ||
+    value === "bedroomsMin" ||
+    value === "bathroomsMin" ||
+    value === "garagesMin" ||
+    value === "priceMin" ||
+    value === "priceMax" ||
+    value === "surfaceMin" ||
+    value === "surfaceMax" ||
+    value === "terrainMin" ||
+    value === "terrainMax" ||
+    value === "features" ||
+    value === "sort" ||
+    value === "page" ||
+    value === "pageSize";
+  const sanitizeFilterPatchKeys = (value: unknown): Array<keyof ToolSearchParams> | undefined => {
+    if (!Array.isArray(value)) return undefined;
+    const keys = Array.from(new Set(value.filter(isFilterPatchKey))).slice(0, 12);
+    return keys.length > 0 ? keys : undefined;
+  };
+  const sanitizeBucketList = (value: unknown): SanitizedAggregateBucket[] | undefined => {
+    if (!Array.isArray(value)) return undefined;
+    const buckets = value
+      .filter((bucket): bucket is Record<string, unknown> => Boolean(bucket && typeof bucket === "object"))
+      .map((bucket) => {
+        const key = typeof bucket.key === "string" ? bucket.key.trim().slice(0, 80) : "";
+        const label = typeof bucket.label === "string" ? bucket.label.trim().slice(0, 120) : "";
+        const count =
+          typeof bucket.count === "number" && Number.isFinite(bucket.count)
+            ? Math.max(0, Math.floor(bucket.count))
+            : Number(bucket.count);
+        if (!key || !label || !Number.isFinite(count) || count < 0) return null;
+        const avgPrice =
+          bucket.avgPrice == null
+            ? null
+            : typeof bucket.avgPrice === "number" && Number.isFinite(bucket.avgPrice)
+              ? bucket.avgPrice
+              : Number(bucket.avgPrice);
+        const avgSurfaceM2 =
+          bucket.avgSurfaceM2 == null
+            ? null
+            : typeof bucket.avgSurfaceM2 === "number" && Number.isFinite(bucket.avgSurfaceM2)
+              ? bucket.avgSurfaceM2
+              : Number(bucket.avgSurfaceM2);
+        return {
+          key,
+          label,
+          count: Math.max(0, Math.floor(count)),
+          avgPrice: Number.isFinite(avgPrice) ? avgPrice : null,
+          avgSurfaceM2: Number.isFinite(avgSurfaceM2) ? avgSurfaceM2 : null,
+        };
+      })
+      .filter((bucket): bucket is SanitizedAggregateBucket => Boolean(bucket))
+      .slice(0, 10);
+    return buckets.length > 0 ? buckets : undefined;
+  };
 
   for (const value of raw.slice(0, 5)) {
     if (!value || typeof value !== "object") continue;
@@ -2168,6 +2376,179 @@ function sanitizeActions(raw: unknown): ChatbotUiAction[] | undefined {
                 .filter(Boolean)
                 .slice(0, 5)
             : undefined,
+        },
+      });
+      continue;
+    }
+
+    if (candidate.kind === "stats_summary") {
+      const metricsCandidate =
+        data.metrics && typeof data.metrics === "object" ? (data.metrics as Record<string, unknown>) : null;
+      if (!metricsCandidate) continue;
+      const count =
+        typeof metricsCandidate.count === "number" && Number.isFinite(metricsCandidate.count)
+          ? Math.max(0, Math.floor(metricsCandidate.count))
+          : Number(metricsCandidate.count);
+      if (!Number.isFinite(count) || count < 0) continue;
+      const numericOrNull = (value: unknown): number | null | undefined => {
+        if (value == null) return null;
+        if (typeof value === "number" && Number.isFinite(value)) return value;
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : undefined;
+      };
+      const metrics = {
+        count: Math.max(0, Math.floor(count)),
+        excludedSurfaceCount:
+          typeof metricsCandidate.excludedSurfaceCount === "number" && Number.isFinite(metricsCandidate.excludedSurfaceCount)
+            ? Math.max(0, Math.floor(metricsCandidate.excludedSurfaceCount))
+            : undefined,
+        excludedPricePerM2Count:
+          typeof metricsCandidate.excludedPricePerM2Count === "number" && Number.isFinite(metricsCandidate.excludedPricePerM2Count)
+            ? Math.max(0, Math.floor(metricsCandidate.excludedPricePerM2Count))
+            : undefined,
+        avgSurfaceM2: numericOrNull(metricsCandidate.avgSurfaceM2),
+        medianSurfaceM2: numericOrNull(metricsCandidate.medianSurfaceM2),
+        minSurfaceM2: numericOrNull(metricsCandidate.minSurfaceM2),
+        maxSurfaceM2: numericOrNull(metricsCandidate.maxSurfaceM2),
+        avgPrice: numericOrNull(metricsCandidate.avgPrice),
+        medianPrice: numericOrNull(metricsCandidate.medianPrice),
+        minPrice: numericOrNull(metricsCandidate.minPrice),
+        maxPrice: numericOrNull(metricsCandidate.maxPrice),
+        avgPricePerM2: numericOrNull(metricsCandidate.avgPricePerM2),
+      };
+      const scope =
+        data.scope === "current_filtered" || data.scope === "global_active_inventory" || data.scope === "selected_properties"
+          ? data.scope
+          : null;
+      const scopeLabel = typeof data.scopeLabel === "string" ? data.scopeLabel.trim().slice(0, 80) : "";
+      const criteriaSummary =
+        typeof data.criteriaSummary === "string" ? data.criteriaSummary.trim().slice(0, 300) : "Statistiques";
+      const sampleSizeLabel = typeof data.sampleSizeLabel === "string" ? data.sampleSizeLabel.trim().slice(0, 120) : "";
+      if (!scope || !scopeLabel || !sampleSizeLabel) continue;
+      const breakdownsCandidate =
+        data.breakdowns && typeof data.breakdowns === "object" ? (data.breakdowns as Record<string, unknown>) : null;
+      const selectedPropertyIds = Array.isArray(data.selectedPropertyIds)
+        ? data.selectedPropertyIds
+            .map((value) => (typeof value === "number" ? value : Number(value)))
+            .filter((value) => Number.isInteger(value) && value > 0)
+            .slice(0, 50)
+        : undefined;
+
+      actions.push({
+        ...base,
+        kind: "stats_summary",
+        data: {
+          scope,
+          scopeLabel,
+          criteriaSummary,
+          searchParams: sanitizeToolSearchParams(data.searchParams),
+          selectedPropertyIds: selectedPropertyIds && selectedPropertyIds.length > 0 ? selectedPropertyIds : undefined,
+          metrics,
+          breakdowns: breakdownsCandidate
+            ? {
+                byTransaction: sanitizeBucketList(breakdownsCandidate.byTransaction),
+                byType: sanitizeBucketList(breakdownsCandidate.byType),
+                topCities: sanitizeBucketList(breakdownsCandidate.topCities),
+              }
+            : undefined,
+          sampleSizeLabel,
+          lowSampleWarning:
+            typeof data.lowSampleWarning === "string" && data.lowSampleWarning.trim().length > 0
+              ? data.lowSampleWarning.trim().slice(0, 240)
+              : undefined,
+        },
+      });
+      continue;
+    }
+
+    if (candidate.kind === "facet_refine") {
+      const searchParams = sanitizeToolSearchParams(data.searchParams) ?? {};
+      const suggestions = Array.isArray(data.suggestions)
+        ? data.suggestions
+            .filter((item): item is Record<string, unknown> => Boolean(item && typeof item === "object"))
+            .map((item) => {
+              const label = typeof item.label === "string" ? item.label.trim().slice(0, 80) : "";
+              const patch = sanitizeToolSearchParams(item.patch) ?? {};
+              const removeKeys = sanitizeFilterPatchKeys(item.removeKeys);
+              if (!label) return null;
+              if (Object.keys(patch).length === 0 && (!removeKeys || removeKeys.length === 0)) return null;
+              return { label, patch, removeKeys };
+            })
+            .filter((item): item is SanitizedFacetSuggestion => Boolean(item))
+            .slice(0, 8)
+        : [];
+      if (suggestions.length === 0) continue;
+      actions.push({
+        ...base,
+        kind: "facet_refine",
+        data: {
+          searchParams,
+          suggestions,
+        },
+      });
+      continue;
+    }
+
+    if (candidate.kind === "apply_filter_patch") {
+      const label = typeof data.label === "string" ? data.label.trim().slice(0, 80) : "";
+      const searchParamsPatch = sanitizeToolSearchParams(data.searchParamsPatch) ?? {};
+      const removeKeys = sanitizeFilterPatchKeys(data.removeKeys);
+      if (!label) continue;
+      if (Object.keys(searchParamsPatch).length === 0 && (!removeKeys || removeKeys.length === 0)) continue;
+      actions.push({
+        ...base,
+        kind: "apply_filter_patch",
+        data: {
+          label,
+          searchParamsPatch,
+          removeKeys,
+          syntheticPrompt:
+            typeof data.syntheticPrompt === "string" && data.syntheticPrompt.trim().length > 0
+              ? data.syntheticPrompt.trim().slice(0, 160)
+              : undefined,
+        },
+      });
+      continue;
+    }
+
+    if (candidate.kind === "clarify_scope") {
+      const options = Array.isArray(data.options)
+        ? data.options
+            .filter((item): item is Record<string, unknown> => Boolean(item && typeof item === "object"))
+            .map((item) => {
+              const scope =
+                item.scope === "current_filtered" ||
+                item.scope === "global_active_inventory" ||
+                item.scope === "selected_properties"
+                  ? item.scope
+                  : null;
+              const label = typeof item.label === "string" ? item.label.trim().slice(0, 80) : "";
+              if (!scope || !label) return null;
+              return {
+                scope,
+                label,
+                description:
+                  typeof item.description === "string" && item.description.trim().length > 0
+                    ? item.description.trim().slice(0, 160)
+                    : undefined,
+                searchParams: sanitizeToolSearchParams(item.searchParams),
+              };
+            })
+            .filter((item): item is SanitizedScopeOption => Boolean(item))
+            .slice(0, 3)
+        : [];
+      if (options.length === 0) continue;
+      actions.push({
+        ...base,
+        kind: "clarify_scope",
+        data: {
+          options,
+          defaultScope:
+            data.defaultScope === "current_filtered" ||
+            data.defaultScope === "global_active_inventory" ||
+            data.defaultScope === "selected_properties"
+              ? data.defaultScope
+              : undefined,
         },
       });
       continue;
@@ -2407,6 +2788,13 @@ function applyRouteMetadata(reply: ChatbotReply, route: ChatbotRouteDecision): C
     routeCategory: route.category,
   };
 }
+
+export const chatbotServiceTestInternals = {
+  sanitizeToolSearchParams,
+  sanitizeToolTrace,
+  sanitizePlannerMeta,
+  sanitizeActions,
+};
 
 export async function askAgencyChatbot(request: ChatbotRequest): Promise<ChatbotReply> {
   const context = buildConversationContext(request.question, request.chatHistory);

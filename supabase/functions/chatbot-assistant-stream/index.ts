@@ -98,7 +98,7 @@ Deno.serve(async (request) => {
       const send = (event: string, data: unknown) => controller.enqueue(encoder.encode(sseEvent(event, data)));
       try {
         send("meta", { requestId, streamSupported: streamFlag, synthetic: true });
-        send("status", { phase: "dispatching" });
+        send("status", { phase: "parsing" });
 
         if (!supabaseUrl || !serviceRoleKey) {
           send("error", { code: "stream_proxy_config_missing", message: "Missing Supabase edge proxy configuration." });
@@ -113,6 +113,7 @@ Deno.serve(async (request) => {
         const proxyAuth = forwardedAuth || (serviceRoleKey ? `Bearer ${serviceRoleKey}` : "");
         const proxyController = new AbortController();
         const proxyTimeoutId = setTimeout(() => proxyController.abort(), Number.isFinite(proxyTimeoutMs) ? proxyTimeoutMs : 20000);
+        send("status", { phase: "searching" });
 
         let response: Response;
         try {
@@ -171,12 +172,19 @@ Deno.serve(async (request) => {
         }
 
         const answer = typeof data.answer === "string" ? data.answer : "";
+        const actions = Array.isArray(data.actions) ? data.actions : [];
+        const hasAggregateAction = actions.some((action) =>
+          Boolean(action && typeof action === "object" && (action as Record<string, unknown>).kind === "stats_summary")
+        );
+        if (hasAggregateAction) {
+          send("status", { phase: "aggregating" });
+        }
         send("meta", {
           requestId: typeof data.requestId === "string" ? data.requestId : requestId,
           agentMode: data.agentMode,
           route: data.routeCategory,
         });
-        send("status", { phase: "streaming_text" });
+        send("status", { phase: "building_response" });
 
         const chunks = splitTextIntoChunks(answer);
         for (const chunk of chunks) {
@@ -187,8 +195,8 @@ Deno.serve(async (request) => {
         if (Array.isArray(data.citations)) {
           send("citation", { citations: data.citations });
         }
-        if (Array.isArray(data.actions)) {
-          send("action", { actions: data.actions });
+        if (actions.length > 0) {
+          send("action", { actions });
         }
         if (Array.isArray(data.analysisCards)) {
           send("action", { analysisCards: data.analysisCards });

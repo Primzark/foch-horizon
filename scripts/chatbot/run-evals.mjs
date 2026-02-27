@@ -78,8 +78,11 @@ const evalCases = [
 ];
 
 async function callChatbot(edgeBaseUrl, body) {
+  const chatbotEndpoint = edgeBaseUrl.includes('/functions/v1')
+    ? `${edgeBaseUrl}/chatbot-assistant`
+    : `${edgeBaseUrl}/api/chatbot-assistant`;
   const started = Date.now();
-  const response = await fetch(`${edgeBaseUrl}/api/chatbot-assistant`, {
+  const response = await fetch(chatbotEndpoint, {
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify(body),

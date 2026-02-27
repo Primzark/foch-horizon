@@ -131,3 +131,41 @@ values
 on conflict (property_id, source_url) do update set
   sort_order = excluded.sort_order,
   alt_text = excluded.alt_text;
+
+-- Minimal RAG seed to keep core evals deterministic in local environments without external model keys.
+insert into chatbot_content_chunks (
+  document_key,
+  source_kind,
+  source_url,
+  path,
+  title,
+  section_heading,
+  chunk_index,
+  content,
+  content_hash,
+  token_estimate,
+  metadata
+)
+values (
+  'site:/honoraires',
+  'web_page',
+  'https://www.fochimmobilier.com/honoraires',
+  '/honoraires',
+  'Honoraires',
+  'Honoraires agence',
+  0,
+  'Honoraires de transaction et de location : consultez les honoraires de l agence Foch Immobilier sur cette page.',
+  'seed-honoraires-1',
+  24,
+  '{}'::jsonb
+)
+on conflict (document_key, chunk_index) do update set
+  source_url = excluded.source_url,
+  path = excluded.path,
+  title = excluded.title,
+  section_heading = excluded.section_heading,
+  content = excluded.content,
+  content_hash = excluded.content_hash,
+  token_estimate = excluded.token_estimate,
+  metadata = excluded.metadata,
+  updated_at = now();

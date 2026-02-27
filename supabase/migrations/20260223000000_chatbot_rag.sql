@@ -31,7 +31,7 @@ create index if not exists idx_chatbot_content_chunks_path
 create index if not exists idx_chatbot_content_chunks_source_kind
   on chatbot_content_chunks(source_kind);
 create index if not exists idx_chatbot_content_chunks_embedding_cosine
-  on chatbot_content_chunks using ivfflat (embedding extensions.vector_cosine_ops)
+  on chatbot_content_chunks using ivfflat (embedding vector_cosine_ops)
   with (lists = 20);
 
 alter table chatbot_content_chunks enable row level security;

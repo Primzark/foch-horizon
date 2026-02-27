@@ -225,8 +225,16 @@ function applyFilters(items: Property[], params: PropertySearchParams): Property
     result = result.filter((property) => property.surfaceM2 >= params.surfaceMin!);
   }
 
+  if (params.surfaceMax != null) {
+    result = result.filter((property) => property.surfaceM2 <= params.surfaceMax!);
+  }
+
   if (params.terrainMin != null) {
     result = result.filter((property) => (property.terrainM2 ?? 0) >= params.terrainMin!);
+  }
+
+  if (params.terrainMax != null) {
+    result = result.filter((property) => (property.terrainM2 ?? 0) <= params.terrainMax!);
   }
 
   if (params.features && params.features.length > 0) {
@@ -275,7 +283,9 @@ export async function searchProperties(params: PropertySearchParams): Promise<Pr
     if (params.priceMin != null) query.set("priceMin", String(params.priceMin));
     if (params.priceMax != null) query.set("priceMax", String(params.priceMax));
     if (params.surfaceMin != null) query.set("surfaceMin", String(params.surfaceMin));
+    if (params.surfaceMax != null) query.set("surfaceMax", String(params.surfaceMax));
     if (params.terrainMin != null) query.set("terrainMin", String(params.terrainMin));
+    if (params.terrainMax != null) query.set("terrainMax", String(params.terrainMax));
     if (params.features) params.features.forEach((feature) => query.append("features", feature));
     if (params.page) query.set("page", String(params.page));
     if (params.pageSize) query.set("pageSize", String(params.pageSize));

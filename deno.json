@@ -1,0 +1,16 @@
+{
+  "fmt": {
+    "files": {
+      "include": ["supabase/functions/**/*.ts", "supabase/workers/**/*.ts"]
+    }
+  },
+  "lint": {
+    "files": {
+      "include": ["supabase/functions/**/*.ts", "supabase/workers/**/*.ts"]
+    }
+  },
+  "compilerOptions": {
+    "strict": true,
+    "noUncheckedIndexedAccess": false
+  }
+}

@@ -110,6 +110,9 @@ describe("SiteChatbot feedback and telemetry hooks", () => {
           suggestedPrompts: ["Ouvrir /honoraires"],
         };
         const sseBody = [
+          `event: status\ndata: ${JSON.stringify({ phase: "parsing" })}\n\n`,
+          `event: status\ndata: ${JSON.stringify({ phase: "searching" })}\n\n`,
+          `event: status\ndata: ${JSON.stringify({ phase: "building_response" })}\n\n`,
           `event: text_delta\ndata: ${JSON.stringify({ delta: "Les honoraires sont sur /honoraires." })}\n\n`,
           `event: citation\ndata: ${JSON.stringify({ citations: replyPayload.citations })}\n\n`,
           `event: done\ndata: ${JSON.stringify({ reply: replyPayload })}\n\n`,

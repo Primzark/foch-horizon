@@ -30,4 +30,29 @@ describe("listings query param normalization", () => {
     expect(params.get("page")).toBe("2");
     expect(params.get("pageSize")).toBe("48");
   });
+
+  it("parses and builds surfaceMax / terrainMax", () => {
+    const parsed = parseSearchParams(new URLSearchParams("surfaceMin=120&surfaceMax=90&terrainMin=800&terrainMax=500"));
+    expect(parsed.surfaceMin).toBe(90);
+    expect(parsed.surfaceMax).toBe(120);
+    expect(parsed.terrainMin).toBe(500);
+    expect(parsed.terrainMax).toBe(800);
+
+    const built = buildSearchParams({
+      surfaceMin: 60,
+      surfaceMax: 140,
+      terrainMin: 300,
+      terrainMax: 900,
+    });
+    expect(built.get("surfaceMin")).toBe("60");
+    expect(built.get("surfaceMax")).toBe("140");
+    expect(built.get("terrainMin")).toBe("300");
+    expect(built.get("terrainMax")).toBe("900");
+  });
+
+  it("normalizes inverted price ranges from URL params", () => {
+    const parsed = parseSearchParams(new URLSearchParams("priceMin=500000&priceMax=350000"));
+    expect(parsed.priceMin).toBe(350000);
+    expect(parsed.priceMax).toBe(500000);
+  });
 });

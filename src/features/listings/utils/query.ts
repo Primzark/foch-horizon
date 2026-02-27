@@ -38,8 +38,7 @@ function toEnum<T extends string>(value: string | null, options: readonly T[]): 
 
 export function parseSearchParams(searchParams: URLSearchParams): PropertySearchParams {
   const features = searchParams.getAll("features").filter(Boolean);
-
-  return {
+  const parsed: PropertySearchParams = {
     transaction: toEnum(searchParams.get("transaction"), TRANSACTION_VALUES),
     type: toEnum(searchParams.get("type"), TYPE_VALUES),
     city: searchParams.get("city") ?? undefined,
@@ -50,12 +49,26 @@ export function parseSearchParams(searchParams: URLSearchParams): PropertySearch
     priceMin: toNumber(searchParams.get("priceMin")),
     priceMax: toNumber(searchParams.get("priceMax")),
     surfaceMin: toNumber(searchParams.get("surfaceMin")),
+    surfaceMax: toNumber(searchParams.get("surfaceMax")),
     terrainMin: toNumber(searchParams.get("terrainMin")),
+    terrainMax: toNumber(searchParams.get("terrainMax")),
     features: features.length > 0 ? features : undefined,
     page: toPositiveInteger(searchParams.get("page")),
     pageSize: toListingsPageSize(searchParams.get("pageSize")),
     sort: (searchParams.get("sort") as PropertySearchParams["sort"]) ?? undefined,
   };
+
+  if (parsed.priceMin != null && parsed.priceMax != null && parsed.priceMin > parsed.priceMax) {
+    [parsed.priceMin, parsed.priceMax] = [parsed.priceMax, parsed.priceMin];
+  }
+  if (parsed.surfaceMin != null && parsed.surfaceMax != null && parsed.surfaceMin > parsed.surfaceMax) {
+    [parsed.surfaceMin, parsed.surfaceMax] = [parsed.surfaceMax, parsed.surfaceMin];
+  }
+  if (parsed.terrainMin != null && parsed.terrainMax != null && parsed.terrainMin > parsed.terrainMax) {
+    [parsed.terrainMin, parsed.terrainMax] = [parsed.terrainMax, parsed.terrainMin];
+  }
+
+  return parsed;
 }
 
 export function buildSearchParams(params: PropertySearchParams): URLSearchParams {
@@ -71,7 +84,9 @@ export function buildSearchParams(params: PropertySearchParams): URLSearchParams
   if (params.priceMin != null) searchParams.set("priceMin", String(params.priceMin));
   if (params.priceMax != null) searchParams.set("priceMax", String(params.priceMax));
   if (params.surfaceMin != null) searchParams.set("surfaceMin", String(params.surfaceMin));
+  if (params.surfaceMax != null) searchParams.set("surfaceMax", String(params.surfaceMax));
   if (params.terrainMin != null) searchParams.set("terrainMin", String(params.terrainMin));
+  if (params.terrainMax != null) searchParams.set("terrainMax", String(params.terrainMax));
   if (params.features) {
     params.features.forEach((feature) => searchParams.append("features", feature));
   }

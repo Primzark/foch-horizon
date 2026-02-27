@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   askAgencyChatbot,
   buildConversationContext,
+  chatbotServiceTestInternals,
   chatbotExamplePrompts,
   decideChatbotRoute,
 } from "@/features/content/api/chatbot.service";
@@ -239,5 +240,121 @@ describe("chatbot service", () => {
     expect(route.target).toBe("local");
     expect(route.category).toBe("fallback");
     expect(route.reason).toBe("edge_disabled");
+  });
+
+  it("sanitizes aggregate planner/tool metadata and advanced actions", () => {
+    const toolTrace = chatbotServiceTestInternals.sanitizeToolTrace([
+      { tool: "aggregate_properties", status: "ok", latencyMs: 42, resultCount: 1 },
+    ]);
+    expect(toolTrace).toEqual([
+      expect.objectContaining({
+        tool: "aggregate_properties",
+        status: "ok",
+      }),
+    ]);
+
+    const planner = chatbotServiceTestInternals.sanitizePlannerMeta({
+      provider: "gemini",
+      mode: "gemini",
+      decisionType: "tool_call",
+      toolName: "aggregate_properties",
+      confidence: 0.9,
+    });
+    expect(planner?.toolName).toBe("aggregate_properties");
+
+    const actions = chatbotServiceTestInternals.sanitizeActions([
+      {
+        id: "stats-1",
+        title: "Stats",
+        kind: "stats_summary",
+        data: {
+          scope: "current_filtered",
+          scopeLabel: "Résultats filtrés",
+          criteriaSummary: "Appartements Le Havre",
+          metrics: {
+            count: 12,
+            avgSurfaceM2: 78,
+            medianSurfaceM2: 75,
+            minSurfaceM2: 40,
+            maxSurfaceM2: 120,
+            avgPrice: 280000,
+            medianPrice: 270000,
+            minPrice: 190000,
+            maxPrice: 350000,
+            avgPricePerM2: 3590,
+          },
+          sampleSizeLabel: "12 biens",
+          breakdowns: {
+            byType: [{ key: "appartement", label: "Appartement", count: 12 }],
+          },
+        },
+      },
+      {
+        id: "facet-1",
+        title: "Affiner",
+        kind: "facet_refine",
+        data: {
+          searchParams: { city: "Le Havre", surfaceMin: 60 },
+          suggestions: [{ label: "+10 m²", patch: { surfaceMin: 70 }, removeKeys: ["page"] }],
+        },
+      },
+      {
+        id: "patch-1",
+        title: "Patch",
+        kind: "apply_filter_patch",
+        data: {
+          label: "Budget +",
+          searchParamsPatch: { priceMax: 400000 },
+          removeKeys: ["page"],
+        },
+      },
+      {
+        id: "scope-1",
+        title: "Scope",
+        kind: "clarify_scope",
+        data: {
+          options: [
+            { scope: "current_filtered", label: "Résultats actuels" },
+            { scope: "global_active_inventory", label: "Stock actif" },
+          ],
+        },
+      },
+    ]);
+
+    expect(actions?.map((action) => action.kind)).toEqual([
+      "stats_summary",
+      "facet_refine",
+      "apply_filter_patch",
+      "clarify_scope",
+    ]);
+  });
+
+  it("drops malformed advanced actions during sanitization", () => {
+    const actions = chatbotServiceTestInternals.sanitizeActions([
+      {
+        id: "bad-stats",
+        title: "Stats invalides",
+        kind: "stats_summary",
+        data: {
+          scope: "current_filtered",
+          scopeLabel: "Résultats filtrés",
+          criteriaSummary: "x",
+          metrics: {
+            count: "not-a-number",
+          },
+          sampleSizeLabel: "x",
+        },
+      },
+      {
+        id: "bad-facet",
+        title: "Facet invalide",
+        kind: "facet_refine",
+        data: {
+          suggestions: [{ label: "", patch: {} }],
+        },
+      },
+    ]);
+
+    expect(actions).toBeUndefined();
   });
 });

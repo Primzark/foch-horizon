@@ -18,6 +18,10 @@
       "destination": "https://rcrulfdobtmfxzpuyryn.supabase.co/functions/v1/properties-stats"
     },
     {
+      "source": "/api/properties/aggregate",
+      "destination": "https://rcrulfdobtmfxzpuyryn.supabase.co/functions/v1/properties-aggregate"
+    },
+    {
       "source": "/api/properties/:id",
       "destination": "https://rcrulfdobtmfxzpuyryn.supabase.co/functions/v1/property-detail/:id"
     },

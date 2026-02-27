@@ -282,6 +282,7 @@ function isEdgeChatStreamingEligible(actionRequest?: ChatbotActionRequest): bool
   // remains compatible with tool replies that include actions/citations.
   return (
     actionRequest.type === "search_refine" ||
+    actionRequest.type === "aggregate_properties" ||
     actionRequest.type === "compare_selected_properties" ||
     actionRequest.type === "open_path_confirmed" ||
     actionRequest.type === "prepare_handoff" ||
@@ -509,6 +510,7 @@ function sanitizePlannerMeta(raw: unknown): ChatbotPlannerMeta | undefined {
     decisionType,
     toolName:
       candidate.toolName === "search_properties" ||
+      candidate.toolName === "aggregate_properties" ||
       candidate.toolName === "get_properties" ||
       candidate.toolName === "compare_properties" ||
       candidate.toolName === "prepare_handoff" ||
@@ -797,6 +799,14 @@ function sanitizeConversationState(raw: unknown): ChatbotConversationState {
         typeof preferences.bedroomsMin === "number" && Number.isFinite(preferences.bedroomsMin)
           ? Math.max(0, Math.floor(preferences.bedroomsMin))
           : undefined,
+      bathroomsMin:
+        typeof preferences.bathroomsMin === "number" && Number.isFinite(preferences.bathroomsMin)
+          ? Math.max(0, Math.floor(preferences.bathroomsMin))
+          : undefined,
+      garagesMin:
+        typeof preferences.garagesMin === "number" && Number.isFinite(preferences.garagesMin)
+          ? Math.max(0, Math.floor(preferences.garagesMin))
+          : undefined,
       priceMin:
         typeof preferences.priceMin === "number" && Number.isFinite(preferences.priceMin)
           ? Math.max(0, Math.floor(preferences.priceMin))
@@ -805,7 +815,61 @@ function sanitizeConversationState(raw: unknown): ChatbotConversationState {
         typeof preferences.priceMax === "number" && Number.isFinite(preferences.priceMax)
           ? Math.max(0, Math.floor(preferences.priceMax))
           : undefined,
+      surfaceMin:
+        typeof preferences.surfaceMin === "number" && Number.isFinite(preferences.surfaceMin)
+          ? Math.max(0, Math.floor(preferences.surfaceMin))
+          : undefined,
+      surfaceMax:
+        typeof preferences.surfaceMax === "number" && Number.isFinite(preferences.surfaceMax)
+          ? Math.max(0, Math.floor(preferences.surfaceMax))
+          : undefined,
+      terrainMin:
+        typeof preferences.terrainMin === "number" && Number.isFinite(preferences.terrainMin)
+          ? Math.max(0, Math.floor(preferences.terrainMin))
+          : undefined,
+      terrainMax:
+        typeof preferences.terrainMax === "number" && Number.isFinite(preferences.terrainMax)
+          ? Math.max(0, Math.floor(preferences.terrainMax))
+          : undefined,
+      features:
+        Array.isArray(preferences.features)
+          ? Array.from(
+              new Set(
+                preferences.features
+                  .map((value) => (typeof value === "string" ? value.trim().slice(0, 80) : ""))
+                  .filter(Boolean),
+              ),
+            ).slice(0, 12)
+          : undefined,
+      sort:
+        preferences.sort === "newest" ||
+        preferences.sort === "price_asc" ||
+        preferences.sort === "price_desc" ||
+        preferences.sort === "surface_desc"
+          ? preferences.sort
+          : undefined,
     };
+    if (
+      typeof state.preferences.priceMin === "number" &&
+      typeof state.preferences.priceMax === "number" &&
+      state.preferences.priceMin > state.preferences.priceMax
+    ) {
+      [state.preferences.priceMin, state.preferences.priceMax] = [state.preferences.priceMax, state.preferences.priceMin];
+    }
+    if (
+      typeof state.preferences.surfaceMin === "number" &&
+      typeof state.preferences.surfaceMax === "number" &&
+      state.preferences.surfaceMin > state.preferences.surfaceMax
+    ) {
+      [state.preferences.surfaceMin, state.preferences.surfaceMax] = [state.preferences.surfaceMax, state.preferences.surfaceMin];
+    }
+    if (
+      typeof state.preferences.terrainMin === "number" &&
+      typeof state.preferences.terrainMax === "number" &&
+      state.preferences.terrainMin > state.preferences.terrainMax
+    ) {
+      [state.preferences.terrainMin, state.preferences.terrainMax] = [state.preferences.terrainMax, state.preferences.terrainMin];
+    }
   }
 
   return state;
@@ -891,6 +955,52 @@ function formatSurface(surface: number | null | undefined): string {
   return `${Math.round(surface)} m²`;
 }
 
+function formatNumberValue(value: number | null | undefined, maximumFractionDigits = 0): string {
+  if (typeof value !== "number" || !Number.isFinite(value)) return "—";
+  return new Intl.NumberFormat("fr-FR", { maximumFractionDigits }).format(value);
+}
+
+function formatPricePerM2(value: number | null | undefined): string {
+  if (typeof value !== "number" || !Number.isFinite(value)) return "—";
+  return `${formatCompactPrice(value, "EUR")}/m²`;
+}
+
+function mergeToolSearchParamsPatch(
+  base: ToolSearchParams | undefined,
+  patch: Partial<ToolSearchParams>,
+  removeKeys?: Array<keyof ToolSearchParams>,
+): ToolSearchParams {
+  const next: ToolSearchParams = { ...(base ?? {}) };
+  for (const key of removeKeys ?? []) {
+    delete (next as Record<string, unknown>)[key];
+  }
+  Object.assign(next, patch);
+
+  // Refinement actions should restart pagination unless explicitly set by the patch.
+  if (typeof patch.page !== "number") {
+    next.page = 1;
+  }
+
+  if (Array.isArray(next.features)) {
+    next.features = Array.from(new Set(next.features.map((value) => value.trim()).filter(Boolean))).slice(0, 12);
+    if (next.features.length === 0) {
+      delete (next as { features?: string[] }).features;
+    }
+  }
+
+  if (typeof next.priceMin === "number" && typeof next.priceMax === "number" && next.priceMin > next.priceMax) {
+    [next.priceMin, next.priceMax] = [next.priceMax, next.priceMin];
+  }
+  if (typeof next.surfaceMin === "number" && typeof next.surfaceMax === "number" && next.surfaceMin > next.surfaceMax) {
+    [next.surfaceMin, next.surfaceMax] = [next.surfaceMax, next.surfaceMin];
+  }
+  if (typeof next.terrainMin === "number" && typeof next.terrainMax === "number" && next.terrainMin > next.terrainMax) {
+    [next.terrainMin, next.terrainMax] = [next.terrainMax, next.terrainMin];
+  }
+
+  return next;
+}
+
 function readStoredMessages(): ChatMessage[] {
   if (typeof window === "undefined") {
     return [initialMessage];
@@ -942,6 +1052,10 @@ export function SiteChatbot() {
   const abortControllerRef = useRef<AbortController | null>(null);
   const requestSequenceRef = useRef(0);
   const openingSequenceRef = useRef(0);
+  const streamStatusRef = useRef<string | null>(null);
+  const sendChatRequestRef = useRef<
+    ((params: { question: string; actionRequest?: ChatbotActionRequest; syntheticPrompt?: string }) => Promise<void>) | null
+  >(null);
   const sessionIdRef = useRef<string>(readOrCreateChatbotSessionId());
   const conversationIdRef = useRef<string>(createMessageId());
   const [pendingFeedbackMessageId, setPendingFeedbackMessageId] = useState<string | null>(null);
@@ -1485,6 +1599,7 @@ export function SiteChatbot() {
       const shouldUseStreaming = CHATBOT_STREAMING_ENABLED && isEdgeChatStreamingEligible(params.actionRequest);
       usedStreaming = shouldUseStreaming;
       if (shouldUseStreaming) {
+        streamStatusRef.current = null;
         trackEvent("chatbot_stream_started", {
           source: "site_chatbot",
           routeHint: params.actionRequest ? "edge_tools" : "edge_rag_or_general",
@@ -1530,6 +1645,12 @@ export function SiteChatbot() {
                     content: streamedContent,
                     source: "edge",
                   }));
+                },
+                onStatus: (payload) => {
+                  const phase = typeof payload.phase === "string" ? payload.phase.trim() : "";
+                  if (phase) {
+                    streamStatusRef.current = phase.slice(0, 60);
+                  }
                 },
               },
             );
@@ -1580,11 +1701,12 @@ export function SiteChatbot() {
           routeCategory: reply.routeCategory,
           responseLatencyMs: Math.round(performance.now() - requestStartedAt),
           metadata: mergeTelemetryMetadata(
-            {
-              streamDurationMs: Math.round(performance.now() - requestStartedAt),
-            },
-            reply.planner,
-          ),
+              {
+                streamDurationMs: Math.round(performance.now() - requestStartedAt),
+                streamLastPhase: streamStatusRef.current,
+              },
+              reply.planner,
+            ),
         });
       }
     } catch (error) {
@@ -1618,11 +1740,12 @@ export function SiteChatbot() {
           routeDecision: aborted ? "stream_timeout" : "stream_error",
           responseLatencyMs: Math.round(performance.now() - requestStartedAt),
           requestChars: text.length,
-          metadata: {
-            aborted,
-          },
-        });
-      }
+            metadata: {
+              aborted,
+              streamLastPhase: streamStatusRef.current,
+            },
+          });
+        }
       emitChatbotTelemetry("request_failed", {
         source: "local",
         routeCategory: "fallback",
@@ -1662,18 +1785,21 @@ export function SiteChatbot() {
       }
     }
   };
+  sendChatRequestRef.current = sendChatRequest;
 
-  const sendMessage = async (value: string) => {
-    await sendChatRequest({ question: value });
-  };
+  const sendMessage = useCallback(async (value: string) => {
+    if (!sendChatRequestRef.current) return;
+    await sendChatRequestRef.current({ question: value });
+  }, []);
 
-  const sendAction = async (actionRequest: ChatbotActionRequest, opts?: { syntheticPrompt?: string }) => {
-    await sendChatRequest({
+  const sendAction = useCallback(async (actionRequest: ChatbotActionRequest, opts?: { syntheticPrompt?: string }) => {
+    if (!sendChatRequestRef.current) return;
+    await sendChatRequestRef.current({
       question: opts?.syntheticPrompt ?? actionRequest.type,
       actionRequest,
       syntheticPrompt: opts?.syntheticPrompt,
     });
-  };
+  }, []);
 
   const handlePromptClick = (prompt: string) => {
     void sendMessage(prompt);
@@ -2036,7 +2162,7 @@ export function SiteChatbot() {
     [emitChatbotTelemetry, navigateFromChat],
   );
 
-  const handleCompareSelectionRequest = (message: ChatMessage) => {
+  const handleCompareSelectionRequest = useCallback((message: ChatMessage) => {
     const selectedIds = (conversationState.selectedPropertyIds ?? []).slice(0, 3);
     if (selectedIds.length < 2) {
       toast.info("Sélectionnez au moins 2 biens pour comparer.");
@@ -2062,9 +2188,9 @@ export function SiteChatbot() {
         message.planner,
       ),
     });
-  };
+  }, [conversationState.selectedPropertyIds, emitChatbotTelemetry, sendAction]);
 
-  const handleSearchRefineAction = (searchParams: ToolSearchParams, nextPage: number) => {
+  const handleSearchRefineAction = useCallback((searchParams: ToolSearchParams, nextPage: number) => {
     void sendAction(
       {
         type: "search_refine",
@@ -2076,9 +2202,43 @@ export function SiteChatbot() {
       },
       { syntheticPrompt: `Voir plus de résultats (page ${nextPage})` },
     );
-  };
+  }, [sendAction]);
 
-  const handlePrepareHandoffAction = (propertyIds?: number[]) => {
+  const handleAggregatePropertiesAction = useCallback((payload?: {
+    scope?: "current_filtered" | "global_active_inventory" | "selected_properties";
+    searchParams?: ToolSearchParams;
+    propertyIds?: number[];
+  }, syntheticPrompt?: string) => {
+    void sendAction(
+      {
+        type: "aggregate_properties",
+        payload,
+      },
+      { syntheticPrompt: syntheticPrompt ?? "Voir les statistiques" },
+    );
+  }, [sendAction]);
+
+  const handleApplyFilterPatchAction = useCallback((
+    baseSearchParams: ToolSearchParams | undefined,
+    patch: Partial<ToolSearchParams>,
+    removeKeys?: Array<keyof ToolSearchParams>,
+    syntheticPrompt?: string,
+  ) => {
+    const nextSearchParams = mergeToolSearchParamsPatch(baseSearchParams, patch, removeKeys);
+    void sendAction(
+      {
+        type: "search_refine",
+        payload: {
+          searchParams: nextSearchParams,
+          page: nextSearchParams.page ?? 1,
+          pageSize: nextSearchParams.pageSize,
+        },
+      },
+      { syntheticPrompt: syntheticPrompt ?? "Affiner la recherche" },
+    );
+  }, [sendAction]);
+
+  const handlePrepareHandoffAction = useCallback((propertyIds?: number[]) => {
     void sendAction(
       {
         type: "prepare_handoff",
@@ -2086,7 +2246,7 @@ export function SiteChatbot() {
       },
       { syntheticPrompt: "Préremplir le formulaire de contact" },
     );
-  };
+  }, [sendAction]);
 
   const handleResetButtonClick = (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
@@ -2172,6 +2332,236 @@ export function SiteChatbot() {
             >
               Préremplir le formulaire
             </button>
+          </div>
+        );
+      }
+
+      if (action.kind === "apply_filter_patch") {
+        return (
+          <div className="mt-3 rounded-lg border border-border/70 bg-background/60 px-3 py-2 text-xs">
+            <p className="font-medium">{action.title}</p>
+            {action.description && <p className="mt-1 text-muted-foreground">{action.description}</p>}
+            <button
+              type="button"
+              onClick={() =>
+                handleApplyFilterPatchAction(
+                  conversationState.recentSearch?.params,
+                  action.data.searchParamsPatch,
+                  action.data.removeKeys,
+                  action.data.syntheticPrompt ?? action.data.label,
+                )}
+              className="mt-2 rounded-full border border-border bg-background px-2.5 py-1 text-[11px] hover:bg-muted"
+            >
+              {action.data.label}
+            </button>
+          </div>
+        );
+      }
+
+      if (action.kind === "facet_refine") {
+        return (
+          <div className="mt-3 rounded-lg border border-border/70 bg-background/60 px-3 py-2 text-xs">
+            <p className="font-medium">{action.title}</p>
+            {action.description && <p className="mt-1 text-muted-foreground">{action.description}</p>}
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {action.data.suggestions.map((suggestion, index) => (
+                <button
+                  key={`${action.id}-facet-${index}-${suggestion.label}`}
+                  type="button"
+                  onClick={() =>
+                    handleApplyFilterPatchAction(
+                      action.data.searchParams,
+                      suggestion.patch,
+                      suggestion.removeKeys,
+                      `Affiner: ${suggestion.label}`,
+                    )}
+                  className="rounded-full border border-border bg-background px-2.5 py-1 text-[11px] hover:bg-muted"
+                >
+                  {suggestion.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+      }
+
+      if (action.kind === "clarify_scope") {
+        return (
+          <div className="mt-3 rounded-lg border border-border/70 bg-background/60 px-3 py-2 text-xs">
+            <p className="font-medium">{action.title}</p>
+            {action.description && <p className="mt-1 text-muted-foreground">{action.description}</p>}
+            <div className="mt-2 space-y-2">
+              {action.data.options.map((option) => (
+                <button
+                  key={`${action.id}-${option.scope}`}
+                  type="button"
+                  onClick={() =>
+                    handleAggregatePropertiesAction(
+                      {
+                        scope: option.scope,
+                        searchParams: option.searchParams ?? conversationState.recentSearch?.params,
+                        propertyIds: option.scope === "selected_properties" ? conversationState.selectedPropertyIds : undefined,
+                      },
+                      option.label,
+                    )}
+                  className={cn(
+                    "w-full rounded-lg border px-2.5 py-2 text-left text-[11px]",
+                    option.scope === action.data.defaultScope
+                      ? "border-emerald-500/30 bg-emerald-500/5"
+                      : "border-border bg-background hover:bg-muted",
+                  )}
+                >
+                  <span className="block font-medium">{option.label}</span>
+                  {option.description ? <span className="mt-0.5 block text-muted-foreground">{option.description}</span> : null}
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+      }
+
+      if (action.kind === "stats_summary") {
+        const hasSearchParams =
+          !!action.data.searchParams && Object.keys(action.data.searchParams).length > 0;
+        const topCities = action.data.breakdowns?.topCities?.slice(0, 3) ?? [];
+        const byType = action.data.breakdowns?.byType?.slice(0, 3) ?? [];
+        const byTransaction = action.data.breakdowns?.byTransaction?.slice(0, 2) ?? [];
+
+        return (
+          <div className="mt-3 rounded-lg border border-border/70 bg-background/60 px-3 py-2 text-xs">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="font-medium">{action.title}</p>
+              <span className="rounded-full border border-border bg-background px-2 py-0.5 text-[10px]">
+                {action.data.scopeLabel}
+              </span>
+            </div>
+            <p className="mt-1 text-muted-foreground">{action.data.criteriaSummary}</p>
+            {action.description && <p className="mt-1 text-muted-foreground">{action.description}</p>}
+
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <div className="rounded-md border border-border bg-card/80 px-2 py-1.5">
+                <p className="text-[10px] uppercase tracking-[0.08em] text-muted-foreground">Biens</p>
+                <p className="text-sm font-medium">{formatNumberValue(action.data.metrics.count)}</p>
+              </div>
+              <div className="rounded-md border border-border bg-card/80 px-2 py-1.5">
+                <p className="text-[10px] uppercase tracking-[0.08em] text-muted-foreground">Surface moyenne</p>
+                <p className="text-sm font-medium">{formatSurface(action.data.metrics.avgSurfaceM2 ?? null)}</p>
+              </div>
+              <div className="rounded-md border border-border bg-card/80 px-2 py-1.5">
+                <p className="text-[10px] uppercase tracking-[0.08em] text-muted-foreground">Prix moyen</p>
+                <p className="text-sm font-medium">
+                  {typeof action.data.metrics.avgPrice === "number"
+                    ? formatCompactPrice(action.data.metrics.avgPrice, "EUR")
+                    : "—"}
+                </p>
+              </div>
+              <div className="rounded-md border border-border bg-card/80 px-2 py-1.5">
+                <p className="text-[10px] uppercase tracking-[0.08em] text-muted-foreground">Prix/m² moyen</p>
+                <p className="text-sm font-medium">{formatPricePerM2(action.data.metrics.avgPricePerM2 ?? null)}</p>
+              </div>
+            </div>
+
+            <div className="mt-2 flex flex-wrap gap-1.5 text-[10px] text-muted-foreground">
+              <span>{action.data.sampleSizeLabel}</span>
+              {typeof action.data.metrics.excludedSurfaceCount === "number" && action.data.metrics.excludedSurfaceCount > 0 && (
+                <span>· {action.data.metrics.excludedSurfaceCount} sans surface</span>
+              )}
+              {typeof action.data.metrics.excludedPricePerM2Count === "number" &&
+                action.data.metrics.excludedPricePerM2Count > 0 && (
+                  <span>· {action.data.metrics.excludedPricePerM2Count} exclus du prix/m²</span>
+                )}
+            </div>
+
+            {action.data.lowSampleWarning && (
+              <p className="mt-2 rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-1.5 text-[11px] text-amber-800">
+                {action.data.lowSampleWarning}
+              </p>
+            )}
+
+            {(byTransaction.length > 0 || byType.length > 0 || topCities.length > 0) && (
+              <div className="mt-2 space-y-2">
+                {byTransaction.length > 0 && (
+                  <div>
+                    <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Par transaction</p>
+                    <div className="mt-1 flex flex-wrap gap-1.5">
+                      {byTransaction.map((bucket) => (
+                        <span key={`${action.id}-tx-${bucket.key}`} className="rounded-full border border-border bg-background px-2 py-0.5">
+                          {bucket.label}: {bucket.count}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {byType.length > 0 && (
+                  <div>
+                    <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Par type</p>
+                    <div className="mt-1 flex flex-wrap gap-1.5">
+                      {byType.map((bucket) => (
+                        <span key={`${action.id}-type-${bucket.key}`} className="rounded-full border border-border bg-background px-2 py-0.5">
+                          {bucket.label}: {bucket.count}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {topCities.length > 0 && (
+                  <div>
+                    <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Villes principales</p>
+                    <div className="mt-1 flex flex-wrap gap-1.5">
+                      {topCities.map((bucket) => (
+                        <span key={`${action.id}-city-${bucket.key}`} className="rounded-full border border-border bg-background px-2 py-0.5">
+                          {bucket.label}: {bucket.count}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {hasSearchParams && (
+                <button
+                  type="button"
+                  onClick={() => handleSearchRefineAction({ ...(action.data.searchParams ?? {}), page: 1 }, 1)}
+                  className="rounded-full border border-border bg-background px-2.5 py-1 text-[11px] hover:bg-muted"
+                >
+                  Voir les biens correspondants
+                </button>
+              )}
+              {action.data.scope !== "global_active_inventory" && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleAggregatePropertiesAction(
+                      {
+                        scope: "global_active_inventory",
+                        searchParams: action.data.searchParams,
+                      },
+                      "Comparer avec tout le stock actif",
+                    )}
+                  className="rounded-full border border-border bg-background px-2.5 py-1 text-[11px] hover:bg-muted"
+                >
+                  Comparer au stock actif
+                </button>
+              )}
+              {action.data.scope !== "current_filtered" && hasSearchParams && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleAggregatePropertiesAction(
+                      {
+                        scope: "current_filtered",
+                        searchParams: action.data.searchParams,
+                      },
+                      "Voir les stats des résultats",
+                    )}
+                  className="rounded-full border border-border bg-background px-2.5 py-1 text-[11px] hover:bg-muted"
+                >
+                  Voir les stats filtrées
+                </button>
+              )}
+            </div>
           </div>
         );
       }
@@ -2321,6 +2711,20 @@ export function SiteChatbot() {
               >
                 Comparer la sélection
               </button>
+              <button
+                type="button"
+                onClick={() =>
+                  handleAggregatePropertiesAction(
+                    {
+                      scope: "current_filtered",
+                      searchParams: action.data.searchParams,
+                    },
+                    "Voir les stats des résultats",
+                  )}
+                className="rounded-full border border-border bg-background px-2.5 py-1 text-[11px] hover:bg-muted"
+              >
+                Voir les stats
+              </button>
               {action.data.total > action.data.items.length && (
                 <button
                   type="button"
@@ -2345,8 +2749,10 @@ export function SiteChatbot() {
       return null;
     },
     [
+      conversationState.recentSearch?.params,
       conversationState.selectedPropertyIds,
-      emitChatbotTelemetry,
+      handleAggregatePropertiesAction,
+      handleApplyFilterPatchAction,
       handleCompareSelectionRequest,
       handlePrepareHandoffAction,
       handleSearchRefineAction,
@@ -2512,7 +2918,11 @@ export function SiteChatbot() {
               conversationState.preferences?.transaction ||
               conversationState.preferences?.type ||
               typeof conversationState.preferences?.bedroomsMin === "number" ||
-              typeof conversationState.preferences?.priceMax === "number") && (
+              typeof conversationState.preferences?.bathroomsMin === "number" ||
+              typeof conversationState.preferences?.surfaceMin === "number" ||
+              typeof conversationState.preferences?.surfaceMax === "number" ||
+              typeof conversationState.preferences?.priceMax === "number" ||
+              (conversationState.preferences?.features?.length ?? 0) > 0) && (
               <div className="border-b border-border/70 px-4 py-2">
                 <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
                   <span className="text-muted-foreground">Contexte mémorisé:</span>
@@ -2540,11 +2950,32 @@ export function SiteChatbot() {
                       {conversationState.preferences.bedroomsMin}+ ch.
                     </span>
                   )}
+                  {typeof conversationState.preferences?.bathroomsMin === "number" && (
+                    <span className="rounded-full border border-border bg-background px-2 py-0.5">
+                      {conversationState.preferences.bathroomsMin}+ sdb
+                    </span>
+                  )}
+                  {(typeof conversationState.preferences?.surfaceMin === "number" ||
+                    typeof conversationState.preferences?.surfaceMax === "number") && (
+                    <span className="rounded-full border border-border bg-background px-2 py-0.5">
+                      {typeof conversationState.preferences?.surfaceMin === "number" &&
+                      typeof conversationState.preferences?.surfaceMax === "number"
+                        ? `Surface ${formatSurface(conversationState.preferences.surfaceMin)}-${formatSurface(conversationState.preferences.surfaceMax)}`
+                        : typeof conversationState.preferences?.surfaceMin === "number"
+                          ? `Surface min ${formatSurface(conversationState.preferences.surfaceMin)}`
+                          : `Surface max ${formatSurface(conversationState.preferences?.surfaceMax ?? null)}`}
+                    </span>
+                  )}
                   {typeof conversationState.preferences?.priceMax === "number" && (
                     <span className="rounded-full border border-border bg-background px-2 py-0.5">
                       Budget max {formatCompactPrice(conversationState.preferences.priceMax, "EUR")}
                     </span>
                   )}
+                  {(conversationState.preferences?.features ?? []).slice(0, 3).map((feature) => (
+                    <span key={`memory-feature-${feature}`} className="rounded-full border border-border bg-background px-2 py-0.5">
+                      {feature}
+                    </span>
+                  ))}
                   <button
                     type="button"
                     onClick={() =>

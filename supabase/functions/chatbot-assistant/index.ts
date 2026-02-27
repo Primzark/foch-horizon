@@ -1,6 +1,16 @@
 import { z } from "https://esm.sh/zod@3.25.76";
 import { createServiceClient } from "../_shared/client.ts";
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
+import {
+  computeSharedPropertyAggregateMetrics,
+  fetchAggregateRowsByIds,
+  fetchAggregateRowsForSearchFilters,
+  runSharedPropertySearchQuery,
+  type SharedPropertyAggregateBucket,
+  type SharedPropertyAggregateMetrics,
+  type SharedPropertySearchQueryParams,
+  type SharedPropertySearchRow,
+} from "../_shared/property-search.ts";
 
 const toolSearchParamsSchema = z.object({
   transaction: z.enum(["vente", "location"]).optional(),
@@ -8,8 +18,16 @@ const toolSearchParamsSchema = z.object({
   city: z.string().min(1).max(80).optional(),
   q: z.string().min(1).max(120).optional(),
   bedroomsMin: z.number().int().min(0).max(12).optional(),
+  bathroomsMin: z.number().int().min(0).max(12).optional(),
+  garagesMin: z.number().int().min(0).max(12).optional(),
   priceMin: z.number().int().min(0).max(50_000_000).optional(),
   priceMax: z.number().int().min(0).max(50_000_000).optional(),
+  surfaceMin: z.number().min(0).max(100_000).optional(),
+  surfaceMax: z.number().min(0).max(100_000).optional(),
+  terrainMin: z.number().min(0).max(10_000_000).optional(),
+  terrainMax: z.number().min(0).max(10_000_000).optional(),
+  features: z.array(z.string().min(1).max(80)).max(12).optional(),
+  sort: z.enum(["newest", "price_asc", "price_desc", "surface_desc"]).optional(),
   page: z.number().int().min(1).max(100).optional(),
   pageSize: z.number().int().min(1).max(10).optional(),
 });
@@ -38,8 +56,16 @@ const conversationStateSchema = z.object({
       type: z.enum(["appartement", "maison_villa", "autre"]).optional(),
       city: z.string().min(1).max(80).optional(),
       bedroomsMin: z.number().int().min(0).max(12).optional(),
+      bathroomsMin: z.number().int().min(0).max(12).optional(),
+      garagesMin: z.number().int().min(0).max(12).optional(),
       priceMax: z.number().int().min(0).max(50_000_000).optional(),
       priceMin: z.number().int().min(0).max(50_000_000).optional(),
+      surfaceMin: z.number().min(0).max(100_000).optional(),
+      surfaceMax: z.number().min(0).max(100_000).optional(),
+      terrainMin: z.number().min(0).max(10_000_000).optional(),
+      terrainMax: z.number().min(0).max(10_000_000).optional(),
+      features: z.array(z.string().min(1).max(80)).max(12).optional(),
+      sort: z.enum(["newest", "price_asc", "price_desc", "surface_desc"]).optional(),
     })
     .optional(),
 });
@@ -47,6 +73,7 @@ const conversationStateSchema = z.object({
 const actionRequestSchema = z.object({
   type: z.enum([
     "search_refine",
+    "aggregate_properties",
     "compare_selected_properties",
     "open_path_confirmed",
     "prepare_handoff",
@@ -119,8 +146,16 @@ interface ToolSearchParams {
   city?: string;
   q?: string;
   bedroomsMin?: number;
+  bathroomsMin?: number;
+  garagesMin?: number;
   priceMin?: number;
   priceMax?: number;
+  surfaceMin?: number;
+  surfaceMax?: number;
+  terrainMin?: number;
+  terrainMax?: number;
+  features?: string[];
+  sort?: "newest" | "price_asc" | "price_desc" | "surface_desc";
   page?: number;
   pageSize?: number;
 }
@@ -146,14 +181,23 @@ interface ToolConversationState {
     type?: "appartement" | "maison_villa" | "autre";
     city?: string;
     bedroomsMin?: number;
+    bathroomsMin?: number;
+    garagesMin?: number;
     priceMin?: number;
     priceMax?: number;
+    surfaceMin?: number;
+    surfaceMax?: number;
+    terrainMin?: number;
+    terrainMax?: number;
+    features?: string[];
+    sort?: "newest" | "price_asc" | "price_desc" | "surface_desc";
   };
 }
 
 interface ToolActionRequest {
   type:
     | "search_refine"
+    | "aggregate_properties"
     | "compare_selected_properties"
     | "open_path_confirmed"
     | "prepare_handoff"
@@ -194,6 +238,7 @@ interface ToolCompareProperty {
 interface ToolTraceItem {
   tool:
     | "search_properties"
+    | "aggregate_properties"
     | "get_properties"
     | "compare_properties"
     | "prepare_handoff"
@@ -223,6 +268,85 @@ interface ToolUiActionSearchResults extends ToolUiActionBase {
     canCompare: boolean;
     compareSelectionLimit: number;
     nextSuggestedRefinements?: string[];
+  };
+}
+
+type PropertyAggregationScope = "current_filtered" | "global_active_inventory" | "selected_properties";
+
+interface PropertyAggregateMetrics {
+  count: number;
+  excludedSurfaceCount?: number;
+  excludedPricePerM2Count?: number;
+  avgSurfaceM2?: number | null;
+  medianSurfaceM2?: number | null;
+  minSurfaceM2?: number | null;
+  maxSurfaceM2?: number | null;
+  avgPrice?: number | null;
+  medianPrice?: number | null;
+  minPrice?: number | null;
+  maxPrice?: number | null;
+  avgPricePerM2?: number | null;
+}
+
+interface PropertyAggregateBreakdownBucket {
+  key: string;
+  label: string;
+  count: number;
+  avgPrice?: number | null;
+  avgSurfaceM2?: number | null;
+}
+
+interface ToolUiActionStatsSummary extends ToolUiActionBase {
+  kind: "stats_summary";
+  data: {
+    scope: PropertyAggregationScope;
+    scopeLabel: string;
+    criteriaSummary: string;
+    searchParams?: ToolSearchParams;
+    selectedPropertyIds?: number[];
+    metrics: PropertyAggregateMetrics;
+    breakdowns?: {
+      byTransaction?: PropertyAggregateBreakdownBucket[];
+      byType?: PropertyAggregateBreakdownBucket[];
+      topCities?: PropertyAggregateBreakdownBucket[];
+    };
+    sampleSizeLabel: string;
+    lowSampleWarning?: string;
+  };
+}
+
+interface ToolUiActionFacetRefine extends ToolUiActionBase {
+  kind: "facet_refine";
+  data: {
+    searchParams: ToolSearchParams;
+    suggestions: Array<{
+      label: string;
+      patch: Partial<ToolSearchParams>;
+      removeKeys?: Array<keyof ToolSearchParams>;
+    }>;
+  };
+}
+
+interface ToolUiActionApplyFilterPatch extends ToolUiActionBase {
+  kind: "apply_filter_patch";
+  data: {
+    searchParamsPatch: Partial<ToolSearchParams>;
+    removeKeys?: Array<keyof ToolSearchParams>;
+    label: string;
+    syntheticPrompt?: string;
+  };
+}
+
+interface ToolUiActionClarifyScope extends ToolUiActionBase {
+  kind: "clarify_scope";
+  data: {
+    options: Array<{
+      scope: PropertyAggregationScope;
+      label: string;
+      description?: string;
+      searchParams?: ToolSearchParams;
+    }>;
+    defaultScope?: PropertyAggregationScope;
   };
 }
 
@@ -260,6 +384,10 @@ interface ToolUiActionNotice extends ToolUiActionBase {
 
 type ToolUiAction =
   | ToolUiActionSearchResults
+  | ToolUiActionStatsSummary
+  | ToolUiActionFacetRefine
+  | ToolUiActionApplyFilterPatch
+  | ToolUiActionClarifyScope
   | ToolUiActionCompareSummary
   | ToolUiActionOpenPage
   | ToolUiActionLeadHandoffDraft
@@ -325,6 +453,7 @@ interface ToolOrchestrationResult {
 
 type PlannerToolName =
   | "search_properties"
+  | "aggregate_properties"
   | "get_properties"
   | "compare_properties"
   | "prepare_handoff"
@@ -345,7 +474,7 @@ interface PlannerMeta {
 
 interface PlannerClarification {
   question: string;
-  missingFields?: Array<"transaction" | "city" | "budget" | "type" | "bedrooms">;
+  missingFields?: Array<"transaction" | "city" | "budget" | "type" | "bedrooms" | "surface">;
   options?: string[];
 }
 
@@ -357,6 +486,14 @@ interface PlannerStep {
 
 type PlannerToolArgs =
   | ({ tool: "search_properties"; args: ToolSearchParams })
+  | ({
+      tool: "aggregate_properties";
+      args?: {
+        scope?: PropertyAggregationScope;
+        searchParams?: ToolSearchParams;
+        propertyIds?: number[];
+      };
+    })
   | ({ tool: "get_properties"; args?: { propertyIds?: number[] } })
   | ({ tool: "compare_properties"; args?: { propertyIds?: number[] } })
   | ({ tool: "prepare_handoff"; args?: { propertyIds?: number[] } })
@@ -1848,13 +1985,40 @@ function sanitizePlannerSearchArgs(rawArgs: unknown): ToolSearchParams {
   if (typeof candidate.q === "string" && candidate.q.trim().length > 0) {
     parsed.q = candidate.q.trim().slice(0, 120);
   }
+  if (
+    candidate.sort === "newest" ||
+    candidate.sort === "price_asc" ||
+    candidate.sort === "price_desc" ||
+    candidate.sort === "surface_desc"
+  ) {
+    parsed.sort = candidate.sort;
+  }
+  if (Array.isArray(candidate.features)) {
+    const features = candidate.features
+      .map((value) => (typeof value === "string" ? value.trim().slice(0, 80) : ""))
+      .filter(Boolean)
+      .slice(0, 12);
+    if (features.length > 0) parsed.features = [...new Set(features)];
+  }
 
   const bedroomsMin = parsePlannerNumber(candidate.bedroomsMin, 0, 12);
   if (typeof bedroomsMin === "number") parsed.bedroomsMin = bedroomsMin;
+  const bathroomsMin = parsePlannerNumber(candidate.bathroomsMin, 0, 12);
+  if (typeof bathroomsMin === "number") parsed.bathroomsMin = bathroomsMin;
+  const garagesMin = parsePlannerNumber(candidate.garagesMin, 0, 12);
+  if (typeof garagesMin === "number") parsed.garagesMin = garagesMin;
   const priceMin = parsePlannerNumber(candidate.priceMin, 0, 50_000_000);
   if (typeof priceMin === "number") parsed.priceMin = priceMin;
   const priceMax = parsePlannerNumber(candidate.priceMax, 0, 50_000_000);
   if (typeof priceMax === "number") parsed.priceMax = priceMax;
+  const surfaceMin = parsePlannerNumber(candidate.surfaceMin, 0, 100_000);
+  if (typeof surfaceMin === "number") parsed.surfaceMin = surfaceMin;
+  const surfaceMax = parsePlannerNumber(candidate.surfaceMax, 0, 100_000);
+  if (typeof surfaceMax === "number") parsed.surfaceMax = surfaceMax;
+  const terrainMin = parsePlannerNumber(candidate.terrainMin, 0, 10_000_000);
+  if (typeof terrainMin === "number") parsed.terrainMin = terrainMin;
+  const terrainMax = parsePlannerNumber(candidate.terrainMax, 0, 10_000_000);
+  if (typeof terrainMax === "number") parsed.terrainMax = terrainMax;
   const page = parsePlannerNumber(candidate.page, 1, 100);
   if (typeof page === "number") parsed.page = page;
   const pageSize = parsePlannerNumber(candidate.pageSize, 1, 10);
@@ -1863,8 +2027,50 @@ function sanitizePlannerSearchArgs(rawArgs: unknown): ToolSearchParams {
   if (parsed.priceMin != null && parsed.priceMax != null && parsed.priceMin > parsed.priceMax) {
     [parsed.priceMin, parsed.priceMax] = [parsed.priceMax, parsed.priceMin];
   }
+  if (parsed.surfaceMin != null && parsed.surfaceMax != null && parsed.surfaceMin > parsed.surfaceMax) {
+    [parsed.surfaceMin, parsed.surfaceMax] = [parsed.surfaceMax, parsed.surfaceMin];
+  }
+  if (parsed.terrainMin != null && parsed.terrainMax != null && parsed.terrainMin > parsed.terrainMax) {
+    [parsed.terrainMin, parsed.terrainMax] = [parsed.terrainMax, parsed.terrainMin];
+  }
 
   return parsed;
+}
+
+function sanitizePlannerAggregateArgs(rawArgs: unknown): {
+  scope?: PropertyAggregationScope;
+  searchParams?: ToolSearchParams;
+  propertyIds?: number[];
+} {
+  if (!rawArgs || typeof rawArgs !== "object") return {};
+  const candidate = rawArgs as Record<string, unknown>;
+  const args: {
+    scope?: PropertyAggregationScope;
+    searchParams?: ToolSearchParams;
+    propertyIds?: number[];
+  } = {};
+
+  if (
+    candidate.scope === "current_filtered" ||
+    candidate.scope === "global_active_inventory" ||
+    candidate.scope === "selected_properties"
+  ) {
+    args.scope = candidate.scope;
+  }
+  if (candidate.searchParams && typeof candidate.searchParams === "object" && !Array.isArray(candidate.searchParams)) {
+    args.searchParams = sanitizePlannerSearchArgs(candidate.searchParams);
+  } else {
+    const directSearchParams = sanitizePlannerSearchArgs(candidate);
+    if (Object.keys(directSearchParams).length > 0) args.searchParams = directSearchParams;
+  }
+  if (Array.isArray(candidate.propertyIds)) {
+    const ids = candidate.propertyIds
+      .map((value) => (typeof value === "number" ? value : Number(value)))
+      .filter((value) => Number.isInteger(value) && value > 0)
+      .slice(0, 50);
+    if (ids.length > 0) args.propertyIds = ids;
+  }
+  return args;
 }
 
 function normalizePlannerRawInput(raw: unknown): unknown {
@@ -1924,6 +2130,7 @@ function normalizePlannerRawInput(raw: unknown): unknown {
     if (typeof value !== "string") return undefined;
     const v = value.trim().toLowerCase();
     if (v === "search_properties" || v === "search" || v === "property_search") return "search_properties";
+    if (v === "aggregate_properties" || v === "aggregate" || v === "stats" || v === "property_stats") return "aggregate_properties";
     if (v === "get_properties" || v === "get_property" || v === "fetch_properties") return "get_properties";
     if (v === "compare_properties" || v === "compare" || v === "comparison") return "compare_properties";
     if (v === "prepare_handoff" || v === "handoff" || v === "contact" || v === "prepare_contact") return "prepare_handoff";
@@ -2047,13 +2254,21 @@ function sanitizePlannerDecision(raw: unknown): PlannerDecision | null {
       ? candidate.clarification.missingFields
           .map((field) => String(field).trim().toLowerCase())
           .map((field) => {
-            if (field === "transaction" || field === "city" || field === "budget" || field === "type" || field === "bedrooms") return field;
+            if (
+              field === "transaction" ||
+              field === "city" ||
+              field === "budget" ||
+              field === "type" ||
+              field === "bedrooms" ||
+              field === "surface"
+            ) return field;
             if (field === "price" || field === "price_max" || field === "budgetmax") return "budget";
             if (field === "bedroom" || field === "rooms" || field === "chambres") return "bedrooms";
+            if (field === "m2" || field === "surface_m2" || field === "surfacemin" || field === "surfacemax") return "surface";
             return null;
           })
           .filter(
-            (field): field is "transaction" | "city" | "budget" | "type" | "bedrooms" => field != null,
+            (field): field is "transaction" | "city" | "budget" | "type" | "bedrooms" | "surface" => field != null,
           )
           .slice(0, 5)
       : undefined;
@@ -2073,6 +2288,7 @@ function sanitizePlannerDecision(raw: unknown): PlannerDecision | null {
   if (decisionType === "plan") {
     const allowedTools = new Set<PlannerToolName>([
       "search_properties",
+      "aggregate_properties",
       "get_properties",
       "compare_properties",
       "prepare_handoff",
@@ -2080,8 +2296,8 @@ function sanitizePlannerDecision(raw: unknown): PlannerDecision | null {
       "get_property_document_context",
       "retrieve_site_context",
     ]);
-    const steps = (candidate.steps ?? [])
-      .map((step) => {
+    const steps: PlannerStep[] = (candidate.steps ?? [])
+      .map((step): PlannerStep | null => {
         const tool = typeof step.tool === "string" ? step.tool.trim() : "";
         if (!allowedTools.has(tool as PlannerToolName)) return null;
         const argsRaw =
@@ -2091,6 +2307,8 @@ function sanitizePlannerDecision(raw: unknown): PlannerDecision | null {
         let args: Record<string, unknown> = {};
         if (tool === "search_properties") {
           args = sanitizePlannerSearchArgs(argsRaw) as unknown as Record<string, unknown>;
+        } else if (tool === "aggregate_properties") {
+          args = sanitizePlannerAggregateArgs(argsRaw) as unknown as Record<string, unknown>;
         } else if (
           tool === "compare_properties" ||
           tool === "prepare_handoff" ||
@@ -2110,9 +2328,13 @@ function sanitizePlannerDecision(raw: unknown): PlannerDecision | null {
           args = query ? { query } : {};
         }
         const purpose = typeof step.purpose === "string" ? step.purpose.trim().slice(0, 120) : undefined;
-        return { tool: tool as PlannerToolName, args, purpose } satisfies PlannerStep;
+        return {
+          tool: tool as PlannerToolName,
+          args: Object.keys(args).length > 0 ? args : undefined,
+          purpose,
+        };
       })
-      .filter((step): step is PlannerStep => Boolean(step))
+      .filter((step): step is PlannerStep => step !== null)
       .slice(0, 3);
     if (steps.length === 0) return null;
     return {
@@ -2138,6 +2360,19 @@ function sanitizePlannerDecision(raw: unknown): PlannerDecision | null {
       toolCall: {
         tool,
         args: sanitizePlannerSearchArgs(candidate.toolCall.args),
+      },
+    };
+  }
+
+  if (tool === "aggregate_properties") {
+    return {
+      version: 1,
+      decisionType: "tool_call",
+      confidence,
+      reasonCode,
+      toolCall: {
+        tool,
+        args: sanitizePlannerAggregateArgs(candidate.toolCall.args),
       },
     };
   }
@@ -2194,6 +2429,16 @@ function plannerDecisionToActionRequest(decision: Extract<PlannerDecision, { dec
       type: "search_refine",
       payload: {
         searchParams: toolCall.args ?? {},
+      },
+    };
+  }
+  if (toolCall.tool === "aggregate_properties") {
+    return {
+      type: "aggregate_properties",
+      payload: {
+        ...(toolCall.args?.scope ? { scope: toolCall.args.scope } : {}),
+        ...(toolCall.args?.searchParams ? { searchParams: toolCall.args.searchParams } : {}),
+        ...(toolCall.args?.propertyIds?.length ? { propertyIds: toolCall.args.propertyIds } : {}),
       },
     };
   }
@@ -2269,11 +2514,26 @@ function buildGeminiPlannerPrompt(input: {
           type: ["appartement", "maison_villa", "autre"],
           city: "slug ville ex: le-havre",
           bedroomsMin: "number",
+          bathroomsMin: "number",
+          garagesMin: "number",
           priceMin: "number",
           priceMax: "number",
+          surfaceMin: "number",
+          surfaceMax: "number",
+          terrainMin: "number",
+          terrainMax: "number",
+          features: "optional string[]",
+          sort: ["newest", "price_asc", "price_desc", "surface_desc"],
           q: "string",
           page: "number",
           pageSize: "number <= 10",
+        },
+      },
+      aggregate_properties: {
+        args: {
+          scope: ["current_filtered", "global_active_inventory", "selected_properties"],
+          searchParams: "optional object same shape as search_properties args",
+          propertyIds: "optional number[] (for selected_properties)",
         },
       },
       compare_properties: {
@@ -2307,7 +2567,7 @@ function buildGeminiPlannerPrompt(input: {
   const v2Enabled = Boolean(input.v2Enabled);
   const systemInstruction = [
     "You are a strict property-tool planner for a French real-estate chatbot (Foch Immobilier, Le Havre).",
-    "You are planning only for PROPERTY flows (search / compare / handoff).",
+    "You are planning only for PROPERTY flows (search / aggregate stats / compare / handoff).",
     "Return JSON only. No markdown. No prose outside JSON.",
     v2Enabled ? "Allowed decision types: plan or clarify." : "Allowed decision types: tool_call or clarify.",
     v2Enabled
@@ -2319,7 +2579,7 @@ function buildGeminiPlannerPrompt(input: {
     "Use French for clarification.question and options.",
     v2Enabled
       ? "Use exact tool names from the allowed tools and keep steps minimal."
-      : "Use exact tool names: search_properties, compare_properties, prepare_handoff.",
+      : "Use exact tool names: search_properties, aggregate_properties, compare_properties, prepare_handoff.",
     "For compare, use compare_properties only when the user clearly asks to compare or a selection exists.",
     v2Enabled ? "Output schema version must be 2." : "Output schema version must be 1.",
   ].join(" ");
@@ -2444,6 +2704,24 @@ function buildFallback(question: string) {
   };
 }
 
+function buildRagFallbackWithoutGeneration(ragContext: RAGContextResult): { answer: string; suggestedPrompts: string[] } | null {
+  if (!ragContext.contextBlock || ragContext.citations.length === 0) return null;
+
+  const siteCitation = ragContext.citations.find((citation) => citation.kind !== "web") ?? ragContext.citations[0];
+  const citationLabel = siteCitation?.path || "la page demandée";
+  const prompts = [
+    ...buildSuggestedPromptsFromCitations(ragContext.citations),
+    "Résumer les points clés",
+    "Ouvrir la page source",
+  ].slice(0, 6);
+
+  return {
+    answer:
+      `J’ai retrouvé des informations pertinentes sur ${citationLabel}. Souhaitez-vous un résumé rapide ou l’ouverture de la page ?`,
+    suggestedPrompts: prompts,
+  };
+}
+
 function buildSuggestedPromptsFromCitations(citations: RAGCitation[]): string[] {
   const prompts: string[] = [];
   const seen = new Set<string>();
@@ -2482,6 +2760,8 @@ interface PropertySearchQueryRow {
 
 const toolPropertyIntentPattern =
   /appartement|maison|villa|studio|t[1-9]\b|bien(?:s)?|acheter|achat|louer|location|vente|budget|chambre|surface|m2|annonce/;
+const toolAggregateIntentPattern =
+  /moyenn|average|mediane|median|stat(?:s|istiques)?|prix\s*(?:au|\/)\s*m2|m2\s*(?:moyen|moyenne)|surface\s*(?:moyenne|moyen)/;
 const toolCompareIntentPattern = /compar|compare|lequel est mieux|laquelle est mieux|entre les deux|entre ces biens/;
 const toolHandoffIntentPattern = /contact|conseiller|rappel|rappeler|etre contacte|etre rappele|mail|email/;
 const toolWebsiteIntentPattern =
@@ -2645,6 +2925,20 @@ function parseBedroomsMin(question: string): number | undefined {
   return undefined;
 }
 
+function parseBathroomsMin(question: string): number | undefined {
+  const normalized = normalizeText(question);
+  const match = normalized.match(/(\d{1,2})\s*(?:sdb|salle(?:s)? de bain|salles? de bains?)/);
+  if (!match) return undefined;
+  return clamp(Number(match[1]), 0, 12);
+}
+
+function parseGaragesMin(question: string): number | undefined {
+  const normalized = normalizeText(question);
+  const match = normalized.match(/(\d{1,2})\s*garage/);
+  if (!match) return undefined;
+  return clamp(Number(match[1]), 0, 12);
+}
+
 function parsePriceHints(question: string): Pick<ToolSearchParams, "priceMin" | "priceMax"> {
   const normalized = normalizeText(question);
   const extract = (value: string) => Number(value.replace(/\s+/g, ""));
@@ -2695,6 +2989,91 @@ function parsePriceHints(question: string): Pick<ToolSearchParams, "priceMin" | 
   return {};
 }
 
+function parseMetricRangeHints(
+  question: string,
+  config: { unitPattern: string; minKey: "surfaceMin" | "terrainMin"; maxKey: "surfaceMax" | "terrainMax" },
+): Partial<ToolSearchParams> {
+  const compactQuestion = question.replace(/\u00a0/g, " ");
+  const unitPattern = config.unitPattern;
+  const result: Partial<ToolSearchParams> = {};
+  const extract = (value: string) => Number(value.replace(/[^\d.,]/g, "").replace(",", "."));
+
+  const between = compactQuestion.match(
+    new RegExp(`entre\\s+([0-9][0-9\\s.,]{0,7})\\s*(?:${unitPattern})\\s+et\\s+([0-9][0-9\\s.,]{0,7})\\s*(?:${unitPattern})?`, "i"),
+  );
+  if (between) {
+    const a = extract(between[1]);
+    const b = extract(between[2]);
+    const min = Math.min(a, b);
+    const max = Math.max(a, b);
+    if (Number.isFinite(min)) result[config.minKey] = min;
+    if (Number.isFinite(max)) result[config.maxKey] = max;
+    return result;
+  }
+
+  const maxMatch = compactQuestion.match(
+    new RegExp(`(?:moins de|max(?:imum)?|jusqu(?:e|')?a)\\s*[:-]?\\s*([0-9][0-9\\s.,]{0,7})\\s*(?:${unitPattern})`, "i"),
+  );
+  if (maxMatch) {
+    const max = extract(maxMatch[1]);
+    if (Number.isFinite(max)) result[config.maxKey] = max;
+  }
+
+  const minMatch = compactQuestion.match(
+    new RegExp(`(?:au moins|min(?:imum)?|a partir de|plus de)\\s*[:-]?\\s*([0-9][0-9\\s.,]{0,7})\\s*(?:${unitPattern})`, "i"),
+  );
+  if (minMatch) {
+    const min = extract(minMatch[1]);
+    if (Number.isFinite(min)) result[config.minKey] = min;
+  }
+
+  return result;
+}
+
+function parseSurfaceHints(question: string): Pick<ToolSearchParams, "surfaceMin" | "surfaceMax"> {
+  const parsed = parseMetricRangeHints(question, {
+    unitPattern: "m2|m\\^2|m²",
+    minKey: "surfaceMin",
+    maxKey: "surfaceMax",
+  });
+  return {
+    surfaceMin: typeof parsed.surfaceMin === "number" && Number.isFinite(parsed.surfaceMin) ? parsed.surfaceMin : undefined,
+    surfaceMax: typeof parsed.surfaceMax === "number" && Number.isFinite(parsed.surfaceMax) ? parsed.surfaceMax : undefined,
+  };
+}
+
+function parseTerrainHints(question: string): Pick<ToolSearchParams, "terrainMin" | "terrainMax"> {
+  const terrainQuestion = question;
+  const parsed = parseMetricRangeHints(terrainQuestion, {
+    unitPattern: "m2|m\\^2|m²",
+    minKey: "terrainMin",
+    maxKey: "terrainMax",
+  });
+  // Only keep terrain ranges when "terrain" appears to avoid confusing with habitable surface.
+  if (!/\bterrain\b/i.test(terrainQuestion)) return {};
+  return {
+    terrainMin: typeof parsed.terrainMin === "number" && Number.isFinite(parsed.terrainMin) ? parsed.terrainMin : undefined,
+    terrainMax: typeof parsed.terrainMax === "number" && Number.isFinite(parsed.terrainMax) ? parsed.terrainMax : undefined,
+  };
+}
+
+function detectFeatureFilters(question: string): string[] | undefined {
+  const normalized = normalizeText(question);
+  const rules: Array<{ key: string; patterns: RegExp[] }> = [
+    { key: "balcon", patterns: [/\bbalcon\b/] },
+    { key: "terrasse", patterns: [/\bterrasse\b/] },
+    { key: "ascenseur", patterns: [/\bascenseur\b/] },
+    { key: "garage", patterns: [/\bgarage\b/] },
+    { key: "parking", patterns: [/\bparking\b/, /\bstationnement\b/] },
+    { key: "jardin", patterns: [/\bjardin\b/] },
+    { key: "vue mer", patterns: [/\bvue mer\b/, /\bmer\b/] },
+  ];
+  const features = rules
+    .filter((rule) => rule.patterns.some((pattern) => pattern.test(normalized)))
+    .map((rule) => rule.key);
+  return features.length > 0 ? features.slice(0, 6) : undefined;
+}
+
 function mergeSearchParams(
   base: ToolSearchParams,
   overrides: ToolSearchParams,
@@ -2707,6 +3086,16 @@ function mergeSearchParams(
   };
   if (merged.priceMin && merged.priceMax && merged.priceMin > merged.priceMax) {
     [merged.priceMin, merged.priceMax] = [merged.priceMax, merged.priceMin];
+  }
+  if (merged.surfaceMin && merged.surfaceMax && merged.surfaceMin > merged.surfaceMax) {
+    [merged.surfaceMin, merged.surfaceMax] = [merged.surfaceMax, merged.surfaceMin];
+  }
+  if (merged.terrainMin && merged.terrainMax && merged.terrainMin > merged.terrainMax) {
+    [merged.terrainMin, merged.terrainMax] = [merged.terrainMax, merged.terrainMin];
+  }
+  if (Array.isArray(merged.features)) {
+    merged.features = [...new Set(merged.features.map((value) => value.trim()).filter(Boolean))].slice(0, 12);
+    if (merged.features.length === 0) delete merged.features;
   }
   merged.page = clamp(Math.floor(merged.page ?? pageFallback), 1, 100);
   merged.pageSize = clamp(Math.floor(merged.pageSize ?? pageSizeFallback), 1, 10);
@@ -2725,11 +3114,16 @@ function extractSearchParamsFromQuestion(
     type: detectPropertyType(question),
     city: detectCitySlug(question),
     bedroomsMin: parseBedroomsMin(question),
+    bathroomsMin: parseBathroomsMin(question),
+    garagesMin: parseGaragesMin(question),
     ...parsePriceHints(question),
+    ...parseSurfaceHints(question),
+    ...parseTerrainHints(question),
+    features: detectFeatureFilters(question),
   };
 
   let actionParams: ToolSearchParams = {};
-  if (actionRequest?.type === "search_refine") {
+  if (actionRequest?.type === "search_refine" || actionRequest?.type === "aggregate_properties") {
     const payload = actionRequest.payload ?? {};
     const rawSearchParams = payload.searchParams;
     if (rawSearchParams && typeof rawSearchParams === "object") {
@@ -2738,13 +3132,15 @@ function extractSearchParamsFromQuestion(
         actionParams = { ...parsed.data };
       }
     }
-    const page = typeof payload.page === "number" ? payload.page : Number(payload.page);
-    if (Number.isFinite(page)) {
-      actionParams.page = Math.floor(page);
-    }
-    const pageSize = typeof payload.pageSize === "number" ? payload.pageSize : Number(payload.pageSize);
-    if (Number.isFinite(pageSize)) {
-      actionParams.pageSize = Math.floor(pageSize);
+    if (actionRequest.type === "search_refine") {
+      const page = typeof payload.page === "number" ? payload.page : Number(payload.page);
+      if (Number.isFinite(page)) {
+        actionParams.page = Math.floor(page);
+      }
+      const pageSize = typeof payload.pageSize === "number" ? payload.pageSize : Number(payload.pageSize);
+      if (Number.isFinite(pageSize)) {
+        actionParams.pageSize = Math.floor(pageSize);
+      }
     }
   }
 
@@ -2772,11 +3168,32 @@ function buildCriteriaSummary(params: ToolSearchParams): string {
   if (typeof params.bedroomsMin === "number" && params.bedroomsMin > 0) {
     parts.push(`min. ${params.bedroomsMin} chambre${params.bedroomsMin > 1 ? "s" : ""}`);
   }
+  if (typeof params.bathroomsMin === "number" && params.bathroomsMin > 0) {
+    parts.push(`min. ${params.bathroomsMin} sdb`);
+  }
+  if (typeof params.garagesMin === "number" && params.garagesMin > 0) {
+    parts.push(`min. ${params.garagesMin} garage${params.garagesMin > 1 ? "s" : ""}`);
+  }
   if (typeof params.priceMax === "number") {
     parts.push(`budget max ${formatPriceValue(params.priceMax)}`);
   }
   if (typeof params.priceMin === "number") {
     parts.push(`budget min ${formatPriceValue(params.priceMin)}`);
+  }
+  if (typeof params.surfaceMin === "number") {
+    parts.push(`surface min ${formatMetricValue(params.surfaceMin, "m²")}`);
+  }
+  if (typeof params.surfaceMax === "number") {
+    parts.push(`surface max ${formatMetricValue(params.surfaceMax, "m²")}`);
+  }
+  if (typeof params.terrainMin === "number") {
+    parts.push(`terrain min ${formatMetricValue(params.terrainMin, "m²")}`);
+  }
+  if (typeof params.terrainMax === "number") {
+    parts.push(`terrain max ${formatMetricValue(params.terrainMax, "m²")}`);
+  }
+  if (Array.isArray(params.features) && params.features.length > 0) {
+    parts.push(`options ${params.features.slice(0, 3).join(", ")}`);
   }
   if (typeof params.q === "string" && params.q.trim().length > 0) {
     parts.push(`mot-clé "${truncateText(params.q.trim(), 40)}"`);
@@ -2797,6 +3214,10 @@ function isLikelyPropertyToolQuestion(question: string): boolean {
   return toolPropertyIntentPattern.test(normalizeText(question));
 }
 
+function isLikelyAggregateQuestion(question: string): boolean {
+  return toolAggregateIntentPattern.test(normalizeText(question));
+}
+
 function isLikelyCompareQuestion(question: string): boolean {
   return toolCompareIntentPattern.test(normalizeText(question));
 }
@@ -2812,6 +3233,7 @@ function detectAgentMode(
 ): AgentMode {
   if (actionRequest) return "tool";
   if (isLikelyWebsiteContentQuestion(question)) return "rag";
+  if (isLikelyAggregateQuestion(question)) return "tool";
   if (
     isLikelyCompareQuestion(question) &&
     Array.isArray(conversationState?.selectedPropertyIds) &&
@@ -2853,56 +3275,233 @@ async function executeSearchPropertiesTool(
 ): Promise<{ items: ToolSearchResultItem[]; total: number; searchParams: ToolSearchParams }> {
   const page = clamp(Math.floor(params.page ?? 1), 1, 100);
   const pageSize = clamp(Math.floor(params.pageSize ?? parseNumberEnv("CHATBOT_AGENT_TOOLS_MAX_RESULTS", 5)), 1, 10);
-  const from = (page - 1) * pageSize;
-  const to = from + pageSize - 1;
-
-  const runQueryAttempt = async (keywordOrFilter: string | null) => {
-    let query = supabase
-      .from("properties")
-      .select(
-        "id,title,slug,transaction_type,property_type,status,price_amount,price_currency,surface_m2,terrain_m2,bedrooms,bathrooms,garage_count,dpe_label,city:cities(name,slug),images:property_images(source_url,sort_order)",
-        { count: "exact" },
-      )
-      .neq("status", "off_market")
-      .order("published_at", { ascending: false })
-      .range(from, to);
-
-    if (params.transaction) query = query.eq("transaction_type", params.transaction);
-    if (params.type) query = query.eq("property_type", params.type);
-    if (params.city) query = query.eq("city.slug", params.city);
-    if (typeof params.priceMin === "number") query = query.gte("price_amount", params.priceMin);
-    if (typeof params.priceMax === "number") query = query.lte("price_amount", params.priceMax);
-    if (typeof params.bedroomsMin === "number") query = query.gte("bedrooms", params.bedroomsMin);
-    if (keywordOrFilter) query = query.or(keywordOrFilter);
-
-    const { data, error, count } = await query;
-    if (error) throw error;
-
-    const rows = ((data as PropertySearchQueryRow[] | null) ?? []).filter((row) => row && typeof row.id === "number");
-    return { rows, total: count ?? rows.length };
-  };
-
-  const phraseFilter = typeof params.q === "string" ? buildKeywordPhraseOrFilter(params.q) : null;
-  const tokenFilter = typeof params.q === "string" ? buildKeywordTokenOrFilter(params.q) : null;
-  const attemptFilters = (phraseFilter || tokenFilter)
-    ? [phraseFilter, tokenFilter].filter((value, index, list): value is string =>
-        Boolean(value) && list.findIndex((candidate) => candidate === value) === index
-      )
-    : [null];
-
-  let finalRows: PropertySearchQueryRow[] = [];
-  let finalTotal = 0;
-  for (let i = 0; i < attemptFilters.length; i += 1) {
-    const attempt = await runQueryAttempt(attemptFilters[i] ?? null);
-    finalRows = attempt.rows;
-    finalTotal = attempt.total;
-    if (attempt.rows.length > 0) break;
-  }
-
+  const sharedResult = await runSharedPropertySearchQuery(
+    supabase,
+    {
+      ...(params as SharedPropertySearchQueryParams),
+      page,
+      pageSize,
+    },
+    {
+      defaultPageSize: pageSize,
+      minPageSizeWithoutSlug: 1,
+      maxPageSize: 10,
+    },
+  );
   return {
-    items: finalRows.map(mapSearchRowToToolItem),
-    total: finalTotal,
-    searchParams: { ...params, page, pageSize },
+    items: sharedResult.rows.map((row) => mapSearchRowToToolItem(row as unknown as PropertySearchQueryRow)),
+    total: sharedResult.total,
+    searchParams: { ...params, page: sharedResult.page, pageSize: sharedResult.pageSize },
+  };
+}
+
+function roundMetricValue(value: number | null | undefined, decimals = 1): number | null {
+  if (typeof value !== "number" || !Number.isFinite(value)) return null;
+  const factor = 10 ** decimals;
+  return Math.round(value * factor) / factor;
+}
+
+function normalizeAggregateMetrics(metrics: SharedPropertyAggregateMetrics): PropertyAggregateMetrics {
+  return {
+    count: Math.max(0, Math.floor(metrics.count)),
+    excludedSurfaceCount: Math.max(0, Math.floor(metrics.excludedSurfaceCount ?? 0)),
+    excludedPricePerM2Count: Math.max(0, Math.floor(metrics.excludedPricePerM2Count ?? 0)),
+    avgSurfaceM2: roundMetricValue(metrics.avgSurfaceM2, 1),
+    medianSurfaceM2: roundMetricValue(metrics.medianSurfaceM2, 1),
+    minSurfaceM2: roundMetricValue(metrics.minSurfaceM2, 1),
+    maxSurfaceM2: roundMetricValue(metrics.maxSurfaceM2, 1),
+    avgPrice: roundMetricValue(metrics.avgPrice, 0),
+    medianPrice: roundMetricValue(metrics.medianPrice, 0),
+    minPrice: roundMetricValue(metrics.minPrice, 0),
+    maxPrice: roundMetricValue(metrics.maxPrice, 0),
+    avgPricePerM2: roundMetricValue(metrics.avgPricePerM2, 0),
+  };
+}
+
+function formatAggregateScopeLabel(scope: PropertyAggregationScope): string {
+  if (scope === "current_filtered") return "Résultats filtrés";
+  if (scope === "selected_properties") return "Biens sélectionnés";
+  return "Stock actif global";
+}
+
+function normalizeAggregateBreakdownBuckets(
+  buckets: SharedPropertyAggregateBucket[],
+  labelMap?: Record<string, string>,
+): PropertyAggregateBreakdownBucket[] {
+  return buckets.map((bucket) => ({
+    key: bucket.key,
+    label: labelMap?.[bucket.key] ?? bucket.label,
+    count: bucket.count,
+    avgPrice: roundMetricValue(bucket.avgPrice, 0),
+    avgSurfaceM2: roundMetricValue(bucket.avgSurfaceM2, 1),
+  }));
+}
+
+function buildStatsSummaryAction(input: {
+  scope: PropertyAggregationScope;
+  criteriaSummary: string;
+  metrics: SharedPropertyAggregateMetrics;
+  breakdowns: {
+    byTransaction: SharedPropertyAggregateBucket[];
+    byType: SharedPropertyAggregateBucket[];
+    topCities: SharedPropertyAggregateBucket[];
+  };
+  searchParams?: ToolSearchParams;
+  selectedPropertyIds?: number[];
+}): ToolUiActionStatsSummary {
+  const normalizedMetrics = normalizeAggregateMetrics(input.metrics);
+  const count = normalizedMetrics.count;
+  const lowSampleWarning = count > 0 && count < 5
+    ? "Échantillon réduit: interprétez ces moyennes avec prudence."
+    : undefined;
+  return {
+    id: buildToolActionId("stats"),
+    kind: "stats_summary",
+    title: count > 0 ? `Statistiques (${count} bien${count > 1 ? "s" : ""})` : "Aucune statistique disponible",
+    description:
+      count > 0
+        ? "Métriques calculées sur les biens actuellement pris en compte par la recherche."
+        : "Aucun bien ne correspond aux critères actuels.",
+    data: {
+      scope: input.scope,
+      scopeLabel: formatAggregateScopeLabel(input.scope),
+      criteriaSummary: input.criteriaSummary,
+      searchParams: input.searchParams,
+      selectedPropertyIds: input.selectedPropertyIds,
+      metrics: normalizedMetrics,
+      breakdowns: count > 0
+        ? {
+            byTransaction: normalizeAggregateBreakdownBuckets(input.breakdowns.byTransaction, {
+              vente: "Vente",
+              location: "Location",
+            }),
+            byType: normalizeAggregateBreakdownBuckets(input.breakdowns.byType, {
+              appartement: "Appartement",
+              maison_villa: "Maison / Villa",
+              autre: "Autre",
+            }),
+            topCities: normalizeAggregateBreakdownBuckets(input.breakdowns.topCities),
+          }
+        : undefined,
+      sampleSizeLabel: `${count} bien${count > 1 ? "s" : ""}`,
+      lowSampleWarning,
+    },
+  };
+}
+
+function buildAggregateClarifyScopeAction(searchParams: ToolSearchParams): ToolUiActionClarifyScope {
+  return {
+    id: buildToolActionId("clarify-scope"),
+    kind: "clarify_scope",
+    title: "Préciser le périmètre des statistiques",
+    description: "Voulez-vous les statistiques sur vos résultats filtrés ou sur tout le stock actif ?",
+    data: {
+      defaultScope: "current_filtered",
+      options: [
+        {
+          scope: "current_filtered",
+          label: "Mes résultats filtrés",
+          description: "Calculer la moyenne et les stats sur la recherche actuelle.",
+          searchParams,
+        },
+        {
+          scope: "global_active_inventory",
+          label: "Tout le stock actif",
+          description: "Comparer avec les statistiques globales actuelles.",
+        },
+      ],
+    },
+  };
+}
+
+function buildAggregateQuickRefineFacetAction(searchParams: ToolSearchParams): ToolUiActionFacetRefine | null {
+  const suggestions: ToolUiActionFacetRefine["data"]["suggestions"] = [];
+  if (typeof searchParams.surfaceMin === "number") {
+    suggestions.push({
+      label: `+10 m² min`,
+      patch: { surfaceMin: searchParams.surfaceMin + 10, page: 1 },
+      removeKeys: ["page"],
+    });
+  } else {
+    suggestions.push({ label: "Min 70 m²", patch: { surfaceMin: 70, page: 1 }, removeKeys: ["page"] });
+  }
+  if (typeof searchParams.priceMax === "number") {
+    suggestions.push({
+      label: "Budget +10%",
+      patch: { priceMax: Math.round(searchParams.priceMax * 1.1), page: 1 },
+      removeKeys: ["page"],
+    });
+  }
+  if (searchParams.type !== "appartement") {
+    suggestions.push({ label: "Appartement", patch: { type: "appartement", page: 1 }, removeKeys: ["page"] });
+  }
+  if (searchParams.type !== "maison_villa") {
+    suggestions.push({ label: "Maison", patch: { type: "maison_villa", page: 1 }, removeKeys: ["page"] });
+  }
+  if (suggestions.length === 0) return null;
+  return {
+    id: buildToolActionId("facet"),
+    kind: "facet_refine",
+    title: "Affinages rapides",
+    description: "Appliquez un ajustement en un clic, puis relancez la recherche.",
+    data: {
+      searchParams,
+      suggestions: suggestions.slice(0, 5),
+    },
+  };
+}
+
+function parseAggregateScopeFromAction(actionRequest: ToolActionRequest | undefined): PropertyAggregationScope | undefined {
+  if (actionRequest?.type !== "aggregate_properties") return undefined;
+  const scope = actionRequest.payload?.scope;
+  if (scope === "current_filtered" || scope === "global_active_inventory" || scope === "selected_properties") return scope;
+  return undefined;
+}
+
+function normalizeAggregatePropertyIdsFromAction(actionRequest: ToolActionRequest | undefined): number[] {
+  if (actionRequest?.type !== "aggregate_properties") return [];
+  const raw = actionRequest.payload?.propertyIds;
+  if (!Array.isArray(raw)) return [];
+  return uniqueNumberList(raw.map((value) => (typeof value === "number" ? value : Number(value))), 50);
+}
+
+async function executeAggregatePropertiesTool(
+  supabase: ReturnType<typeof createServiceClient>,
+  input: {
+    scope: PropertyAggregationScope;
+    searchParams?: ToolSearchParams;
+    propertyIds?: number[];
+  },
+): Promise<{
+  scope: PropertyAggregationScope;
+  criteriaSummary: string;
+  metrics: SharedPropertyAggregateMetrics;
+  breakdowns: {
+    byTransaction: SharedPropertyAggregateBucket[];
+    byType: SharedPropertyAggregateBucket[];
+    topCities: SharedPropertyAggregateBucket[];
+  };
+  searchParams?: ToolSearchParams;
+  selectedPropertyIds?: number[];
+}> {
+  const scope = input.scope;
+  const searchParams = input.searchParams;
+  const selectedPropertyIds = uniqueNumberList(input.propertyIds ?? [], 50);
+  const rows = scope === "selected_properties"
+    ? await fetchAggregateRowsByIds(supabase, selectedPropertyIds)
+    : await fetchAggregateRowsForSearchFilters(supabase, (searchParams ?? {}) as SharedPropertySearchQueryParams);
+  const { metrics, breakdowns } = computeSharedPropertyAggregateMetrics(rows);
+  const criteriaSummary =
+    scope === "selected_properties"
+      ? `Sélection de ${selectedPropertyIds.length} bien${selectedPropertyIds.length > 1 ? "s" : ""}`
+      : buildCriteriaSummary(searchParams ?? {});
+  return {
+    scope,
+    criteriaSummary,
+    metrics,
+    breakdowns,
+    searchParams,
+    selectedPropertyIds: scope === "selected_properties" ? selectedPropertyIds : undefined,
   };
 }
 
@@ -2916,14 +3515,14 @@ async function executeGetPropertiesTool(
   const { data, error } = await supabase
     .from("properties")
     .select(
-      "id,title,slug,price_amount,price_currency,surface_m2,terrain_m2,bedrooms,bathrooms,garage_count,dpe_label,transaction_type,property_type,city:cities(name,slug)",
+      "id,title,slug,status,price_amount,price_currency,surface_m2,terrain_m2,bedrooms,bathrooms,garage_count,dpe_label,transaction_type,property_type,city:cities(name,slug)",
     )
     .in("id", uniqueIds)
     .neq("status", "off_market");
 
   if (error) throw error;
 
-  const rows = ((data as PropertySearchQueryRow[] | null) ?? []).filter((row) => row && typeof row.id === "number");
+  const rows = ((data as unknown as PropertySearchQueryRow[] | null) ?? []).filter((row) => row && typeof row.id === "number");
   const byId = new Map(rows.map((row) => [row.id, row]));
 
   return uniqueIds
@@ -3168,8 +3767,16 @@ const memoryExtractorSchema = z.object({
     type: z.enum(["appartement", "maison_villa", "autre"]).optional(),
     city: z.string().trim().min(1).max(80).optional(),
     bedroomsMin: z.number().int().min(0).max(12).optional(),
+    bathroomsMin: z.number().int().min(0).max(12).optional(),
+    garagesMin: z.number().int().min(0).max(12).optional(),
     priceMin: z.number().int().min(0).max(50_000_000).optional(),
     priceMax: z.number().int().min(0).max(50_000_000).optional(),
+    surfaceMin: z.number().min(0).max(100_000).optional(),
+    surfaceMax: z.number().min(0).max(100_000).optional(),
+    terrainMin: z.number().min(0).max(10_000_000).optional(),
+    terrainMax: z.number().min(0).max(10_000_000).optional(),
+    features: z.array(z.string().trim().min(1).max(80)).max(12).optional(),
+    sort: z.enum(["newest", "price_asc", "price_desc", "surface_desc"]).optional(),
   }).partial().optional(),
   qualification: z.object({
     district: z.string().trim().min(1).max(80).optional(),
@@ -3238,7 +3845,12 @@ function memoryFieldExplicitlyMentioned(question: string, field: string): boolea
   if (field === "type") return /\b(appartement|maison|villa|studio)\b/.test(q);
   if (field === "city") return /\b(havre|sainte adresse|montivilliers|gainneville|harfleur)\b/.test(q);
   if (field === "bedroomsMin") return /\b(t[1-9]|chambre|chambres|pieces|pi[eè]ces?)\b/.test(q);
+  if (field === "bathroomsMin") return /\b(sdb|salle de bain|salles de bain)\b/.test(q);
+  if (field === "garagesMin") return /\bgarage|garages\b/.test(q);
   if (field === "priceMin" || field === "priceMax") return /\b(eur|euro|€|budget|\d{4,})\b/.test(q);
+  if (field === "surfaceMin" || field === "surfaceMax") return /\b(surface|m2|m²)\b/.test(q);
+  if (field === "terrainMin" || field === "terrainMax") return /\bterrain\b/.test(q);
+  if (field === "features") return /\b(balcon|terrasse|ascenseur|garage|parking|jardin|vue mer)\b/.test(q);
   return false;
 }
 
@@ -3279,7 +3891,7 @@ async function extractStructuredMemoryWithGemini(input: {
               "Do not include raw transcript text.",
               "Only extract facts the user likely stated or implied clearly.",
               "Schema keys: preferences, qualification, selectedPropertyIds, summary, updatedKeys, confidence.",
-              "preferences keys: transaction, type, city, bedroomsMin, priceMin, priceMax.",
+              "preferences keys: transaction, type, city, bedroomsMin, bathroomsMin, garagesMin, priceMin, priceMax, surfaceMin, surfaceMax, terrainMin, terrainMax, features, sort.",
               "qualification keys: district, timeline, project, financingStatus, urgency, occupancyPurpose, amenities (array).",
               `Current preferences: ${JSON.stringify(input.currentPreferences ?? {})}`,
               `Current summary: ${JSON.stringify(input.currentSummary ?? null)}`,
@@ -3306,6 +3918,33 @@ async function extractStructuredMemoryWithGemini(input: {
         parsed.data.preferences.priceMax,
         parsed.data.preferences.priceMin,
       ];
+    }
+    if (
+      parsed.data.preferences?.surfaceMin != null &&
+      parsed.data.preferences?.surfaceMax != null &&
+      parsed.data.preferences.surfaceMin > parsed.data.preferences.surfaceMax
+    ) {
+      [parsed.data.preferences.surfaceMin, parsed.data.preferences.surfaceMax] = [
+        parsed.data.preferences.surfaceMax,
+        parsed.data.preferences.surfaceMin,
+      ];
+    }
+    if (
+      parsed.data.preferences?.terrainMin != null &&
+      parsed.data.preferences?.terrainMax != null &&
+      parsed.data.preferences.terrainMin > parsed.data.preferences.terrainMax
+    ) {
+      [parsed.data.preferences.terrainMin, parsed.data.preferences.terrainMax] = [
+        parsed.data.preferences.terrainMax,
+        parsed.data.preferences.terrainMin,
+      ];
+    }
+    if (Array.isArray(parsed.data.preferences?.features)) {
+      const features = parsed.data.preferences.features
+        .map((value) => (typeof value === "string" ? value.trim().slice(0, 80) : ""))
+        .filter(Boolean)
+        .slice(0, 12);
+      parsed.data.preferences.features = features.length > 0 ? Array.from(new Set(features)) : undefined;
     }
     return parsed.data;
   } catch {
@@ -3541,8 +4180,8 @@ async function getCachedPropertyAnalysisCards(
     }
     const staleHours = clamp(Math.floor(parseNumberEnv("CHATBOT_MULTIMODAL_STALE_HOURS", 168)), 1, 24 * 365);
     const staleMs = staleHours * 60 * 60 * 1000;
-    return data
-      .map((row) => {
+    const cards: Array<AnalysisCard | null> = data
+      .map((row): AnalysisCard | null => {
         if (!row || typeof row !== "object") return null;
         const r = row as Record<string, unknown>;
         const propertyId = typeof r.property_id === "number" ? r.property_id : Number(r.property_id);
@@ -3600,9 +4239,9 @@ async function getCachedPropertyAnalysisCards(
             label: typeof metadata.label === "string" ? truncateText(metadata.label, 120) : undefined,
             kind: sourceKind,
           }],
-        } satisfies AnalysisCard;
-      })
-      .filter((card): card is AnalysisCard => Boolean(card));
+        };
+      });
+    return cards.filter((card): card is AnalysisCard => card !== null);
   } catch {
     return [];
   }
@@ -3631,7 +4270,9 @@ function isAllowedInlineSourceMimeType(sourceKind: "image" | "document", mimeTyp
 }
 
 async function sha256HexBytes(bytes: Uint8Array): Promise<string> {
-  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  const copy = new Uint8Array(new ArrayBuffer(bytes.byteLength));
+  copy.set(bytes);
+  const digest = await crypto.subtle.digest("SHA-256", copy.buffer);
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
@@ -3664,7 +4305,7 @@ async function getOnDemandPropertySource(
   sourceId?: string;
   documentKind?: "dpe_pdf" | "diagnostic_pdf" | "floor_plan_pdf" | "brochure_pdf" | "other";
   label?: string;
-}> {
+} | null> {
   if (sourceKind === "image") {
     const { data, error } = await supabase
       .from("property_images")
@@ -3673,7 +4314,7 @@ async function getOnDemandPropertySource(
       .order("sort_order", { ascending: true })
       .limit(1)
       .maybeSingle();
-    if (error || !data || typeof (data as Record<string, unknown>).source_url !== "string") return {};
+    if (error || !data || typeof (data as Record<string, unknown>).source_url !== "string") return null;
     return { sourceUrl: (data as Record<string, unknown>).source_url as string };
   }
   const { data, error } = await supabase
@@ -3683,7 +4324,7 @@ async function getOnDemandPropertySource(
     .in("status", ["ready", "pending", "error"])
     .order("updated_at", { ascending: false })
     .limit(6);
-  if (error || !Array.isArray(data)) return {};
+  if (error || !Array.isArray(data)) return null;
   const preferred = (data as Array<Record<string, unknown>>)
     .filter((row) => typeof row.source_url === "string")
     .sort((a, b) => {
@@ -3691,7 +4332,7 @@ async function getOnDemandPropertySource(
         kind === "floor_plan_pdf" ? 0 : kind === "dpe_pdf" ? 1 : kind === "diagnostic_pdf" ? 2 : kind === "brochure_pdf" ? 3 : 4;
       return rank(a.kind) - rank(b.kind);
     })[0];
-  if (!preferred) return {};
+  if (!preferred) return null;
   const metadata = sanitizeJsonObject(preferred.metadata);
   return {
     sourceId: typeof preferred.id === "string" ? preferred.id : undefined,
@@ -3741,7 +4382,7 @@ async function getPropertyAnalysisCards(
 
   const propertyId = ids[0];
   const source = await getOnDemandPropertySource(supabase, propertyId, sourceKind);
-  if (!source.sourceUrl) return [];
+  if (!source || !source.sourceUrl) return [];
 
   const timeoutMs = clamp(Math.floor(parseNumberEnv("CHATBOT_MULTIMODAL_ON_DEMAND_TIMEOUT_MS", 2500)), 600, 10000);
   const maxBytes = clamp(Math.floor(parseNumberEnv("CHATBOT_MULTIMODAL_MAX_FILE_BYTES", 8 * 1024 * 1024)), 200_000, 50 * 1024 * 1024);
@@ -3975,6 +4616,8 @@ async function orchestrateToolRequest(input: {
           },
         },
       ];
+      const quickFacetAction = buildAggregateQuickRefineFacetAction(result.searchParams);
+      if (quickFacetAction) actions.push(quickFacetAction);
 
       if (result.items.length === 0) {
         actions.push(
@@ -4027,8 +4670,18 @@ async function orchestrateToolRequest(input: {
             city: result.searchParams.city ?? mergedConversationState?.preferences?.city,
             bedroomsMin:
               result.searchParams.bedroomsMin ?? mergedConversationState?.preferences?.bedroomsMin,
+            bathroomsMin:
+              result.searchParams.bathroomsMin ?? mergedConversationState?.preferences?.bathroomsMin,
+            garagesMin:
+              result.searchParams.garagesMin ?? mergedConversationState?.preferences?.garagesMin,
             priceMin: result.searchParams.priceMin ?? mergedConversationState?.preferences?.priceMin,
             priceMax: result.searchParams.priceMax ?? mergedConversationState?.preferences?.priceMax,
+            surfaceMin: result.searchParams.surfaceMin ?? mergedConversationState?.preferences?.surfaceMin,
+            surfaceMax: result.searchParams.surfaceMax ?? mergedConversationState?.preferences?.surfaceMax,
+            terrainMin: result.searchParams.terrainMin ?? mergedConversationState?.preferences?.terrainMin,
+            terrainMax: result.searchParams.terrainMax ?? mergedConversationState?.preferences?.terrainMax,
+            features: result.searchParams.features ?? mergedConversationState?.preferences?.features,
+            sort: result.searchParams.sort ?? mergedConversationState?.preferences?.sort,
           },
         },
         toolTrace,
@@ -4046,6 +4699,156 @@ async function orchestrateToolRequest(input: {
         answer: "Je n’ai pas pu interroger les biens en direct pour le moment. Je peux quand même vous aider à reformuler votre recherche.",
         suggestedPrompts: ["Je cherche un appartement au Havre", "Préciser budget et chambres", "Je veux être rappelé"],
         actions: [buildNoticeAction("Recherche indisponible", "La recherche live est temporairement indisponible.", "search_failed")],
+        toolTrace,
+        agentMode: "tool",
+      };
+    }
+  };
+
+  const runAggregate = async (): Promise<ToolOrchestrationResult> => {
+    const explicitScope = parseAggregateScopeFromAction(effectiveActionRequest);
+    const explicitIds = normalizeAggregatePropertyIdsFromAction(effectiveActionRequest);
+    const selectedIdsFromState = uniqueNumberList(mergedConversationState?.selectedPropertyIds ?? [], 50);
+    const normalizedQuestion = normalizeText(input.question);
+    const mentionsGlobal = /\b(stock|global|tout|tous|ensemble|marche)\b/.test(normalizedQuestion);
+    const mentionsSelection = /\b(selection|selectionnes|compare|ces biens|biens choisis)\b/.test(normalizedQuestion);
+    const inferredSearchParams = extractSearchParamsFromQuestion(input.question, mergedConversationState, effectiveActionRequest);
+    const hasSearchCriteria =
+      Boolean(inferredSearchParams.transaction || inferredSearchParams.type || inferredSearchParams.city || inferredSearchParams.q) ||
+      inferredSearchParams.bedroomsMin != null ||
+      inferredSearchParams.bathroomsMin != null ||
+      inferredSearchParams.garagesMin != null ||
+      inferredSearchParams.priceMin != null ||
+      inferredSearchParams.priceMax != null ||
+      inferredSearchParams.surfaceMin != null ||
+      inferredSearchParams.surfaceMax != null ||
+      inferredSearchParams.terrainMin != null ||
+      inferredSearchParams.terrainMax != null ||
+      (inferredSearchParams.features?.length ?? 0) > 0;
+    const hasRecentSearchContext = Boolean(mergedConversationState?.recentSearch?.params || mergedConversationState?.recentSearch?.resultIds?.length);
+
+    let scope: PropertyAggregationScope | undefined = explicitScope;
+    if (!scope && explicitIds.length > 0) scope = "selected_properties";
+    if (!scope && mentionsSelection && selectedIdsFromState.length > 0) scope = "selected_properties";
+    if (!scope && mentionsGlobal) scope = "global_active_inventory";
+    if (!scope && (hasSearchCriteria || hasRecentSearchContext)) scope = "current_filtered";
+
+    if (!scope) {
+      const baseSearchParams = hasRecentSearchContext
+        ? (parseToolSearchParamsFromState(mergedConversationState) ?? {})
+        : inferredSearchParams;
+      return {
+        answer: "Je peux calculer ces statistiques. Voulez-vous les chiffres sur vos résultats filtrés ou sur tout le stock actif ?",
+        suggestedPrompts: ["Statistiques sur mes résultats", "Statistiques sur tout le stock actif"],
+        actions: [buildAggregateClarifyScopeAction(baseSearchParams)],
+        toolTrace,
+        agentMode: "tool",
+        costHints: { route: "edge_tools", estimatedClass: "low" },
+      };
+    }
+
+    const startedAt = Date.now();
+    try {
+      const searchParams = scope === "global_active_inventory"
+        ? undefined
+        : (hasSearchCriteria || hasRecentSearchContext ? inferredSearchParams : undefined);
+      const propertyIds = scope === "selected_properties"
+        ? (explicitIds.length > 0 ? explicitIds : selectedIdsFromState)
+        : undefined;
+
+      const aggregate = await executeAggregatePropertiesTool(supabase, {
+        scope,
+        searchParams,
+        propertyIds,
+      });
+      toolTrace.push({
+        tool: "aggregate_properties",
+        status: "ok",
+        latencyMs: Date.now() - startedAt,
+        resultCount: aggregate.metrics.count,
+      });
+
+      const statsAction = buildStatsSummaryAction({
+        scope: aggregate.scope,
+        criteriaSummary: aggregate.criteriaSummary,
+        metrics: aggregate.metrics,
+        breakdowns: aggregate.breakdowns,
+        searchParams: aggregate.searchParams,
+        selectedPropertyIds: aggregate.selectedPropertyIds,
+      });
+      const actions: ToolUiAction[] = [statsAction];
+
+      if (aggregate.scope === "current_filtered" && aggregate.searchParams) {
+        actions.push(buildAggregateClarifyScopeAction(aggregate.searchParams));
+        const quickFacetAction = buildAggregateQuickRefineFacetAction(aggregate.searchParams);
+        if (quickFacetAction) actions.push(quickFacetAction);
+      }
+
+      const metrics = normalizeAggregateMetrics(aggregate.metrics);
+      if (metrics.count === 0) {
+        return {
+          answer: "Aucun bien ne correspond aux critères actuels, donc je ne peux pas calculer de moyenne pour l’instant.",
+          suggestedPrompts: ["Élargir le budget", "Réduire la surface minimale", "Voir tout le stock actif"],
+          actions,
+          conversationStatePatch: aggregate.searchParams
+            ? {
+                preferences: {
+                  ...mergedConversationState?.preferences,
+                  ...aggregate.searchParams,
+                },
+              }
+            : undefined,
+          toolTrace,
+          agentMode: "tool",
+          costHints: { route: "edge_tools", estimatedClass: "low" },
+        };
+      }
+
+      const summaryParts = [
+        `Sur ${statsAction.data.sampleSizeLabel.toLowerCase()} (${statsAction.data.scopeLabel.toLowerCase()}),`,
+      ];
+      if (metrics.avgSurfaceM2 != null) {
+        summaryParts.push(`la surface moyenne est d’environ ${formatMetricValue(metrics.avgSurfaceM2, "m²")}.`);
+      }
+      if (metrics.avgPrice != null) {
+        summaryParts.push(`Le prix moyen est ${formatPriceValue(metrics.avgPrice)}.`);
+      }
+      if (metrics.avgPricePerM2 != null) {
+        summaryParts.push(`Le prix moyen au m² est ${formatPriceValue(metrics.avgPricePerM2)} / m².`);
+      }
+      if (statsAction.data.lowSampleWarning) {
+        summaryParts.push(statsAction.data.lowSampleWarning);
+      }
+
+      return {
+        answer: summaryParts.join(" "),
+        suggestedPrompts: aggregate.scope === "current_filtered"
+          ? ["Voir les biens correspondants", "Comparer avec tout le stock actif", "Affiner la recherche"]
+          : ["Filtrer les biens", "Voir les statistiques par type", "Je cherche des biens précis"],
+        actions,
+        conversationStatePatch: aggregate.searchParams
+          ? {
+              preferences: {
+                ...mergedConversationState?.preferences,
+                ...aggregate.searchParams,
+              },
+            }
+          : undefined,
+        toolTrace,
+        agentMode: "tool",
+        costHints: { route: "edge_tools", estimatedClass: "low" },
+      };
+    } catch {
+      toolTrace.push({
+        tool: "aggregate_properties",
+        status: "error",
+        latencyMs: Date.now() - startedAt,
+        errorCode: "aggregate_failed",
+      });
+      return {
+        answer: "Je n’ai pas pu calculer les statistiques pour le moment.",
+        suggestedPrompts: ["Réessayer les statistiques", "Voir les résultats", "Préparer un contact"],
+        actions: [buildNoticeAction("Statistiques indisponibles", "Le calcul des statistiques a échoué.", "aggregate_failed")],
         toolTrace,
         agentMode: "tool",
       };
@@ -4350,6 +5153,31 @@ async function orchestrateToolRequest(input: {
         return result;
       }
 
+      if (step.tool === "aggregate_properties") {
+        const aggregateArgs =
+          step.args && typeof step.args === "object" && !Array.isArray(step.args)
+            ? sanitizePlannerAggregateArgs(step.args)
+            : {};
+        effectiveActionRequest = {
+          type: "aggregate_properties",
+          payload: {
+            ...(aggregateArgs.scope ? { scope: aggregateArgs.scope } : {}),
+            ...(aggregateArgs.searchParams ? { searchParams: aggregateArgs.searchParams } : {}),
+            ...(aggregateArgs.propertyIds ? { propertyIds: aggregateArgs.propertyIds } : {}),
+          },
+        };
+        const result = await runAggregate();
+        if (collectedAnalysisCards.length > 0) {
+          result.analysisCards = [...(result.analysisCards ?? []), ...collectedAnalysisCards].slice(0, 8);
+          result.costHints = {
+            route: "edge_tools",
+            multimodalUsed: true,
+            estimatedClass: "medium",
+          };
+        }
+        return result;
+      }
+
       if (step.tool === "compare_properties") {
         const ids = uniqueNumberList(
           [
@@ -4414,10 +5242,34 @@ async function orchestrateToolRequest(input: {
   if (!input.actionRequest && plannerFeatureEnabled) {
     const plannerConfig = resolveGeminiPlannerConfig();
     if (!plannerConfig) {
+      const inferred = extractSearchParamsFromQuestion(input.question, mergedConversationState, effectiveActionRequest);
+      const normalizedQuestion = normalizeText(input.question);
+      const isInvestmentIntent = /\binvest/.test(normalizedQuestion) || /\blocatif\b|\brendement\b/.test(normalizedQuestion);
+      const missingCity = !(inferred.city && inferred.city.trim().length > 0);
+      const missingTransaction = !inferred.transaction;
+
+      if (isInvestmentIntent && missingCity && missingTransaction) {
+        plannerMeta = {
+          provider: "fallback",
+          mode: "deterministic_fallback",
+          decisionType: "clarify",
+          reasonCode: "planner_unavailable_clarify_invest",
+        };
+        return applyPlannerMeta({
+          answer: "Pour un investissement, vous visez plutôt l’achat ou la location, et dans quelle ville ?",
+          suggestedPrompts: ["Achat au Havre", "Location au Havre", "Comparer achat et location"],
+          actions: [buildNoticeAction("Précision nécessaire", "Précisez la transaction et la ville cible.", "planner_clarify")],
+          toolTrace,
+          agentMode: "tool",
+          costHints: { route: "edge_tools", estimatedClass: "low" },
+        });
+      }
+
       plannerMeta = {
         provider: "fallback",
-        mode: "disabled",
-        decisionType: "none",
+        mode: "deterministic_fallback",
+        decisionType: "plan",
+        toolName: "search_properties",
         reasonCode: "planner_unavailable",
       };
     } else {
@@ -4495,7 +5347,8 @@ async function orchestrateToolRequest(input: {
         plannerMeta = {
           provider: "fallback",
           mode: "deterministic_fallback",
-          decisionType: "none",
+          decisionType: "plan",
+          toolName: "search_properties",
           reasonCode: plannerResult.failureCode ?? "planner_no_decision",
         };
       }
@@ -4520,6 +5373,8 @@ async function orchestrateToolRequest(input: {
         return applyPlannerMeta(await runPrepareHandoff());
       case "search_refine":
         return applyPlannerMeta(await runSearch());
+      case "aggregate_properties":
+        return applyPlannerMeta(await runAggregate());
       case "open_path_confirmed": {
         const rawPath = typeof effectiveActionRequest.payload?.path === "string" ? effectiveActionRequest.payload.path.trim() : "";
         const safePath = /^\/[a-z0-9/_-]+(?:\?[a-z0-9=&_-]+)?$/i.test(rawPath) ? rawPath : null;
@@ -4561,6 +5416,10 @@ async function orchestrateToolRequest(input: {
 
   if (isLikelyHandoffQuestion(input.question) && (mergedConversationState?.recentSearch || mergedConversationState?.selectedPropertyIds?.length)) {
     return applyPlannerMeta(await runPrepareHandoff());
+  }
+
+  if (isLikelyAggregateQuestion(input.question)) {
+    return applyPlannerMeta(await runAggregate());
   }
 
   if (isLikelyPropertyToolQuestion(input.question)) {
@@ -4627,23 +5486,29 @@ Deno.serve(async (request) => {
       });
     }
 
-    if (!resolveGenerationProvider()) {
-      return jsonResponse({
-        source: "fallback",
-        edgeProvider: "fallback",
-        retrievalMode: "none",
-        requestId,
-        agentMode: "fallback",
-        streamSupported: parseBooleanEnv("CHATBOT_STREAM_ENABLED", false),
-        ...buildFallback(payload.question),
-      });
-    }
-
     let ragContext: RAGContextResult = { contextBlock: null, citations: [], retrievalMode: "none" };
     try {
       ragContext = await retrieveWebsiteContextWithPageFallback(payload.question);
     } catch {
       ragContext = { contextBlock: null, citations: [], retrievalMode: "none" };
+    }
+
+    if (!resolveGenerationProvider()) {
+      const ragFallback = buildRagFallbackWithoutGeneration(ragContext);
+      return jsonResponse({
+        source: "fallback",
+        edgeProvider: "fallback",
+        retrievalMode: ragContext.retrievalMode,
+        requestId,
+        ragUsed: Boolean(ragContext.contextBlock),
+        citations: ragContext.citations.length > 0 ? ragContext.citations : undefined,
+        agentMode: ragFallback ? "rag" : "fallback",
+        pageContextUsed: ragContext.pageContextMeta?.used,
+        pageContextMode: ragContext.pageContextMeta?.fetchMode,
+        pageContextCacheHit: ragContext.pageContextMeta?.cacheHit,
+        streamSupported: parseBooleanEnv("CHATBOT_STREAM_ENABLED", false),
+        ...(ragFallback ?? buildFallback(payload.question)),
+      });
     }
 
     const normalizedHistory = normalizeHistoryForModel(payload.chatHistory, payload.question);

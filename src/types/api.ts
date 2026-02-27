@@ -11,7 +11,9 @@ export interface PropertySearchParams {
   priceMin?: number;
   priceMax?: number;
   surfaceMin?: number;
+  surfaceMax?: number;
   terrainMin?: number;
+  terrainMax?: number;
   features?: string[];
   page?: number;
   pageSize?: number;
