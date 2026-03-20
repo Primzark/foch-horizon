@@ -11,6 +11,7 @@ jobs:
     timeout-minutes: 20
     env:
       EDGE_API_BASE_URL: "${{ secrets.EDGE_API_BASE_URL || secrets.RAG_INDEX_BASE_URL || 'https://foch-horizon.vercel.app' }}"
+      EDGE_ANON_KEY: "${{ secrets.EDGE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjcnVsZmRvYnRtZnh6cHV5cnluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYwNjEyMzMsImV4cCI6MjA4MTYzNzIzM30.VRo0gOOtaukvUpJn_gxsl81xIQ6uNh9pRvf-8LGNcjs' }}"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -29,7 +30,7 @@ jobs:
           missing=0
           for name in EDGE_ANON_KEY; do
             if [ -z "${!name}" ]; then
-              echo "::error title=Missing secret::$name is not set"
+              echo "::error title=Missing edge auth key::$name is not set"
               missing=1
             fi
           done
@@ -37,7 +38,6 @@ jobs:
 
       - name: Run chatbot evals
         env:
-          EDGE_ANON_KEY: ${{ secrets.EDGE_ANON_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           CHATBOT_ALERTS_WEBHOOK_URL: ${{ secrets.CHATBOT_ALERTS_WEBHOOK_URL }}
