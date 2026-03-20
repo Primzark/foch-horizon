@@ -3,6 +3,7 @@
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { resolveRequiredSupabaseServiceRoleConfig } from "./supabase-env.mjs";
 
 const DEFAULT_SITEMAP_PATH = "public/sitemap.xml";
 const DEFAULT_OUT_FILE = "docs/chatbot/rag-index-preview.json";
@@ -751,12 +752,7 @@ async function insertDocumentChunks(supabaseUrl, serviceRoleKey, rows) {
 }
 
 async function uploadRowsToSupabase(rows) {
-  const supabaseUrl = process.env.SUPABASE_URL ?? "";
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
-
-  if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY for upload.");
-  }
+  const { supabaseUrl, serviceRoleKey } = resolveRequiredSupabaseServiceRoleConfig();
 
   const rowsByDocument = new Map();
   for (const row of rows) {

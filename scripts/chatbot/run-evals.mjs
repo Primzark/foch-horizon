@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+import { resolveOptionalSupabaseServiceRoleConfig } from './supabase-env.mjs';
+
 const DEFAULT_SUITE = process.env.CHATBOT_EVAL_SUITE || 'core';
 const DEFAULT_ENV = process.env.CHATBOT_EVAL_ENV || 'manual';
 
@@ -38,9 +40,8 @@ function getEdgeBaseUrl() {
 }
 
 function getSupabaseConfig() {
-  const url = (process.env.SUPABASE_URL || '').trim();
-  const key = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
-  return { url, key, enabled: Boolean(url && key) };
+  const { supabaseUrl, serviceRoleKey, enabled } = resolveOptionalSupabaseServiceRoleConfig();
+  return { url: supabaseUrl, key: serviceRoleKey, enabled };
 }
 
 function getHeaders() {

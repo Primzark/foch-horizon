@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { createClient } from "@supabase/supabase-js";
+import { resolveRequiredSupabaseServiceRoleConfig } from "./supabase-env.mjs";
 
 function parseArgs(argv) {
   return {
@@ -16,11 +17,7 @@ function parseArgs(argv) {
 
 async function main() {
   const { dryRun, batchSize } = parseArgs(process.argv.slice(2));
-  const supabaseUrl = (process.env.SUPABASE_URL ?? "").trim();
-  const serviceRoleKey = (process.env.SUPABASE_SERVICE_ROLE_KEY ?? "").trim();
-  if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
-  }
+  const { supabaseUrl, serviceRoleKey } = resolveRequiredSupabaseServiceRoleConfig();
 
   const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
   const nowIso = new Date().toISOString();
@@ -67,4 +64,3 @@ main().catch((error) => {
   );
   process.exit(1);
 });
-
