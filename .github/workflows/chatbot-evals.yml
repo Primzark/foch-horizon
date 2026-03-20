@@ -9,6 +9,8 @@ jobs:
   evals:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      EDGE_API_BASE_URL: "${{ secrets.EDGE_API_BASE_URL || secrets.RAG_INDEX_BASE_URL || 'https://foch-horizon.vercel.app' }}"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -22,9 +24,19 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Validate required secrets
+        run: |
+          missing=0
+          for name in EDGE_ANON_KEY; do
+            if [ -z "${!name}" ]; then
+              echo "::error title=Missing secret::$name is not set"
+              missing=1
+            fi
+          done
+          exit "$missing"
+
       - name: Run chatbot evals
         env:
-          EDGE_API_BASE_URL: ${{ secrets.EDGE_API_BASE_URL }}
           EDGE_ANON_KEY: ${{ secrets.EDGE_ANON_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
