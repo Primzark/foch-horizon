@@ -26,7 +26,7 @@ jobs:
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       RAG_EMBEDDING_PROVIDER: gemini
-      RAG_INDEX_BASE_URL: ${{ secrets.RAG_INDEX_BASE_URL }}
+      RAG_INDEX_BASE_URL: "${{ secrets.RAG_INDEX_BASE_URL || 'https://foch-horizon.vercel.app' }}"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -47,10 +47,14 @@ jobs:
 
       - name: Validate required secrets
         run: |
-          test -n "$SUPABASE_URL"
-          test -n "$SUPABASE_SERVICE_ROLE_KEY"
-          test -n "$GEMINI_API_KEY"
-          test -n "$RAG_INDEX_BASE_URL"
+          missing=0
+          for name in SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY GEMINI_API_KEY; do
+            if [ -z "${!name}" ]; then
+              echo "::error title=Missing secret::$name is not set"
+              missing=1
+            fi
+          done
+          exit "$missing"
 
       - name: Re-index website content (headless)
         run: npm run chatbot:index:site -- --headless
