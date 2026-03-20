@@ -50,6 +50,7 @@ jobs:
           test -n "$SUPABASE_URL"
           test -n "$SUPABASE_SERVICE_ROLE_KEY"
           test -n "$GEMINI_API_KEY"
+          test -n "$RAG_INDEX_BASE_URL"
 
       - name: Re-index website content (headless)
         run: npm run chatbot:index:site -- --headless

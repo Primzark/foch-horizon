@@ -200,6 +200,18 @@ function normalizeInternalPath(urlValue) {
   return `${pathname}${url.search}`;
 }
 
+function buildAbsoluteUrlForRoutePath(routePath, baseUrl) {
+  return new URL(routePath, baseUrl).toString();
+}
+
+function buildFallbackRouteUrls(fallbackDocsByPath, baseUrl, pathPrefix = "") {
+  if (!baseUrl) return [];
+
+  return Array.from(fallbackDocsByPath.keys())
+    .filter((routePath) => !pathPrefix || routePath.startsWith(pathPrefix))
+    .map((routePath) => buildAbsoluteUrlForRoutePath(routePath, baseUrl));
+}
+
 function decodeHtmlEntities(value) {
   return value
     .replace(/&nbsp;/gi, " ")
@@ -780,14 +792,26 @@ async function main() {
   const sitemapText = await loadTextFromPathOrUrl(args.sitemap);
   const fallbackDocsByPath = await loadFallbackRouteDocumentsMap();
   const htmlFetcher = await createHtmlFetcher(args);
-  const allUrls = extractSitemapUrls(sitemapText)
+  const sitemapUrls = extractSitemapUrls(sitemapText)
     .map((url) => applyBaseUrlOverride(url, args.baseUrl))
     .filter((url) => {
       if (!args.pathPrefix) return true;
       return normalizeInternalPath(url).startsWith(args.pathPrefix);
     });
+  let urlSource = "sitemap";
+  let uniqueUrls = Array.from(new Set(sitemapUrls));
 
-  const uniqueUrls = Array.from(new Set(allUrls));
+  if (uniqueUrls.length === 0 && args.baseUrl) {
+    const fallbackRouteUrls = buildFallbackRouteUrls(fallbackDocsByPath, args.baseUrl, args.pathPrefix);
+    if (fallbackRouteUrls.length > 0) {
+      uniqueUrls = Array.from(new Set(fallbackRouteUrls));
+      urlSource = "fallback-routes";
+      console.warn(
+        `[warn] sitemap ${args.sitemap} yielded 0 URLs; seeding ${uniqueUrls.length} route URLs from local fallback documents.`,
+      );
+    }
+  }
+
   const selectedUrls = args.limit ? uniqueUrls.slice(0, args.limit) : uniqueUrls;
 
   if (selectedUrls.length === 0) {
@@ -796,6 +820,7 @@ async function main() {
 
   console.log(`[index] sitemap: ${args.sitemap}`);
   console.log(`[index] urls: ${selectedUrls.length}`);
+  console.log(`[index] url-source: ${urlSource}`);
   console.log(`[index] render-mode: ${htmlFetcher.mode}`);
   if (args.baseUrl) {
     console.log(`[index] base-url override: ${args.baseUrl}`);
