@@ -5547,18 +5547,20 @@ Deno.serve(async (request) => {
     const generationResult = await generateAssistantAnswer(payload.question, normalizedHistory, ragContext);
 
     if (!generationResult) {
-      const fallback = buildFallback(payload.question);
+      const ragFallback = buildRagFallbackWithoutGeneration(ragContext);
       return jsonResponse({
         source: "fallback",
         edgeProvider: "fallback",
         retrievalMode: ragContext.retrievalMode,
         requestId,
-        agentMode: "fallback",
+        ragUsed: Boolean(ragContext.contextBlock),
+        citations: ragContext.citations.length > 0 ? ragContext.citations : undefined,
+        agentMode: ragFallback ? "rag" : "fallback",
         pageContextUsed: ragContext.pageContextMeta?.used,
         pageContextMode: ragContext.pageContextMeta?.fetchMode,
         pageContextCacheHit: ragContext.pageContextMeta?.cacheHit,
         streamSupported: parseBooleanEnv("CHATBOT_STREAM_ENABLED", false),
-        ...fallback,
+        ...(ragFallback ?? buildFallback(payload.question)),
       });
     }
     const citationPrompts = buildSuggestedPromptsFromCitations(ragContext.citations);
