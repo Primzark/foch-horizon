@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { resolveOptionalSupabaseServiceRoleConfig } from './supabase-env.mjs';
+import { normalizeSupabaseUrlInput, resolveOptionalSupabaseServiceRoleConfig } from './supabase-env.mjs';
 
 const DEFAULT_SUITE = process.env.CHATBOT_EVAL_SUITE || 'core';
 const DEFAULT_ENV = process.env.CHATBOT_EVAL_ENV || 'manual';
@@ -31,12 +31,48 @@ function parseArgs(argv) {
   return options;
 }
 
-function getEdgeBaseUrl() {
-  const fromEnv = (process.env.EDGE_API_BASE_URL || process.env.RAG_INDEX_BASE_URL || '').trim();
-  if (!fromEnv) {
-    throw new Error('Missing EDGE_API_BASE_URL (or RAG_INDEX_BASE_URL)');
+function isLocalUrl(value) {
+  try {
+    const parsed = new URL(value);
+    return parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1' || parsed.hostname === '::1';
+  } catch {
+    return false;
   }
-  return fromEnv.replace(/\/$/, '');
+}
+
+function uniqueNonEmpty(values) {
+  const seen = new Set();
+  const result = [];
+  for (const value of values) {
+    const trimmed = (value || '').trim().replace(/\/$/, '');
+    if (!trimmed || seen.has(trimmed)) continue;
+    seen.add(trimmed);
+    result.push(trimmed);
+  }
+  return result;
+}
+
+function getEdgeBaseUrl() {
+  const explicit = (
+    process.env.EDGE_API_BASE_URL ||
+    process.env.RAG_INDEX_BASE_URL ||
+    ''
+  ).trim();
+  if (explicit) {
+    return explicit.replace(/\/$/, '');
+  }
+
+  const supabaseProjectUrl = normalizeSupabaseUrlInput(process.env.SUPABASE_URL || process.env.VITE_SUPABASE_PROJECT_URL || '');
+  const candidates = uniqueNonEmpty([
+    supabaseProjectUrl ? `${supabaseProjectUrl}/functions/v1` : '',
+    process.env.VITE_API_BASE_URL,
+    process.env.VITE_PUBLIC_SITE_URL,
+  ]);
+  const reachableByDefault = candidates.find((candidate) => !isLocalUrl(candidate)) || candidates[0];
+  if (!reachableByDefault) {
+    throw new Error('Missing EDGE_API_BASE_URL (or RAG_INDEX_BASE_URL, VITE_API_BASE_URL, or VITE_SUPABASE_PROJECT_URL)');
+  }
+  return reachableByDefault;
 }
 
 function getSupabaseConfig() {
@@ -46,7 +82,7 @@ function getSupabaseConfig() {
 
 function getHeaders() {
   const headers = { 'Content-Type': 'application/json' };
-  const anonKey = (process.env.EDGE_ANON_KEY || '').trim();
+  const anonKey = (process.env.EDGE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || '').trim();
   if (anonKey) {
     headers.apikey = anonKey;
     headers.Authorization = `Bearer ${anonKey}`;
@@ -74,9 +110,28 @@ const evalCases = [
     name: 'planner_clarify_invest',
     tags: ['planner', 'clarify'],
     request: { question: 'Je cherche un bien pour investir' },
-    expect: (reply) => reply.agentMode === 'tool' && reply.planner && (reply.planner.decisionType === 'clarify' || reply.planner.decisionType === 'plan'),
+    expect: (reply) => {
+      const plannerDecision = reply.planner?.decisionType;
+      return (
+        reply.agentMode === 'tool' &&
+        reply.planner &&
+        (plannerDecision === 'clarify' || plannerDecision === 'plan')
+      );
+    },
   },
 ];
+
+function summarizeActualReply(reply) {
+  return {
+    agentMode: reply?.agentMode,
+    routeCategory: reply?.routeCategory,
+    ragUsed: reply?.ragUsed,
+    retrievalMode: reply?.retrievalMode,
+    planner: reply?.planner,
+    actions: Array.isArray(reply?.actions) ? reply.actions.map((action) => action?.kind).slice(0, 8) : undefined,
+    citations: Array.isArray(reply?.citations) ? reply.citations.map((citation) => citation?.path).filter(Boolean).slice(0, 5) : undefined,
+  };
+}
 
 async function callChatbot(edgeBaseUrl, body) {
   const chatbotEndpoint = edgeBaseUrl.includes('/functions/v1')
@@ -260,6 +315,7 @@ async function run() {
       pass: result.pass,
       latencyMs: result.latencyMs,
       failureReason: result.failureReason,
+      actual: result.pass ? undefined : summarizeActualReply(result.body),
     }));
   }
 

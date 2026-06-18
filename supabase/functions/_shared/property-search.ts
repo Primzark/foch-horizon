@@ -53,6 +53,9 @@ export interface SharedPropertySearchRow {
 type SortValue = "newest" | "price_asc" | "price_desc" | "surface_desc";
 
 type ServiceClient = ReturnType<typeof createServiceClient>;
+type SortablePropertyQuery<TQuery> = {
+  order(column: "price_amount" | "published_at" | "surface_m2", options: { ascending: boolean }): TQuery;
+};
 
 function normalizeTerm(value: string): string {
   return value.trim();
@@ -240,10 +243,10 @@ export async function resolveCityFilterPropertyIds(
   return Array.from(propertyIds);
 }
 
-function applySort(
-  query: any,
+function applySort<TQuery extends SortablePropertyQuery<TQuery>>(
+  query: TQuery,
   sort: SortValue | string | null | undefined,
-) {
+): TQuery {
   switch (sort) {
     case "price_asc":
       return query.order("price_amount", { ascending: true }).order("published_at", { ascending: false });

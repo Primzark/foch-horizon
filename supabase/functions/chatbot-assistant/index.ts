@@ -1177,9 +1177,31 @@ function extractRequestedRoute(question: string): string | null {
   return null;
 }
 
+function inferKnownPageRoute(question: string): { path: string; reason: string } | null {
+  const normalized = normalizeText(question);
+  if (/\bhonoraires?\b|\bbareme\b|\bbar[eè]me\b|\bcommission\b|\bfrais\b/.test(normalized)) {
+    return { path: "/honoraires", reason: "known_page_honoraires" };
+  }
+  if (/\bconfidentialite\b|\bconfidentialit[eé]\b|\brgpd\b|\bdonnees personnelles\b/.test(normalized)) {
+    return { path: "/confidentialite", reason: "known_page_confidentialite" };
+  }
+  if (/\bcookies?\b|\btraceurs?\b/.test(normalized)) {
+    return { path: "/cookies", reason: "known_page_cookies" };
+  }
+  if (/\bmentions legales\b|\bmentions l[eé]gales\b/.test(normalized)) {
+    return { path: "/mentions-legales", reason: "known_page_mentions_legales" };
+  }
+  if (/\bplan du site\b|\bsitemap\b/.test(normalized)) {
+    return { path: "/plan-du-site", reason: "known_page_sitemap" };
+  }
+  return null;
+}
+
 function resolvePageFallbackCandidate(question: string, ragCitations: RAGCitation[]): { path: string; reason: string } | null {
   const explicit = extractRequestedRoute(question);
   if (explicit) return { path: explicit, reason: "explicit_route" };
+  const knownPage = inferKnownPageRoute(question);
+  if (knownPage) return knownPage;
   if (!pageFallbackQuestionPattern.test(question)) return null;
   if (ragCitations.length === 1 && normalizeRoutePath(ragCitations[0].path)) {
     return { path: ragCitations[0].path, reason: "single_rag_citation" };
@@ -1472,6 +1494,8 @@ function shouldAttemptPageFallback(question: string, rag: RAGContextResult): boo
   if (!parseBooleanEnv("CHATBOT_PAGE_FALLBACK_ENABLED", true)) return false;
   const explicitRoute = extractRequestedRoute(question);
   if (explicitRoute) return true;
+  const knownPage = inferKnownPageRoute(question);
+  if (knownPage) return true;
   const pageLike = pageFallbackQuestionPattern.test(normalizeText(question));
   if (!pageLike) return false;
   if (!rag.contextBlock || rag.retrievalMode === "none") return true;
@@ -3224,6 +3248,14 @@ function isLikelyCompareQuestion(question: string): boolean {
 
 function isLikelyHandoffQuestion(question: string): boolean {
   return toolHandoffIntentPattern.test(normalizeText(question));
+}
+
+function isBroadInvestmentSearchQuestion(question: string, params: ToolSearchParams): boolean {
+  const normalized = normalizeText(question);
+  const isInvestmentIntent = /\binvest/.test(normalized) || /\blocatif\b|\brendement\b/.test(normalized);
+  const missingCity = !(params.city && params.city.trim().length > 0);
+  const missingTransaction = !params.transaction;
+  return isInvestmentIntent && missingCity && missingTransaction;
 }
 
 function detectAgentMode(
@@ -5239,32 +5271,32 @@ async function orchestrateToolRequest(input: {
     return null;
   };
 
+  const clarifyBroadInvestmentSearch = (): ToolOrchestrationResult | null => {
+    const inferred = extractSearchParamsFromQuestion(input.question, mergedConversationState, effectiveActionRequest);
+    if (!isBroadInvestmentSearchQuestion(input.question, inferred)) return null;
+
+    plannerMeta = {
+      provider: "fallback",
+      mode: "deterministic_fallback",
+      decisionType: "clarify",
+      reasonCode: "deterministic_clarify_invest",
+    };
+    return applyPlannerMeta({
+      answer: "Pour un investissement, vous visez plutôt l’achat ou la location, et dans quelle ville ?",
+      suggestedPrompts: ["Achat au Havre", "Location au Havre", "Comparer achat et location"],
+      actions: [buildNoticeAction("Précision nécessaire", "Précisez la transaction et la ville cible.", "planner_clarify")],
+      toolTrace,
+      agentMode: "tool",
+      costHints: { route: "edge_tools", estimatedClass: "low" },
+    });
+  };
+
+  const investmentClarification = clarifyBroadInvestmentSearch();
+  if (investmentClarification) return investmentClarification;
+
   if (!input.actionRequest && plannerFeatureEnabled) {
     const plannerConfig = resolveGeminiPlannerConfig();
     if (!plannerConfig) {
-      const inferred = extractSearchParamsFromQuestion(input.question, mergedConversationState, effectiveActionRequest);
-      const normalizedQuestion = normalizeText(input.question);
-      const isInvestmentIntent = /\binvest/.test(normalizedQuestion) || /\blocatif\b|\brendement\b/.test(normalizedQuestion);
-      const missingCity = !(inferred.city && inferred.city.trim().length > 0);
-      const missingTransaction = !inferred.transaction;
-
-      if (isInvestmentIntent && missingCity && missingTransaction) {
-        plannerMeta = {
-          provider: "fallback",
-          mode: "deterministic_fallback",
-          decisionType: "clarify",
-          reasonCode: "planner_unavailable_clarify_invest",
-        };
-        return applyPlannerMeta({
-          answer: "Pour un investissement, vous visez plutôt l’achat ou la location, et dans quelle ville ?",
-          suggestedPrompts: ["Achat au Havre", "Location au Havre", "Comparer achat et location"],
-          actions: [buildNoticeAction("Précision nécessaire", "Précisez la transaction et la ville cible.", "planner_clarify")],
-          toolTrace,
-          agentMode: "tool",
-          costHints: { route: "edge_tools", estimatedClass: "low" },
-        });
-      }
-
       plannerMeta = {
         provider: "fallback",
         mode: "deterministic_fallback",

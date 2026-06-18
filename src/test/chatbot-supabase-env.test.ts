@@ -31,6 +31,18 @@ describe("chatbot supabase env", () => {
     });
   });
 
+  it("does not enable optional eval persistence without the service role key", () => {
+    expect(
+      resolveOptionalSupabaseServiceRoleConfig({
+        VITE_SUPABASE_PROJECT_URL: "rcrulfdobtmfxzpuyryn",
+      }),
+    ).toEqual({
+      enabled: false,
+      supabaseUrl: "",
+      serviceRoleKey: "",
+    });
+  });
+
   it("rejects invalid Supabase URL inputs", () => {
     expect(() =>
       resolveRequiredSupabaseServiceRoleConfig({
