@@ -7,7 +7,7 @@ import DpeBadge from "@/components/property/DpeBadge";
 import {
   formatPrice,
   formatPropertyTypeLabel,
-  getPropertyStatusLabel,
+  getPropertyCardLabels,
   toCanonicalPropertyPath,
 } from "@/features/listings/utils/formatting";
 import { useFavoritesStore } from "@/features/favorites/useFavoritesStore";
@@ -30,7 +30,7 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, classNam
   const { reducedMotion } = useMotionPreference();
 
   const path = toCanonicalPropertyPath({ id: item.id, slug: item.slug });
-  const status = getPropertyStatusLabel(item.status);
+  const labels = getPropertyCardLabels(item);
   const propertyTypeLabel = formatPropertyTypeLabel(item.type);
   const imageMood = inferPlaceImageMood(item.city.name, item.title, propertyTypeLabel);
   const imageMotionPreset = getPlaceImageMotionPreset(imageMood);
@@ -77,7 +77,15 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, classNam
                 imageMotionPreset.overlayClassName,
               )}
             />
-            {status && <span className="absolute left-2 top-2 z-[3] rounded-full bg-background/95 px-2 py-1 text-xs font-medium">{status}</span>}
+            {labels.length > 0 && (
+              <div className="absolute left-2 right-2 top-2 z-[3] flex flex-wrap gap-1.5">
+                {labels.map((label) => (
+                  <span key={label} className="rounded-full bg-background/95 px-2.5 py-1 text-xs font-medium text-foreground">
+                    {label}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
           <div>
@@ -173,7 +181,15 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, classNam
             imageMotionPreset.overlayClassName,
           )}
         />
-        {status && <span className="absolute left-3 top-3 z-[3] rounded-full bg-background/95 px-2 py-1 text-xs font-medium">{status}</span>}
+        {labels.length > 0 && (
+          <div className="absolute left-3 right-14 top-3 z-[3] flex flex-wrap gap-1.5">
+            {labels.map((label) => (
+              <span key={label} className="rounded-full bg-background/95 px-2.5 py-1 text-xs font-medium text-foreground">
+                {label}
+              </span>
+            ))}
+          </div>
+        )}
         <button
           type="button"
           className={cn(

@@ -1,13 +1,11 @@
 import { Link } from "react-router-dom";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 import { Download, ExternalLink, Facebook } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { agents } from "@/features/listings/data/agents";
 import { useSeo } from "@/lib/seo/useSeo";
-import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
+import { AgencyPageHeader } from "@/features/content/components/AgencyPageHeader";
 
-const aboutImageOne = "https://www.fochimmobilier.com/static/img/fochimmobilier-agence-immobiliere-le-havre-76_1.jpg";
-const aboutImageTwo = "https://www.fochimmobilier.com/static/img/fochimmobilier-agence-immobiliere-le-havre-76_2.jpg";
 const feesPdfUrl = "https://www.fochimmobilier.com/static/pdf/honoraires-fochimmobilier-le-havre-76.pdf";
 
 const fadeUp = {
@@ -18,10 +16,6 @@ const fadeUp = {
 };
 
 export default function AboutPageV2() {
-  const { reducedMotion } = useMotionPreference();
-  const { scrollYProgress } = useScroll();
-  const imageShift = useTransform(scrollYProgress, [0, 1], [0, reducedMotion ? 0 : -22]);
-
   useSeo({
     title: "À propos | Foch Immobilier",
     description:
@@ -34,33 +28,16 @@ export default function AboutPageV2() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(188,165,132,0.14),transparent_42%),radial-gradient(circle_at_82%_86%,rgba(14,29,44,0.09),transparent_40%)]" />
 
       <div className="container relative mx-auto px-4">
-        <motion.header {...fadeUp} className="max-w-4xl">
-          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">L'agence</p>
-          <h1 className="mt-2 font-display text-4xl md:text-5xl">L'exigence immobilière depuis 1972</h1>
-          <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-            Foch Immobilier conseille et accompagne ses clients au Havre avec la rigueur d'une maison indépendante, membre du réseau <strong>UNIS</strong>.
-          </p>
-        </motion.header>
+        <AgencyPageHeader
+          eyebrow="L'agence"
+          title="L'exigence immobilière depuis 1972"
+          description="Foch Immobilier conseille et accompagne ses clients au Havre avec la rigueur d'une maison indépendante."
+        />
 
-        <div className="mt-10 grid gap-6 lg:grid-cols-2">
-          <motion.figure
-            {...fadeUp}
-            style={{ y: imageShift }}
-            className="group relative overflow-hidden rounded-3xl border border-border bg-card shadow-[0_30px_64px_-48px_rgba(12,20,30,0.75)]"
-          >
-            <img
-              src={aboutImageOne}
-              alt="Agence immobilière Foch Immobilier au Havre, réseau UNIS"
-              className="h-[330px] w-full bg-muted/20 object-contain object-center transition-transform duration-500 group-hover:scale-[1.01] md:h-[400px]"
-              loading="lazy"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/10 to-transparent" />
-            <figcaption className="absolute bottom-0 p-5 text-sm text-white/90">Agence immobilière depuis 1972.</figcaption>
-          </motion.figure>
-
+        <div className="mt-10">
           <motion.article
             {...fadeUp}
-            className="rounded-3xl border border-border bg-card/85 p-7 shadow-[0_18px_40px_-34px_rgba(22,35,50,0.6)]"
+            className="max-w-4xl"
           >
             <h2 className="font-display text-3xl">
               L'agence <span className="text-accent">Foch</span> Immobilier au Havre
@@ -99,15 +76,6 @@ export default function AboutPageV2() {
             </div>
           </motion.article>
         </div>
-
-        <motion.figure {...fadeUp} className="mt-6 overflow-hidden rounded-3xl border border-border bg-card">
-          <img
-            src={aboutImageTwo}
-            alt="Agence immobilière Foch Immobilier au Havre"
-            className="h-[280px] w-full bg-muted/20 object-contain object-center transition-transform duration-500 hover:scale-[1.01] md:h-[340px]"
-            loading="lazy"
-          />
-        </motion.figure>
 
         <motion.section {...fadeUp} className="mt-12">
           <h2 className="font-display text-3xl">

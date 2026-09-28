@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSeo } from "@/lib/seo/useSeo";
+import { AgencyPageHeader } from "@/features/content/components/AgencyPageHeader";
 
 const points = [
   "Avis de valeur argumenté avec analyse locale approfondie.",
@@ -19,13 +20,11 @@ export default function SellPage() {
 
   return (
     <section className="container mx-auto px-4 py-10">
-      <header className="max-w-3xl">
-        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Vendre</p>
-        <h1 className="mt-2 font-display text-4xl">Vendre avec méthode, du mandat à l'acte</h1>
-        <p className="mt-3 text-sm text-muted-foreground">
-          Nous construisons une stratégie de vente cohérente avec votre bien, votre calendrier et les standards du marché local.
-        </p>
-      </header>
+      <AgencyPageHeader
+        eyebrow="Vendre"
+        title="Vendre avec méthode, du mandat à l'acte"
+        description="Nous construisons une stratégie de vente cohérente avec votre bien, votre calendrier et les standards du marché local."
+      />
 
       <div className="mt-6 rounded-2xl border border-border bg-card p-6">
         <ul className="grid gap-3 md:grid-cols-2">
@@ -40,7 +39,7 @@ export default function SellPage() {
 
       <div className="mt-8 flex flex-wrap gap-3">
         <Button asChild variant="brand">
-          <Link to="/estimation">Demander une estimation</Link>
+          <Link to="/estimation">Demander un avis de valeur</Link>
         </Button>
         <Button variant="brand" asChild>
           <Link to="/contact">Échanger avec un conseiller</Link>

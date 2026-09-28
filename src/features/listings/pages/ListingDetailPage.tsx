@@ -8,6 +8,7 @@ import { cityById } from "@/features/cities/data/cities";
 import { getPropertyById, getSimilarProperties } from "@/features/listings/api/properties.service";
 import { ListingGallery } from "@/features/listings/components/ListingGallery";
 import { ListingCard } from "@/features/listings/components/ListingCard";
+import { ListingShareButton } from "@/features/listings/components/ListingShareButton";
 import { agentById } from "@/features/listings/data/agents";
 import { toSearchItem } from "@/features/listings/utils/mappers";
 import { LeadForm } from "@/features/leads/components/LeadForm";
@@ -212,9 +213,9 @@ export default function ListingDetailPage() {
               </p>
             </div>
 
-            <div className="text-right">
-              <p className="font-display text-4xl">{formatPrice(property.priceAmount, property.transactionType)}</p>
-              <div className="mt-2 flex items-center justify-end gap-2">
+            <div className="w-full text-left sm:w-auto sm:text-right">
+              <p className="font-display text-5xl leading-tight tracking-tight text-brand-strong sm:text-6xl">{formatPrice(property.priceAmount, property.transactionType)}</p>
+              <div className="mt-3 flex flex-wrap items-center gap-2 sm:justify-end">
                 <Button
                   variant="outline"
                   size="sm"
@@ -233,16 +234,7 @@ export default function ListingDetailPage() {
                   <Heart className={isFavorite ? "fill-brand text-brand" : undefined} />
                   {isFavorite ? "Sauvegardé" : "Sauvegarder"}
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    navigator.clipboard.writeText(window.location.href);
-                    trackEvent("listing_viewed", { propertyId: property.id, action: "copy_link" });
-                  }}
-                >
-                  <Copy className="mr-1 h-3.5 w-3.5" /> Lien
-                </Button>
+                <ListingShareButton key={property.id} propertyId={property.id} title={property.title} path={canonicalPath!} />
                 <Button
                   variant="outline"
                   size="sm"
@@ -305,7 +297,7 @@ export default function ListingDetailPage() {
           </motion.article>
         </div>
 
-        <aside className="space-y-4 lg:sticky lg:top-24 lg:h-fit">
+        <aside className="space-y-4 lg:sticky lg:top-[calc(145px+env(safe-area-inset-top))] lg:h-fit">
           <section className="rounded-2xl border border-border bg-card p-5">
             <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Votre interlocuteur</p>
             <p className="mt-2 font-display text-2xl">{agent?.fullName ?? "Foch Immobilier"}</p>

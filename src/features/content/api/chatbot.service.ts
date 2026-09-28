@@ -453,7 +453,7 @@ const serviceIntentPattern = /service|gestion|location|vendre|estimation|syndic|
 const contactIntentPattern = /contact|telephone|tel|appeler|email|mail|adresse|horaire|ouvert|ouverture|rdv|rendez vous|rappel/;
 const reviewsIntentPattern = /avis|review|google|note|reputation|temoignage/;
 const feesIntentPattern = /honoraire|bareme|frais|commission|pdf/;
-const historyIntentPattern = /histoire|historique|fondation|unesco|perret|saint francois|saint-vincent|saint vincent|sanvic|graville|docks vauban|eure/;
+const historyIntentPattern = /geographie|secteurs|sainte adresse|gobelins|saint michel|octeville|saint romain|etretat|deauville|trouville|histoire|historique|fondation|unesco|perret|saint francois|saint-vincent|saint vincent|sanvic|graville|docks vauban|eure/;
 const aboutIntentPattern = /agence|equipe|apropos|a propos|depuis 1972|unis/;
 const siteNavigationIntentPattern = /site|page|rubrique|navigation|plan du site|sitemap|ou trouver|ou puis je|ou puis-je|lien/;
 const directLeadCapturePattern = /ne trouve pas|introuvable|aucun bien|pas de bien|pas adapte|rappeler|etre contacte|etre rappele|laisser mon email|alerte email/;
@@ -483,7 +483,7 @@ const knownInternalPaths = [
   "/estimation",
   "/services",
   "/avis",
-  "/histoire-immobilier-le-havre",
+  "/geographie",
   "/honoraires",
   "/biens-sauvegardes",
   "/my-selection",
@@ -632,12 +632,12 @@ const siteTopics: SiteTopicDescriptor[] = [
   },
   {
     id: "history",
-    path: "/histoire-immobilier-le-havre",
-    title: "Histoire immobilier Le Havre",
+    path: "/geographie",
+    title: "Géographie",
     summary:
-      "Analyse historique et immobiliere de Perret, Saint-Francois, Saint-Vincent, Sanvic, Graville et Eure-Docks.",
-    keywords: ["histoire", "perret", "saint francois", "saint vincent", "sanvic", "graville", "eure", "docks"],
-    suggestedPrompts: ["Ouvrir /histoire-immobilier-le-havre", "Quel quartier pour investir ?", "Ouvrir /biens"],
+      "Nos secteurs : Sainte-Adresse, La plage, Les gobelins, Saint Michel, Octeville sur mer, la campagne dans un rayon de 30 km du Havre, de Saint-Romain à Etretat et Deauville–Trouville.",
+    keywords: ["geographie", "secteurs", "sainte adresse", "plage", "gobelins", "saint michel", "octeville", "saint romain", "etretat", "deauville", "trouville"],
+    suggestedPrompts: ["Ouvrir /geographie", "Quel quartier pour investir ?", "Ouvrir /biens"],
   },
   {
     id: "fees",
@@ -1244,11 +1244,11 @@ function buildHistoryAnswer(context: ConversationContext): ChatbotReply {
   if (faqMatch) {
     return {
       source: "local",
-      answer: `Bonne question. ${faqMatch.answer} Pour le dossier complet, ouvrez /histoire-immobilier-le-havre.`,
+      answer: `Bonne question. ${faqMatch.answer} Pour découvrir nos secteurs, ouvrez /geographie.`,
       suggestedPrompts: normalizePromptList([
         "Quels quartiers suivre pour investir au Havre ?",
         "Resumez-moi Perret, Saint-Francois et Saint-Vincent",
-        "Ouvrir /histoire-immobilier-le-havre",
+        "Ouvrir /geographie",
       ]),
     };
   }
@@ -1256,11 +1256,11 @@ function buildHistoryAnswer(context: ConversationContext): ChatbotReply {
   return {
     source: "local",
     answer:
-      "Je vous conseille la page /histoire-immobilier-le-havre: elle couvre l'evolution du marche de 1517 a aujourd'hui avec focus sur Perret, Saint-Francois, Saint-Vincent, Sanvic, Graville et Eure-Docks.",
+      "La page /geographie présente nos secteurs : Sainte-Adresse, La plage, Les gobelins, Saint Michel, Octeville sur mer, la campagne dans un rayon de 30 km du Havre, de Saint-Romain à Etretat et Deauville–Trouville.",
     suggestedPrompts: normalizePromptList([
       "Quels sont les atouts du quartier Perret ?",
       "Quel secteur viser pour un investissement locatif ?",
-      "Ouvrir /histoire-immobilier-le-havre",
+      "Ouvrir /geographie",
     ]),
   };
 }
@@ -1269,7 +1269,7 @@ function buildAboutAnswer(): ChatbotReply {
   return {
     source: "local",
     answer:
-      "Foch Immobilier est une agence du Havre active depuis 1972 (reseau UNIS). L'equipe accompagne la transaction, la location et l'administration de biens. Presentation complete sur /apropos.",
+      "Foch Immobilier est une agence du Havre active depuis 1972. L'equipe accompagne la transaction, la location et l'administration de biens. Presentation complete sur /apropos.",
     suggestedPrompts: normalizePromptList([
       "Quels services propose l'agence ?",
       "Comment contacter un conseiller ?",
@@ -1293,12 +1293,12 @@ function buildDistrictComparisonAnswer(): ChatbotReply | null {
   return {
     source: "local",
     answer:
-      `Pour un investissement locatif au Havre, trois secteurs ressortent souvent: ${rankedDistricts[0].name} (demande locative active), ${rankedDistricts[1].name} (renouvellement urbain et petites surfaces) et ${rankedDistricts[2].name} (liquidite patrimoniale forte). Vous pouvez approfondir sur /histoire-immobilier-le-havre puis filtrer les annonces sur /biens.`,
+      `Pour un investissement locatif au Havre, trois secteurs ressortent souvent: ${rankedDistricts[0].name} (demande locative active), ${rankedDistricts[1].name} (renouvellement urbain et petites surfaces) et ${rankedDistricts[2].name} (liquidite patrimoniale forte). Vous pouvez approfondir sur /geographie puis filtrer les annonces sur /biens.`,
     suggestedPrompts: normalizePromptList([
       "Quels biens avez-vous dans ces quartiers ?",
       "Je veux un comparatif rendement / budget",
       "Ouvrir /biens",
-      "Ouvrir /histoire-immobilier-le-havre",
+      "Ouvrir /geographie",
     ]),
   };
 }
@@ -1331,11 +1331,11 @@ function buildDistrictAnswer(context: ConversationContext): ChatbotReply | null 
 
   return {
     source: "local",
-    answer: `${districtData.name}: ${districtData.summary} ${districtData.investmentAngle} Detail historique: /histoire-immobilier-le-havre.`,
+    answer: `${districtData.name}: ${districtData.summary} ${districtData.investmentAngle} Detail historique: /geographie.`,
     suggestedPrompts: normalizePromptList([
       `Quels biens avez-vous actuellement dans ${districtData.name} ?`,
       `Quelle strategie de vente recommandez-vous dans ${districtData.name} ?`,
-      "Ouvrir /histoire-immobilier-le-havre",
+      "Ouvrir /geographie",
       "Ouvrir /biens",
     ]),
   };
@@ -1590,7 +1590,7 @@ function buildSiteNavigationAnswer(): ChatbotReply {
   return {
     source: "local",
     answer:
-      "Vous pouvez naviguer rapidement vers: /biens, /vendre, /estimation, /services, /histoire-immobilier-le-havre, /avis, /honoraires, /contact et /plan-du-site.",
+      "Vous pouvez naviguer rapidement vers: /biens, /vendre, /estimation, /services, /geographie, /avis, /honoraires, /contact et /plan-du-site.",
     suggestedPrompts: normalizePromptList([
       "Ouvrir /biens",
       "Ouvrir /avis",
@@ -1630,7 +1630,7 @@ function buildCapabilitiesAnswer(): ChatbotReply {
     suggestedPrompts: normalizePromptList([
       "Ouvrir /biens",
       "Ouvrir /avis",
-      "Ouvrir /histoire-immobilier-le-havre",
+      "Ouvrir /geographie",
       "Ouvrir /contact",
     ]),
   };

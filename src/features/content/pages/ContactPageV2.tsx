@@ -2,6 +2,7 @@ import { MapPin, Clock, Phone, Mail } from "lucide-react";
 import { LeadForm } from "@/features/leads/components/LeadForm";
 import { getConfiguredPublicSiteUrl, getSiteUrl, useSeo } from "@/lib/seo/useSeo";
 import { trackEvent } from "@/lib/analytics/events";
+import { AgencyPageHeader } from "@/features/content/components/AgencyPageHeader";
 
 export default function ContactPageV2() {
   const siteUrl = getSiteUrl();
@@ -30,13 +31,11 @@ export default function ContactPageV2() {
 
   return (
     <section className="container mx-auto px-4 py-10">
-      <header className="max-w-3xl">
-        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Contact</p>
-        <h1 className="mt-2 font-display text-4xl">Parlons de votre projet immobilier</h1>
-        <p className="mt-3 text-sm text-muted-foreground">
-          Nous répondons rapidement à vos demandes de vente, d'achat, de location et de gestion locative.
-        </p>
-      </header>
+      <AgencyPageHeader
+        eyebrow="Contact"
+        title="Parlons de votre projet immobilier"
+        description="Nous répondons rapidement à vos demandes de vente, d'achat, de location et de gestion locative."
+      />
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         <section className="rounded-2xl border border-border bg-card p-6 h-card" itemScope itemType="https://schema.org/RealEstateAgent">

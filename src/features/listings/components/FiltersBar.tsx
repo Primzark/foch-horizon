@@ -18,7 +18,7 @@ export function FiltersBar({ sort, onSortChange, viewMode, onViewModeChange, onO
   const { reducedMotion } = useMotionPreference();
 
   return (
-    <div className="sticky top-[calc(74px+env(safe-area-inset-top))] z-30 rounded-2xl border border-border bg-background/85 p-3 backdrop-blur supports-[backdrop-filter]:bg-background/70">
+    <div className="sticky top-[calc(93px+env(safe-area-inset-top))] lg:top-[calc(145px+env(safe-area-inset-top))] z-30 rounded-2xl border border-border bg-background/85 p-3 backdrop-blur supports-[backdrop-filter]:bg-background/70">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-sm text-muted-foreground">

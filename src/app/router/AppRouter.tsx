@@ -15,7 +15,8 @@ const SellPage = lazy(() => import("@/features/content/pages/SellPage"));
 const EstimationPageV2 = lazy(() => import("@/features/content/pages/EstimationPageV2"));
 const ServicesPage = lazy(() => import("@/features/content/pages/ServicesPage"));
 const ReviewsPage = lazy(() => import("@/features/content/pages/ReviewsPage"));
-const LeHavreHistoryPage = lazy(() => import("@/features/content/pages/LeHavreHistoryPage"));
+const GeographyPage = lazy(() => import("@/features/content/pages/GeographyPage"));
+const RecentSalesPage = lazy(() => import("@/features/content/pages/RecentSalesPage"));
 const LegalTextPage = lazy(() => import("@/features/content/pages/LegalTextPage"));
 const SiteMapPage = lazy(() => import("@/features/content/pages/SiteMapPage"));
 const SelectionPage = lazy(() => import("@/features/favorites/pages/SelectionPage"));
@@ -53,7 +54,9 @@ export function AppRouter() {
             <Route path="/estimation" element={<EstimationPageV2 />} />
             <Route path="/services" element={<ServicesPage />} />
             <Route path="/avis" element={<ReviewsPage />} />
-            <Route path="/histoire-immobilier-le-havre" element={<LeHavreHistoryPage />} />
+            <Route path="/geographie" element={<GeographyPage />} />
+            <Route path="/nos-dernieres-ventes" element={<RecentSalesPage />} />
+            <Route path="/histoire-immobilier-le-havre" element={<Navigate to="/geographie" replace />} />
             <Route path="/honoraires" element={<FeesPage />} />
             <Route path="/biens-sauvegardes" element={<SelectionPage />} />
             <Route path="/my-selection" element={<Navigate to="/biens-sauvegardes" replace />} />

@@ -1,5 +1,6 @@
 import { ExternalLink, MapPin, Phone, Mail, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
+import { primaryLinks } from "@/layout/navigation";
 import { trackEvent } from "@/lib/analytics/events";
 import { getConfiguredPublicSiteUrl } from "@/lib/seo/useSeo";
 
@@ -14,14 +15,11 @@ const legalLinks = [
 
 const quickLinks = [
   { href: "/", label: "Accueil" },
-  { href: "/biens", label: "Biens" },
-  { href: "/histoire-immobilier-le-havre", label: "Le Havre & patrimoine" },
+  ...primaryLinks.map(({ to, label }) => ({ href: to, label })),
   { href: "/avis", label: "Avis clients" },
   { href: "/biens-sauvegardes", label: "Biens sauvegardés" },
-  { href: "/vendre", label: "Vendre" },
   { href: "/services", label: "Services" },
   { href: "/apropos", label: "À propos" },
-  { href: "/contact", label: "Contact" },
 ];
 
 export function AppFooter() {
@@ -35,7 +33,7 @@ export function AppFooter() {
           <meta itemProp="name" content="Foch Immobilier" />
           {configuredSiteUrl ? <meta itemProp="url" content={configuredSiteUrl} /> : null}
           <p className="font-display text-2xl">Foch Immobilier</p>
-          <p className="mt-1 text-xs uppercase tracking-[0.24em] text-muted-foreground">Depuis 1972 · Réseau UNIS</p>
+          <p className="mt-1 text-xs uppercase tracking-[0.24em] text-muted-foreground">Depuis 1972</p>
           <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
             Immobilier résidentiel haut de gamme, location et gestion locative au Havre et sur le littoral.
           </p>

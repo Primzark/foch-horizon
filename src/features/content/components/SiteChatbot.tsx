@@ -2837,7 +2837,7 @@ export function SiteChatbot() {
     [handleAnalysisEvidenceClick],
   );
 
-  const openChatWithGreeting = () => {
+  const openChatWithGreeting = useCallback(() => {
     if (open) {
       closeChat();
       return;
@@ -2863,7 +2863,13 @@ export function SiteChatbot() {
 
       return trimMessages([...current, nextOpeningGreetingMessage()]);
     });
-  };
+  }, [open, closeChat, emitChatbotTelemetry, nextOpeningGreetingMessage]);
+
+  useEffect(() => {
+    const handleOpen = () => { if (!open) openChatWithGreeting(); };
+    window.addEventListener("foch:open-assistant", handleOpen);
+    return () => window.removeEventListener("foch:open-assistant", handleOpen);
+  }, [open, openChatWithGreeting]);
 
   return (
     <>

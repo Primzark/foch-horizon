@@ -1,3 +1,4 @@
+import { AgencyPageHeader } from "@/features/content/components/AgencyPageHeader";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -94,13 +95,12 @@ export default function ListingsIndexPage() {
 
   return (
     <section className="container mx-auto px-4 py-8">
-      <header className="mb-6">
-        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Biens</p>
-        <h1 className="mt-2 font-display text-4xl">Tous nos biens</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Affinez votre recherche avec des filtres avancés et accédez rapidement aux biens d'exception qui correspondent à vos critères.
-        </p>
-      </header>
+      <AgencyPageHeader
+        eyebrow="À découvrir"
+        title="Nos biens"
+        description="Affinez votre recherche et trouvez le bien qui correspond à votre projet."
+        className="mb-6"
+      />
 
       <FiltersBar
         sort={filters.sort ?? "newest"}

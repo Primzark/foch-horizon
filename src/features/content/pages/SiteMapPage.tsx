@@ -4,11 +4,12 @@ import { useSeo } from "@/lib/seo/useSeo";
 
 const pages = [
   { href: "/", label: "Accueil" },
-  { href: "/biens", label: "Biens" },
+  { href: "/biens", label: "Nos biens" },
   { href: "/vendre", label: "Vendre" },
-  { href: "/estimation", label: "Estimation" },
+  { href: "/estimation", label: "Avis de valeur" },
   { href: "/services", label: "Services" },
-  { href: "/histoire-immobilier-le-havre", label: "Histoire immobilier Le Havre" },
+  { href: "/geographie", label: "Géographie" },
+  { href: "/nos-dernieres-ventes", label: "Nos dernières ventes" },
   { href: "/avis", label: "Avis clients" },
   { href: "/apropos", label: "À propos" },
   { href: "/contact", label: "Contact" },

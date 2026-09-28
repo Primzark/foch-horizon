@@ -1,22 +1,21 @@
 import { LeadForm } from "@/features/leads/components/LeadForm";
 import { useSeo } from "@/lib/seo/useSeo";
+import { AgencyPageHeader } from "@/features/content/components/AgencyPageHeader";
 
 export default function EstimationPageV2() {
   useSeo({
-    title: "Estimation | Foch Immobilier",
-    description: "Demandez une estimation immobilière argumentée avec un conseiller Foch Immobilier.",
+    title: "Avis de valeur | Foch Immobilier",
+    description: "Demandez un avis de valeur argumenté pour votre bien avec un conseiller Foch Immobilier.",
     canonicalPath: "/estimation",
   });
 
   return (
     <section className="container mx-auto px-4 py-10">
-      <header className="max-w-3xl">
-        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Estimation</p>
-        <h1 className="mt-2 font-display text-4xl">Estimer votre bien</h1>
-        <p className="mt-3 text-sm text-muted-foreground">
-          Décrivez votre bien et vos contraintes de calendrier. Un conseiller dédié vous recontacte avec une estimation argumentée.
-        </p>
-      </header>
+      <AgencyPageHeader
+        eyebrow="Votre projet de vente"
+        title="Avis de valeur"
+        description="Décrivez votre bien et vos contraintes de calendrier. Un conseiller dédié vous recontacte avec un avis de valeur argumenté."
+      />
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_420px]">
         <article className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
@@ -30,9 +29,9 @@ export default function EstimationPageV2() {
 
         <LeadForm
           source="estimation"
-          title="Lancer votre demande d'estimation"
+          title="Demander un avis de valeur"
           description="Nous revenons vers vous sous 24h ouvrées."
-          ctaLabel="Recevoir mon estimation"
+          ctaLabel="Recevoir mon avis de valeur"
           showAppointmentFields
         />
       </div>

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { buildSearchParams, parseSearchParams } from "@/features/listings/utils/query";
 import {
   formatPropertyTypeLabel,
+  getPropertyCardLabels,
   parseReferenceFromQuery,
   sanitizePropertySlug,
   toCanonicalPropertyPath,
@@ -56,5 +57,26 @@ describe("listing formatting helpers", () => {
     expect(formatPropertyTypeLabel("appartement")).toBe("Appartement");
     expect(formatPropertyTypeLabel("maison_villa")).toBe("Maison / Villa");
     expect(formatPropertyTypeLabel("autre")).toBe("Autre");
+  });
+
+  it("uses explicit listing labels without inventing statuses", () => {
+    expect(getPropertyCardLabels({ status: "active", title: "EXCLUSIVITÉ - NOUVEAUTÉ Sainte-Adresse" })).toEqual([
+      "Exclusivité",
+      "Nouveautés",
+    ]);
+    expect(getPropertyCardLabels({ status: "active", title: "SOUS COMPROMIS — Maison au Havre" })).toEqual([
+      "Sous compromis",
+    ]);
+    expect(getPropertyCardLabels({ status: "active", title: "Sous offre : appartement" })).toEqual(["Sous offre"]);
+    expect(getPropertyCardLabels({ status: "active", title: "Maison avec une nouvelle cuisine" })).toEqual([]);
+    expect(getPropertyCardLabels({ status: "active", title: "Maison sans exclusivité" })).toEqual([]);
+  });
+
+  it("prefers structured status and omits newness on unavailable properties", () => {
+    expect(getPropertyCardLabels({ status: "under_offer", title: "NOUVEAUTÉ EXCLUSIVITÉ Appartement" })).toEqual([
+      "Sous offre",
+      "Exclusivité",
+    ]);
+    expect(getPropertyCardLabels({ status: "sold", title: "NOUVEAUTÉ EXCLUSIVITÉ Maison" })).toEqual(["Vendu"]);
   });
 });

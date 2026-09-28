@@ -37,6 +37,38 @@ export function getPropertyStatusLabel(status: PropertyStatus): string | null {
   }
 }
 
+export function getPropertyCardLabels(property: Pick<Property, "status" | "title">): string[] {
+  const statusLabel = getPropertyStatusLabel(property.status);
+  if (property.status === "sold" || property.status === "rented" || property.status === "off_market") {
+    return statusLabel ? [statusLabel] : [];
+  }
+
+  // The source feed currently publishes these labels in listing titles, without
+  // dedicated exclusivity/newness fields. Only read explicit leading labels;
+  // do not infer a property's status from its age, price, or description.
+  const sourceLabels = new Set<string>();
+  let title = normalizeKeyword(property.title).replace(/^[\s\p{P}]+/u, "");
+  let match: RegExpMatchArray | null;
+  while ((match = title.match(/^(sous[\s-]+compromis|sous[\s-]+offre|exclusivite|nouveautes?)\b/))) {
+    sourceLabels.add(match[1].replace(/[\s-]+/g, " "));
+    title = title.slice(match[0].length).replace(/^[\s\p{P}]+/u, "");
+  }
+
+  const labels: string[] = [];
+  const sourceStatus = sourceLabels.has("sous compromis")
+    ? "Sous compromis"
+    : sourceLabels.has("sous offre")
+      ? "Sous offre"
+      : null;
+  const effectiveStatus = statusLabel ?? sourceStatus;
+  if (effectiveStatus) labels.push(effectiveStatus);
+  if (sourceLabels.has("exclusivite")) labels.push("Exclusivité");
+  if (!effectiveStatus && (sourceLabels.has("nouveaute") || sourceLabels.has("nouveautes"))) {
+    labels.push("Nouveautés");
+  }
+  return labels;
+}
+
 export function formatPropertyTypeLabel(propertyType: PropertyType): string {
   switch (propertyType) {
     case "appartement":
