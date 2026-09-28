@@ -158,9 +158,6 @@ export default function HomePage() {
             </Button>
           </motion.div>
         </div>
-        <p className="absolute bottom-2 left-4 z-[6] max-w-[70%] text-left text-[10px] leading-snug text-white/85 md:bottom-3 md:left-5 md:text-xs">
-          Raoul Dufy, <em>L’Estacade et la Plage du Havre</em> (vers 1926) · affichage recadré
-        </p>
       </section>
       <section className="container mx-auto px-4 pt-8 pb-16 md:py-16">
         <ScrollReveal mood={heroMood}>
