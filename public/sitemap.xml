@@ -1,4 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <!-- Populate with the final production domain before go-live. -->
+  <url><loc>https://foch-horizon.vercel.app/</loc></url>
+  <url><loc>https://foch-horizon.vercel.app/biens</loc></url>
+  <url><loc>https://foch-horizon.vercel.app/vendre</loc></url>
+  <url><loc>https://foch-horizon.vercel.app/estimation</loc></url>
+  <url><loc>https://foch-horizon.vercel.app/services</loc></url>
+  <url><loc>https://foch-horizon.vercel.app/avis</loc></url>
+  <url>
+    <loc>https://foch-horizon.vercel.app/geographie</loc>
+    <lastmod>2026-09-28</lastmod>
+  </url>
+  <url><loc>https://foch-horizon.vercel.app/nos-dernieres-ventes</loc></url>
+  <url><loc>https://foch-horizon.vercel.app/apropos</loc></url>
+  <url><loc>https://foch-horizon.vercel.app/contact</loc></url>
+  <url><loc>https://foch-horizon.vercel.app/honoraires</loc></url>
+  <url><loc>https://foch-horizon.vercel.app/plan-du-site</loc></url>
+  <url><loc>https://foch-horizon.vercel.app/immobilier/le-havre</loc></url>
+  <url><loc>https://foch-horizon.vercel.app/immobilier/sainte-adresse</loc></url>
+  <url><loc>https://foch-horizon.vercel.app/immobilier/montivilliers</loc></url>
+  <url><loc>https://foch-horizon.vercel.app/immobilier/maneglise</loc></url>
+  <url><loc>https://foch-horizon.vercel.app/immobilier/gainneville</loc></url>
 </urlset>
