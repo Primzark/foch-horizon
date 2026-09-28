@@ -165,7 +165,7 @@ export default function ReviewsPage() {
   useSeo({
     title: "Avis clients | Foch Immobilier Le Havre",
     description:
-      "Consultez les avis clients vérifiés de Foch Immobilier au Havre: achat, vente, location et gestion locative.",
+      "Consultez les avis publiés sur la fiche Google de Foch Immobilier au Havre: achat, vente, location et gestion locative.",
     canonicalPath: "/avis",
     jsonLd: payload
       ? [
@@ -220,7 +220,7 @@ export default function ReviewsPage() {
           <h1 className="font-display text-4xl">Avis clients Foch Immobilier</h1>
         </div>
         <p className="mt-3 text-sm text-muted-foreground">
-          Notes et retours vérifiés sur nos services immobiliers au Havre: vente, achat, location et gestion locative.
+          Notes et commentaires publiés sur la fiche Google de l'agence au Havre.
         </p>
       </header>
 
@@ -373,7 +373,9 @@ export default function ReviewsPage() {
                     <h2 className="font-display text-2xl sm:text-3xl">Avis Google</h2>
                   </div>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    Extraits récents et représentatifs liés à l'activité locale de l'agence au Havre.
+                    {payload.reviews.length > 0
+                      ? "Commentaires sélectionnés par Google sur la fiche de l'agence au Havre."
+                      : "La note Google est disponible, mais aucun commentaire n'a été transmis pour cette fiche."}
                   </p>
                 </div>
 
@@ -411,6 +413,20 @@ export default function ReviewsPage() {
                 </div>
               </div>
             </div>
+
+            {payload.reviews.length === 0 && (
+              <div className="mt-5 rounded-2xl border border-border bg-background/70 p-5 text-sm text-muted-foreground">
+                <p>Google ne fournit actuellement aucun commentaire à afficher sur cette page.</p>
+                <a
+                  href={AGENCY_GOOGLE_MAPS_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-3 inline-flex items-center gap-1.5 font-medium text-brand-strong hover:underline"
+                >
+                  Lire les avis sur Google Maps <ExternalLink className="h-3.5 w-3.5" />
+                </a>
+              </div>
+            )}
 
             <section className="mt-5 columns-1 [column-gap:1rem] md:columns-2 xl:columns-3">
               {payload.reviews.map((review, index) => {

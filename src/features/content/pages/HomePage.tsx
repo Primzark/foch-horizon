@@ -265,11 +265,17 @@ export default function HomePage() {
               </div>
               <Link to="/avis" className="inline-flex items-center gap-1.5 text-sm hover:underline">
                 <GoogleGIcon size={14} decorative />
-                Consulter tous les avis
+                Consulter les avis
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
           </ScrollReveal>
+
+          {reviewsQuery.data.reviews.length === 0 && (
+            <p className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">
+              Aucun commentaire n'est actuellement fourni par Google pour cette fiche. La note reste disponible.
+            </p>
+          )}
 
           <div className="grid gap-4 md:grid-cols-3">
             {reviewsQuery.data.reviews.slice(0, 3).map((review, index) => (
