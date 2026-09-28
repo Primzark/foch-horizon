@@ -1,6 +1,6 @@
 import { LeadForm } from "@/features/leads/components/LeadForm";
 import { useSeo } from "@/lib/seo/useSeo";
-import { AgencyPageHeader } from "@/features/content/components/AgencyPageHeader";
+import { StorefrontPageHero } from "@/features/content/components/StorefrontPageHero";
 
 export default function EstimationPageV2() {
   useSeo({
@@ -10,14 +10,15 @@ export default function EstimationPageV2() {
   });
 
   return (
-    <section className="container mx-auto px-4 py-10">
-      <AgencyPageHeader
+    <>
+      <StorefrontPageHero
         eyebrow="Votre projet de vente"
         title="Avis de valeur"
         description="Décrivez votre bien et vos contraintes de calendrier. Un conseiller dédié vous recontacte avec un avis de valeur argumenté."
       />
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_420px]">
+      <section className="container mx-auto px-4 py-10">
+      <div className="grid gap-6 lg:grid-cols-[1fr_420px]">
         <article className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
           <h2 className="font-display text-2xl text-foreground">Comment cela fonctionne</h2>
           <ol className="mt-4 space-y-3">
@@ -41,6 +42,7 @@ export default function EstimationPageV2() {
           showAppointmentFields
         />
       </div>
-    </section>
+      </section>
+    </>
   );
 }

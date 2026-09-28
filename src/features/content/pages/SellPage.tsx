@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSeo } from "@/lib/seo/useSeo";
-import { AgencyPageHeader } from "@/features/content/components/AgencyPageHeader";
+import { StorefrontPageHero } from "@/features/content/components/StorefrontPageHero";
 
 const points = [
   "Avis de valeur argumenté avec analyse locale approfondie.",
@@ -19,14 +19,15 @@ export default function SellPage() {
   });
 
   return (
-    <section className="container mx-auto px-4 py-10">
-      <AgencyPageHeader
+    <>
+      <StorefrontPageHero
         eyebrow="Vendre"
         title="Vendre avec méthode, du mandat à l'acte"
         description="Nous construisons une stratégie de vente cohérente avec votre bien, votre calendrier et les standards du marché local."
       />
 
-      <div className="mt-6 rounded-2xl border border-border bg-card p-6">
+      <section className="container mx-auto px-4 py-10">
+      <div className="rounded-2xl border border-border bg-card p-6">
         <ul className="grid gap-3 md:grid-cols-2">
           {points.map((point) => (
             <li key={point} className="inline-flex items-start gap-2 text-sm">
@@ -49,6 +50,7 @@ export default function SellPage() {
           <Link to="/contact">Échanger avec un conseiller</Link>
         </Button>
       </div>
-    </section>
+      </section>
+    </>
   );
 }

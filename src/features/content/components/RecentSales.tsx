@@ -28,8 +28,8 @@ export function RecentSales({ compact = false }: { compact?: boolean }) {
             </div>
           )}
           {!query.isLoading && !query.isError && sales?.length === 0 && (
-            <div className="mt-6 grid overflow-hidden rounded-2xl border border-border bg-background md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
-              <img src="/images/agence-foch.jpg" alt="La façade du cabinet Foch Immobilier au Havre" className="h-56 w-full object-cover md:h-full" loading="lazy" />
+            <div className="mt-6 grid overflow-hidden rounded-2xl border border-border bg-background md:grid-cols-[minmax(0,2.14fr)_minmax(0,1fr)]">
+              <img src="/images/geography/foch-storefront.png" alt="La devanture de l’agence Foch Immobilier au Havre" className="aspect-[2.14/1] w-full object-cover" loading="lazy" />
               <div className="flex flex-col justify-center p-6 md:p-8">
                 <h3 className="font-display text-2xl">Des ventes à découvrir avec notre équipe</h3>
                 <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">Découvrez nos références de vente auprès de notre équipe et parlons de votre projet.</p>

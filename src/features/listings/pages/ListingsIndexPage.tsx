@@ -1,4 +1,4 @@
-import { AgencyPageHeader } from "@/features/content/components/AgencyPageHeader";
+import { StorefrontPageHero } from "@/features/content/components/StorefrontPageHero";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -94,14 +94,14 @@ export default function ListingsIndexPage() {
   });
 
   return (
-    <section className="container mx-auto px-4 py-8">
-      <AgencyPageHeader
+    <>
+      <StorefrontPageHero
         eyebrow="À découvrir"
         title="Nos biens"
         description="Affinez votre recherche et trouvez le bien qui correspond à votre projet."
-        className="mb-6"
       />
 
+      <section className="container mx-auto px-4 py-8">
       <FiltersBar
         sort={filters.sort ?? "newest"}
         onSortChange={(value) => updateFilters({ sort: value as PropertySearchParams["sort"] })}
@@ -198,6 +198,7 @@ export default function ListingsIndexPage() {
           </motion.div>
         </AnimatePresence>
       )}
-    </section>
+      </section>
+    </>
   );
 }

@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight, MapPin, MoveUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSeo, getSiteUrl } from "@/lib/seo/useSeo";
+import { StorefrontPageHero } from "@/features/content/components/StorefrontPageHero";
 
 const sectors = [
   {
@@ -87,7 +88,7 @@ export default function GeographyPage() {
     description:
       "Explorez les secteurs accompagnés par Foch Immobilier : Le Havre, Sainte-Adresse, les communes voisines, Étretat et Deauville–Trouville. Consultez les biens ou parlons de votre projet.",
     canonicalPath: "/geographie",
-    image: "/images/le-havre-history/panorama-le-havre.jpg",
+    image: "/images/geography/foch-storefront.png",
     jsonLd: [
       {
         "@context": "https://schema.org",
@@ -121,40 +122,20 @@ export default function GeographyPage() {
 
   return (
     <div>
-      <section className="container mx-auto px-4 pb-12 pt-8 md:pb-16 md:pt-12">
-        <div className="grid items-center gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:gap-14">
-          <header className="max-w-xl">
-            <p className="text-xs uppercase tracking-[0.22em] text-brand-strong">Nos secteurs</p>
-            <h1 className="mt-4 font-display text-4xl leading-tight md:text-6xl">Immobilier au Havre et alentours</h1>
-            <p className="mt-5 max-w-lg text-base leading-relaxed text-muted-foreground">
-              Du Havre et de Sainte-Adresse aux communes et stations du littoral citées par notre agence, explorez les lieux de votre projet.
-            </p>
-            <div className="mt-7 flex flex-wrap gap-3">
-              <Button asChild variant="brand">
-                <Link to="/biens">Explorer les biens <ArrowRight aria-hidden="true" className="ml-2 h-4 w-4" /></Link>
-              </Button>
-              <Button asChild variant="outline">
-                <Link to="/contact">Parler à l’agence</Link>
-              </Button>
-            </div>
-          </header>
-
-          <figure className="relative overflow-hidden rounded-2xl bg-muted">
-            <img
-              src="/images/geography/panorama-le-havre.webp"
-              alt="Panorama du Havre et de son front de mer"
-              width={1400}
-              height={766}
-              fetchPriority="high"
-              className="aspect-[16/10] w-full object-cover"
-            />
-            <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent px-4 pb-3 pt-12 text-xs text-white">
-              Panorama du Havre · Martin Falbisoner · CC BY-SA 4.0 ·{" "}
-              <a className="underline underline-offset-2" href="https://commons.wikimedia.org/wiki/File:Panorama_of_Le_Havre,_September_2019.jpg" target="_blank" rel="noreferrer">source et licence</a>
-            </figcaption>
-          </figure>
+      <StorefrontPageHero
+        eyebrow="Nos secteurs"
+        title="Immobilier au Havre et alentours"
+        description="Du Havre et de Sainte-Adresse aux communes et stations du littoral citées par notre agence, explorez les lieux de votre projet."
+      >
+        <div className="mt-7 flex flex-wrap gap-3">
+          <Button asChild variant="brand">
+            <Link to="/biens">Explorer les biens <ArrowRight aria-hidden="true" className="ml-2 h-4 w-4" /></Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link to="/contact">Parler à l’agence</Link>
+          </Button>
         </div>
-      </section>
+      </StorefrontPageHero>
 
       <section className="border-y border-border bg-card/40" aria-labelledby="sectors-heading">
         <div className="container mx-auto grid gap-10 px-4 py-12 lg:grid-cols-[0.8fr_1.2fr] lg:py-16">

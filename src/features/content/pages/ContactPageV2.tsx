@@ -2,7 +2,7 @@ import { MapPin, Clock, Phone, Mail } from "lucide-react";
 import { LeadForm } from "@/features/leads/components/LeadForm";
 import { getConfiguredPublicSiteUrl, getSiteUrl, useSeo } from "@/lib/seo/useSeo";
 import { trackEvent } from "@/lib/analytics/events";
-import { AgencyPageHeader } from "@/features/content/components/AgencyPageHeader";
+import { StorefrontPageHero } from "@/features/content/components/StorefrontPageHero";
 
 export default function ContactPageV2() {
   const siteUrl = getSiteUrl();
@@ -30,14 +30,15 @@ export default function ContactPageV2() {
   });
 
   return (
-    <section className="container mx-auto px-4 py-10">
-      <AgencyPageHeader
+    <>
+      <StorefrontPageHero
         eyebrow="Contact"
         title="Parlons de votre projet immobilier"
         description="Nous répondons rapidement à vos demandes de vente, d'achat, de location et de gestion locative."
       />
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-2">
+      <section className="container mx-auto px-4 py-10">
+      <div className="grid gap-6 lg:grid-cols-2">
         <section className="rounded-2xl border border-border bg-card p-6 h-card" itemScope itemType="https://schema.org/RealEstateAgent">
           <meta itemProp="name" content="Foch Immobilier" />
           {configuredSiteUrl ? <meta itemProp="url" content={configuredSiteUrl} /> : null}
@@ -97,6 +98,7 @@ export default function ContactPageV2() {
             ctaLabel="Envoyer ma demande"
           />
       </div>
-    </section>
+      </section>
+    </>
   );
 }
