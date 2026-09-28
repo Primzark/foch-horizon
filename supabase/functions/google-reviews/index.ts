@@ -122,8 +122,34 @@ Deno.serve(async (request) => {
       return jsonResponse({ ok: false, error: "Unable to resolve Google place id" }, 404);
     }
 
+    // The legacy details endpoint supplies review text for this listing. Query it
+    // first so a normal page load requires only one billable Place Details call.
+    const legacyDetails = await fetchLegacyReviews(apiKey, placeId).catch(() => null);
+    const legacyReviews = (legacyDetails?.reviews ?? []).map((review, index) => ({
+      id: `google-legacy-${review.time ?? index}-${index}`,
+      authorName: review.author_name ?? "Client Google",
+      authorUrl: review.author_url,
+      authorPhotoUrl: review.profile_photo_url,
+      rating: review.rating ?? 0,
+      text: (review.text ?? "").trim(),
+      publishTime: review.time ? new Date(review.time * 1000).toISOString() : undefined,
+      relativePublishTimeDescription: review.relative_time_description,
+    })).filter((review) => review.text.length > 0);
+
+    if (legacyReviews.length > 0) {
+      return jsonResponse({
+        source: "google_places",
+        live: true,
+        placeName: legacyDetails?.name ?? defaultQuery,
+        rating: legacyDetails?.rating ?? 0,
+        userRatingCount: legacyDetails?.user_ratings_total ?? legacyReviews.length,
+        reviews: legacyReviews,
+        fetchedAt: new Date().toISOString(),
+      });
+    }
+
     const details = await fetchPlaceDetails(apiKey, placeId);
-    let reviews = (details.reviews ?? []).map((review, index) => ({
+    const reviews = (details.reviews ?? []).map((review, index) => ({
       id: review.name ?? `google-${index}`,
       authorName: review.authorAttribution?.displayName ?? "Client Google",
       authorUrl: review.authorAttribution?.uri,
@@ -133,27 +159,6 @@ Deno.serve(async (request) => {
       publishTime: review.publishTime,
       relativePublishTimeDescription: review.relativePublishTimeDescription,
     })).filter((review) => review.text.length > 0);
-
-    // Some Places (New) responses include a rating count but omit review excerpts.
-    // Try the supported legacy details endpoint before returning an empty list.
-    let legacyDetails: LegacyPlaceDetailsResponse["result"] | null = null;
-    if (reviews.length === 0 && (details.userRatingCount ?? 0) > 0) {
-      try {
-        legacyDetails = await fetchLegacyReviews(apiKey, placeId);
-        reviews = (legacyDetails?.reviews ?? []).map((review, index) => ({
-          id: `google-legacy-${review.time ?? index}-${index}`,
-          authorName: review.author_name ?? "Client Google",
-          authorUrl: review.author_url,
-          authorPhotoUrl: review.profile_photo_url,
-          rating: review.rating ?? 0,
-          text: (review.text ?? "").trim(),
-          publishTime: review.time ? new Date(review.time * 1000).toISOString() : undefined,
-          relativePublishTimeDescription: review.relative_time_description,
-        })).filter((review) => review.text.length > 0);
-      } catch {
-        // Preserve the rating response when the legacy endpoint is unavailable.
-      }
-    }
 
     return jsonResponse({
       source: "google_places",
