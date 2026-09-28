@@ -62,7 +62,7 @@ export function AppHeader() {
           </div>
           <nav aria-label="Navigation principale" className="hidden min-h-[60px] items-center justify-center gap-4 border-t border-border/70 lg:flex xl:gap-7">
             {primaryLinks.map((item) => (
-              <NavLink key={item.to} to={item.to} className={({ isActive }) => cn("whitespace-nowrap px-1 py-3 text-sm font-medium transition-colors hover:text-brand-strong", isActive ? "text-brand-strong underline underline-offset-8" : "text-foreground/80")}>
+              <NavLink key={item.to} to={item.to} end={item.to === "/"} className={({ isActive }) => cn("whitespace-nowrap px-1 py-3 text-sm font-medium transition-colors hover:text-brand-strong", isActive ? "text-brand-strong underline underline-offset-8" : "text-foreground/80")}>
                 {item.label}
               </NavLink>
             ))}
@@ -75,7 +75,7 @@ export function AppHeader() {
         <nav aria-label="Navigation mobile" className="flex flex-1 flex-col gap-1 overflow-y-auto px-4 py-3">
           {primaryLinks.map((item) => (
             <SheetClose asChild key={item.to}>
-              <NavLink to={item.to} className={({ isActive }) => cn("rounded-lg px-3 py-3 font-medium hover:bg-brand-soft", isActive && "bg-brand-soft text-brand-strong")}>{item.label}</NavLink>
+              <NavLink to={item.to} end={item.to === "/"} className={({ isActive }) => cn("rounded-lg px-3 py-3 font-medium hover:bg-brand-soft", isActive && "bg-brand-soft text-brand-strong")}>{item.label}</NavLink>
             </SheetClose>
           ))}
           {assistantButton(true)}

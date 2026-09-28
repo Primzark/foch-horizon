@@ -1,4 +1,5 @@
 export const primaryLinks = [
+  { to: "/", label: "Accueil" },
   { to: "/biens", label: "Nos biens" },
   { to: "/vendre", label: "Vendre" },
   { to: "/nos-dernieres-ventes", label: "Nos dernières ventes" },
