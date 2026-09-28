@@ -115,7 +115,7 @@ export default function HomePage() {
           fetchPriority="high"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-black/30 to-black/10" />
-        <div className="container relative z-[5] mx-auto flex min-h-[560px] flex-col justify-center px-4 pb-20 pt-10 md:min-h-[620px] md:py-12">
+        <div className="container relative z-[5] mx-auto flex min-h-[520px] flex-col justify-center px-4 pb-20 pt-10 md:min-h-[580px] md:py-12">
           <motion.h1
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
