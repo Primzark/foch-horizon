@@ -42,12 +42,14 @@ export function AppHeader() {
               </button>
             </SheetTrigger>
             <Link to="/" className="flex min-w-0 items-center gap-2" aria-label="Foch Immobilier — Accueil">
-              <img src="https://www.fochimmobilier.com/static/img/favicon.png" alt="" className="hidden h-8 w-8 rounded-md sm:block" />
-              <span className="whitespace-nowrap font-display text-[1.35rem] font-semibold tracking-tight sm:text-3xl">
-                <span className="text-black">Foch</span><span className="text-[#2ca46d]">Immobilier</span>
-              </span>
+              <img
+                src="/images/foch-immobilier-logo.jpg"
+                alt="Foch Immobilier"
+                className="h-auto w-[124px] mix-blend-multiply sm:w-[145px] lg:w-[160px]"
+                decoding="async"
+              />
             </Link>
-            <p className="hidden text-xs uppercase tracking-[0.2em] text-muted-foreground lg:block">Le Havre · Depuis 1972</p>
+            <p className="hidden text-xs uppercase tracking-[0.2em] text-muted-foreground lg:block">Immobilier au Havre · Depuis 1972</p>
             <div className="flex shrink-0 items-center gap-2">
               <a href="tel:0235425176" className="hidden items-center gap-2 text-sm hover:text-brand-strong md:inline-flex" aria-label="Appeler l'agence au 02 35 42 51 76">
                 <Phone className="h-4 w-4" /><span className="hidden xl:inline">02 35 42 51 76</span>

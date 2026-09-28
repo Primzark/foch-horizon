@@ -2,7 +2,7 @@ import { useMemo, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, Building2, Compass, Handshake, Search } from "lucide-react";
+import { ArrowRight, Building2, Compass, Handshake, Search, Sparkles, Star } from "lucide-react";
 import { GoogleGIcon } from "@/components/branding/GoogleGIcon";
 import { Button } from "@/components/ui/button";
 import { getFeaturedProperties } from "@/features/listings/api/properties.service";
@@ -39,7 +39,7 @@ const serviceCards = [
   },
 ];
 
-const HERO_IMAGE_URL = "/images/raoul-dufy-estacade.jpg";
+const HERO_IMAGE_URL = "/images/dufy-final-pick.jpg";
 
 export default function HomePage() {
   const setSearchDrawerOpen = useUiStore((state) => state.setSearchDrawerOpen);
@@ -108,14 +108,14 @@ export default function HomePage() {
       <section className="relative overflow-hidden">
         <img
           src={HERO_IMAGE_URL}
-          alt="L’Estacade et la Plage du Havre, peinture de Raoul Dufy"
+          alt="Scène de plage au Havre, peinture de Raoul Dufy"
           className="absolute inset-0 h-full w-full object-cover object-center"
           loading="eager"
           decoding="async"
           fetchPriority="high"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-black/30 to-black/10" />
-        <div className="container relative z-[5] mx-auto flex min-h-[400px] flex-col justify-center px-4 pb-20 pt-10 md:min-h-[460px] md:py-12">
+        <div className="absolute inset-0 bg-gradient-to-r from-black/38 via-black/16 to-black/0" />
+        <div className="container relative z-[5] mx-auto flex min-h-[360px] flex-col justify-center px-4 py-10 md:min-h-[420px] md:py-12">
           <motion.h1
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -128,7 +128,7 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: reducedMotion ? 0.3 : heroMotionDirector.revealDuration, delay: reducedMotion ? 0.08 : heroMotionDirector.revealStagger * 2 }}
-            className="mt-4 max-w-2xl text-base text-white/85 md:text-lg"
+            className="mt-3 max-w-2xl text-base text-white drop-shadow-sm md:text-lg"
           >
             Notre cabinet accompagne vendeurs et acquéreurs avec une approche sur mesure.
           </motion.p>
@@ -137,15 +137,9 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: reducedMotion ? 0.3 : heroMotionDirector.revealDuration, delay: reducedMotion ? 0.12 : heroMotionDirector.revealStagger * 3 }}
-            className="mt-8 flex flex-wrap gap-3"
+            className="mt-6 flex flex-wrap gap-3"
             style={ctaSweepStyle}
           >
-            <Button size="lg" className="glass-sweep" asChild>
-              <Link to="/biens">Explorer les biens</Link>
-            </Button>
-            <Button size="lg" variant="brand" className="glass-sweep" asChild>
-              <Link to="/estimation">Avis de valeur</Link>
-            </Button>
             <Button
               size="lg"
               variant="brand"
@@ -159,12 +153,11 @@ export default function HomePage() {
           </motion.div>
         </div>
       </section>
-      <section className="container mx-auto px-4 pt-8 pb-16 md:py-16">
+      <section className="container mx-auto px-4 pt-5 pb-16 md:pt-8 md:pb-16">
         <ScrollReveal mood={heroMood}>
           <div className="mb-6 flex items-end justify-between gap-4">
             <div>
               <h2 className="font-display text-3xl">Sélection du moment</h2>
-              <p className="mt-1 text-sm text-muted-foreground">Une sélection de biens d'exception actuellement disponibles à la vente et à la location.</p>
             </div>
             <Link to="/biens" className="inline-flex items-center gap-1 text-sm hover:underline">
               Découvrir tous les biens

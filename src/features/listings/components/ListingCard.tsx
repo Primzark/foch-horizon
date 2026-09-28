@@ -1,4 +1,4 @@
-import { Heart, MapPin, Maximize, BedDouble, Bath, Car } from "lucide-react";
+import { Heart, MapPin, Maximize, BedDouble, Bath, Car, Sparkles, Star } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import type { PropertySearchItem } from "@/types/api";
@@ -80,7 +80,16 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, classNam
             {labels.length > 0 && (
               <div className="absolute left-2 right-2 top-2 z-[3] flex flex-wrap gap-1.5">
                 {labels.map((label) => (
-                  <span key={label} className="rounded-full bg-background/95 px-2.5 py-1 text-xs font-medium text-foreground">
+                  <span
+                    key={label}
+                    className={cn(
+                      "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold shadow-sm",
+                      label.toLocaleLowerCase("fr").includes("exclus")
+                        ? "bg-amber-100 text-amber-950"
+                        : "bg-emerald-100 text-emerald-950",
+                    )}
+                  >
+                    {label.toLocaleLowerCase("fr").includes("exclus") ? <Star className="h-3 w-3 fill-current" /> : <Sparkles className="h-3 w-3" />}
                     {label}
                   </span>
                 ))}
@@ -184,7 +193,16 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, classNam
         {labels.length > 0 && (
           <div className="absolute left-3 right-14 top-3 z-[3] flex flex-wrap gap-1.5">
             {labels.map((label) => (
-              <span key={label} className="rounded-full bg-background/95 px-2.5 py-1 text-xs font-medium text-foreground">
+              <span
+                key={label}
+                className={cn(
+                  "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold shadow-sm",
+                  label.toLocaleLowerCase("fr").includes("exclus")
+                    ? "bg-amber-100 text-amber-950"
+                    : "bg-emerald-100 text-emerald-950",
+                )}
+              >
+                {label.toLocaleLowerCase("fr").includes("exclus") ? <Star className="h-3 w-3 fill-current" /> : <Sparkles className="h-3 w-3" />}
                 {label}
               </span>
             ))}
