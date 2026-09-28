@@ -18,7 +18,6 @@ import { inferPlaceImageMood } from "@/lib/visuals/placeImageMotion";
 import { ScrollReveal } from "@/components/visuals/ScrollReveal";
 import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
 import { getMotionDirectorProfile } from "@/lib/visuals/motionDirector";
-import { RecentSales } from "@/features/content/components/RecentSales";
 
 const serviceCards = [
   {
@@ -41,8 +40,7 @@ const serviceCards = [
   },
 ];
 
-// Raoul Dufy's painting at MuMa, photographed by Martpan (CC BY-SA 4.0).
-const HERO_IMAGE_URL = "/images/dufy-plage-du-havre.jpg";
+const HERO_IMAGE_URL = "/images/raoul-dufy-estacade.jpg";
 
 export default function HomePage() {
   const setSearchDrawerOpen = useUiStore((state) => state.setSearchDrawerOpen);
@@ -163,14 +161,10 @@ export default function HomePage() {
           </motion.div>
         </div>
         <p className="absolute bottom-2 left-4 z-[6] max-w-[70%] text-left text-[10px] leading-snug text-white/85 md:bottom-3 md:left-5 md:text-xs">
-          Raoul Dufy, <em>L’Estacade et la Plage du Havre</em> (vers 1926) · photo :{" "}
-          <a className="underline underline-offset-2" href="https://commons.wikimedia.org/wiki/File:Le_Havre_Mus%C3%A9e_d%27art_moderne_Dufy.jpg" target="_blank" rel="noreferrer">Martpan</a>
-          {" "}· <a className="underline underline-offset-2" href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noreferrer">CC BY-SA 4.0</a>
-          {" "}· affichage recadré
+          Raoul Dufy, <em>L’Estacade et la Plage du Havre</em> (vers 1926) · affichage recadré
         </p>
       </section>
 
-      <RecentSales compact />
 
       <section className="pt-8 pb-4 md:py-12">
         <ScrollReveal mood={heroMood}>
