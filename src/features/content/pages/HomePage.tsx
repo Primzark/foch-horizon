@@ -108,22 +108,14 @@ export default function HomePage() {
       <section className="relative overflow-hidden">
         <img
           src={HERO_IMAGE_URL}
-          alt=""
-          aria-hidden="true"
-          className="absolute inset-0 h-full w-full scale-105 object-cover object-[center_78%] blur-sm"
-          loading="eager"
-          decoding="async"
-        />
-        <img
-          src={HERO_IMAGE_URL}
           alt="L’Estacade et la Plage du Havre, peinture de Raoul Dufy"
-          className="absolute inset-0 h-full w-full object-contain object-center opacity-75 md:object-right md:opacity-100"
+          className="absolute inset-0 h-full w-full object-cover object-center"
           loading="eager"
           decoding="async"
           fetchPriority="high"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-black/20" />
-        <div className="container relative z-[5] mx-auto flex min-h-[520px] flex-col justify-center px-4 pb-20 pt-10 md:min-h-[520px] md:py-12">
+        <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-black/30 to-black/10" />
+        <div className="container relative z-[5] mx-auto flex min-h-[560px] flex-col justify-center px-4 pb-20 pt-10 md:min-h-[620px] md:py-12">
           <motion.h1
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
