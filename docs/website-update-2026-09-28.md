@@ -1,14 +1,16 @@
 # Foch website update — 28 September 2026
 
-Implemented the requested navigation, compact static homepage banner and French transaction copy with prominent « Depuis 1972 », homepage « Nos belles ventes » section and « Nos dernières ventes » page, Géographie page and history URL redirect, agency photography on all secondary main-menu pages, Avis de valeur labels, larger listing prices and sharing, and source-backed listing badges. « Mon assistant IA » opens the existing assistant. UNIS was removed from the active header, footer, About page and local assistant description.
+Implemented the requested navigation, compact static homepage banner and French transaction copy with prominent « Depuis 1972 », homepage « Nos belles ventes » section and « Nos dernières ventes » page, Géographie page and history URL redirect, agency photography on all secondary main-menu pages, Avis de valeur labels, larger listing prices and sharing, and source-backed listing badges. « Mon assistant IA » opens the existing assistant. Its « Ajouter volet (test) » panel now offers example questions that fill the input without sending a request. UNIS was removed from the active header, footer, About page and local assistant description.
 
-## Assets and wording still required
+## Resolved assets and wording
 
-- Confirm the specific Le Havre beach photograph by Raoul and its exact attribution. The static homepage currently retains an existing panorama from the site, without attributing it to Raoul.
-- Confirm the content and behavior of « Ajouter volet (test) ». No test panel has been published.
-- Confirm the sentence for Avis de valeur from https://gallieni-location.fr/page/a-vendre. Candidate: « N’hésitez pas à y faire estimer gracieusement votre bien et ce en toute confidentialité. » It has not been inserted without confirmation.
-- Provide the full wording and intended placement of « Le cabinet....jusqu'au bout ».
-- Provide/mark confirmed sold listings and their photos for the sales showcase. The current local inventory contains no sold records. The showcase only renders records explicitly marked sold; otherwise it invites visitors to contact the agency for references. Archived or active properties are never presented as sales. The current search feed orders by publication date and does not expose sale dates.
+- The homepage uses Raoul Dufy's *L’Estacade et la Plage du Havre* (circa 1926), photographed by Martpan at MuMa. The photograph comes from [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Le_Havre_Mus%C3%A9e_d%27art_moderne_Dufy.jpg) under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). Visible credit names the painter, photographer and license and notes the display crop. The museum [identifies the painting](https://www.muma-lehavre.fr/fr/collections/oeuvres-commentees/raoul-dufy/dufy-lestacade-et-la-plage-du-havre).
+- The exact sentence « N’hésitez pas à y faire estimer gracieusement votre bien et ce en toute confidentialité. » is used on Avis de valeur with a link to [Gallieni’s source page](https://gallieni-location.fr/page/a-vendre).
+- The selling page includes « Le cabinet Foch Immobilier vous accompagne jusqu’au bout de votre projet, de l’avis de valeur à la signature. »
+
+## Source data still required
+
+- Provide or mark confirmed sold listings and their photos for the sales showcase. The live search feed currently contains 51 active sale listings and no sold records. The showcase renders only records explicitly marked sold and otherwise shows an agency-photo callout. Archived or active properties are never presented as sales. The feed does not expose sale dates.
 
 The supplied office photograph is already installed at `/images/agence-foch.jpg`. The original file is untouched; the published copy is resized to 1600 × 1200.
 

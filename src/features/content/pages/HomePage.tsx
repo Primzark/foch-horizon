@@ -41,8 +41,8 @@ const serviceCards = [
   },
 ];
 
-// Keep an existing site photograph until the requested beach image and credit are confirmed.
-const HERO_IMAGE_URL = "/images/le-havre-history/panorama-le-havre.jpg";
+// Raoul Dufy's painting at MuMa, photographed by Martpan (CC BY-SA 4.0).
+const HERO_IMAGE_URL = "/images/dufy-plage-du-havre.jpg";
 
 export default function HomePage() {
   const setSearchDrawerOpen = useUiStore((state) => state.setSearchDrawerOpen);
@@ -111,14 +111,14 @@ export default function HomePage() {
       <section className="relative overflow-hidden">
         <img
           src={HERO_IMAGE_URL}
-          alt="Panorama du Havre"
-          className="absolute inset-0 h-full w-full object-cover"
+          alt="L’Estacade et la Plage du Havre, peinture de Raoul Dufy"
+          className="absolute inset-0 h-full w-full object-cover object-[center_78%]"
           loading="eager"
           decoding="async"
           fetchPriority="high"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/55 to-black/30" />
-        <div className="container relative z-[5] mx-auto flex min-h-[390px] flex-col justify-center px-4 py-10 md:min-h-[420px] md:py-12">
+        <div className="container relative z-[5] mx-auto flex min-h-[480px] flex-col justify-center px-4 pb-20 pt-10 md:min-h-[420px] md:py-12">
           <motion.h1
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -162,6 +162,12 @@ export default function HomePage() {
             </Button>
           </motion.div>
         </div>
+        <p className="absolute bottom-2 left-4 z-[6] max-w-[70%] text-left text-[10px] leading-snug text-white/85 md:bottom-3 md:left-5 md:text-xs">
+          Raoul Dufy, <em>L’Estacade et la Plage du Havre</em> (vers 1926) · photo :{" "}
+          <a className="underline underline-offset-2" href="https://commons.wikimedia.org/wiki/File:Le_Havre_Mus%C3%A9e_d%27art_moderne_Dufy.jpg" target="_blank" rel="noreferrer">Martpan</a>
+          {" "}· <a className="underline underline-offset-2" href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noreferrer">CC BY-SA 4.0</a>
+          {" "}· affichage recadré
+        </p>
       </section>
 
       <RecentSales compact />

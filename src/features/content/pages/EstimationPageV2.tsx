@@ -25,6 +25,12 @@ export default function EstimationPageV2() {
             <li>2. Étude des transactions comparables au Havre et sur son littoral.</li>
             <li>3. Restitution d'une fourchette de prix et d'une stratégie de commercialisation sur mesure.</li>
           </ol>
+          <blockquote className="mt-8 border-l-2 border-brand pl-4 font-display text-lg leading-relaxed text-foreground">
+            « N’hésitez pas à y faire estimer gracieusement votre bien et ce en toute confidentialité. »
+          </blockquote>
+          <p className="mt-2 text-xs">
+            <a href="https://gallieni-location.fr/page/a-vendre" target="_blank" rel="noreferrer" className="underline underline-offset-2">Gallieni Immobilier · À Vendre</a>
+          </p>
         </article>
 
         <LeadForm

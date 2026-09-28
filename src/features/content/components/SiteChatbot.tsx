@@ -1038,6 +1038,7 @@ export function SiteChatbot() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [input, setInput] = useState("");
+  const [showTestPanel, setShowTestPanel] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>(() => readStoredMessages());
   const [conversationState, setConversationState] = useState<ChatbotConversationState>(() => readStoredConversationState());
   const [showLeadCapture, setShowLeadCapture] = useState(false);
@@ -2889,7 +2890,7 @@ export function SiteChatbot() {
           initial={{ opacity: 0, y: 18, scale: 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.2, ease: "easeOut" }}
-          className="pointer-events-auto mb-3 w-[min(94vw,420px)] rounded-2xl border border-border bg-card shadow-card max-sm:w-full"
+          className="pointer-events-auto mb-3 flex max-h-[calc(100dvh-5.5rem)] w-[min(94vw,420px)] flex-col rounded-2xl border border-border bg-card shadow-card max-sm:w-full"
         >
             <header className="flex items-center justify-between border-b border-border px-4 py-3">
               <div>
@@ -2918,6 +2919,42 @@ export function SiteChatbot() {
                 </button>
               </div>
             </header>
+
+            <div className="border-b border-border/70 px-4 py-2">
+              <button
+                type="button"
+                aria-expanded={showTestPanel}
+                aria-controls="assistant-test-panel"
+                onClick={() => setShowTestPanel((visible) => !visible)}
+                className="text-xs font-medium text-brand-strong underline-offset-2 hover:underline"
+              >
+                Ajouter volet (test)
+              </button>
+              {showTestPanel && (
+                <div id="assistant-test-panel" className="mt-2 rounded-xl border border-border bg-muted/40 p-3">
+                  <p className="text-xs text-muted-foreground">Choisissez une question pour préparer un essai avec l’assistant.</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {[
+                      "Quels biens sont disponibles au Havre ?",
+                      "Comment obtenir un avis de valeur ?",
+                      "Quels quartiers connaissez-vous autour du Havre ?",
+                    ].map((question) => (
+                      <button
+                        key={question}
+                        type="button"
+                        onClick={() => {
+                          setInput(question);
+                          setShowTestPanel(false);
+                        }}
+                        className="rounded-lg border border-border bg-background px-2.5 py-1.5 text-left text-xs hover:border-brand-strong"
+                      >
+                        {question}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
 
             {CHATBOT_PERSISTENT_MEMORY_ENABLED &&
               (conversationState.preferences?.city ||
@@ -2999,7 +3036,7 @@ export function SiteChatbot() {
               </div>
             )}
 
-            <div ref={scrollRef} className="max-h-[52vh] space-y-3 overflow-y-auto px-4 py-4 sm:max-h-[56vh]">
+            <div ref={scrollRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4">
               {messages.map((message) => (
                 <article
                   key={message.id}

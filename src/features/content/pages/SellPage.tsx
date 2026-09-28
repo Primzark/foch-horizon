@@ -37,6 +37,10 @@ export default function SellPage() {
         </ul>
       </div>
 
+      <p className="mt-8 max-w-3xl border-l-2 border-brand pl-5 font-display text-xl leading-relaxed">
+        Le cabinet Foch Immobilier vous accompagne jusqu’au bout de votre projet, de l’avis de valeur à la signature.
+      </p>
+
       <div className="mt-8 flex flex-wrap gap-3">
         <Button asChild variant="brand">
           <Link to="/estimation">Demander un avis de valeur</Link>
