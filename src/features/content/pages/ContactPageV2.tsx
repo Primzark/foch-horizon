@@ -81,9 +81,11 @@ export default function ContactPageV2() {
           <div className="mt-6 overflow-hidden rounded-xl border border-border">
             <iframe
               title="Carte Foch Immobilier"
-              src="https://maps.google.com/maps?q=109%20Avenue%20Foch%2C%20Le%20Havre&t=&z=14&ie=UTF8&iwloc=&output=embed"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2591.51231358466!2d0.1051513!3d49.4937186!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47e02f23c1ddd555%3A0x727211ca7353fc0e!2sFoch%20Immobilier!5e0!3m2!1sen!2sfr!4v1790611459553!5m2!1sen!2sfr"
               className="h-64 w-full"
-              loading="lazy"
+              loading="eager"
+              referrerPolicy="strict-origin-when-cross-origin"
+              allowFullScreen
             />
           </div>
         </section>
