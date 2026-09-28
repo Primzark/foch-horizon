@@ -12,7 +12,6 @@ import { toSearchItem } from "@/features/listings/utils/mappers";
 import { cities } from "@/features/cities/data/cities";
 import { useUiStore } from "@/lib/state/useUiStore";
 import { getSiteUrl, useSeo } from "@/lib/seo/useSeo";
-import { MarketCounters } from "@/features/content/components/MarketCounters";
 import { getAgencyReviews } from "@/features/content/api/googleReviews.service";
 import { inferPlaceImageMood } from "@/lib/visuals/placeImageMotion";
 import { ScrollReveal } from "@/components/visuals/ScrollReveal";
@@ -123,8 +122,7 @@ export default function HomePage() {
             transition={{ duration: reducedMotion ? 0.3 : heroMotionDirector.revealDuration }}
             className="max-w-4xl font-display text-3xl text-white md:text-5xl"
           >
-            La transaction au Havre
-            <span className="mt-2 block text-5xl font-semibold md:text-7xl">Depuis 1972</span>
+            <span className="block text-5xl font-semibold md:text-7xl">Depuis 1972</span>
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 12 }}
@@ -164,14 +162,6 @@ export default function HomePage() {
           Raoul Dufy, <em>L’Estacade et la Plage du Havre</em> (vers 1926) · affichage recadré
         </p>
       </section>
-
-
-      <section className="pt-8 pb-4 md:py-12">
-        <ScrollReveal mood={heroMood}>
-          <MarketCounters />
-        </ScrollReveal>
-      </section>
-
       <section className="container mx-auto px-4 pt-8 pb-16 md:py-16">
         <ScrollReveal mood={heroMood}>
           <div className="mb-6 flex items-end justify-between gap-4">
