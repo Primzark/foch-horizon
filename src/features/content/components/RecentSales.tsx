@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollReveal } from "@/components/visuals/ScrollReveal";
 import { getRecentSales } from "@/features/content/api/recentSales.service";
@@ -28,12 +28,43 @@ export function RecentSales({ compact = false }: { compact?: boolean }) {
             </div>
           )}
           {!query.isLoading && !query.isError && sales?.length === 0 && (
-            <div className="mt-6 grid overflow-hidden rounded-2xl border border-border bg-background md:grid-cols-[minmax(0,2.14fr)_minmax(0,1fr)]">
-              <img src="/images/geography/foch-storefront.png" alt="La devanture de l’agence Foch Immobilier au Havre" className="aspect-[2.14/1] w-full object-cover" loading="lazy" />
-              <div className="flex flex-col justify-center p-6 md:p-8">
-                <h3 className="font-display text-2xl">Des ventes à découvrir avec notre équipe</h3>
+            <div className="mt-6 grid overflow-hidden rounded-2xl border border-border bg-background md:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+              <figure className={`relative isolate overflow-hidden bg-slate-900 ${compact ? "min-h-64 md:min-h-72" : "min-h-72 md:min-h-[26rem]"}`}>
+                <img
+                  src="/images/geography/panorama-le-havre.webp"
+                  alt="Panorama du Havre, entre front de mer et quartiers résidentiels"
+                  className="absolute inset-0 -z-10 h-full w-full object-cover object-[52%_48%]"
+                  loading="lazy"
+                />
+                <div aria-hidden="true" className="absolute inset-0 -z-10 bg-gradient-to-t from-slate-950/65 via-slate-950/5 to-transparent" />
+                <div className="absolute left-5 top-5 inline-flex items-center gap-2 rounded-full border border-white/25 bg-slate-950/30 px-3 py-2 text-xs font-medium text-white backdrop-blur-sm">
+                  <MapPin aria-hidden="true" className="h-3.5 w-3.5" /> Le Havre et le littoral
+                </div>
+                <div className="absolute bottom-5 right-5 hidden w-36 overflow-hidden rounded-xl border-4 border-white shadow-xl sm:block md:w-40">
+                  <img
+                    src="/images/geography/architecture-perret.webp"
+                    alt="Architecture Perret au Havre"
+                    className="aspect-[4/3] w-full object-cover"
+                    loading="lazy"
+                  />
+                  <p className="bg-white px-2 py-1.5 text-[10px] font-medium text-slate-800">Le centre reconstruit</p>
+                </div>
+                <figcaption className="absolute bottom-5 left-5 max-w-[55%] text-[10px] leading-relaxed text-white/90 drop-shadow">
+                  <a
+                    href="https://commons.wikimedia.org/wiki/File:Panorama_of_Le_Havre,_September_2019.jpg"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="underline decoration-white/50 underline-offset-2 hover:decoration-white"
+                  >
+                    Panorama du Havre · Martin Falbisoner · CC BY-SA 4.0
+                  </a>
+                </figcaption>
+              </figure>
+              <div className="flex flex-col justify-center p-6 md:p-8 lg:p-10">
+                <p className="text-xs uppercase tracking-[0.18em] text-brand-strong">À vos côtés depuis 1972</p>
+                <h3 className="mt-3 font-display text-2xl md:text-3xl">Des ventes à découvrir avec notre équipe</h3>
                 <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">Découvrez nos références de vente auprès de notre équipe et parlons de votre projet.</p>
-                <Link to="/contact" className="mt-5 inline-flex items-center gap-2 self-start text-sm font-medium text-brand-strong hover:underline">Échanger avec le cabinet <ArrowRight className="h-4 w-4" /></Link>
+                <Link to="/contact" className="mt-6 inline-flex items-center gap-2 self-start text-sm font-medium text-brand-strong hover:underline">Échanger avec le cabinet <ArrowRight className="h-4 w-4" /></Link>
               </div>
             </div>
           )}
