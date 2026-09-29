@@ -1,17 +1,48 @@
-import { useEffect } from "react";
-import { Link } from "react-router-dom";
-import { syncGoogleTagManagerConsent } from "@/lib/analytics/gtm";
+import { useEffect, useRef } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { hasGoogleTagManagerScript, syncGoogleTagManagerConsent, trackGoogleAnalyticsPageView } from "@/lib/analytics/gtm";
 import { useUiStore } from "@/lib/state/useUiStore";
 
 export function CookieConsentManager() {
+  const location = useLocation();
   const consent = useUiStore((state) => state.cookieConsent);
   const setConsent = useUiStore((state) => state.setCookieConsent);
   const preferencesOpen = useUiStore((state) => state.cookiePreferencesOpen);
   const setPreferencesOpen = useUiStore((state) => state.setCookiePreferencesOpen);
+  const previousConsent = useRef<typeof consent | null>(null);
+  const previousPageLocation = useRef<string | null>(null);
 
   useEffect(() => {
-    syncGoogleTagManagerConsent(consent === "accepted");
-  }, [consent]);
+    const pageLocation = window.location.href;
+    const priorConsent = previousConsent.current;
+    const priorPageLocation = previousPageLocation.current;
+    const gtmWasAlreadyLoaded = hasGoogleTagManagerScript();
+    const consentChanged = priorConsent !== consent;
+    const accepted = consent === "accepted";
+
+    if (consentChanged) {
+      syncGoogleTagManagerConsent(accepted);
+    }
+
+    const routeChanged = priorPageLocation !== null && priorPageLocation !== pageLocation;
+    const consentRestored = accepted && consentChanged && priorConsent === "rejected" && gtmWasAlreadyLoaded;
+    let pageViewTimer: number | undefined;
+
+    if (accepted && (routeChanged || consentRestored)) {
+      pageViewTimer = window.setTimeout(() => {
+        trackGoogleAnalyticsPageView(pageLocation, routeChanged ? priorPageLocation ?? undefined : undefined);
+      }, 0);
+    }
+
+    previousConsent.current = consent;
+    previousPageLocation.current = pageLocation;
+
+    return () => {
+      if (pageViewTimer !== undefined) {
+        window.clearTimeout(pageViewTimer);
+      }
+    };
+  }, [consent, location.pathname, location.search, location.hash]);
 
   const visible = consent === "unset" || preferencesOpen;
   if (!visible) return null;

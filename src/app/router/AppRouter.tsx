@@ -1,6 +1,7 @@
 import { Suspense, lazy } from "react";
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router-dom";
 import { AppLayout } from "@/layout/AppLayout";
+import { CookieConsentManager } from "@/layout/CookieConsentManager";
 import { LegacyAnnonceRedirect, LegacyPropertySlugRedirect, QueryRedirect } from "@/app/router/LegacyRedirects";
 import { RouteLoadingScreen } from "@/components/ui/RouteLoadingScreen";
 
@@ -34,6 +35,7 @@ function LayoutShell() {
 export function AppRouter() {
   return (
     <BrowserRouter>
+      <CookieConsentManager />
       <Suspense fallback={<RouteLoadingScreen fullscreen />}>
         <Routes>
           <Route path="/admin" element={<AdminMarketCountersPage />} />
