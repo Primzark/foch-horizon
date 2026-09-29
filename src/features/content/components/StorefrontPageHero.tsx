@@ -15,7 +15,7 @@ export function StorefrontPageHero({ eyebrow, title, description, children }: St
     <section className="relative isolate overflow-hidden bg-slate-950">
       <div
         aria-hidden="true"
-        className="absolute inset-0 -z-10 bg-contain bg-center bg-no-repeat"
+        className="absolute inset-0 -z-10 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage }}
       />
       <div className="container mx-auto flex min-h-[min(62svh,620px)] items-start px-4 pb-12 pt-32 md:pt-56">
