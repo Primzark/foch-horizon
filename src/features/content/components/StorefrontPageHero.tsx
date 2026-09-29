@@ -15,15 +15,9 @@ export function StorefrontPageHero({ eyebrow, title, description, children }: St
     <section className="relative isolate overflow-hidden bg-slate-950">
       <div
         aria-hidden="true"
-        className="absolute inset-0 -z-10 scale-105 bg-cover bg-center opacity-55 blur-md"
-        style={{ backgroundImage }}
-      />
-      <div
-        aria-hidden="true"
         className="absolute inset-0 -z-10 bg-contain bg-center bg-no-repeat"
         style={{ backgroundImage }}
       />
-      <div aria-hidden="true" className="absolute inset-0 -z-10 bg-gradient-to-r from-slate-950/95 via-slate-950/85 to-slate-950/20" />
       <div className="container mx-auto flex min-h-[min(62svh,620px)] items-start px-4 pb-12 pt-32 md:pt-56">
         <header className="max-w-xl">
           <p className="text-xs uppercase tracking-[0.22em] text-white/80">{eyebrow}</p>
@@ -32,7 +26,6 @@ export function StorefrontPageHero({ eyebrow, title, description, children }: St
           {children}
         </header>
       </div>
-      <p className="container absolute inset-x-0 bottom-3 mx-auto px-4 text-xs text-white/75">L’agence Foch Immobilier au Havre</p>
     </section>
   );
 }
