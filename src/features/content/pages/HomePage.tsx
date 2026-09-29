@@ -153,7 +153,7 @@ export default function HomePage() {
           </motion.div>
         </div>
       </section>
-      <section className="container mx-auto px-4 pt-5 pb-16 md:pt-8 md:pb-16">
+      <section className="container mx-auto px-4 pt-5 pb-12 md:pt-8 md:pb-12">
         <ScrollReveal mood={heroMood}>
           <div className="mb-6 flex items-end justify-between gap-4">
             <div>
@@ -166,7 +166,7 @@ export default function HomePage() {
           </div>
         </ScrollReveal>
 
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {featuredQuery.isLoading &&
             Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="h-[320px] animate-pulse rounded-2xl bg-muted/60" />
@@ -212,7 +212,7 @@ export default function HomePage() {
       </section>
 
       <section className="border-y border-border bg-muted/30">
-        <div className="container mx-auto grid gap-6 px-4 py-14 md:grid-cols-3">
+        <div className="container mx-auto grid gap-5 px-4 py-10 md:grid-cols-3">
           {serviceCards.map((card, index) => (
             <ScrollReveal key={card.title} mood={heroMood} delay={Math.min(index * heroMotionDirector.revealStagger, 0.24)}>
               <Link
@@ -229,7 +229,7 @@ export default function HomePage() {
       </section>
 
       {reviewsQuery.data && (
-        <section className="container mx-auto px-4 py-16">
+        <section className="container mx-auto px-4 py-12">
           <ScrollReveal mood={heroMood}>
             <div className="mb-6 flex items-end justify-between gap-4">
               <div>
@@ -275,7 +275,7 @@ export default function HomePage() {
         </section>
       )}
 
-      <section className="container mx-auto px-4 py-16">
+      <section className="container mx-auto px-4 py-12">
         <ScrollReveal mood={heroMood}>
           <h2 className="font-display text-3xl">L'équipe</h2>
           <p className="mt-1 text-sm text-muted-foreground">Des interlocuteurs identifiés pour chaque projet.</p>

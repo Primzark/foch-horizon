@@ -7,6 +7,7 @@ import { SearchDrawer } from "@/features/listings/components/SearchDrawer";
 import { RouteLoadingScreen } from "@/components/ui/RouteLoadingScreen";
 import { BackToTopButton } from "@/components/ui/BackToTopButton";
 import { SiteChatbot } from "@/features/content/components/SiteChatbot";
+import { CookieConsentManager } from "@/layout/CookieConsentManager";
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const location = useLocation();
@@ -34,6 +35,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
       <SearchDrawer />
       <BackToTopButton />
       <SiteChatbot />
+      <CookieConsentManager />
     </div>
   );
 }

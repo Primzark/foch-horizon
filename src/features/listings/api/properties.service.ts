@@ -17,6 +17,7 @@ type EdgePropertyDetailRow = {
   transaction_type: Property["transactionType"];
   property_type: Property["propertyType"];
   status: Property["status"];
+  source_status?: string | null;
   price_amount: number;
   price_currency: Property["priceCurrency"];
   surface_m2: number | null;
@@ -111,6 +112,7 @@ function mapEdgePropertyDetailToDomain(row: EdgePropertyDetailRow): Property {
     transactionType: row.transaction_type,
     propertyType: row.property_type,
     status: row.status,
+    sourceStatus: row.source_status ?? null,
     priceAmount: row.price_amount,
     priceCurrency: row.price_currency ?? "EUR",
     surfaceM2: row.surface_m2 ?? 0,

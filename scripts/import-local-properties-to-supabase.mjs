@@ -232,6 +232,7 @@ function mapPropertyRow(property, cityIdToDbId, agentIdToDbId) {
     transaction_type: property.transactionType,
     property_type: property.propertyType,
     status: property.status,
+    source_status: toNullableText(property.sourceStatus),
     price_amount: Number(property.priceAmount ?? 0),
     price_currency: property.priceCurrency ?? "EUR",
     surface_m2: property.surfaceM2,

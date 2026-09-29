@@ -176,7 +176,7 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, classNam
             src={item.coverImageUrl}
             alt={item.title}
             className={cn(
-              "aspect-[4/3] w-full object-cover transition-transform",
+                  "aspect-[3/2] w-full object-cover transition-transform",
               imageMotionPreset.hoverClassName,
             )}
             loading="lazy"
@@ -226,7 +226,7 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, classNam
         </button>
       </Link>
 
-      <div className="space-y-3 p-4">
+      <div className="space-y-2 p-3 sm:p-4">
         <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">
           <p>Réf {item.id}</p>
           <span className="rounded-full border border-border px-2 py-0.5 normal-case tracking-normal text-foreground/85">

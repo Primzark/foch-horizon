@@ -2,6 +2,10 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     {
+      "source": "/api/property-feed/import",
+      "destination": "https://rcrulfdobtmfxzpuyryn.supabase.co/functions/v1/property-feed-import"
+    },
+    {
       "source": "/api/cities/:slug/properties",
       "destination": "https://rcrulfdobtmfxzpuyryn.supabase.co/functions/v1/city-properties/:slug"
     },

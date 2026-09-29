@@ -49,6 +49,11 @@ function buildSupabaseApiProxy(env: Record<string, string>): Record<string, Prox
   const anonKey = (env.VITE_SUPABASE_ANON_KEY ?? env.EDGE_ANON_KEY ?? "").trim();
 
   return {
+    [routePattern("^/api/property-feed/import$")]: createSupabaseFunctionProxy(
+      projectUrl,
+      () => "/functions/v1/property-feed-import",
+      anonKey,
+    ),
     [routePattern("^/api/cities$")]: createSupabaseFunctionProxy(
       projectUrl,
       () => "/functions/v1/cities-list",

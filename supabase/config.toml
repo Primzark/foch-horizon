@@ -1,1 +1,4 @@
 project_id = "rcrulfdobtmfxzpuyryn"
+
+[functions.property-feed-import]
+verify_jwt = false

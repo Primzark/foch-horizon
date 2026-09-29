@@ -2,6 +2,7 @@
 
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
+import { mapProviderPropertyStatus, mapProviderTransactionType } from "./provider-status.mjs";
 
 const SOURCE_HOST = "https://www.fochimmobilier.com";
 const LISTING_PATH = "/biens-immobiliers";
@@ -142,23 +143,6 @@ function mapPropertyType(rawType) {
   return "autre";
 }
 
-function mapTransaction(rawStatus) {
-  const status = normalizeKey(rawStatus);
-  if (status.includes("location") || status.includes("loue") || status.includes("loue")) {
-    return "location";
-  }
-  return "vente";
-}
-
-function mapStatus(rawStatus) {
-  const status = normalizeKey(rawStatus);
-  if (status.includes("sous offre")) return "under_offer";
-  if (status.includes("vendu")) return "sold";
-  if (status.includes("loue") || status.includes("louee")) return "rented";
-  if (status.includes("retire")) return "off_market";
-  return "active";
-}
-
 function mapAgentId(contactToken, detailHtml) {
   const token = normalizeKey(contactToken);
   if (token && AGENT_FROM_CONTACT[token]) {
@@ -255,8 +239,8 @@ function parsePropertyDetail(id, html, orderIndex) {
     `Annonce ${id}`;
 
   const statusLabel = summary.get("statut") || extractKeywordsValue(keywords, "Categorie") || "Vente";
-  const transactionType = mapTransaction(statusLabel);
-  const status = mapStatus(statusLabel);
+  const transactionType = mapProviderTransactionType(statusLabel);
+  const status = mapProviderPropertyStatus(statusLabel);
 
   const typeLabel = summary.get("type de bien") || extractKeywordsValue(keywords, "TypeBien") || "autre";
   const propertyType = mapPropertyType(typeLabel);
@@ -318,6 +302,7 @@ function parsePropertyDetail(id, html, orderIndex) {
     transactionType,
     propertyType,
     status,
+    sourceStatus: statusLabel || null,
     priceAmount,
     priceCurrency: "EUR",
     surfaceM2,

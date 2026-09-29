@@ -6,6 +6,8 @@ interface UiState {
   setSearchDrawerOpen: (isOpen: boolean) => void;
   cookieConsent: "accepted" | "rejected" | "unset";
   setCookieConsent: (consent: UiState["cookieConsent"]) => void;
+  cookiePreferencesOpen: boolean;
+  setCookiePreferencesOpen: (isOpen: boolean) => void;
   motionPreference: "system" | "reduced";
 }
 
@@ -16,6 +18,8 @@ export const useUiStore = create<UiState>()(
       setSearchDrawerOpen: (isOpen) => set({ searchDrawerOpen: isOpen }),
       cookieConsent: "unset",
       setCookieConsent: (consent) => set({ cookieConsent: consent }),
+      cookiePreferencesOpen: false,
+      setCookiePreferencesOpen: (isOpen) => set({ cookiePreferencesOpen: isOpen }),
       motionPreference: "system",
     }),
     {

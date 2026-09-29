@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { primaryLinks } from "@/layout/navigation";
 import { trackEvent } from "@/lib/analytics/events";
 import { getConfiguredPublicSiteUrl } from "@/lib/seo/useSeo";
+import { useUiStore } from "@/lib/state/useUiStore";
 
 const legalLinks = [
   { href: "/honoraires", label: "Honoraires" },
@@ -14,7 +15,6 @@ const legalLinks = [
 ];
 
 const quickLinks = [
-  { href: "/", label: "Accueil" },
   ...primaryLinks.map(({ to, label }) => ({ href: to, label })),
   { href: "/avis", label: "Avis clients" },
   { href: "/biens-sauvegardes", label: "Biens sauvegardés" },
@@ -24,11 +24,12 @@ const quickLinks = [
 
 export function AppFooter() {
   const configuredSiteUrl = getConfiguredPublicSiteUrl();
+  const setCookiePreferencesOpen = useUiStore((state) => state.setCookiePreferencesOpen);
 
   return (
-    <footer className="mt-16 border-t border-border bg-card">
+    <footer className="mt-12 border-t border-border bg-card">
       <div className="h-px w-full accent-divider" />
-      <div className="container mx-auto grid gap-10 px-4 py-12 md:grid-cols-2 lg:grid-cols-4">
+      <div className="container mx-auto grid gap-8 px-4 py-10 md:grid-cols-2 lg:grid-cols-[1.1fr_0.9fr_1.2fr_0.9fr]">
         <div className="h-card" itemScope itemType="https://schema.org/RealEstateAgent">
           <meta itemProp="name" content="Foch Immobilier" />
           {configuredSiteUrl ? <meta itemProp="url" content={configuredSiteUrl} /> : null}
@@ -61,6 +62,13 @@ export function AppFooter() {
               </li>
             ))}
           </ul>
+          <button
+            type="button"
+            className="mt-2 text-left text-sm hover:underline"
+            onClick={() => setCookiePreferencesOpen(true)}
+          >
+            Préférences cookies
+          </button>
         </div>
 
         <div>
@@ -88,7 +96,7 @@ export function AppFooter() {
             </li>
             <li className="flex items-center gap-2">
               <Mail className="h-4 w-4" />
-              <a href="mailto:vendre@fochimmobilier.com" className="u-email break-all" itemProp="email">
+              <a href="mailto:vendre@fochimmobilier.com" className="u-email break-words text-[13px]" itemProp="email">
                 vendre@fochimmobilier.com
               </a>
             </li>

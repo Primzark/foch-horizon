@@ -50,6 +50,8 @@ export interface Property {
   transactionType: TransactionType;
   propertyType: PropertyType;
   status: PropertyStatus;
+  /** Original label from the property provider, retained for audit and future mappings. */
+  sourceStatus?: string | null;
   priceAmount: number;
   priceCurrency: "EUR";
   surfaceM2: number;

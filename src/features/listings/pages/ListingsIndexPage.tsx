@@ -101,7 +101,7 @@ export default function ListingsIndexPage() {
         description="Affinez votre recherche et trouvez le bien qui correspond à votre projet."
       />
 
-      <section className="container mx-auto px-4 py-8">
+      <section className="container mx-auto px-4 py-6">
       <FiltersBar
         sort={filters.sort ?? "newest"}
         onSortChange={(value) => updateFilters({ sort: value as PropertySearchParams["sort"] })}
@@ -164,7 +164,7 @@ export default function ListingsIndexPage() {
               </div>
             ) : (
               <>
-                <div className={viewMode === "grid" ? "mt-4 grid gap-5 md:grid-cols-2 xl:grid-cols-3" : "mt-4 space-y-4"}>
+                <div className={viewMode === "grid" ? "mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3" : "mt-4 space-y-4"}>
                   {query.data.items.map((item, index) => (
                     <motion.div
                       key={item.id}
