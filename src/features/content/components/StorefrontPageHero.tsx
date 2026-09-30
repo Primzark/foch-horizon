@@ -18,7 +18,6 @@ export function StorefrontPageHero({ eyebrow, title, description, children }: St
         className="absolute inset-0 -z-10 bg-cover bg-no-repeat"
         style={{ backgroundImage, backgroundPosition: "center top" }}
       />
-      <div aria-hidden="true" className="absolute inset-0 -z-10 bg-gradient-to-r from-black/80 via-black/55 to-black/20" />
       <div className="page-banner container mx-auto flex items-center px-4 py-6 md:py-8">
         <header className="max-w-3xl">
           <p className="text-xs uppercase tracking-[0.22em] text-white/80">{eyebrow}</p>
