@@ -268,3 +268,7 @@
     );
   }
 }
+
+/* Homepage dimensions shared by equivalent photographic page banners. */
+.page-banner { height: 360px; }
+@media (min-width: 768px) { .page-banner { height: 420px; } }

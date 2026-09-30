@@ -91,24 +91,33 @@ export default function ListingDetailPage() {
             image: property.images.map((image) => image.sourceUrl),
             description: property.description,
             datePosted: property.publishedAt,
-            floorSize: {
-              "@type": "QuantitativeValue",
-              value: property.surfaceM2,
-              unitCode: "MTK",
-            },
-            numberOfRooms: property.rooms ?? undefined,
-            numberOfBedrooms: property.bedrooms ?? undefined,
-            address: {
-              "@type": "PostalAddress",
-              addressLocality: cityById.get(property.cityId)?.name ?? "Le Havre",
-              postalCode: property.postalCode,
-              addressCountry: "FR",
+            dateModified: property.updatedAt,
+            publisher: { "@id": `${siteUrl}/#agency` },
+            about: cityById.get(property.cityId) ? { "@id": `${siteUrl}/immobilier/${cityById.get(property.cityId)!.slug}#place`, "@type": "City", name: cityById.get(property.cityId)!.name } : undefined,
+            mainEntity: {
+              "@type": property.propertyType === "appartement" ? "Apartment" : property.propertyType === "maison_villa" ? "House" : "Accommodation",
+              "@id": `${siteUrl}${canonicalPath}#property`,
+              name: property.title,
+              floorSize: { "@type": "QuantitativeValue", value: property.surfaceM2, unitCode: "MTK" },
+              numberOfRooms: property.rooms ?? undefined,
+              numberOfBedrooms: property.bedrooms ?? undefined,
+              address: {
+                "@type": "PostalAddress",
+                addressLocality: cityById.get(property.cityId)?.name,
+                postalCode: property.postalCode,
+                addressCountry: "FR",
+              },
+              ...(property.lat != null && property.lng != null ? { geo: { "@type": "GeoCoordinates", latitude: property.lat, longitude: property.lng } } : {}),
             },
             offers: {
               "@type": "Offer",
-              priceCurrency: "EUR",
+              url: `${siteUrl}${canonicalPath}`,
+              priceCurrency: property.priceCurrency,
               price: property.priceAmount,
-              availability: property.status === "active" ? "https://schema.org/InStock" : "https://schema.org/SoldOut",
+              seller: { "@id": `${siteUrl}/#agency` },
+              businessFunction: property.transactionType === "location" ? "http://purl.org/goodrelations/v1#LeaseOut" : "http://purl.org/goodrelations/v1#Sell",
+              itemOffered: { "@id": `${siteUrl}${canonicalPath}#property` },
+              availability: property.status === "active" ? "https://schema.org/InStock" : property.status === "under_offer" ? "https://schema.org/LimitedAvailability" : property.status === "off_market" ? "https://schema.org/Discontinued" : "https://schema.org/SoldOut",
             },
           },
         }
@@ -217,7 +226,7 @@ export default function ListingDetailPage() {
               </div>
               <p className="mt-2 inline-flex items-center gap-1 text-sm text-muted-foreground">
                 <MapPin className="h-4 w-4" />
-                {city?.name} ({property.postalCode})
+                {city ? <Link to={`/immobilier/${city.slug}`} className="underline underline-offset-4">{city.name}</Link> : "Localisation"} ({property.postalCode})
               </p>
             </div>
 

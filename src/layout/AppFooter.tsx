@@ -20,6 +20,9 @@ const quickLinks = [
   { href: "/avis", label: "Avis clients" },
   { href: "/biens-sauvegardes", label: "Biens sauvegardés" },
   { href: "/services", label: "Services" },
+  { href: "/immobilier/le-havre", label: "Immobilier au Havre" },
+  { href: "/immobilier/halles-centrales", label: "Halles Centrales" },
+  { href: "/immobilier/hotel-de-ville", label: "Hôtel de Ville" },
   { href: "/apropos", label: "À propos" },
 ];
 

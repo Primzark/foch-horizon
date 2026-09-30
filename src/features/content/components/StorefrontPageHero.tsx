@@ -15,14 +15,15 @@ export function StorefrontPageHero({ eyebrow, title, description, children }: St
     <section className="relative isolate overflow-hidden bg-slate-950">
       <div
         aria-hidden="true"
-        className="absolute inset-0 -z-10 bg-[length:100%_auto] bg-top bg-no-repeat"
+        className="absolute inset-0 -z-10 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage }}
       />
-      <div className="container mx-auto flex min-h-[min(40svh,420px)] items-start px-4 pb-8 pt-[calc(100vw/2.14+0.75rem)] md:pt-[14vw]">
-        <header className="max-w-xl">
+      <div aria-hidden="true" className="absolute inset-0 -z-10 bg-gradient-to-r from-black/80 via-black/55 to-black/20" />
+      <div className="page-banner container mx-auto flex items-center px-4 py-6 md:py-8">
+        <header className="max-w-3xl">
           <p className="text-xs uppercase tracking-[0.22em] text-white/80">{eyebrow}</p>
-          <h1 className="mt-4 font-display text-4xl leading-tight text-white md:text-6xl">{title}</h1>
-          <p className="mt-5 max-w-lg text-base leading-relaxed text-white/85">{description}</p>
+          <h1 className="mt-4 font-display text-3xl leading-tight text-white md:text-5xl">{title}</h1>
+          <p className="mt-4 max-w-xl text-base leading-relaxed text-white/85">{description}</p>
           {children}
         </header>
       </div>

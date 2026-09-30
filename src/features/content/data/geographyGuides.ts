@@ -23,6 +23,7 @@ export type GeographyGuide = {
   typicalHomes: string;
   priceBreakdown?: Array<{ label: string; value: string }>;
   nearbyGuideIds?: string[];
+  reviewedAt?: string;
   placeType?: "quartier" | "commune";
 };
 
@@ -36,7 +37,7 @@ export type GeographyPhotoCredit = {
 
 const commonsCredit = (creator: string, fileTitle: string, licenseVersion: "2.0" | "3.0" | "4.0"): GeographyPhotoCredit => ({
   creator,
-  sourceUrl: `https://commons.wikimedia.org/wiki/File:${encodeURIComponent(fileTitle.replaceAll(" ", "_"))}`,
+  sourceUrl: `https://commons.wikimedia.org/wiki/File:${encodeURIComponent(fileTitle.replace(/ /g, "_"))}`,
   license: `CC BY-SA ${licenseVersion}`,
   licenseUrl: `https://creativecommons.org/licenses/by-sa/${licenseVersion}/`,
   modification: "Redimensionnée et convertie en WebP",
@@ -72,11 +73,11 @@ export const geographyGuides: GeographyGuide[] = [
     newBuild: "4 034 €/m² : médiane DVF 2025 des ventes neuves au Havre.",
     older: "Médianes DVF 2025 des reventes : 2 229 €/m² en appartement et 2 384 €/m² en maison. L’âge seul n’est pas isolé dans l’indice.",
     historyArchitecture: "Fondé en 1517 comme port royal, Le Havre a été lourdement détruit en 1944 puis reconstruit sous la direction d’Auguste Perret. Le centre reconstruit, inscrit au [patrimoine mondial de l’UNESCO](https://lehavre.fr/que-faire-au-havre/lh-culture/panorama/le-havre-patrimoine-mondial-de-lunesco), est marqué par le béton armé, la trame régulière, les rues larges et les immeubles à ossature visible. Saint-François conserve un tissu plus ancien ; les quartiers de coteaux mêlent villas, maisons de brique et silex, et pavillons.",
-    schoolsServices: "Écoles, collèges, lycées et établissements d’enseignement supérieur sont répartis dans la ville ; le campus universitaire et les équipements hospitaliers forment des pôles importants. La [Ville du Havre présente ses quartiers et services de proximité](https://lehavre.fr/ma-ville/vie-des-quartiers) ; les services administratifs, de santé et du quotidien se concentrent notamment dans le centre et les centres de quartier.",
-    shopsLeisure: "Les Halles, l’Espace Coty, les rues piétonnes et les marchés complètent une offre commerciale dense. Le front de mer, les jardins suspendus, le parc de Rouelles, le MuMa, le Volcan et les saisons d’art dans l’espace public offrent des loisirs toute l’année.",
+    schoolsServices: "Écoles, collèges, lycées et établissements d’enseignement supérieur sont répartis dans la ville ; l’[Université Le Havre Normandie](https://www.univ-lehavre.fr/fr/universite/) et les équipements du [Groupe Hospitalier du Havre](https://www.ch-havre.fr/) forment des pôles importants. La [Ville du Havre présente ses quartiers et services de proximité](https://lehavre.fr/ma-ville/vie-des-quartiers) ; les services administratifs, de santé et du quotidien se concentrent notamment dans le centre et les centres de quartier.",
+    shopsLeisure: "Les Halles, [l’Espace Coty](https://espace-coty.klepierre.fr/), les rues piétonnes et [les marchés](https://lehavre.fr/services-au-quotidien/commerces-entreprises/les-marches-havrais) complètent une offre commerciale dense. Le front de mer, les jardins suspendus, le parc de Rouelles, le [MuMa](https://www.muma-lehavre.fr/), [le Volcan](https://www.levolcan.com/) et les saisons d’art dans l’espace public offrent des loisirs toute l’année.",
     projectsTransport: "Le tram A/B, le funiculaire, les bus LiA, la gare et les pistes cyclables structurent les déplacements ; consultez les [lignes et horaires LiA](https://www.transports-lia.fr/). Le chantier de la ligne C prévoit 17 stations nouvelles vers les quartiers sud, Harfleur et Montivilliers en 2027. La ville poursuit aussi le [réaménagement des espaces publics du centre reconstruit](https://lehavre.fr/ma-ville/le-havre-ville-en-mouvement/requalification-des-espaces-publics-du-centre-reconstruit) et prépare l’ouverture du centre d’art contemporain en 2027.",
     typicalHomes: "Le parc est diversifié : appartements de la Reconstruction des années 1950–60, immeubles plus anciens en brique et pierre, maisons de ville, villas de coteau et pavillons avec jardin. Les surfaces vont du studio en centre-ville aux maisons familiales de 90 à 150 m² ; ascenseur, stationnement, balcon, vue mer et travaux de copropriété pèsent fortement dans la valeur.",
-    nearbyGuideIds: ["centre-ville", "notre-dame", "saint-francois", "perrey", "sainte-adresse", "montivilliers"],
+    nearbyGuideIds: ["centre-ville", "halles-centrales", "hotel-de-ville", "notre-dame", "saint-francois", "perrey", "sainte-adresse", "montivilliers"],
   },
   {
     id: "sainte-adresse",
@@ -131,7 +132,7 @@ export const geographyGuides: GeographyGuide[] = [
     older: "Repères de revente DVF 2025 au Havre : 2 229 €/m² en appartement et 2 384 €/m² en maison. La proximité immédiate de la mer crée une prime locale.",
     historyArchitecture: "Le front de mer s’est urbanisé avec l’essor des bains de mer et des promenades au XIXe siècle. Saint-Vincent est un ancien faubourg rattaché au Havre en 1852. On y voit des villas et immeubles anciens, des maisons de ville, puis des constructions de la Reconstruction ; la [Ville du Havre détaille les équipements du secteur Saint-Vincent–Gobelins](https://lehavre.fr/ma-ville/vie-des-quartiers/quartier-saint-vincent-gobelins).",
     schoolsServices: "Le secteur Saint-Vincent-Gobelins compte l’école maternelle Vivaldi, l’école élémentaire Frédéric-Bellanger, une crèche et une aire de jeux. Les établissements secondaires, soins et services publics du centre havrais sont accessibles à pied, en bus ou en tram selon l’adresse.",
-    shopsLeisure: "Marché des Gobelins les mercredis et samedis, commerces de quartier, restaurants et cafés. La plage, la promenade, les Bains Maritimes en saison, les activités sportives et les animations d’Un Été Au Havre forment les principaux espaces de loisirs.",
+    shopsLeisure: "Marché des Gobelins les mercredis et samedis, commerces de quartier, restaurants et cafés. La plage, la promenade, les Bains Maritimes en saison, les activités sportives et les animations d’[Un Été Au Havre](https://www.uneteauhavre.fr/fr/) forment les principaux espaces de loisirs.",
     projectsTransport: "La Ville a pérennisé un plan de circulation apaisé avec itinéraires cyclables et parvis d’école végétalisés ; elle poursuit l’amélioration des services et équipements de plage. Les lignes A/B et les [bus LiA](https://www.transports-lia.fr/) desservent le centre et le littoral ; la ligne de bus « Plage » est une adaptation saisonnière aux chantiers 2026, tandis que la future ligne C doit étendre le réseau en 2027.",
     typicalHomes: "Appartements anciens, maisons de ville et villas côtières côtoient les immeubles de la Reconstruction. Les petits logements proches de la plage sont recherchés pour un pied-à-terre ; les maisons disposent parfois de jardins en retrait. Contrôler exposition aux embruns, état des menuiseries, parties communes, vues réelles et nuisances estivales.",
     nearbyGuideIds: ["perrey", "notre-dame", "sainte-adresse", "gobelins"],
@@ -439,6 +440,7 @@ type AdditionalGuideInput = {
   projectsTransport: string;
   typicalHomes: string;
   nearbyGuideIds: string[];
+  reviewedAt?: string;
   placeType: "quartier" | "commune";
   priceBreakdown?: GeographyGuide["priceBreakdown"];
 };
@@ -463,6 +465,55 @@ function additionalGuide(input: AdditionalGuideInput): GeographyGuide {
 }
 
 const additionalGeographyGuides: GeographyGuide[] = [
+  additionalGuide({
+    id: "halles-centrales", reviewedAt: "2026-09-30", name: "Halles Centrales", pageTitle: "Immobilier aux Halles Centrales au Havre",
+    heroImage: { src: "/images/geography/architecture-perret.webp", alt: "Architecture du centre reconstruit du Havre, où se situe le secteur des Halles Centrales", credit: commonsZeroCredit },
+    listingSearch: { city: "le-havre", query: "Halles" },
+    subtitle: "Un secteur commerçant du centre reconstruit, autour du marché couvert et près du Volcan",
+    averagePrice: "Estimation à l’adresse", area: "Le Havre · centre reconstruit · secteur des Halles Centrales",
+    link: { label: "Halles Centrales et patrimoine architectural : Ville du Havre", href: "https://lehavre.fr/que-faire-au-havre/lh-culture/panorama/ville-des-modernites-architecturales" },
+    priceLink: { label: "Consulter les ventes DVF à l’adresse", href: "https://app.dvf.etalab.gouv.fr/" },
+    marketBasis: "Aucun indice propre aux Halles Centrales n’est présenté ici. Les mutations DVF permettent de comparer des ventes réalisées ; elles ne constituent pas une estimation du logement à vendre.",
+    priceBreakdown: [
+      { label: "Appartements", value: "Comparer les ventes de logements similaires autour des Halles : surface, étage, ascenseur, exposition et état de la copropriété." },
+      { label: "Studios et petites surfaces", value: "Comparer des surfaces proches ; les charges et les travaux peuvent peser davantage dans le budget total." },
+      { label: "Maisons", value: "Offre moins représentative de ce secteur central ; examiner chaque bien individuellement, sans extrapoler un prix d’appartement." },
+      { label: "Haut de gamme", value: "Les volumes, vues, prestations et travaux justifient une analyse à l’adresse ; aucun indice distinct n’est retenu." },
+      { label: "Neuf", value: "Comparer le programme précis, sa livraison, ses garanties et son stationnement ; aucun prix neuf de secteur n’est établi." },
+      { label: "Ancien", value: "Étudier DPE, charges, procès-verbaux et travaux votés, notamment dans les immeubles de la Reconstruction." },
+    ],
+    historyArchitecture: "Les Halles Centrales sont un secteur du centre-ville du Havre, et non une commune distincte. Le marché couvert a retrouvé son emplacement d’avant-guerre au sein du centre reconstruit. La [Ville du Havre documente son architecture](https://lehavre.fr/que-faire-au-havre/lh-culture/panorama/ville-des-modernites-architecturales) et sa rénovation de 1999. Les rues voisines associent logements de la Reconstruction et commerces en rez-de-chaussée.",
+    schoolsServices: "Le collège Raoul-Dufy est un repère scolaire du secteur, identifié dans le [dossier patrimonial municipal](https://lehavre.fr/sites/default/files/fichier/dossier_candidature_havre_patrimoine_mondial.pdf). L’affectation scolaire dépend de l’adresse et se confirme auprès de la Ville. L’[Hôtel de Ville](https://lehavre.fr/annuaire-equipements/hotel-de-ville) donne accès aux services municipaux du centre.",
+    shopsLeisure: "Le marché couvert, les commerces alimentaires et les rues voisines forment le cœur de la vie locale. Le [marché dominical des Halles Centrales](https://lehavre.fr/services-au-quotidien/commerces-entreprises/les-marches-havrais) complète cette offre ; consulter les horaires municipaux avant une visite. Le [Volcan](https://www.levolcan.com/), [la bibliothèque Oscar Niemeyer](https://bibliotheques.lehavre.fr/bibliotheque/bibliotheque-oscar-niemeyer) et les quais proposent des sorties à proximité.",
+    projectsTransport: "Les déplacements à pied relient les Halles aux autres secteurs du centre. Les [plans et horaires LiA](https://www.transports-lia.fr/) permettent de préparer les correspondances en bus et en tram. Pour les travaux et les changements de circulation, suivre le [projet municipal du centre reconstruit](https://lehavre.fr/ma-ville/le-havre-ville-en-mouvement/requalification-des-espaces-publics-du-centre-reconstruit), sans assimiler son périmètre à toutes les rues des Halles.",
+    typicalHomes: "Appartements de la Reconstruction, petites surfaces et logements familiaux composent l’essentiel des recherches dans ce secteur. Pour acheter, vérifier luminosité, ascenseur, isolation, travaux de copropriété et stationnement. La présence de commerces, livraisons et terrasses invite à visiter à plusieurs moments de la journée.",
+    nearbyGuideIds: ["centre-ville", "hotel-de-ville", "notre-dame", "perrey", "saint-francois"], placeType: "quartier",
+  }),
+  additionalGuide({
+    id: "hotel-de-ville", reviewedAt: "2026-09-30", name: "Hôtel de Ville", pageTitle: "Immobilier près de l’Hôtel de Ville du Havre",
+    heroImage: { src: "/images/geography/architecture-perret.webp", alt: "Immeubles du centre reconstruit du Havre, autour du secteur de l’Hôtel de Ville", credit: commonsZeroCredit },
+    listingSearch: { city: "le-havre", query: "Hôtel de Ville" },
+    subtitle: "La place, ses jardins et les rues voisines au cœur du centre reconstruit",
+    averagePrice: "Estimation à l’adresse", area: "Le Havre · centre reconstruit · secteur de l’Hôtel de Ville",
+    link: { label: "Services et accès à l’Hôtel de Ville : fiche officielle", href: "https://lehavre.fr/annuaire-equipements/hotel-de-ville" },
+    priceLink: { label: "Consulter les ventes DVF à l’adresse", href: "https://app.dvf.etalab.gouv.fr/" },
+    marketBasis: "Aucun indice spécifique à la place de l’Hôtel de Ville n’est présenté. Les ventes DVF servent de comparables historiques ; l’étage, la vue et les prestations demandent une analyse individuelle.",
+    priceBreakdown: [
+      { label: "Appartements", value: "Comparer des lots de surface et d’étage proches, avec ou sans ascenseur, autour de la place." },
+      { label: "Studios", value: "Analyser le coût total, les charges et le DPE ; aucun indice propre aux studios du secteur n’est établi." },
+      { label: "Maisons", value: "Étudier l’adresse et le bâti individuellement ; l’offre du centre est surtout composée d’appartements." },
+      { label: "Haut de gamme", value: "Vue sur la place, luminosité et grands volumes s’apprécient logement par logement." },
+      { label: "Neuf", value: "Examiner les programmes disponibles sans extrapoler le prix des immeubles de la Reconstruction." },
+      { label: "Ancien", value: "Consulter les travaux votés, les charges et les règles patrimoniales avant de prévoir une rénovation." },
+    ],
+    historyArchitecture: "L’Hôtel de Ville est un repère du centre reconstruit du Havre ; le secteur présenté désigne la place et ses rues voisines. Les [Archives municipales retracent sa construction et son inauguration en 1958](https://archives.lehavre.fr/expositions/lhotel-de-ville-du-havre-1958-2018-symbole-de-la-reconstruction). Les perspectives, les jardins et les immeubles de la Reconstruction structurent ce cadre urbain.",
+    schoolsServices: "La mairie centrale accueille des démarches et services publics ; la [fiche officielle de l’Hôtel de Ville](https://lehavre.fr/annuaire-equipements/hotel-de-ville) précise les accès. Les écoles et établissements secondaires se choisissent selon l’adresse et la carte scolaire. L’[Université Le Havre Normandie](https://www.univ-lehavre.fr/fr/universite/) constitue un pôle d’enseignement supérieur à l’échelle de la ville.",
+    shopsLeisure: "Les jardins de la place, les commerces du centre, les Halles Centrales et les rues piétonnes composent le quotidien. Le [Volcan](https://www.levolcan.com/) et le [MuMa](https://www.muma-lehavre.fr/) complètent l’offre culturelle du centre et du front de mer. Les programmations sont à consulter auprès de chaque établissement.",
+    projectsTransport: "Le tramway et les [bus LiA](https://www.transports-lia.fr/) desservent le centre ; vérifier les arrêts et correspondances selon le trajet. Les projets et modifications de circulation sont publiés par la Ville et la métropole. Une visite sur place permet d’apprécier les cheminements, l’accès au stationnement et l’animation de la place.",
+    typicalHomes: "Appartements de la Reconstruction et logements familiaux sont les principaux biens recherchés autour de la place. Les étages, l’orientation, la vue, l’ascenseur, les charges et les travaux créent des différences importantes. Vérifier les possibilités de rénovation dans le périmètre patrimonial ainsi que l’exposition au bruit des axes proches.",
+    nearbyGuideIds: ["centre-ville", "halles-centrales", "saint-michel", "perrey", "gobelins"], placeType: "quartier",
+  }),
+
   additionalGuide({
     id: "notre-dame", name: "Notre-Dame", pageTitle: "Immobilier dans le quartier Notre-Dame au Havre",
     heroImage: { src: "/images/geography/saint-francois.webp", alt: "Les bassins historiques du centre du Havre, près de Notre-Dame", credit: commonsCredit("Philippe Alès", "Le Havre (France), quarter Saint-François and Bassin du Roy.JPG", "3.0") },
@@ -521,11 +572,11 @@ const additionalGeographyGuides: GeographyGuide[] = [
     priceLink: { label: "Estimation immobilière au Havre", href: lehavrePriceLink },
     marketBasis: "Repère MeilleursAgents au 1 septembre 2026 à l’échelle communale. L’étage, l’état, l’ascenseur et l’adresse modifient sensiblement la valeur.",
     historyArchitecture: "La destruction de 1944 a conduit à la reconstruction du centre sous la direction d’Auguste Perret. Le béton armé, les îlots réguliers et les perspectives urbaines donnent au quartier son identité ; plusieurs ensembles sont inscrits au [patrimoine mondial de l’UNESCO](https://lehavre.fr/que-faire-au-havre/lh-culture/panorama/le-havre-patrimoine-mondial-de-lunesco). Saint-François et Notre-Dame conservent des formes urbaines plus anciennes à proximité.",
-    schoolsServices: "Le centre rassemble des établissements scolaires, la mairie, des services de santé et des équipements culturels. L’université et les écoles supérieures se rejoignent en tram, en bus ou à vélo. L’offre et la sectorisation scolaire sont à confirmer auprès de la Ville selon l’adresse exacte.",
-    shopsLeisure: "Les Halles centrales, l’Espace Coty, les rues piétonnes et plusieurs marchés offrent une gamme complète de commerces. La bibliothèque Oscar Niemeyer, le Volcan, le MuMa, les cinémas, les squares et la plage se rejoignent facilement à pied ou en tram.",
+    schoolsServices: "Le centre rassemble des établissements scolaires, l’[Hôtel de Ville](https://lehavre.fr/annuaire-equipements/hotel-de-ville), des services de santé et des équipements culturels. L’université et les écoles supérieures se rejoignent en tram, en bus ou à vélo. L’offre et la sectorisation scolaire sont à confirmer auprès de la Ville selon l’adresse exacte.",
+    shopsLeisure: "[Les Halles centrales](https://lehavre.fr/services-au-quotidien/commerces-entreprises/les-marches-havrais), [l’Espace Coty](https://espace-coty.klepierre.fr/), les rues piétonnes et plusieurs marchés offrent une gamme complète de commerces. La bibliothèque Oscar Niemeyer, [le Volcan](https://www.levolcan.com/), le [MuMa](https://www.muma-lehavre.fr/), les cinémas, les squares et la plage se rejoignent facilement à pied ou en tram.",
     projectsTransport: "Le projet municipal de requalification des espaces publics couvre 10 hectares entre la place du Chillou, Saint-François et la rue de Paris, avec davantage de place pour les piétons, les vélos, la végétation et les quais ([informations et calendrier de la Ville](https://lehavre.fr/ma-ville/le-havre-ville-en-mouvement/requalification-des-espaces-publics-du-centre-reconstruit)). Tram A/B, funiculaire, bus LiA, gare et réseau cyclable offrent plusieurs options de déplacement.",
     typicalHomes: "La majorité de l’offre se compose d’appartements : immeubles de la Reconstruction, résidences récentes et quelques bâtiments plus anciens près des bassins. Studios et petites surfaces côtoient des appartements familiaux. Examiner la performance énergétique, les charges, les travaux votés, l’ascenseur, le stationnement et les règles patrimoniales.",
-    nearbyGuideIds: ["notre-dame", "saint-francois", "perrey", "saint-michel", "gobelins"], placeType: "quartier",
+    nearbyGuideIds: ["halles-centrales", "hotel-de-ville", "notre-dame", "saint-francois", "perrey", "saint-michel", "gobelins"], placeType: "quartier",
   }),
   additionalGuide({
     id: "harfleur", name: "Harfleur", pageTitle: "Immobilier à Harfleur",
@@ -651,7 +702,7 @@ const additionalGeographyGuides: GeographyGuide[] = [
     historyArchitecture: "La Remuée, anciennement Notre-Dame-sur-Seine, est mentionnée à partir du XIIe siècle. Le village s’est développé le long de l’ancienne voie reliant Lillebonne à Harfleur. L’église du XVIIIe siècle et le château de Maréfosse, visible sur la route vers Saint-Romain, sont des repères du patrimoine local ; la [fiche de la Métropole](https://www.lehavreseinemetropole.fr/annuaire-des-communes/la-remuee) présente les services municipaux.",
     schoolsServices: "La commune dispose de services municipaux et d’une vie associative locale. Les parcours scolaires, établissements du secondaire et services de santé se répartissent avec les bourgs voisins ; confirmer les inscriptions et trajets auprès de la mairie selon le niveau de classe.",
     shopsLeisure: "Le village propose un environnement calme, des chemins ruraux et des espaces de promenade. Saint-Romain-de-Colbosc et Bolbec apportent davantage de commerces, de marchés, de restaurants et d’équipements. Les distances et horaires de transport varient selon le hameau.",
-    projectsTransport: "Les axes routiers relient La Remuée à Saint-Romain, Bolbec et l’A29 ; les cars NOMAD sont à consulter pour les trajets sans voiture. Les autorisations de travaux sont instruites par le pôle de Saint-Romain de [Le Havre Seine Métropole](https://www.lehavreseinemetropole.fr/amonservice/demarche/autorisations-durbanisme).",
+    projectsTransport: "Les axes routiers relient La Remuée à Saint-Romain, Bolbec et l’A29 ; les cars NOMAD sont à consulter pour les trajets sans voiture. Les autorisations de travaux sont instruites par le pôle de Saint-Romain de la communauté urbaine [Le Havre Seine Métropole](https://www.lehavreseinemetropole.fr/amonservice/demarche/autorisations-durbanisme).",
     typicalHomes: "Maisons individuelles, pavillons, maisons de bourg, fermes et propriétés avec dépendances composent l’essentiel du marché. Il y a peu d’appartements. Examiner l’état des toitures, les bâtiments annexes, le terrain, l’assainissement et la distance réelle aux services.",
     nearbyGuideIds: ["saint-aubin-routot", "epretot", "saint-romain", "gommerville"], placeType: "commune",
   }),
@@ -663,7 +714,7 @@ const additionalGeographyGuides: GeographyGuide[] = [
     link: { label: "Fiche officielle de la commune", href: lhsmTown("gommerville") },
     priceLink: { label: "Prix estimés à Gommerville", href: marketEstimateLink("gommerville", "76430") },
     marketBasis: "Estimation MeilleursAgents au 1 septembre 2026, tous biens confondus ; faible volume de ventes, à utiliser comme simple ordre de grandeur.",
-    historyArchitecture: "Gommerville est une petite commune agricole du pays de Caux, organisée en bourg et hameaux. Le bâti mêle maisons de village, anciennes fermes et pavillons, avec des matériaux normands comme la brique, le silex et le colombage. Les informations de mairie et les repères communaux sont rassemblés sur la [fiche de Le Havre Seine Métropole](https://www.lehavreseinemetropole.fr/annuaire-des-communes/gommerville).",
+    historyArchitecture: "Gommerville est une petite commune agricole du pays de Caux, organisée en bourg et hameaux. Le bâti mêle maisons de village, anciennes fermes et pavillons, avec des matériaux normands comme la brique, le silex et le colombage. Les informations de mairie et les repères communaux sont rassemblés sur la [fiche de la communauté urbaine Le Havre Seine Métropole](https://www.lehavreseinemetropole.fr/annuaire-des-communes/gommerville).",
     schoolsServices: "Les équipements et services sont ceux d’une commune de petite taille ; vérifier la carte scolaire, les transports et les services disponibles auprès de la mairie. Saint-Romain-de-Colbosc, tout proche, offre une gamme plus large d’établissements, de professionnels de santé et de commerces.",
     shopsLeisure: "Les promenades rurales, associations et activités agricoles donnent le ton local. Pour les achats courants, le marché, les restaurants et les équipements sportifs, les habitants se rendent principalement à Saint-Romain ou dans les communes voisines.",
     projectsTransport: "Le pôle de Saint-Romain-de-Colbosc instruit les demandes d’urbanisme de Gommerville ; la procédure est décrite par [la Métropole](https://www.lehavreseinemetropole.fr/amonservice/demarche/autorisations-durbanisme). Routes départementales et cars interurbains relient les bourgs ; vérifier les horaires avant de compter sur les transports collectifs au quotidien.",
@@ -696,7 +747,7 @@ const additionalGeographyGuides: GeographyGuide[] = [
     historyArchitecture: "Le nom « Tribus Petris » apparaît en 1222 ; il évoquerait trois blocs de pierre autrefois présents dans le cimetière. Le village conserve une échelle agricole et des maisons de pays, avec des fermes et pavillons autour du bourg. La [fiche de la Métropole](https://www.lehavreseinemetropole.fr/annuaire-des-communes/les-trois-pierres) décrit son histoire et ses services.",
     schoolsServices: "La mairie et les équipements de proximité desservent un village de taille modeste. Pour les établissements scolaires, soins et services plus spécialisés, Saint-Romain-de-Colbosc et Bolbec constituent les pôles voisins ; confirmer la carte scolaire et les transports en mairie.",
     shopsLeisure: "La campagne, les associations et les producteurs locaux animent la vie quotidienne. Une cueillette locale et des exploitations agricoles sont présentes sur le territoire ; marchés, commerces et équipements sont plus nombreux à Saint-Romain ou Bolbec.",
-    projectsTransport: "Les routes locales relient la commune à Saint-Romain et Bolbec ; les cars régionaux NOMAD desservent l’axe selon les horaires publiés. Les demandes d’urbanisme relèvent du pôle de Saint-Romain de [Le Havre Seine Métropole](https://www.lehavreseinemetropole.fr/amonservice/demarche/autorisations-durbanisme).",
+    projectsTransport: "Les routes locales relient la commune à Saint-Romain et Bolbec ; les cars régionaux NOMAD desservent l’axe selon les horaires publiés. Les demandes d’urbanisme relèvent du pôle de Saint-Romain de la communauté urbaine [Le Havre Seine Métropole](https://www.lehavreseinemetropole.fr/amonservice/demarche/autorisations-durbanisme).",
     typicalHomes: "Maisons individuelles, pavillons, fermes rénovées et maisons avec jardin ou dépendances constituent l’essentiel de l’offre. Les appartements sont rares. Le prix au mètre carré dépend de l’état, des annexes, de la superficie du terrain et de l’accès aux réseaux.",
     nearbyGuideIds: ["gommerville", "saint-romain", "la-remuee", "epretot"], placeType: "commune",
   }),

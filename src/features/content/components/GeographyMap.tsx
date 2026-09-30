@@ -19,7 +19,7 @@ export function GeographyMap({ locations }: GeographyMapProps) {
     const container = containerRef.current;
     if (!container || locations.length === 0) return;
 
-    const map = L.map(container, { scrollWheelZoom: false, zoomControl: false, tap: true });
+    const map = L.map(container, { scrollWheelZoom: false, zoomControl: false });
     L.control.zoom({ position: "topright" }).addTo(map);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
@@ -56,7 +56,7 @@ export function GeographyMap({ locations }: GeographyMapProps) {
       ref={containerRef}
       role="region"
       aria-label={`Carte interactive des ${locations.length} communes et quartiers couverts par Foch Immobilier`}
-      className="h-72 w-full bg-muted md:h-[440px]"
+      className="relative isolate z-0 h-72 w-full bg-muted md:h-[440px]"
     />
   );
 }

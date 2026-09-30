@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useLocation } from "react-router-dom";
+import { PageBreadcrumbs } from "@/layout/PageBreadcrumbs";
 import { AppFooter } from "@/layout/AppFooter";
 import { AppHeader } from "@/layout/AppHeader";
 import { SearchDrawer } from "@/features/listings/components/SearchDrawer";
@@ -29,7 +30,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
     <div className="min-h-screen bg-background text-foreground">
       {isRouteLoading && <RouteLoadingScreen fullscreen className="z-[95]" />}
       <AppHeader />
-      <main>{children}</main>
+      <main>{children}<PageBreadcrumbs /></main>
       <AppFooter />
       <SearchDrawer />
       <BackToTopButton />

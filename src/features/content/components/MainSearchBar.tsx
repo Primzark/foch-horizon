@@ -189,11 +189,14 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
     <div className="w-full max-w-3xl">
       <div className="relative z-20">
         <form
+          action="/biens"
+          method="get"
           onSubmit={handleSubmit}
           className="rounded-2xl border border-white/70 bg-background/95 p-3 shadow-[0_18px_55px_-25px_rgba(5,20,26,0.7)] backdrop-blur-md sm:rounded-full sm:p-2"
         >
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <div className="flex w-fit shrink-0 items-center rounded-full bg-muted/80 p-1">
+          <input type="hidden" name="transaction" value="vente" />
+          <div className="flex items-center gap-2">
+            <div className="hidden w-fit shrink-0 items-center rounded-full bg-muted/80 p-1 sm:flex">
               <span className="rounded-full bg-background px-4 py-2 text-sm font-medium text-foreground shadow-sm">
                 Acheter
               </span>
@@ -206,6 +209,7 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
               </label>
               <input
                 id="main-property-search"
+                name="q"
                 type="search"
                 role="combobox"
                 aria-autocomplete="list"
@@ -248,9 +252,9 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
               )}
             </div>
 
-            <Button type="submit" variant="brand" size="lg" className="h-12 shrink-0 gap-2 rounded-full px-6 sm:h-14">
-              Rechercher
-              <Search className="h-4 w-4" />
+            <Button type="submit" variant="brand" size="lg" className="h-12 w-12 shrink-0 gap-2 rounded-full px-0 sm:h-14 sm:w-auto sm:px-6">
+              <span className="sr-only sm:not-sr-only">Rechercher</span>
+              <Search aria-hidden="true" className="h-4 w-4" />
             </Button>
           </div>
         </form>

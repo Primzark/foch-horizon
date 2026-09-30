@@ -1,0 +1,214 @@
+{
+  "le-havre": {
+    "code": "76351",
+    "name": "Le Havre",
+    "latitude": 49.4943,
+    "longitude": 0.1078,
+    "postalCodes": [
+      "76600",
+      "76610",
+      "76620"
+    ],
+    "source": "https://geo.api.gouv.fr/communes/76351?fields=nom,code,centre,mairie,codesPostaux"
+  },
+  "sainte-adresse": {
+    "code": "76552",
+    "name": "Sainte-Adresse",
+    "latitude": 49.5051,
+    "longitude": 0.0858,
+    "postalCodes": [
+      "76310"
+    ],
+    "source": "https://geo.api.gouv.fr/communes/76552?fields=nom,code,centre,mairie,codesPostaux"
+  },
+  "octeville-sur-mer": {
+    "code": "76481",
+    "name": "Octeville-sur-Mer",
+    "latitude": 49.5553,
+    "longitude": 0.1163,
+    "postalCodes": [
+      "76930"
+    ],
+    "source": "https://geo.api.gouv.fr/communes/76481?fields=nom,code,centre,mairie,codesPostaux"
+  },
+  "montivilliers": {
+    "code": "76447",
+    "name": "Montivilliers",
+    "latitude": 49.5457,
+    "longitude": 0.1924,
+    "postalCodes": [
+      "76290"
+    ],
+    "source": "https://geo.api.gouv.fr/communes/76447?fields=nom,code,centre,mairie,codesPostaux"
+  },
+  "maneglise": {
+    "code": "76404",
+    "name": "Manéglise",
+    "latitude": 49.5662,
+    "longitude": 0.2555,
+    "postalCodes": [
+      "76133"
+    ],
+    "source": "https://geo.api.gouv.fr/communes/76404?fields=nom,code,centre,mairie,codesPostaux"
+  },
+  "gainneville": {
+    "code": "76296",
+    "name": "Gainneville",
+    "latitude": 49.5174,
+    "longitude": 0.2649,
+    "postalCodes": [
+      "76700"
+    ],
+    "source": "https://geo.api.gouv.fr/communes/76296?fields=nom,code,centre,mairie,codesPostaux"
+  },
+  "saint-romain": {
+    "code": "76647",
+    "name": "Saint-Romain-de-Colbosc",
+    "latitude": 49.5291,
+    "longitude": 0.3581,
+    "postalCodes": [
+      "76430"
+    ],
+    "source": "https://geo.api.gouv.fr/communes/76647?fields=nom,code,centre,mairie,codesPostaux"
+  },
+  "etretat": {
+    "code": "76254",
+    "name": "Étretat",
+    "latitude": 49.7076,
+    "longitude": 0.2055,
+    "postalCodes": [
+      "76790"
+    ],
+    "source": "https://geo.api.gouv.fr/communes/76254?fields=nom,code,centre,mairie,codesPostaux"
+  },
+  "deauville": {
+    "code": "14220",
+    "name": "Deauville",
+    "latitude": 49.3592,
+    "longitude": 0.0746,
+    "postalCodes": [
+      "14800"
+    ],
+    "source": "https://geo.api.gouv.fr/communes/14220?fields=nom,code,centre,mairie,codesPostaux"
+  },
+  "trouville": {
+    "code": "14715",
+    "name": "Trouville-sur-Mer",
+    "latitude": 49.3658,
+    "longitude": 0.0811,
+    "postalCodes": [
+      "14360"
+    ],
+    "source": "https://geo.api.gouv.fr/communes/14715?fields=nom,code,centre,mairie,codesPostaux"
+  },
+  "harfleur": {
+    "code": "76341",
+    "name": "Harfleur",
+    "latitude": 49.5078,
+    "longitude": 0.2,
+    "postalCodes": [
+      "76700"
+    ],
+    "source": "https://geo.api.gouv.fr/communes/76341?fields=nom,code,centre,mairie,codesPostaux"
+  },
+  "gonfreville-l-orcher": {
+    "code": "76305",
+    "name": "Gonfreville-l'Orcher",
+    "latitude": 49.5028,
+    "longitude": 0.2332,
+    "postalCodes": [
+      "76700"
+    ],
+    "source": "https://geo.api.gouv.fr/communes/76305?fields=nom,code,centre,mairie,codesPostaux"
+  },
+  "rogerville": {
+    "code": "76533",
+    "name": "Rogerville",
+    "latitude": 49.5036,
+    "longitude": 0.2671,
+    "postalCodes": [
+      "76700"
+    ],
+    "source": "https://geo.api.gouv.fr/communes/76533?fields=nom,code,centre,mairie,codesPostaux"
+  },
+  "saint-laurent-de-brevedent": {
+    "code": "76596",
+    "name": "Saint-Laurent-de-Brèvedent",
+    "latitude": 49.532,
+    "longitude": 0.2572,
+    "postalCodes": [
+      "76700"
+    ],
+    "source": "https://geo.api.gouv.fr/communes/76596?fields=nom,code,centre,mairie,codesPostaux"
+  },
+  "etainhus": {
+    "code": "76250",
+    "name": "Étainhus",
+    "latitude": 49.5662,
+    "longitude": 0.3122,
+    "postalCodes": [
+      "76430"
+    ],
+    "source": "https://geo.api.gouv.fr/communes/76250?fields=nom,code,centre,mairie,codesPostaux"
+  },
+  "epretot": {
+    "code": "76239",
+    "name": "Épretot",
+    "latitude": 49.5398,
+    "longitude": 0.3138,
+    "postalCodes": [
+      "76430"
+    ],
+    "source": "https://geo.api.gouv.fr/communes/76239?fields=nom,code,centre,mairie,codesPostaux"
+  },
+  "saint-aubin-routot": {
+    "code": "76563",
+    "name": "Saint-Aubin-Routot",
+    "latitude": 49.524,
+    "longitude": 0.3255,
+    "postalCodes": [
+      "76430"
+    ],
+    "source": "https://geo.api.gouv.fr/communes/76563?fields=nom,code,centre,mairie,codesPostaux"
+  },
+  "la-remuee": {
+    "code": "76522",
+    "name": "La Remuée",
+    "latitude": 49.5281,
+    "longitude": 0.4023,
+    "postalCodes": [
+      "76430"
+    ],
+    "source": "https://geo.api.gouv.fr/communes/76522?fields=nom,code,centre,mairie,codesPostaux"
+  },
+  "gommerville": {
+    "code": "76303",
+    "name": "Gommerville",
+    "latitude": 49.556,
+    "longitude": 0.3678,
+    "postalCodes": [
+      "76430"
+    ],
+    "source": "https://geo.api.gouv.fr/communes/76303?fields=nom,code,centre,mairie,codesPostaux"
+  },
+  "la-cerlangue": {
+    "code": "76169",
+    "name": "La Cerlangue",
+    "latitude": 49.5077,
+    "longitude": 0.4121,
+    "postalCodes": [
+      "76430"
+    ],
+    "source": "https://geo.api.gouv.fr/communes/76169?fields=nom,code,centre,mairie,codesPostaux"
+  },
+  "les-trois-pierres": {
+    "code": "76714",
+    "name": "Les Trois-Pierres",
+    "latitude": 49.5467,
+    "longitude": 0.4152,
+    "postalCodes": [
+      "76430"
+    ],
+    "source": "https://geo.api.gouv.fr/communes/76714?fields=nom,code,centre,mairie,codesPostaux"
+  }
+}

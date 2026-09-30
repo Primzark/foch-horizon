@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "node scripts/seo/build.mjs",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
@@ -23,7 +23,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:edge": "RUN_EDGE_INTEGRATION=true vitest run src/test/edge-endpoints.integration.test.ts",
-    "test:edge:write": "RUN_EDGE_INTEGRATION=true RUN_EDGE_WRITE_TESTS=true vitest run src/test/edge-endpoints.integration.test.ts"
+    "test:edge:write": "RUN_EDGE_INTEGRATION=true RUN_EDGE_WRITE_TESTS=true vitest run src/test/edge-endpoints.integration.test.ts",
+    "build:spa": "vite build",
+    "audit:seo": "node scripts/seo/audit.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -96,6 +98,7 @@
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^15.15.0",
     "jsdom": "^20.0.3",
+    "playwright": "^1.63.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.3",

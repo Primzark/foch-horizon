@@ -12,21 +12,7 @@ export default function ContactPageV2() {
     title: "Contact | Foch Immobilier",
     description: "Contactez Foch Immobilier, votre agence immobilière au Havre depuis 1972.",
     canonicalPath: "/contact",
-    jsonLd: {
-      "@context": "https://schema.org",
-      "@type": "RealEstateAgent",
-      name: "Foch Immobilier",
-      url: `${siteUrl}/contact`,
-      address: {
-        "@type": "PostalAddress",
-        streetAddress: "109 Av. Foch",
-        postalCode: "76600",
-        addressLocality: "Le Havre",
-        addressCountry: "FR",
-      },
-      telephone: "+33235425176",
-      email: "vendre@fochimmobilier.com",
-    },
+    jsonLd: { "@context": "https://schema.org", "@type": "ContactPage", "@id": `${siteUrl}/contact#webpage`, url: `${siteUrl}/contact`, mainEntity: { "@id": `${siteUrl}/#agency` } },
   });
 
   return (

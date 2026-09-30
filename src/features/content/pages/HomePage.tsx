@@ -73,41 +73,7 @@ export default function HomePage() {
       "Depuis 1972, Foch Immobilier accompagne vos projets de vente, location et gestion locative au Havre et sur le littoral.",
     canonicalPath: "/",
     image: HERO_IMAGE_URL,
-    jsonLd: [
-      {
-        "@context": "https://schema.org",
-        "@type": "Organization",
-        name: "Foch Immobilier",
-        url: siteUrl,
-        address: {
-          "@type": "PostalAddress",
-          streetAddress: "109 Av. Foch",
-          postalCode: "76600",
-          addressLocality: "Le Havre",
-          addressCountry: "FR",
-        },
-        telephone: "+33235425176",
-      },
-      {
-        "@context": "https://schema.org",
-        "@type": "RealEstateAgent",
-        name: "Foch Immobilier",
-        url: siteUrl,
-        areaServed: ["Le Havre", "Sainte-Adresse", "Montivilliers"],
-        serviceType: ["Achat immobilier", "Vente immobilière", "Location", "Gestion locative", "Estimation immobilière"],
-      },
-      {
-        "@context": "https://schema.org",
-        "@type": "WebSite",
-        name: "Foch Immobilier",
-        url: siteUrl,
-        potentialAction: {
-          "@type": "SearchAction",
-          target: `${siteUrl}/biens?q={search_term_string}`,
-          "query-input": "required name=search_term_string",
-        },
-      },
-    ],
+
   });
 
   return (
@@ -122,14 +88,14 @@ export default function HomePage() {
           fetchPriority="high"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-black/38 via-black/16 to-black/0" />
-        <div className="container relative z-[5] mx-auto flex min-h-[360px] flex-col justify-center px-4 py-10 md:min-h-[420px] md:py-12">
+        <div className="page-banner container relative z-[5] mx-auto flex flex-col justify-center px-4 py-5 md:py-8">
           <motion.h1
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: reducedMotion ? 0.3 : heroMotionDirector.revealDuration }}
             className="max-w-4xl font-display text-3xl text-white md:text-5xl"
           >
-            <span className="block text-5xl font-semibold md:text-7xl">Depuis 1972</span>
+            <span className="block text-4xl font-semibold sm:text-5xl md:text-7xl">Depuis 1972</span>
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 12 }}
@@ -151,7 +117,7 @@ export default function HomePage() {
           </motion.div>
         </div>
       </section>
-      <section className="container mx-auto px-4 pt-5 pb-12 md:pt-8 md:pb-12">
+      <section data-live-content="/biens" className="container mx-auto px-4 pt-5 pb-12 md:pt-8 md:pb-12">
         <ScrollReveal mood={heroMood}>
           <div className="mb-6 flex items-end justify-between gap-4">
             <div>
@@ -222,7 +188,7 @@ export default function HomePage() {
                 className="paper-grain paper-grain-soft [--paper-grain-mobile-reduction:0.014] group block h-full rounded-2xl border border-border bg-card p-6 transition-all duration-300 hover:-translate-y-1 hover:border-brand-border hover:shadow-[0_18px_44px_-30px_hsl(var(--brand)/0.35)]"
               >
                 <card.icon className="h-5 w-5 transition-transform duration-300 group-hover:scale-110 group-hover:text-brand-strong" />
-                <h3 className="mt-4 font-display text-2xl">{card.title}</h3>
+                <h2 className="mt-4 font-display text-2xl">{card.title}</h2>
                 <p className="mt-2 text-sm text-muted-foreground">{card.description}</p>
               </Link>
             </ScrollReveal>

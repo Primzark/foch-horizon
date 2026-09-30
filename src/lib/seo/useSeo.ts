@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { pageBreadcrumbs, siteEntities } from "@/lib/seo/entities";
 
 interface SeoOptions {
   title: string;
@@ -150,11 +151,20 @@ export function useSeo(options: SeoOptions): void {
 
     upsertRobots(Boolean(options.noIndex));
 
-    if (options.jsonLd) {
-      upsertJsonLd(options.jsonLd);
-    } else {
-      removeJsonLdNodes();
-    }
+    const supplied = options.jsonLd ? (Array.isArray(options.jsonLd) ? options.jsonLd : [options.jsonLd]) : [];
+    const pageUrl = toAbsoluteUrl(canonicalPath, siteUrl);
+    const crumbs = pageBreadcrumbs(canonicalPath, options.title);
+    // One stable business identity across all routes; breadcrumbs follow visible navigation.
+    const content = supplied.filter((node) => !["RealEstateAgent", "Organization", "WebSite", "BreadcrumbList"].includes((node as { "@type"?: string })["@type"] ?? ""));
+    upsertJsonLd({
+      "@context": "https://schema.org",
+      "@graph": [
+        ...siteEntities(siteUrl),
+        { "@type": "WebPage", "@id": `${pageUrl}#webpage`, url: pageUrl, name: options.title, description: options.description, inLanguage: "fr-FR", isPartOf: { "@id": `${siteUrl}/#website` }, publisher: { "@id": `${siteUrl}/#agency` }, ...(crumbs.length ? { breadcrumb: { "@id": `${pageUrl}#breadcrumb` } } : {}) },
+        ...(crumbs.length ? [{ "@type": "BreadcrumbList", "@id": `${pageUrl}#breadcrumb`, itemListElement: crumbs.map((crumb, index) => ({ "@type": "ListItem", position: index + 1, name: crumb.name, item: toAbsoluteUrl(crumb.path, siteUrl) })) }] : []),
+        ...content,
+      ],
+    });
 
     return () => {
       removeJsonLdNodes();

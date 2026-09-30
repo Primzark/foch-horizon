@@ -1,3 +1,4 @@
+import { atLocation } from "@/lib/utils/frenchLocation";
 import { StorefrontPageHero } from "@/features/content/components/StorefrontPageHero";
 import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
@@ -102,7 +103,7 @@ export default function ListingsIndexPage() {
   if (filters.q) {
     const cityName = filters.city ? cityBySlug.get(filters.city)?.name : undefined;
     recoveryActions.push({
-      label: cityName ? `Voir tous les biens à ${cityName}` : `Retirer « ${filters.q} »`,
+      label: cityName ? `Voir tous les biens ${atLocation(cityName)}` : `Retirer « ${filters.q} »`,
       filters: { q: undefined },
     });
   }
@@ -280,7 +281,7 @@ export default function ListingsIndexPage() {
                 <section className="mt-8 rounded-2xl border border-border bg-card p-6 sm:p-8" aria-labelledby="location-guide-title">
                   <header className="mb-6 max-w-3xl">
                     <p className="text-xs font-medium uppercase tracking-[0.18em] text-brand-strong">Repères sur le secteur</p>
-                    <h2 id="location-guide-title" className="mt-2 font-display text-3xl">Vivre à {locationGuide.name}</h2>
+                    <h2 id="location-guide-title" className="mt-2 font-display text-3xl">Vivre {atLocation(locationGuide.name)}</h2>
                     <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{locationGuide.subtitle} · {locationGuide.area}</p>
                   </header>
                   <GeographyGuideDetails guide={locationGuide} />

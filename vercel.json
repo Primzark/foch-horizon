@@ -58,8 +58,37 @@
       "destination": "https://rcrulfdobtmfxzpuyryn.supabase.co/functions/v1/chatbot-memory-reset"
     },
     {
+      "source": "/:page(geographie|services|vendre|estimation|apropos|contact|honoraires|reglementation-immobiliere|plan-du-site|mentions-legales|confidentialite|cookies|accessibilite)",
+      "destination": "/:page/index.html"
+    },
+    {
+      "source": "/immobilier/:ville(le-havre|sainte-adresse|la-plage|gobelins|saint-michel|octeville-sur-mer|montivilliers|maneglise|gainneville|saint-romain|etretat|deauville|trouville|halles-centrales|hotel-de-ville|notre-dame|saint-francois|perrey|centre-ville|harfleur|gonfreville-l-orcher|rogerville|saint-laurent-de-brevedent|etainhus|epretot|saint-aubin-routot|la-remuee|gommerville|la-cerlangue|les-trois-pierres)",
+      "destination": "/immobilier/:ville/index.html"
+    },
+    {
       "source": "/((?!api/|assets/|.*\\..*).*)",
-      "destination": "/index.html"
+      "destination": "/spa.html"
+    }
+  ],
+  "buildCommand": "npx playwright install --with-deps chromium && npm run build",
+  "headers": [
+    {
+      "source": "/admin/:path*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/biens-sauvegardes",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, follow"
+        }
+      ]
     }
   ]
 }

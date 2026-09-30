@@ -1,3 +1,5 @@
+import { placeEntity } from "@/lib/seo/entities";
+import { atLocation, ofLocation } from "@/lib/utils/frenchLocation";
 import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
@@ -44,11 +46,11 @@ function RelatedGeographyLinks({ guide, listingHref, estimateCity }: { guide: (t
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Continuer la visite</p>
-          <h2 id={`related-geography-${guide.id}`} className="mt-1 font-display text-2xl">À proximité de {guide.name}</h2>
+          <h2 id={`related-geography-${guide.id}`} className="mt-1 font-display text-2xl">À proximité {ofLocation(guide.name)}</h2>
         </div>
         <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
-          <Link to={listingHref} className="font-medium text-brand-strong underline underline-offset-4">Voir les annonces</Link>
-          <Link to={`/estimation?ville=${encodeURIComponent(estimateCity)}`} className="font-medium text-brand-strong underline underline-offset-4">Faire estimer un bien</Link>
+          <Link to={listingHref} className="font-medium text-brand-strong underline underline-offset-4">Annonces immobilières : {guide.name}</Link>
+          <Link to={`/estimation?ville=${encodeURIComponent(estimateCity)}`} className="font-medium text-brand-strong underline underline-offset-4">Estimer un bien {atLocation(guide.name)}</Link>
           <Link to="/vendre" className="font-medium text-brand-strong underline underline-offset-4">Vendre avec l’agence</Link>
         </div>
       </div>
@@ -69,12 +71,12 @@ function LocationHero({ pageTitle, locationName, locationSlug, locationLabel, im
   const motionDirector = getMotionDirectorProfile(heroMood);
 
   return (
-    <header className="relative overflow-hidden rounded-2xl border border-border">
+    <header className="page-banner relative overflow-hidden rounded-2xl border border-border">
       <ContextAwareParallax mood={heroMood} reducedMotion={reducedMotion} intensity="immersive" scrollReactive className="z-[0]">
         <motion.img
           src={imageUrl}
           alt={imageAlt}
-          className="h-64 w-full object-cover md:h-80"
+          className="h-full w-full object-cover"
           initial={reducedMotion ? { opacity: 0.9 } : { opacity: 0, scale: heroMotionPreset.enterScale, y: heroMotionPreset.enterY }}
           animate={
             reducedMotion
@@ -119,7 +121,7 @@ function LocationHero({ pageTitle, locationName, locationSlug, locationLabel, im
         <p className="inline-flex items-center gap-1 text-xs uppercase tracking-[0.2em] text-white/85">
           <MapPin className="h-3.5 w-3.5" /> {locationLabel}
         </p>
-        <h1 className="mt-2 font-display text-4xl md:text-5xl">{pageTitle}</h1>
+        <h1 className="mt-2 break-words font-display text-3xl sm:text-4xl md:text-5xl">{pageTitle}</h1>
         <p className="mt-2 text-sm text-white/85">
           Une sélection de biens et un accompagnement local sur mesure pour vendre, acheter ou louer dans ce secteur.
         </p>
@@ -145,7 +147,7 @@ export default function CityHubPage() {
 
   const propertiesQuery = useQuery({
     queryKey: ["city-properties", citySlug, cityGuide?.id],
-    enabled: citySlug.length > 0,
+    enabled: Boolean(cityGuide || cityBySlug.has(citySlug)),
     queryFn: async () => {
       const listingSearch = cityGuide?.listingSearch ?? { city: citySlug };
       if (listingSearch.city && !listingSearch.query) {
@@ -164,75 +166,37 @@ export default function CityHubPage() {
     },
   });
 
-  const city = cityQuery.data;
+  const city = cityQuery.data ?? cityBySlug.get(citySlug);
   const siteUrl = getSiteUrl();
-  const pageTitle = cityGuide?.pageTitle ?? `Immobilier à ${city?.name ?? ""}`;
+  const pageTitle = cityGuide?.pageTitle ?? `Immobilier ${atLocation(city?.name ?? "")}`;
 
-  useSeo(
-    city
-      ? {
-          title: `${pageTitle} | Foch Immobilier`,
-          description: cityGuide
-            ? `${cityGuide.subtitle}. Prix, habitat, écoles, commerces et déplacements à ${cityGuide.name}.`
-            : `Découvrez nos biens et notre accompagnement immobilier premium à ${city.name}.`,
-          canonicalPath: `/immobilier/${cityGuide?.id ?? city.slug}`,
-          jsonLd: [
-            {
-              "@context": "https://schema.org",
-              "@type": "Place",
-              name: city.name,
-              address: {
-                "@type": "PostalAddress",
-                postalCode: city.postalCodes[0] ?? "",
-                addressLocality: city.name,
-                addressCountry: "FR",
-              },
-            },
-            {
-              "@context": "https://schema.org",
-              "@type": "CollectionPage",
-              name: pageTitle,
-              url: `${siteUrl}/immobilier/${cityGuide?.id ?? city.slug}`,
-            },
-          ],
-        }
-      : cityGuide
-        ? {
-            title: `${cityGuide.pageTitle} | Foch Immobilier`,
-            description: `${cityGuide.subtitle}. Repères de prix, habitat, écoles, commerces et déplacements à ${cityGuide.name}.`,
-            canonicalPath: `/immobilier/${cityGuide.id}`,
-            jsonLd: {
-              "@context": "https://schema.org",
-              "@type": "CollectionPage",
-              name: cityGuide.pageTitle,
-              description: `${cityGuide.subtitle}. Repères de prix, habitat, écoles, commerces et déplacements à ${cityGuide.name}.`,
-              url: `${siteUrl}/immobilier/${cityGuide.id}`,
-              inLanguage: "fr-FR",
-              mainEntity: {
-                "@type": "Place",
-                name: cityGuide.name,
-                address: {
-                  "@type": "PostalAddress",
-                  addressLocality: cityGuide.placeType === "quartier" ? "Le Havre" : cityGuide.name,
-                  addressRegion: "Normandie",
-                  addressCountry: "FR",
-                },
-              },
-            },
-          }
-        : {
-          title: "Ville introuvable | Foch Immobilier",
-          description: "La page ville demandée n'est pas disponible.",
-          canonicalPath: "/biens",
-          noIndex: true,
-        },
-  );
+  useSeo({
+    title: cityGuide || city ? `${pageTitle} | Foch Immobilier` : "Ville introuvable | Foch Immobilier",
+    description: cityGuide ? `${cityGuide.subtitle}. Habitat, écoles, commerces, déplacements et repères immobiliers.` : `Découvrez nos biens et notre accompagnement immobilier ${atLocation(city?.name ?? "Le Havre")}.`,
+    canonicalPath: `/immobilier/${cityGuide?.id ?? citySlug}`,
+    image: cityGuide?.heroImage.src ?? city?.heroImageUrl,
+    noIndex: !cityGuide && !city,
+    jsonLd: cityGuide ? {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      "@id": `${siteUrl}/immobilier/${cityGuide.id}#webpage`,
+      name: cityGuide.pageTitle,
+      description: cityGuide.subtitle,
+      url: `${siteUrl}/immobilier/${cityGuide.id}`,
+      inLanguage: "fr-FR",
+      publisher: { "@id": `${siteUrl}/#agency` },
+      about: placeEntity(cityGuide, siteUrl),
+      spatialCoverage: { "@id": `${siteUrl}/immobilier/${cityGuide.id}#place` },
+      citation: [cityGuide.link.href, cityGuide.priceLink.href],
+      ...(cityGuide.reviewedAt ? { dateModified: cityGuide.reviewedAt } : {}),
+    } : undefined,
+  });
 
   if (!ville) {
     return <Navigate to="/biens" replace />;
   }
 
-  if (cityQuery.isLoading || propertiesQuery.isLoading) {
+  if (!cityGuide && !city && cityQuery.isLoading) {
     return (
       <section className="container mx-auto px-4 py-10">
         <div className="h-72 animate-pulse rounded-2xl bg-muted/50" />
@@ -265,7 +229,7 @@ export default function CityHubPage() {
         <section className="mt-8 rounded-2xl border border-border bg-card p-6 sm:p-8" aria-labelledby="city-guide-title">
           <header className="mb-6 max-w-3xl">
             <p className="text-xs font-medium uppercase tracking-[0.18em] text-brand-strong">Repères sur le secteur · {cityGuide.area}</p>
-            <h2 id="city-guide-title" className="mt-2 font-display text-3xl">Vivre à {cityGuide.name}</h2>
+            <h2 id="city-guide-title" className="mt-2 font-display text-3xl">Vivre {atLocation(cityGuide.name)}</h2>
           </header>
           <GeographyGuideDetails guide={cityGuide} />
         </section>
@@ -276,15 +240,18 @@ export default function CityHubPage() {
           estimateCity={cityGuide.listingSearch.city ?? cityGuide.name}
         />
 
+        <div data-live-content={`/biens?${allResultsParams.toString()}`}>
         {cityProperties.length === 0 ? (
-          <p className="mt-6 rounded-xl border border-border bg-card p-5 text-sm text-muted-foreground">
-            {propertiesQuery.isError
+          <p aria-live="polite" className="mt-6 rounded-xl border border-border bg-card p-5 text-sm text-muted-foreground">
+            {propertiesQuery.isLoading
+              ? "Chargement des annonces du secteur…"
+              : propertiesQuery.isError
               ? "Les annonces ne sont pas disponibles pour le moment. Retrouvez ci-dessous les repères sur le secteur."
-              : `Aucune annonce active pour le moment à ${cityGuide.name}. Retrouvez ci-dessous les repères sur le secteur.`}
+              : `Aucune annonce active pour le moment ${atLocation(cityGuide.name)}. Retrouvez ci-dessous les repères sur le secteur.`}
           </p>
         ) : (
           <section className="mt-8" aria-labelledby="city-properties-title">
-            <h2 id="city-properties-title" className="mb-4 font-display text-3xl">Biens à {cityGuide.name}</h2>
+            <h2 id="city-properties-title" className="mb-4 font-display text-3xl">Biens {atLocation(cityGuide.name)}</h2>
             <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
               {cityProperties.map((item, index) => (
                 <ListingCard key={item.id} item={item} revealIndex={index} />
@@ -293,9 +260,10 @@ export default function CityHubPage() {
           </section>
         )}
 
+        </div>
         <div className="mt-8 flex flex-wrap gap-3">
           <Button variant="outline" asChild><Link to="/geographie">Tous les secteurs</Link></Button>
-          <Button variant="brand" asChild><Link to="/contact">Parler à l’agence</Link></Button>
+          <Button variant="brand" asChild className="h-auto min-h-10 whitespace-normal text-center"><Link to="/contact">Parler à l’agence</Link></Button>
         </div>
       </section>
     );
@@ -318,7 +286,7 @@ export default function CityHubPage() {
         <section className="mt-8 rounded-2xl border border-border bg-card p-6 sm:p-8" aria-labelledby="city-guide-title">
           <header className="mb-6 max-w-3xl">
             <p className="text-xs font-medium uppercase tracking-[0.18em] text-brand-strong">Repères sur le secteur · {cityGuide.area}</p>
-            <h2 id="city-guide-title" className="mt-2 font-display text-3xl">Vivre à {cityGuide.name}</h2>
+            <h2 id="city-guide-title" className="mt-2 font-display text-3xl">Vivre {atLocation(cityGuide.name)}</h2>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{cityGuide.subtitle}</p>
           </header>
           <GeographyGuideDetails guide={cityGuide} />
@@ -333,24 +301,26 @@ export default function CityHubPage() {
         />
       )}
 
-      <section className="mt-8">
-        <div className="mb-4 flex items-end justify-between gap-4">
+      <section data-live-content={`/biens?${allResultsParams.toString()}`} className="mt-8">
+        <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h2 className="font-display text-3xl">Biens à {city.name}</h2>
+            <h2 className="font-display text-3xl">Biens {atLocation(city.name)}</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               {cityProperties.length} annonce{cityProperties.length > 1 ? "s" : ""} actuellement disponible{cityProperties.length > 1 ? "s" : ""}.
             </p>
           </div>
-          <Button variant="brand" asChild>
+          <Button variant="brand" asChild className="h-auto min-h-10 whitespace-normal text-center">
             <Link to={`/biens?${allResultsParams.toString()}`}>Voir tous les résultats</Link>
           </Button>
         </div>
 
         {cityProperties.length === 0 ? (
           <div className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
-            {propertiesQuery.isError
+            {propertiesQuery.isLoading
+              ? "Chargement des annonces du secteur…"
+              : propertiesQuery.isError
               ? "Les annonces ne sont pas disponibles pour le moment. Réessayez un peu plus tard."
-              : `Aucune annonce active pour le moment à ${cityGuide?.name ?? city.name}. Contactez-nous pour recevoir une alerte personnalisée.`}
+              : `Aucune annonce active pour le moment ${atLocation(cityGuide?.name ?? city.name)}. Contactez-nous pour recevoir une alerte personnalisée.`}
           </div>
         ) : (
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
@@ -362,15 +332,15 @@ export default function CityHubPage() {
       </section>
 
       <section className="mt-10 rounded-2xl border border-border bg-card p-6">
-        <h2 className="font-display text-3xl">Vendre à {city.name}</h2>
+        <h2 className="font-display text-3xl">Vendre {atLocation(city.name)}</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           Préparez votre estimation avec un conseiller local et obtenez une stratégie de mise en marché adaptée à votre bien.
         </p>
         <div className="mt-4 flex flex-wrap gap-3">
-          <Button asChild variant="brand">
-            <Link to={`/estimation?ville=${city.slug}`}>Estimer mon bien à {city.name}</Link>
+          <Button asChild variant="brand" className="h-auto min-h-10 whitespace-normal text-center">
+            <Link to={`/estimation?ville=${city.slug}`}>Estimer mon bien {atLocation(city.name)}</Link>
           </Button>
-          <Button variant="brand" asChild>
+          <Button variant="brand" asChild className="h-auto min-h-10 whitespace-normal text-center">
             <Link to="/contact">Parler à l'agence</Link>
           </Button>
         </div>

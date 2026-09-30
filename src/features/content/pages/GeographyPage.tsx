@@ -1,3 +1,4 @@
+import { communeByGuideId, placeEntity } from "@/lib/seo/entities";
 import { Link } from "react-router-dom";
 import { ArrowRight, MoveUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,7 @@ import { GeographyGuideDetails } from "@/features/content/components/GeographyGu
 import { GeographyMap } from "@/features/content/components/GeographyMap";
 
 const guideSections = [
-  { number: "01", title: "Le Havre et ses quartiers", description: "Du centre reconstruit aux quartiers historiques et au front de mer.", guideIds: ["le-havre", "centre-ville", "notre-dame", "saint-francois", "perrey", "la-plage", "gobelins", "saint-michel"] },
+  { number: "01", title: "Le Havre et ses quartiers", description: "Du centre reconstruit aux quartiers historiques et au front de mer.", guideIds: ["le-havre", "centre-ville", "halles-centrales", "hotel-de-ville", "notre-dame", "saint-francois", "perrey", "la-plage", "gobelins", "saint-michel"] },
   { number: "02", title: "Le littoral et les coteaux", description: "Des communes résidentielles à la côte d’Albâtre.", guideIds: ["sainte-adresse", "octeville-sur-mer", "etretat"] },
   { number: "03", title: "L’agglomération havraise", description: "Villes et communes proches, reliées au Havre par les transports et les services du quotidien.", guideIds: ["montivilliers", "harfleur", "gainneville", "gonfreville-l-orcher", "rogerville", "saint-laurent-de-brevedent", "maneglise"] },
   { number: "04", title: "Entre Le Havre et Saint-Romain", description: "Des bourgs et villages du pays de Caux, à découvrir selon les trajets et les services recherchés.", guideIds: ["saint-romain", "etainhus", "epretot", "saint-aubin-routot", "la-remuee", "gommerville", "la-cerlangue", "les-trois-pierres"] },
@@ -16,7 +17,7 @@ const guideSections = [
 ];
 
 const mapPoints: Record<string, [number, number]> = {
-  "le-havre": [49.4944, 0.1072], "centre-ville": [49.4984, 0.116], "notre-dame": [49.487, 0.115],
+  "halles-centrales": [49.4897, 0.1089], "hotel-de-ville": [49.4946, 0.1079], "le-havre": [49.4944, 0.1072], "centre-ville": [49.4984, 0.116], "notre-dame": [49.487, 0.115],
   "saint-francois": [49.4895, 0.120], perrey: [49.498, 0.103], "la-plage": [49.495, 0.080],
   gobelins: [49.4905, 0.094], "saint-michel": [49.500, 0.098], "sainte-adresse": [49.5055, 0.084],
   "octeville-sur-mer": [49.554, 0.145], montivilliers: [49.545, 0.188], maneglise: [49.552, 0.299],
@@ -29,7 +30,8 @@ const mapPoints: Record<string, [number, number]> = {
 };
 
 const geographyMapLocations = geographyGuides.flatMap((guide) => {
-  const coordinates = mapPoints[guide.id];
+  const commune = communeByGuideId.get(guide.id);
+  const coordinates: [number, number] | undefined = commune ? [commune.latitude, commune.longitude] : mapPoints[guide.id];
   return coordinates ? [{ id: guide.id, name: guide.name, coordinates }] : [];
 });
 
@@ -79,6 +81,8 @@ export default function GeographyPage() {
       {
         "@context": "https://schema.org",
         "@type": "CollectionPage",
+        "@id": `${siteUrl}/geographie#webpage`,
+        publisher: { "@id": `${siteUrl}/#agency` },
         name: "Nos secteurs immobiliers au Havre et alentours",
         description:
           "Guides de vie locale et repères immobiliers pour les villes et quartiers autour du Havre, de Sainte-Adresse et du littoral normand.",
@@ -86,13 +90,11 @@ export default function GeographyPage() {
         inLanguage: "fr-FR",
         mainEntity: {
           "@type": "ItemList",
-          itemListElement: guideSections.flatMap((sector, index) =>
-            sector.guideIds.map((guideId, placeIndex) => ({
+          itemListElement: guideSections.flatMap((sector) => sector.guideIds).map((guideId, index) => ({
               "@type": "ListItem",
-              position: index * 10 + placeIndex + 1,
-              item: { "@type": "Place", name: geographyGuides.find((guide) => guide.id === guideId)?.name ?? guideId },
+              position: index + 1,
+              item: placeEntity(geographyGuides.find((guide) => guide.id === guideId)!, siteUrl),
             })),
-          ),
         },
       },
       {
@@ -134,7 +136,7 @@ export default function GeographyPage() {
             <div className="mt-6 overflow-hidden rounded-xl border border-border bg-background">
               <GeographyMap locations={geographyMapLocations} />
             </div>
-            <p className="mt-2 text-xs text-muted-foreground">{geographyMapLocations.length} villes et quartiers · Sélectionnez un repère pour ouvrir son guide.</p>
+            <p className="mt-2 text-xs text-muted-foreground">{geographyMapLocations.length} villes et quartiers · Repères communaux situés en mairie ; quartiers indicatifs. Sélectionnez un repère pour ouvrir son guide.</p>
           </div>
 
           <div className="divide-y divide-border border-y border-border">
@@ -203,20 +205,20 @@ export default function GeographyPage() {
                   return (
                     <details key={guide.id} className="group overflow-hidden rounded-2xl border border-border bg-card open:shadow-sm">
                       <summary className="flex min-h-24 cursor-pointer list-none items-center justify-between gap-4 p-5 marker:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
-                        <span className="min-w-0">
-                          <span className="block font-display text-xl md:text-2xl">{guide.name}</span>
+                        <div className="min-w-0">
+                          <h4 className="font-display text-xl md:text-2xl">{guide.name}</h4>
                           <span className="mt-1 block text-sm text-muted-foreground">{guide.subtitle}</span>
                           <span className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                             <span className="font-medium text-brand-strong">{guide.averagePrice}</span>
                             <span>{guide.area}</span>
                           </span>
-                        </span>
+                        </div>
                         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border text-brand-strong transition-transform group-open:rotate-180" aria-hidden="true">
                           <ArrowRight className="h-4 w-4 rotate-90" />
                         </span>
                       </summary>
 
-                      <GeographyGuideDetails guide={guide} className="border-t border-border px-5 pb-5 pt-4" />
+                      <GeographyGuideDetails headingLevel={5} guide={guide} className="border-t border-border px-5 pb-5 pt-4" />
                     </details>
                   );
                 })}
