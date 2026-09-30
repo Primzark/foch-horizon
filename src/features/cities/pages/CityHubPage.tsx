@@ -1,4 +1,4 @@
-import { Link, Navigate, useParams } from "react-router-dom";
+import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { MapPin } from "lucide-react";
@@ -14,10 +14,16 @@ import { PlaceAtmosphereLayer } from "@/components/visuals/PlaceAtmosphereLayer"
 import { ContextAwareParallax } from "@/components/visuals/ContextAwareParallax";
 import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
 import { getMotionDirectorProfile } from "@/lib/visuals/motionDirector";
+import { geographyGuides } from "@/features/content/data/geographyGuides";
+import { GeographyGuideDetails } from "@/features/content/components/GeographyGuideDetails";
 
 export default function CityHubPage() {
   const { ville } = useParams();
+  const [searchParams] = useSearchParams();
   const citySlug = ville ?? "";
+  const requestedGuideId = searchParams.get("guide");
+  const cityGuide = geographyGuides.find((guide) => guide.id === requestedGuideId)
+    ?? geographyGuides.find((guide) => guide.id === citySlug);
   const { reducedMotion } = useMotionPreference();
 
   const cityQuery = useQuery({
@@ -61,7 +67,19 @@ export default function CityHubPage() {
             },
           ],
         }
-      : {
+      : cityGuide
+        ? {
+            title: `Immobilier ${cityGuide.name} | Foch Immobilier`,
+            description: `${cityGuide.subtitle}. Repères de prix, habitat, écoles, commerces et déplacements à ${cityGuide.name}.`,
+            canonicalPath: `/immobilier/${citySlug}`,
+            jsonLd: {
+              "@context": "https://schema.org",
+              "@type": "Place",
+              name: cityGuide.name,
+              address: { "@type": "PostalAddress", addressLocality: cityGuide.name, addressCountry: "FR" },
+            },
+          }
+        : {
           title: "Ville introuvable | Foch Immobilier",
           description: "La page ville demandée n'est pas disponible.",
           canonicalPath: "/biens",
@@ -81,11 +99,51 @@ export default function CityHubPage() {
     );
   }
 
+  const cityProperties = propertiesQuery.data ?? [];
   if (!city) {
-    return <Navigate to="/biens" replace />;
+    if (!cityGuide) return <Navigate to="/biens" replace />;
+
+    return (
+      <section className="container mx-auto px-4 py-10">
+        <header className="border-b border-border pb-7">
+          <p className="text-xs uppercase tracking-[0.2em] text-brand-strong">Guide local</p>
+          <h1 className="mt-2 font-display text-4xl md:text-5xl">Immobilier à {cityGuide.name}</h1>
+          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted-foreground">{cityGuide.subtitle}</p>
+        </header>
+
+        {cityProperties.length === 0 ? (
+          <p className="mt-6 rounded-xl border border-border bg-card p-5 text-sm text-muted-foreground">
+            {propertiesQuery.isError
+              ? "Les annonces ne sont pas disponibles pour le moment. Retrouvez ci-dessous les repères sur le secteur."
+              : `Aucune annonce active pour le moment à ${cityGuide.name}. Retrouvez ci-dessous les repères sur le secteur.`}
+          </p>
+        ) : (
+          <section className="mt-8" aria-labelledby="city-properties-title">
+            <h2 id="city-properties-title" className="mb-4 font-display text-3xl">Biens à {cityGuide.name}</h2>
+            <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+              {cityProperties.map((property, index) => (
+                <ListingCard key={property.id} item={toSearchItem(property)} revealIndex={index} />
+              ))}
+            </div>
+          </section>
+        )}
+
+        <section className="mt-8 rounded-2xl border border-border bg-card p-6 sm:p-8" aria-labelledby="city-guide-title">
+          <header className="mb-6 max-w-3xl">
+            <p className="text-xs font-medium uppercase tracking-[0.18em] text-brand-strong">Repères sur le secteur · {cityGuide.area}</p>
+            <h2 id="city-guide-title" className="mt-2 font-display text-3xl">Vivre à {cityGuide.name}</h2>
+          </header>
+          <GeographyGuideDetails guide={cityGuide} />
+        </section>
+
+        <div className="mt-8 flex flex-wrap gap-3">
+          <Button variant="outline" asChild><Link to="/biens">Tous les biens</Link></Button>
+          <Button variant="brand" asChild><Link to="/contact">Parler à l’agence</Link></Button>
+        </div>
+      </section>
+    );
   }
 
-  const cityProperties = propertiesQuery.data ?? [];
   const heroMood = inferPlaceImageMood(city.name, city.slug);
   const heroMotionPreset = getPlaceImageMotionPreset(heroMood);
   const motionDirector = getMotionDirectorProfile(heroMood);
@@ -145,14 +203,28 @@ export default function CityHubPage() {
             </p>
           </div>
           <Button variant="brand" asChild>
-            <Link to={`/biens?city=${city.slug}`}>Voir tous les résultats</Link>
+            <Link to={`/biens?${new URLSearchParams({ city: city.slug, ...(cityGuide ? { guide: cityGuide.id } : {}) }).toString()}`}>Voir tous les résultats</Link>
           </Button>
         </div>
 
         {cityProperties.length === 0 ? (
-          <div className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
-            Aucune annonce active pour le moment sur cette ville. Contactez-nous pour recevoir une alerte personnalisée.
-          </div>
+          <>
+            <div className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
+              {propertiesQuery.isError
+                ? "Les annonces ne sont pas disponibles pour le moment. Réessayez un peu plus tard."
+                : "Aucune annonce active pour le moment sur cette ville. Contactez-nous pour recevoir une alerte personnalisée."}
+            </div>
+            {!propertiesQuery.isError && cityGuide && (
+              <section className="mt-8 rounded-2xl border border-border bg-card p-6 sm:p-8" aria-labelledby="city-guide-title">
+                <header className="mb-6 max-w-3xl">
+                  <p className="text-xs font-medium uppercase tracking-[0.18em] text-brand-strong">Repères sur le secteur</p>
+                  <h2 id="city-guide-title" className="mt-2 font-display text-3xl">Vivre à {cityGuide.name}</h2>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{cityGuide.subtitle} · {cityGuide.area}</p>
+                </header>
+                <GeographyGuideDetails guide={cityGuide} />
+              </section>
+            )}
+          </>
         ) : (
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {cityProperties.map((property, index) => (

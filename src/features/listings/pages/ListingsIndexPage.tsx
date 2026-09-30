@@ -14,6 +14,8 @@ import { buildSearchParams, parseSearchParams } from "@/features/listings/utils/
 import type { PropertySearchParams } from "@/types/api";
 import { useFavoritesStore } from "@/features/favorites/useFavoritesStore";
 import { cityBySlug } from "@/features/cities/data/cities";
+import { geographyGuides } from "@/features/content/data/geographyGuides";
+import { GeographyGuideDetails } from "@/features/content/components/GeographyGuideDetails";
 import { useUiStore } from "@/lib/state/useUiStore";
 import { getSiteUrl, useSeo } from "@/lib/seo/useSeo";
 import { formatPrice, formatPropertyTypeLabel, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
@@ -40,6 +42,14 @@ export default function ListingsIndexPage() {
     ) as PropertySearchParams;
     return { ...defaultParams, ...definedParsed };
   }, [searchParams]);
+  const locationGuideId = searchParams.get("guide");
+  const locationGuide = geographyGuides.find((guide) => guide.id === locationGuideId);
+
+  const buildContextualSearchParams = (nextFilters: PropertySearchParams) => {
+    const nextParams = buildSearchParams(nextFilters);
+    if (locationGuide) nextParams.set("guide", locationGuide.id);
+    return nextParams;
+  };
 
   const query = useQuery({
     queryKey: ["properties", filters],
@@ -68,18 +78,18 @@ export default function ListingsIndexPage() {
     if (!updates.page) {
       next.page = 1;
     }
-    setSearchParams(buildSearchParams(next));
+    setSearchParams(buildContextualSearchParams(next));
   };
 
   const clearFilter = (key: keyof PropertySearchParams) => {
     const next: PropertySearchParams = { ...filters, [key]: undefined };
     next.page = 1;
-    setSearchParams(buildSearchParams(next));
+    setSearchParams(buildContextualSearchParams(next));
   };
 
   const clearAllCriteria = () => {
     setSearchParams(
-      buildSearchParams({
+      buildContextualSearchParams({
         transaction: filters.transaction,
         page: 1,
         pageSize: 12,
@@ -177,7 +187,7 @@ export default function ListingsIndexPage() {
       <ActiveFiltersChips
         filters={filters}
         onClear={clearFilter}
-        onClearAll={() => setSearchParams(buildSearchParams(defaultParams))}
+        onClearAll={() => setSearchParams(buildContextualSearchParams(defaultParams))}
       />
 
       {favoriteIds.length >= 3 && (
@@ -216,12 +226,15 @@ export default function ListingsIndexPage() {
             transition={{ duration: 0.2, ease: "easeOut" }}
           >
             {query.data.items.length === 0 ? (
+              <>
               <section className="mt-8 overflow-hidden rounded-2xl border border-border bg-card" aria-labelledby="no-results-title">
                 <div className="grid gap-6 p-6 sm:p-8 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,0.8fr)] lg:gap-10">
                   <div>
                     <p className="text-xs font-medium uppercase tracking-[0.18em] text-brand-strong">On élargit la recherche</p>
                     <h2 id="no-results-title" className="mt-2 font-display text-3xl">
-                      Aucun bien ne correspond à tous ces critères.
+                      {locationGuide
+                        ? `Aucun bien à ${locationGuide.name} ne correspond à ces critères.`
+                        : "Aucun bien ne correspond à tous ces critères."}
                     </h2>
                     <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">
                       Essayez l’une de ces pistes, ou modifiez vos filtres pour explorer davantage d’annonces.
@@ -263,6 +276,17 @@ export default function ListingsIndexPage() {
                   </Link>
                 </div>
               </section>
+              {locationGuide && (
+                <section className="mt-8 rounded-2xl border border-border bg-card p-6 sm:p-8" aria-labelledby="location-guide-title">
+                  <header className="mb-6 max-w-3xl">
+                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-brand-strong">Repères sur le secteur</p>
+                    <h2 id="location-guide-title" className="mt-2 font-display text-3xl">Vivre à {locationGuide.name}</h2>
+                    <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{locationGuide.subtitle} · {locationGuide.area}</p>
+                  </header>
+                  <GeographyGuideDetails guide={locationGuide} />
+                </section>
+              )}
+              </>
             ) : (
               <>
                 {viewMode === "map" ? (

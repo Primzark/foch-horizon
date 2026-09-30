@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useSeo, getSiteUrl } from "@/lib/seo/useSeo";
 import { StorefrontPageHero } from "@/features/content/components/StorefrontPageHero";
 import { geographyGuides, geographyPriceMethod } from "@/features/content/data/geographyGuides";
+import { GeographyGuideDetails } from "@/features/content/components/GeographyGuideDetails";
 
 const guideSections = [
   { title: "Le Havre et Sainte-Adresse", guideIds: ["le-havre", "sainte-adresse", "la-plage", "gobelins", "saint-michel"] },
@@ -12,33 +13,17 @@ const guideSections = [
   { title: "Deauville et Trouville-sur-Mer", guideIds: ["deauville", "trouville"] },
 ];
 
-const guideFacts = [
-  { key: "historyArchitecture", title: "Histoire et architecture" },
-  { key: "schoolsServices", title: "Écoles et services" },
-  { key: "shopsLeisure", title: "Commerces, loisirs et espaces verts" },
-  { key: "projectsTransport", title: "Projets et accessibilité" },
-] as const;
-
-const guidePrices = [
-  { key: "apartment", title: "Appartements" },
-  { key: "house", title: "Maisons" },
-  { key: "studio", title: "Studios" },
-  { key: "luxury", title: "Haut de gamme" },
-  { key: "newBuild", title: "Neuf" },
-  { key: "older", title: "Ancien" },
-] as const;
-
 const sectors = [
   {
     number: "01",
     title: "Le Havre et Sainte-Adresse",
     description: "Explorez les quartiers havrais et le littoral tout proche.",
     places: [
-      { name: "Le Havre", query: "Le Havre", city: "le-havre", cityPage: true },
-      { name: "Sainte-Adresse", query: "Sainte-Adresse", city: "sainte-adresse", cityPage: true },
-      { name: "La plage", query: "plage", city: "le-havre" },
-      { name: "Les Gobelins", query: "Les Gobelins", city: "le-havre" },
-      { name: "Saint-Michel", query: "Saint-Michel", city: "le-havre" },
+      { name: "Le Havre", query: "Le Havre", city: "le-havre", cityPage: true, guideId: "le-havre" },
+      { name: "Sainte-Adresse", query: "Sainte-Adresse", city: "sainte-adresse", cityPage: true, guideId: "sainte-adresse" },
+      { name: "La plage", query: "plage", city: "le-havre", guideId: "la-plage" },
+      { name: "Les Gobelins", query: "Les Gobelins", city: "le-havre", guideId: "gobelins" },
+      { name: "Saint-Michel", query: "Saint-Michel", city: "le-havre", guideId: "saint-michel" },
     ],
   },
   {
@@ -46,10 +31,10 @@ const sectors = [
     title: "Autour du Havre",
     description: "Des communes voisines où l’agence présente également des biens.",
     places: [
-      { name: "Octeville-sur-Mer", query: "Octeville-sur-Mer" },
-      { name: "Montivilliers", query: "Montivilliers", city: "montivilliers", cityPage: true },
-      { name: "Manéglise", query: "Manéglise", city: "maneglise", cityPage: true },
-      { name: "Gainneville", query: "Gainneville", city: "gainneville", cityPage: true },
+      { name: "Octeville-sur-Mer", query: "Octeville-sur-Mer", guideId: "octeville-sur-mer" },
+      { name: "Montivilliers", query: "Montivilliers", city: "montivilliers", cityPage: true, guideId: "montivilliers" },
+      { name: "Manéglise", query: "Manéglise", city: "maneglise", cityPage: true, guideId: "maneglise" },
+      { name: "Gainneville", query: "Gainneville", city: "gainneville", cityPage: true, guideId: "gainneville" },
     ],
   },
   {
@@ -57,8 +42,8 @@ const sectors = [
     title: "De Saint-Romain à Étretat",
     description: "Un axe entre l’intérieur des terres et la côte d’Albâtre.",
     places: [
-      { name: "Saint-Romain-de-Colbosc", query: "Saint-Romain-de-Colbosc" },
-      { name: "Étretat", query: "Étretat" },
+      { name: "Saint-Romain-de-Colbosc", query: "Saint-Romain-de-Colbosc", guideId: "saint-romain" },
+      { name: "Étretat", query: "Étretat", guideId: "etretat" },
     ],
   },
   {
@@ -66,8 +51,8 @@ const sectors = [
     title: "Deauville et Trouville-sur-Mer",
     description: "Retrouvez aussi ces deux communes parmi les secteurs cités par l’agence.",
     places: [
-      { name: "Deauville", query: "Deauville" },
-      { name: "Trouville-sur-Mer", query: "Trouville-sur-Mer" },
+      { name: "Deauville", query: "Deauville", guideId: "deauville" },
+      { name: "Trouville-sur-Mer", query: "Trouville-sur-Mer", guideId: "trouville" },
     ],
   },
 ];
@@ -80,6 +65,7 @@ const havrePhotos = [
     author: "Philippe Roudaut · CC0",
     href: "https://commons.wikimedia.org/wiki/File:Architecture_Perret_Au_Havre_(180697579).jpeg",
     query: "Perret",
+    guideId: "le-havre",
     width: 1000,
     height: 750,
   },
@@ -90,6 +76,7 @@ const havrePhotos = [
     author: "Philippe Ales · CC BY-SA 3.0",
     href: "https://commons.wikimedia.org/wiki/File:Le_Havre_(France),_quarter_Saint-Fran%C3%A7ois_and_Bassin_du_Roy.JPG",
     query: "Saint-François",
+    guideId: "le-havre",
     width: 1000,
     height: 664,
   },
@@ -100,6 +87,7 @@ const havrePhotos = [
     author: "Philippe Ales · CC BY-SA 4.0",
     href: "https://commons.wikimedia.org/wiki/File:Place_Saint-Vincent_(France).jpg",
     query: "Saint-Vincent",
+    guideId: "la-plage",
     width: 1000,
     height: 664,
   },
@@ -200,7 +188,9 @@ export default function GeographyPage() {
                       {sector.places.map((place) => (
                         <li key={place.name}>
                           <Link
-                            to={place.cityPage ? `/immobilier/${place.city}` : `/biens?${new URLSearchParams({ ...(place.city ? { city: place.city } : {}), q: place.query }).toString()}`}
+                            to={place.cityPage
+                              ? `/immobilier/${place.city}?guide=${place.guideId}`
+                              : `/biens?${new URLSearchParams({ ...(place.city ? { city: place.city } : {}), q: place.query, guide: place.guideId }).toString()}`}
                             className="inline-flex min-h-11 items-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-sm transition-colors hover:border-brand-border hover:bg-brand-soft hover:text-brand-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                           >
                             {place.name}<ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
@@ -263,47 +253,7 @@ export default function GeographyPage() {
                         </span>
                       </summary>
 
-                      <div className="border-t border-border px-5 pb-5 pt-4">
-                        <div className="grid gap-x-6 gap-y-5 md:grid-cols-2">
-                          {guideFacts.map((fact) => (
-                            <section key={fact.key}>
-                              <h4 className="text-sm font-semibold">{fact.title}</h4>
-                              <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{guide[fact.key]}</p>
-                            </section>
-                          ))}
-                          <section className="md:col-span-2">
-                            <h4 className="text-sm font-semibold">Types de biens courants</h4>
-                            <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{guide.typicalHomes}</p>
-                          </section>
-                        </div>
-
-                        <div className="mt-6 border-t border-border pt-5">
-                          <div className="flex flex-wrap items-end justify-between gap-2">
-                            <div>
-                              <h4 className="font-display text-xl">Repères de prix au m²</h4>
-                              <p className="mt-1 text-xs text-muted-foreground">{guide.marketBasis}</p>
-                            </div>
-                            <span className="text-sm font-semibold text-brand-strong">Repère : {guide.averagePrice}</span>
-                          </div>
-                          <dl className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                            {guidePrices.map((price) => (
-                              <div key={price.key} className="rounded-xl border border-border bg-background p-3">
-                                <dt className="text-xs font-semibold text-foreground">{price.title}</dt>
-                                <dd className="mt-1 text-xs leading-relaxed text-muted-foreground">{guide[price.key]}</dd>
-                              </div>
-                            ))}
-                          </dl>
-                        </div>
-
-                        <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 border-t border-border pt-4 text-sm">
-                          <a className="inline-flex items-center gap-1 text-brand-strong underline underline-offset-4" href={guide.link.href} target="_blank" rel="noreferrer">
-                            {guide.link.label}<MoveUpRight aria-hidden="true" className="h-3.5 w-3.5" />
-                          </a>
-                          <a className="inline-flex items-center gap-1 text-brand-strong underline underline-offset-4" href={guide.priceLink.href} target="_blank" rel="noreferrer">
-                            {guide.priceLink.label}<MoveUpRight aria-hidden="true" className="h-3.5 w-3.5" />
-                          </a>
-                        </div>
-                      </div>
+                      <GeographyGuideDetails guide={guide} className="border-t border-border px-5 pb-5 pt-4" />
                     </details>
                   );
                 })}
@@ -319,7 +269,7 @@ export default function GeographyPage() {
             <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Quelques repères</p>
             <h2 id="havre-neighborhoods-heading" className="mt-2 font-display text-3xl md:text-4xl">Quartiers du Havre en images</h2>
           </div>
-          <Link to="/biens?city=le-havre" className="inline-flex items-center gap-2 text-sm text-brand-strong underline-offset-4 hover:underline">
+          <Link to="/biens?city=le-havre&guide=le-havre" className="inline-flex items-center gap-2 text-sm text-brand-strong underline-offset-4 hover:underline">
             Voir les biens au Havre <ArrowRight aria-hidden="true" className="h-4 w-4" />
           </Link>
         </div>
@@ -332,7 +282,7 @@ export default function GeographyPage() {
                   <h3 className="font-medium">{photo.caption}</h3>
                   <a className="mt-1 inline-block text-xs text-muted-foreground underline underline-offset-2" href={photo.href} target="_blank" rel="noreferrer">Photo : {photo.author} · source</a>
                 </div>
-                <Link to={`/biens?${new URLSearchParams({ city: "le-havre", q: photo.query }).toString()}`} aria-label={`Voir les biens associés à ${photo.caption}`} className="rounded-full p-2 text-brand-strong hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <Link to={`/biens?${new URLSearchParams({ city: "le-havre", q: photo.query, guide: photo.guideId }).toString()}`} aria-label={`Voir les biens associés à ${photo.caption}`} className="rounded-full p-2 text-brand-strong hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                   <ArrowRight aria-hidden="true" className="h-4 w-4" />
                 </Link>
               </figcaption>
