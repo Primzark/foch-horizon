@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Building2, Compass, Handshake } from "lucide-react";
 import { GoogleGIcon } from "@/components/branding/GoogleGIcon";
+import { BudgetFinder } from "@/features/content/components/BudgetFinder";
 import { MainSearchBar } from "@/features/content/components/MainSearchBar";
 import { getFeaturedProperties } from "@/features/listings/api/properties.service";
 import { ListingCard } from "@/features/listings/components/ListingCard";
@@ -178,6 +179,10 @@ export default function HomePage() {
           ))}
         </div>
       </section>
+
+      <ScrollReveal mood={heroMood}>
+        <BudgetFinder />
+      </ScrollReveal>
 
       <section className="container mx-auto px-4 pb-14">
         <ScrollReveal mood={heroMood}>

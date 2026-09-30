@@ -1,0 +1,250 @@
+import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { ArrowRight, MapPin } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { cities } from "@/features/cities/data/cities";
+import { searchProperties } from "@/features/listings/api/properties.service";
+import { propertyTypeOptions } from "@/features/listings/data/options";
+import { buildSearchParams } from "@/features/listings/utils/query";
+import { formatPrice, formatPropertyTypeLabel, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
+import type { PropertySearchParams } from "@/types/api";
+import type { PropertyType, TransactionType } from "@/types/domain";
+
+const defaultBudgets: Record<TransactionType, string> = {
+  vente: "350000",
+  location: "1200",
+};
+
+export function BudgetFinder() {
+  const [transaction, setTransaction] = useState<TransactionType>("vente");
+  const [budgets, setBudgets] = useState(defaultBudgets);
+  const [propertyType, setPropertyType] = useState<PropertyType | "">("");
+  const [city, setCity] = useState("");
+  const [settledBudget, setSettledBudget] = useState<number | null>(350000);
+
+  const budgetText = budgets[transaction];
+  const parsedBudget = budgetText.trim() ? Number(budgetText) : Number.NaN;
+  const hasValidBudget = Number.isFinite(parsedBudget) && parsedBudget > 0;
+  const isBudgetSettled = hasValidBudget && parsedBudget === settledBudget;
+
+  useEffect(() => {
+    const nextBudget = hasValidBudget ? parsedBudget : null;
+    const timer = window.setTimeout(() => setSettledBudget(nextBudget), 300);
+    return () => window.clearTimeout(timer);
+  }, [hasValidBudget, parsedBudget]);
+
+  const filters = useMemo<PropertySearchParams>(
+    () => ({
+      transaction,
+      priceMax: settledBudget ?? 0,
+      type: propertyType || undefined,
+      city: city || undefined,
+      page: 1,
+      pageSize: 12,
+      sort: "price_asc",
+    }),
+    [city, propertyType, settledBudget, transaction],
+  );
+
+  const listingsQuery = useQuery({
+    queryKey: ["budget-finder", filters],
+    queryFn: () => searchProperties(filters),
+    enabled: isBudgetSettled,
+    staleTime: 1000 * 30,
+  });
+
+  const resultsHref = `/biens?${buildSearchParams(filters).toString()}`;
+  const withoutCityHref = `/biens?${buildSearchParams({ ...filters, city: undefined }).toString()}`;
+  const withoutTypeHref = `/biens?${buildSearchParams({ ...filters, type: undefined }).toString()}`;
+  const resultItems = listingsQuery.data?.items ?? [];
+  const otherResultCount = Math.max(0, (listingsQuery.data?.total ?? 0) - Math.min(resultItems.length, 3));
+  const isWaitingForBudget = hasValidBudget && !isBudgetSettled;
+
+  return (
+    <section className="border-y border-border bg-muted/25" aria-labelledby="budget-finder-title">
+      <div className="container mx-auto grid gap-9 px-4 py-12 md:py-14 lg:grid-cols-[minmax(17rem,0.8fr)_minmax(0,1.2fr)] lg:gap-12">
+        <div>
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-brand-strong">Explorer par budget</p>
+          <h2 id="budget-finder-title" className="mt-2 max-w-md font-display text-3xl md:text-4xl">
+            Que peut-on acheter avec votre budget ?
+          </h2>
+          <p className="mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
+            Parcourez les annonces actuellement publiées et affinez selon votre projet.
+          </p>
+
+          <div className="mt-6" role="group" aria-label="Type de projet">
+            <div className="inline-flex rounded-full border border-border bg-background p-1">
+              {([
+                ["vente", "Acheter"],
+                ["location", "Louer"],
+              ] as const).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  aria-pressed={transaction === value}
+                  onClick={() => setTransaction(value)}
+                  className={`min-h-10 rounded-full px-4 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                    transaction === value ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-5 grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5 sm:col-span-2">
+              <label htmlFor="budget-finder-amount" className="text-sm font-medium">Budget maximal</label>
+              <div className="relative">
+                <Input
+                  id="budget-finder-amount"
+                  type="number"
+                  inputMode="numeric"
+                  min="1"
+                  step={transaction === "vente" ? 5000 : 50}
+                  value={budgetText}
+                  onChange={(event) => setBudgets((current) => ({ ...current, [transaction]: event.target.value }))}
+                  aria-describedby="budget-finder-hint"
+                  className="pr-28 text-base tabular-nums"
+                />
+                <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground">
+                  {transaction === "location" ? "€ / mois" : "€"}
+                </span>
+              </div>
+              <p id="budget-finder-hint" className="text-xs text-muted-foreground">
+                {transaction === "location" ? "Loyer mensuel maximum" : "Prix d’achat maximum"}
+              </p>
+            </div>
+
+            <div className="space-y-1.5">
+              <label htmlFor="budget-finder-type" className="text-sm font-medium">Type de bien</label>
+              <select
+                id="budget-finder-type"
+                value={propertyType}
+                onChange={(event) => setPropertyType(event.target.value as PropertyType | "")}
+                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <option value="">Tous les types</option>
+                {propertyTypeOptions.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label htmlFor="budget-finder-city" className="text-sm font-medium">Secteur</label>
+              <select
+                id="budget-finder-city"
+                value={city}
+                onChange={(event) => setCity(event.target.value)}
+                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <option value="">Toutes les communes</option>
+                {cities.map((item) => (
+                  <option key={item.id} value={item.slug}>{item.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div className="lg:border-l lg:border-border lg:pl-8">
+          <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Votre sélection</p>
+              <h3 className="mt-1 font-display text-2xl">
+                {!hasValidBudget
+                  ? "Saisissez votre budget"
+                  : isWaitingForBudget || listingsQuery.isLoading
+                    ? "Recherche des annonces…"
+                    : listingsQuery.isError
+                      ? "Annonces momentanément indisponibles"
+                      : `${listingsQuery.data?.total ?? 0} bien${listingsQuery.data?.total === 1 ? "" : "s"} dans votre budget`}
+              </h3>
+            </div>
+            {hasValidBudget && listingsQuery.data && listingsQuery.data.total > 0 && (
+              <Button variant="brand" size="sm" asChild>
+                <Link to={resultsHref}>
+                  Voir les biens <ArrowRight aria-hidden="true" className="ml-1.5 h-4 w-4" />
+                </Link>
+              </Button>
+            )}
+          </div>
+
+          <div className="mt-2" aria-live="polite" aria-busy={isWaitingForBudget || listingsQuery.isLoading}>
+            {!hasValidBudget ? (
+              <p className="py-7 text-sm text-muted-foreground">Entrez un montant supérieur à zéro pour afficher les annonces correspondantes.</p>
+            ) : isWaitingForBudget || listingsQuery.isLoading ? (
+              <div className="divide-y divide-border" aria-hidden="true">
+                {[0, 1, 2].map((item) => <div key={item} className="h-[76px] animate-pulse bg-muted/40" />)}
+              </div>
+            ) : listingsQuery.isError ? (
+              <div className="py-6">
+                <p className="text-sm text-muted-foreground">Vous pouvez consulter les annonces et reprendre votre recherche.</p>
+                <Link to={resultsHref} className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-brand-strong underline-offset-4 hover:underline">
+                  Ouvrir la recherche <ArrowRight aria-hidden="true" className="h-4 w-4" />
+                </Link>
+              </div>
+            ) : listingsQuery.data?.total === 0 ? (
+              <div className="py-6">
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  {city || propertyType
+                    ? "Aucun bien ne correspond à ces sélections pour le moment. Élargissez le secteur ou le type de bien."
+                    : "Aucun bien publié ne correspond actuellement à ce budget."}
+                </p>
+                <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
+                  {city && (
+                    <Link to={withoutCityHref} className="inline-flex items-center gap-1 text-sm font-medium text-brand-strong underline-offset-4 hover:underline">
+                      Inclure les autres communes <ArrowRight aria-hidden="true" className="h-4 w-4" />
+                    </Link>
+                  )}
+                  {propertyType && (
+                    <Link to={withoutTypeHref} className="inline-flex items-center gap-1 text-sm font-medium text-brand-strong underline-offset-4 hover:underline">
+                      Inclure les autres types <ArrowRight aria-hidden="true" className="h-4 w-4" />
+                    </Link>
+                  )}
+                  {!city && !propertyType && <span className="text-sm text-muted-foreground">Essayez un autre montant.</span>}
+                </div>
+              </div>
+            ) : (
+              <div className="divide-y divide-border">
+                {resultItems.slice(0, 3).map((item) => (
+                  <Link
+                    key={item.id}
+                    to={toCanonicalPropertyPath({ id: item.id, slug: item.slug })}
+                    className="group flex min-h-[88px] items-center gap-4 py-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    {item.coverImageUrl ? (
+                      <img src={item.coverImageUrl} alt="" loading="lazy" decoding="async" className="h-16 w-20 shrink-0 rounded-lg object-cover" />
+                    ) : (
+                      <div className="flex h-16 w-20 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-brand-strong" aria-hidden="true">
+                        <MapPin className="h-5 w-5" />
+                      </div>
+                    )}
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-medium group-hover:text-brand-strong">{item.title}</span>
+                      <span className="mt-1 block truncate text-xs text-muted-foreground">
+                        {item.city.name} · {formatPropertyTypeLabel(item.type)} · {item.surfaceM2} m²
+                      </span>
+                    </span>
+                    <span className="shrink-0 text-right text-sm font-semibold tabular-nums text-brand-strong">
+                      {formatPrice(item.priceAmount, item.transaction)}
+                    </span>
+                  </Link>
+                ))}
+                {otherResultCount > 0 && (
+                  <p className="pt-3 text-xs text-muted-foreground">
+                    {otherResultCount} autre{otherResultCount === 1 ? "" : "s"} annonce{otherResultCount === 1 ? "" : "s"} correspond{otherResultCount === 1 ? "" : "ent"}.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
