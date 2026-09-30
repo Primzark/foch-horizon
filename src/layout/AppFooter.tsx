@@ -7,6 +7,7 @@ import { useUiStore } from "@/lib/state/useUiStore";
 
 const legalLinks = [
   { href: "/honoraires", label: "Honoraires" },
+  { href: "/reglementation-immobiliere", label: "Réglementation immobilière" },
   { href: "/mentions-legales", label: "Mentions légales" },
   { href: "/confidentialite", label: "Confidentialité" },
   { href: "/cookies", label: "Cookies" },

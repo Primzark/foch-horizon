@@ -29,6 +29,40 @@ type LocationHeroProps = {
   reducedMotion: boolean;
 };
 
+function getLocationLabel(guide?: (typeof geographyGuides)[number]) {
+  if (guide?.placeType === "quartier" || ["la-plage", "gobelins", "saint-michel"].includes(guide?.id ?? "")) return "Quartier";
+  return "Commune";
+}
+
+function RelatedGeographyLinks({ guide, listingHref, estimateCity }: { guide: (typeof geographyGuides)[number]; listingHref: string; estimateCity: string }) {
+  const nearby = (guide.nearbyGuideIds ?? [])
+    .map((id) => geographyGuides.find((item) => item.id === id))
+    .filter((item): item is (typeof geographyGuides)[number] => Boolean(item));
+
+  return (
+    <section className="mt-8 border-y border-border py-5" aria-labelledby={`related-geography-${guide.id}`}>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Continuer la visite</p>
+          <h2 id={`related-geography-${guide.id}`} className="mt-1 font-display text-2xl">À proximité de {guide.name}</h2>
+        </div>
+        <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
+          <Link to={listingHref} className="font-medium text-brand-strong underline underline-offset-4">Voir les annonces</Link>
+          <Link to={`/estimation?ville=${encodeURIComponent(estimateCity)}`} className="font-medium text-brand-strong underline underline-offset-4">Faire estimer un bien</Link>
+          <Link to="/vendre" className="font-medium text-brand-strong underline underline-offset-4">Vendre avec l’agence</Link>
+        </div>
+      </div>
+      {nearby.length > 0 && (
+        <ul className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm">
+          {nearby.map((place) => (
+            <li key={place.id}><Link to={`/immobilier/${place.id}`} className="text-muted-foreground underline decoration-border underline-offset-4 hover:text-brand-strong">{place.name}</Link></li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
 function LocationHero({ pageTitle, locationName, locationSlug, locationLabel, imageUrl, imageAlt, credit, reducedMotion }: LocationHeroProps) {
   const heroMood = inferPlaceImageMood(locationName, locationSlug);
   const heroMotionPreset = getPlaceImageMotionPreset(heroMood);
@@ -169,9 +203,21 @@ export default function CityHubPage() {
             canonicalPath: `/immobilier/${cityGuide.id}`,
             jsonLd: {
               "@context": "https://schema.org",
-              "@type": "Place",
-              name: cityGuide.name,
-              address: { "@type": "PostalAddress", addressLocality: cityGuide.name, addressCountry: "FR" },
+              "@type": "CollectionPage",
+              name: cityGuide.pageTitle,
+              description: `${cityGuide.subtitle}. Repères de prix, habitat, écoles, commerces et déplacements à ${cityGuide.name}.`,
+              url: `${siteUrl}/immobilier/${cityGuide.id}`,
+              inLanguage: "fr-FR",
+              mainEntity: {
+                "@type": "Place",
+                name: cityGuide.name,
+                address: {
+                  "@type": "PostalAddress",
+                  addressLocality: cityGuide.placeType === "quartier" ? "Le Havre" : cityGuide.name,
+                  addressRegion: "Normandie",
+                  addressCountry: "FR",
+                },
+              },
             },
           }
         : {
@@ -209,7 +255,7 @@ export default function CityHubPage() {
           pageTitle={cityGuide.pageTitle}
           locationName={cityGuide.name}
           locationSlug={cityGuide.id}
-          locationLabel={["la-plage", "gobelins", "saint-michel"].includes(cityGuide.id) ? "Secteur" : "Ville"}
+          locationLabel={getLocationLabel(cityGuide)}
           imageUrl={cityGuide.heroImage.src}
           imageAlt={cityGuide.heroImage.alt}
           credit={cityGuide.heroImage.credit}
@@ -223,6 +269,12 @@ export default function CityHubPage() {
           </header>
           <GeographyGuideDetails guide={cityGuide} />
         </section>
+
+        <RelatedGeographyLinks
+          guide={cityGuide}
+          listingHref={`/biens?${allResultsParams.toString()}`}
+          estimateCity={cityGuide.listingSearch.city ?? cityGuide.name}
+        />
 
         {cityProperties.length === 0 ? (
           <p className="mt-6 rounded-xl border border-border bg-card p-5 text-sm text-muted-foreground">
@@ -255,7 +307,7 @@ export default function CityHubPage() {
         pageTitle={pageTitle}
         locationName={cityGuide?.name ?? city.name}
         locationSlug={cityGuide?.id ?? city.slug}
-        locationLabel={["la-plage", "gobelins", "saint-michel"].includes(cityGuide?.id ?? "") ? "Secteur" : "Ville"}
+        locationLabel={getLocationLabel(cityGuide)}
         imageUrl={cityGuide?.heroImage.src ?? city.heroImageUrl}
         imageAlt={cityGuide?.heroImage.alt ?? `Vue sur ${city.name}`}
         credit={cityGuide?.heroImage.credit}
@@ -271,6 +323,14 @@ export default function CityHubPage() {
           </header>
           <GeographyGuideDetails guide={cityGuide} />
         </section>
+      )}
+
+      {cityGuide && (
+        <RelatedGeographyLinks
+          guide={cityGuide}
+          listingHref={`/biens?${allResultsParams.toString()}`}
+          estimateCity={cityGuide.listingSearch.city ?? cityGuide.name}
+        />
       )}
 
       <section className="mt-8">

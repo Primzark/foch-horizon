@@ -52,7 +52,7 @@ const PropertyCard = ({ property, variant = "grid" }: PropertyCardProps) => {
                   {property.title}
                 </h3>
               </div>
-              <span className="font-display text-xl font-bold text-accent">
+              <span className="font-display text-2xl font-semibold tracking-tight text-brand-strong">
                 {formatPrice(property.price, property.transaction_type)}
               </span>
             </div>
@@ -118,7 +118,7 @@ const PropertyCard = ({ property, variant = "grid" }: PropertyCardProps) => {
           <DpeBadge label={property.dpe_class} size="sm" />
         </div>
         <div className="mt-3 flex items-center justify-between">
-          <span className="font-display text-lg font-bold text-accent">
+          <span className="font-display text-2xl font-semibold tracking-tight text-brand-strong">
             {formatPrice(property.price, property.transaction_type)}
           </span>
           {agent && <span className="text-xs text-muted-foreground">{agent.name}</span>}

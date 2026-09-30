@@ -131,7 +131,7 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, classNam
             </div>
 
             <div className="mt-4 flex items-center justify-between">
-              <p className="font-display text-2xl">{formatPrice(item.priceAmount, item.transaction)}</p>
+              <p className="font-display text-3xl font-semibold tracking-tight text-brand-strong">{formatPrice(item.priceAmount, item.transaction)}</p>
               <button
                 type="button"
                 className={cn(
@@ -256,7 +256,7 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, classNam
           </span>
           {item.dpeLabel && <DpeBadge label={item.dpeLabel} size="sm" />}
         </div>
-        <p className="font-display text-2xl">{formatPrice(item.priceAmount, item.transaction)}</p>
+        <p className="font-display text-3xl font-semibold tracking-tight text-brand-strong">{formatPrice(item.priceAmount, item.transaction)}</p>
         <meta itemProp="identifier" content={String(item.id)} />
         <meta itemProp="floorSize" content={String(item.surfaceM2)} />
         <div itemProp="offers" itemScope itemType="https://schema.org/Offer">

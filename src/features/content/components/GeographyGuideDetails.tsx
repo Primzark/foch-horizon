@@ -23,34 +23,36 @@ type GeographyGuideDetailsProps = {
 };
 
 export function GeographyGuideDetails({ guide, className = "" }: GeographyGuideDetailsProps) {
+  const priceItems = guide.priceBreakdown ?? guidePrices.map((price) => ({ label: price.title, value: guide[price.key] }));
+
   return (
     <div className={className}>
       <div className="grid gap-x-6 gap-y-5 md:grid-cols-2">
         {guideFacts.map((fact) => (
           <section key={fact.key}>
             <h3 className="text-sm font-semibold">{fact.title}</h3>
-            <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{guide[fact.key]}</p>
+            <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground"><ContextualText text={guide[fact.key]} /></p>
           </section>
         ))}
         <section className="md:col-span-2">
           <h3 className="text-sm font-semibold">Types de biens courants</h3>
-          <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{guide.typicalHomes}</p>
+          <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground"><ContextualText text={guide.typicalHomes} /></p>
         </section>
       </div>
 
       <section className="mt-6 border-t border-border pt-5" aria-labelledby={`guide-prices-${guide.id}`}>
-        <div className="flex flex-wrap items-end justify-between gap-2">
+        <div className="flex flex-wrap items-end justify-between gap-3 border-l-2 border-brand bg-brand-soft/30 px-4 py-3">
           <div>
             <h3 id={`guide-prices-${guide.id}`} className="font-display text-xl">Prix estimés au m² par type de bien</h3>
-            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{guide.marketBasis}</p>
+            <p className="mt-1 max-w-3xl text-xs leading-relaxed text-muted-foreground"><ContextualText text={guide.marketBasis} /></p>
           </div>
-          <span className="text-sm font-semibold text-brand-strong">Moyenne indicative : {guide.averagePrice}</span>
+          <span className="font-display text-xl font-semibold tracking-tight text-brand-strong">{guide.averagePrice}</span>
         </div>
-        <dl className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          {guidePrices.map((price) => (
-            <div key={price.key} className="rounded-xl border border-border bg-background p-3">
-              <dt className="text-xs font-semibold text-foreground">{price.title}</dt>
-              <dd className="mt-1 text-xs leading-relaxed text-muted-foreground">{guide[price.key]}</dd>
+        <dl className="mt-3 grid divide-y divide-border border-y border-border sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-3">
+          {priceItems.map((price) => (
+            <div key={price.label} className="py-3 sm:px-3">
+              <dt className="text-xs font-semibold text-foreground">{price.label}</dt>
+              <dd className="mt-1 text-sm leading-relaxed text-muted-foreground"><ContextualText text={price.value} /></dd>
             </div>
           ))}
         </dl>
@@ -66,4 +68,25 @@ export function GeographyGuideDetails({ guide, className = "" }: GeographyGuideD
       </div>
     </div>
   );
+}
+
+function ContextualText({ text }: { text: string }) {
+  const linkPattern = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
+  const nodes: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = linkPattern.exec(text)) !== null) {
+    if (match.index > lastIndex) nodes.push(text.slice(lastIndex, match.index));
+    nodes.push(
+      <a key={`${match.index}-${match[1]}`} href={match[2]} target="_blank" rel="noopener noreferrer" className="font-medium text-brand-strong underline decoration-brand/50 underline-offset-4 hover:decoration-brand">
+        {match[1]}
+      </a>,
+    );
+    lastIndex = linkPattern.lastIndex;
+  }
+
+  if (nodes.length === 0) return text;
+  if (lastIndex < text.length) nodes.push(text.slice(lastIndex));
+  return <>{nodes}</>;
 }

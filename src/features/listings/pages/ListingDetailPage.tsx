@@ -9,6 +9,7 @@ import { getPropertyById, getSimilarProperties } from "@/features/listings/api/p
 import { ListingGallery } from "@/features/listings/components/ListingGallery";
 import { ListingCard } from "@/features/listings/components/ListingCard";
 import { ListingShareButton } from "@/features/listings/components/ListingShareButton";
+import DpeBadge from "@/components/property/DpeBadge";
 import { agentById } from "@/features/listings/data/agents";
 import { toSearchItem } from "@/features/listings/utils/mappers";
 import { LeadForm } from "@/features/leads/components/LeadForm";
@@ -290,15 +291,17 @@ export default function ListingDetailPage() {
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <div className="rounded-xl border border-border p-4">
                 <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">DPE</p>
-                <p className="mt-1 text-lg">
-                  {property.dpeLabel ?? "N.C."} {property.dpeValue ? `· ${property.dpeValue} kWh/m².an` : ""}
-                </p>
+                <div className="mt-2 flex items-center gap-4">
+                  <DpeBadge label={property.dpeLabel} size="md" value={property.dpeValue} />
+                  <p className="text-sm text-muted-foreground">{property.dpeValue ? `${property.dpeValue} kWh/m².an` : "Consommation non renseignée"}</p>
+                </div>
               </div>
               <div className="rounded-xl border border-border p-4">
                 <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">GES</p>
-                <p className="mt-1 text-lg">
-                  {property.gesLabel ?? "N.C."} {property.gesValue ? `· ${property.gesValue} kgCO2/m².an` : ""}
-                </p>
+                <div className="mt-2 flex items-center gap-4">
+                  <DpeBadge label={property.gesLabel} size="md" type="GES" value={property.gesValue} />
+                  <p className="text-sm text-muted-foreground">{property.gesValue ? `${property.gesValue} kgCO₂/m².an` : "Émissions non renseignées"}</p>
+                </div>
               </div>
             </div>
           </motion.article>

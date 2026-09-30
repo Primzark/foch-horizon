@@ -1,61 +1,37 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, MapPin, MoveUpRight } from "lucide-react";
+import { ArrowRight, MoveUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSeo, getSiteUrl } from "@/lib/seo/useSeo";
 import { StorefrontPageHero } from "@/features/content/components/StorefrontPageHero";
 import { geographyGuides, geographyPriceMethod } from "@/features/content/data/geographyGuides";
 import { GeographyGuideDetails } from "@/features/content/components/GeographyGuideDetails";
+import { GeographyMap } from "@/features/content/components/GeographyMap";
 
 const guideSections = [
-  { title: "Le Havre et Sainte-Adresse", guideIds: ["le-havre", "sainte-adresse", "la-plage", "gobelins", "saint-michel"] },
-  { title: "Autour du Havre", guideIds: ["octeville-sur-mer", "montivilliers", "maneglise", "gainneville"] },
-  { title: "De Saint-Romain à Étretat", guideIds: ["saint-romain", "etretat"] },
-  { title: "Deauville et Trouville-sur-Mer", guideIds: ["deauville", "trouville"] },
+  { number: "01", title: "Le Havre et ses quartiers", description: "Du centre reconstruit aux quartiers historiques et au front de mer.", guideIds: ["le-havre", "centre-ville", "notre-dame", "saint-francois", "perrey", "la-plage", "gobelins", "saint-michel"] },
+  { number: "02", title: "Le littoral et les coteaux", description: "Des communes résidentielles à la côte d’Albâtre.", guideIds: ["sainte-adresse", "octeville-sur-mer", "etretat"] },
+  { number: "03", title: "L’agglomération havraise", description: "Villes et communes proches, reliées au Havre par les transports et les services du quotidien.", guideIds: ["montivilliers", "harfleur", "gainneville", "gonfreville-l-orcher", "rogerville", "saint-laurent-de-brevedent", "maneglise"] },
+  { number: "04", title: "Entre Le Havre et Saint-Romain", description: "Des bourgs et villages du pays de Caux, à découvrir selon les trajets et les services recherchés.", guideIds: ["saint-romain", "etainhus", "epretot", "saint-aubin-routot", "la-remuee", "gommerville", "la-cerlangue", "les-trois-pierres"] },
+  { number: "05", title: "Deauville et Trouville-sur-Mer", description: "Deux stations balnéaires également citées dans les secteurs de l’agence.", guideIds: ["deauville", "trouville"] },
 ];
 
-const sectors = [
-  {
-    number: "01",
-    title: "Le Havre et Sainte-Adresse",
-    description: "Explorez les quartiers havrais et le littoral tout proche.",
-    places: [
-      { name: "Le Havre", guideId: "le-havre" },
-      { name: "Sainte-Adresse", guideId: "sainte-adresse" },
-      { name: "La plage", guideId: "la-plage" },
-      { name: "Les Gobelins", guideId: "gobelins" },
-      { name: "Saint-Michel", guideId: "saint-michel" },
-    ],
-  },
-  {
-    number: "02",
-    title: "Autour du Havre",
-    description: "Des communes voisines où l’agence présente également des biens.",
-    places: [
-      { name: "Octeville-sur-Mer", guideId: "octeville-sur-mer" },
-      { name: "Montivilliers", guideId: "montivilliers" },
-      { name: "Manéglise", guideId: "maneglise" },
-      { name: "Gainneville", guideId: "gainneville" },
-    ],
-  },
-  {
-    number: "03",
-    title: "De Saint-Romain à Étretat",
-    description: "Un axe entre l’intérieur des terres et la côte d’Albâtre.",
-    places: [
-      { name: "Saint-Romain-de-Colbosc", guideId: "saint-romain" },
-      { name: "Étretat", guideId: "etretat" },
-    ],
-  },
-  {
-    number: "04",
-    title: "Deauville et Trouville-sur-Mer",
-    description: "Retrouvez aussi ces deux communes parmi les secteurs cités par l’agence.",
-    places: [
-      { name: "Deauville", guideId: "deauville" },
-      { name: "Trouville-sur-Mer", guideId: "trouville" },
-    ],
-  },
-];
+const mapPoints: Record<string, [number, number]> = {
+  "le-havre": [49.4944, 0.1072], "centre-ville": [49.4984, 0.116], "notre-dame": [49.487, 0.115],
+  "saint-francois": [49.4895, 0.120], perrey: [49.498, 0.103], "la-plage": [49.495, 0.080],
+  gobelins: [49.4905, 0.094], "saint-michel": [49.500, 0.098], "sainte-adresse": [49.5055, 0.084],
+  "octeville-sur-mer": [49.554, 0.145], montivilliers: [49.545, 0.188], maneglise: [49.552, 0.299],
+  gainneville: [49.505, 0.25], harfleur: [49.507, 0.20], "gonfreville-l-orcher": [49.506, 0.232],
+  rogerville: [49.516, 0.28], "saint-laurent-de-brevedent": [49.535, 0.23], "saint-romain": [49.531, 0.357],
+  etainhus: [49.552, 0.321], epretot: [49.559, 0.296], "saint-aubin-routot": [49.551, 0.322],
+  "la-remuee": [49.557, 0.399], gommerville: [49.57, 0.348], "la-cerlangue": [49.51, 0.416],
+  "les-trois-pierres": [49.563, 0.371], etretat: [49.707, 0.205], deauville: [49.358, 0.075],
+  trouville: [49.366, 0.083],
+};
+
+const geographyMapLocations = geographyGuides.flatMap((guide) => {
+  const coordinates = mapPoints[guide.id];
+  return coordinates ? [{ id: guide.id, name: guide.name, coordinates }] : [];
+});
 
 const havrePhotos = [
   {
@@ -110,11 +86,11 @@ export default function GeographyPage() {
         inLanguage: "fr-FR",
         mainEntity: {
           "@type": "ItemList",
-          itemListElement: sectors.flatMap((sector, index) =>
-            sector.places.map((place, placeIndex) => ({
+          itemListElement: guideSections.flatMap((sector, index) =>
+            sector.guideIds.map((guideId, placeIndex) => ({
               "@type": "ListItem",
               position: index * 10 + placeIndex + 1,
-              item: { "@type": "Place", name: place.name },
+              item: { "@type": "Place", name: geographyGuides.find((guide) => guide.id === guideId)?.name ?? guideId },
             })),
           ),
         },
@@ -150,48 +126,40 @@ export default function GeographyPage() {
       <section className="border-y border-border bg-card/40" aria-labelledby="sectors-heading">
         <div className="container mx-auto grid gap-10 px-4 py-12 lg:grid-cols-[0.8fr_1.2fr] lg:py-16">
           <div className="lg:sticky lg:top-28 lg:self-start">
-            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Repères géographiques</p>
+            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Nos guides locaux</p>
             <h2 id="sectors-heading" className="mt-3 font-display text-3xl md:text-4xl">Explorez nos secteurs</h2>
             <p className="mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
-              Retrouvez les communes et quartiers mentionnés par Foch Immobilier. Sélectionnez un lieu pour consulter les annonces correspondantes lorsqu’elles sont disponibles.
+              Quartiers, villes et communes autour du Havre : ouvrez un guide pour voir les repères de vie locale et d’immobilier.
             </p>
             <div className="mt-6 overflow-hidden rounded-xl border border-border bg-background">
-              <iframe
-                title="Carte OpenStreetMap des secteurs autour du Havre, Étretat et Deauville"
-                src="https://www.openstreetmap.org/export/embed.html?bbox=-0.15%2C49.24%2C0.5%2C49.76&layer=mapnik&marker=49.494%2C0.107"
-                className="h-72 w-full border-0 md:h-80"
-                loading="lazy"
-                referrerPolicy="no-referrer"
-              />
-              <div className="flex items-center justify-between gap-3 px-4 py-3 text-xs text-muted-foreground">
-                <span className="inline-flex items-center gap-2"><MapPin aria-hidden="true" className="h-4 w-4 text-brand" /> Le Havre et le littoral normand</span>
-                <a className="inline-flex shrink-0 items-center gap-1 text-brand-strong underline-offset-4 hover:underline" href="https://www.openstreetmap.org/?mlat=49.494&mlon=0.107#map=9/49.494/0.107" target="_blank" rel="noreferrer">
-                  Agrandir <MoveUpRight aria-hidden="true" className="h-3.5 w-3.5" />
-                </a>
-              </div>
+              <GeographyMap locations={geographyMapLocations} />
             </div>
-            <p className="mt-2 text-xs text-muted-foreground">Carte © contributeurs OpenStreetMap. La carte aide à se repérer et ne délimite pas une zone contractuelle d’intervention.</p>
+            <p className="mt-2 text-xs text-muted-foreground">{geographyMapLocations.length} villes et quartiers · Sélectionnez un repère pour ouvrir son guide.</p>
           </div>
 
           <div className="divide-y divide-border border-y border-border">
-            {sectors.map((sector) => (
+            {guideSections.map((sector) => (
               <article key={sector.number} className="py-7 md:py-8">
                 <div className="flex gap-5 md:gap-7">
                   <span className="pt-1 text-xs tracking-[0.18em] text-brand-strong">{sector.number}</span>
                   <div className="min-w-0 flex-1">
                     <h3 className="font-display text-2xl md:text-3xl">{sector.title}</h3>
                     <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{sector.description}</p>
-                    <ul className="mt-5 flex flex-wrap gap-2.5" aria-label={`Annonces par lieu : ${sector.title}`}>
-                      {sector.places.map((place) => (
-                        <li key={place.name}>
+                    <ul className="mt-5 flex flex-wrap gap-2.5" aria-label={`Guides par lieu : ${sector.title}`}>
+                      {sector.guideIds.map((guideId) => {
+                        const place = geographyGuides.find((guide) => guide.id === guideId);
+                        if (!place) return null;
+                        return (
+                        <li key={place.id}>
                           <Link
-                            to={`/immobilier/${place.guideId}`}
+                            to={`/immobilier/${place.id}`}
                             className="inline-flex min-h-11 items-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-sm transition-colors hover:border-brand-border hover:bg-brand-soft hover:text-brand-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                           >
                             {place.name}<ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
                           </Link>
                         </li>
-                      ))}
+                        );
+                      })}
                     </ul>
                   </div>
                 </div>

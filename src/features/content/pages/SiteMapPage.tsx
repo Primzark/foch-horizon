@@ -14,6 +14,7 @@ const pages = [
   { href: "/apropos", label: "À propos" },
   { href: "/contact", label: "Contact" },
   { href: "/honoraires", label: "Honoraires" },
+  { href: "/reglementation-immobiliere", label: "Réglementation immobilière" },
   { href: "/mentions-legales", label: "Mentions légales" },
   { href: "/confidentialite", label: "Confidentialité" },
   { href: "/cookies", label: "Cookies" },
