@@ -1,6 +1,6 @@
 import { StorefrontPageHero } from "@/features/content/components/StorefrontPageHero";
 import { useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -13,9 +13,10 @@ import { PaginationBar } from "@/features/listings/components/PaginationBar";
 import { buildSearchParams, parseSearchParams } from "@/features/listings/utils/query";
 import type { PropertySearchParams } from "@/types/api";
 import { useFavoritesStore } from "@/features/favorites/useFavoritesStore";
+import { cityBySlug } from "@/features/cities/data/cities";
 import { useUiStore } from "@/lib/state/useUiStore";
 import { getSiteUrl, useSeo } from "@/lib/seo/useSeo";
-import { toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
+import { formatPrice, formatPropertyTypeLabel, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
 import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
 
 const defaultParams: PropertySearchParams = {
@@ -75,6 +76,64 @@ export default function ListingsIndexPage() {
     next.page = 1;
     setSearchParams(buildSearchParams(next));
   };
+
+  const clearAllCriteria = () => {
+    setSearchParams(
+      buildSearchParams({
+        transaction: filters.transaction,
+        page: 1,
+        pageSize: 12,
+        sort: "newest",
+      }),
+    );
+  };
+
+  const recoveryActions: Array<{ label: string; filters: Partial<PropertySearchParams> }> = [];
+  if (filters.q) {
+    const cityName = filters.city ? cityBySlug.get(filters.city)?.name : undefined;
+    recoveryActions.push({
+      label: cityName ? `Voir tous les biens à ${cityName}` : `Retirer « ${filters.q} »`,
+      filters: { q: undefined },
+    });
+  }
+  if (filters.priceMax != null && filters.priceMax > 0) {
+    const widerBudget = Math.ceil((filters.priceMax * 1.1) / 5_000) * 5_000;
+    if (widerBudget > filters.priceMax) {
+      recoveryActions.push({
+        label: `Élargir le budget à ${formatPrice(widerBudget, filters.transaction ?? "vente")}`,
+        filters: { priceMax: widerBudget },
+      });
+    }
+  }
+  if (filters.features?.length) {
+    recoveryActions.push({ label: "Retirer les critères d’équipement", filters: { features: undefined } });
+  }
+  if (filters.bedroomsMin != null && filters.bedroomsMin > 0) {
+    const bedroomsMin = filters.bedroomsMin - 1;
+    recoveryActions.push({
+      label: bedroomsMin === 0 ? "Ne pas imposer de nombre de chambres" : `Dès ${bedroomsMin} chambres`,
+      filters: { bedroomsMin },
+    });
+  }
+  if (filters.surfaceMin != null && filters.surfaceMin > 0) {
+    const surfaceMin = Math.max(0, filters.surfaceMin - 10);
+    recoveryActions.push({
+      label: surfaceMin === 0 ? "Retirer la surface minimale" : `Inclure les biens dès ${surfaceMin} m²`,
+      filters: { surfaceMin },
+    });
+  }
+  if (filters.priceMin != null && filters.priceMin > 0) {
+    recoveryActions.push({ label: "Inclure les biens moins chers", filters: { priceMin: undefined } });
+  }
+  if (filters.type) {
+    recoveryActions.push({
+      label: `Voir tous les types (actuellement ${formatPropertyTypeLabel(filters.type).toLowerCase()})`,
+      filters: { type: undefined },
+    });
+  }
+  if (filters.city) {
+    recoveryActions.push({ label: "Élargir à toutes les villes", filters: { city: undefined } });
+  }
 
   useSeo({
     title: "Biens immobiliers | Foch Immobilier",
@@ -157,15 +216,53 @@ export default function ListingsIndexPage() {
             transition={{ duration: 0.2, ease: "easeOut" }}
           >
             {query.data.items.length === 0 ? (
-              <div className="mt-8 rounded-2xl border border-border bg-card p-8 text-center">
-                <p className="font-display text-2xl">Aucun bien ne correspond à ces critères.</p>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Élargissez vos critères ou contactez l'agence pour bénéficier d'un accompagnement sur mesure.
-                </p>
-                <Button className="mt-4" variant="brand" asChild>
-                  <a href="/contact">Nous contacter</a>
-                </Button>
-              </div>
+              <section className="mt-8 overflow-hidden rounded-2xl border border-border bg-card" aria-labelledby="no-results-title">
+                <div className="grid gap-6 p-6 sm:p-8 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,0.8fr)] lg:gap-10">
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-brand-strong">On élargit la recherche</p>
+                    <h2 id="no-results-title" className="mt-2 font-display text-3xl">
+                      Aucun bien ne correspond à tous ces critères.
+                    </h2>
+                    <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">
+                      Essayez l’une de ces pistes, ou modifiez vos filtres pour explorer davantage d’annonces.
+                    </p>
+                  </div>
+
+                  <div className="border-t border-border pt-5 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
+                    <p className="text-sm font-medium">Quelques essais utiles</p>
+                    {recoveryActions.length > 0 ? (
+                      <div className="mt-3 flex flex-col gap-2">
+                        {recoveryActions.slice(0, 3).map((action) => (
+                          <button
+                            key={action.label}
+                            type="button"
+                            onClick={() => updateFilters(action.filters)}
+                            className="min-h-11 rounded-xl border border-border px-4 py-2.5 text-left text-sm font-medium transition-colors hover:border-brand-border hover:bg-brand-soft/55 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          >
+                            {action.label}
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                        Aucun ajustement automatique n’est disponible pour cette recherche.
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3 border-t border-border bg-muted/25 px-6 py-4 sm:px-8">
+                  <Button variant="brand" onClick={() => setSearchDrawerOpen(true)}>
+                    Modifier mes filtres
+                  </Button>
+                  <Button variant="outline" onClick={clearAllCriteria}>
+                    Effacer les critères
+                  </Button>
+                  <Link to="/geographie" className="text-sm font-medium text-brand-strong underline-offset-4 hover:underline">
+                    Explorer les secteurs
+                  </Link>
+                </div>
+              </section>
             ) : (
               <>
                 {viewMode === "map" ? (

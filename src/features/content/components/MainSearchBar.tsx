@@ -13,6 +13,13 @@ import type { PropertySearchItem, PropertySearchParams, PropertySearchResponse }
 import type { TransactionType } from "@/types/domain";
 
 const searchPrompts = ["Le Havre", "Sainte-Adresse", "Montivilliers", "vue mer"];
+const searchShortcuts: Array<{ label: string; filters: Partial<PropertySearchParams> }> = [
+  { label: "Vue mer", filters: { q: "vue mer" } },
+  { label: "Balcon / terrasse", filters: { features: ["balcon"] } },
+  { label: "Maison", filters: { type: "maison_villa" } },
+  { label: "Jardin", filters: { q: "jardin" } },
+  { label: "Garage", filters: { garagesMin: 1 } },
+];
 
 export type MainSearchSeedItem = PropertySearchItem & { description?: string };
 
@@ -113,6 +120,17 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
     queryClient.setQueryData(["properties", filters], initialResults);
     void queryClient.invalidateQueries({ queryKey: ["properties", filters], exact: true, refetchType: "none" });
 
+    navigate({ pathname: "/biens", search: searchParams.toString() });
+  };
+
+  const navigateToShortcut = (shortcutFilters: Partial<PropertySearchParams>) => {
+    const searchParams = buildSearchParams({
+      transaction,
+      page: 1,
+      pageSize: 12,
+      sort: "newest",
+      ...shortcutFilters,
+    });
     navigate({ pathname: "/biens", search: searchParams.toString() });
   };
 
@@ -305,6 +323,24 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
             </motion.div>
           </AnimatePresence>
         )}
+      </div>
+
+      <div className="mt-4">
+        <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.16em] text-white/80">
+          Explorer par critère
+        </p>
+        <div role="group" aria-label="Raccourcis de recherche" className="flex gap-2 overflow-x-auto pb-1">
+          {searchShortcuts.map((shortcut) => (
+            <button
+              key={shortcut.label}
+              type="button"
+              onClick={() => navigateToShortcut(shortcut.filters)}
+              className="shrink-0 rounded-full border border-white/35 bg-slate-950/20 px-3.5 py-2 text-sm font-medium text-white backdrop-blur-sm transition-colors hover:border-white/70 hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950/20"
+            >
+              {shortcut.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <button
