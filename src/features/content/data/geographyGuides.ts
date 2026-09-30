@@ -2,6 +2,7 @@ export type GeographyGuide = {
   id: string;
   name: string;
   pageTitle: string;
+  heroImage: { src: string; alt: string; credit?: GeographyPhotoCredit };
   listingSearch: { city?: string; query?: string };
   subtitle: string;
   averagePrice: string;
@@ -22,6 +23,22 @@ export type GeographyGuide = {
   typicalHomes: string;
 };
 
+export type GeographyPhotoCredit = {
+  creator: string;
+  sourceUrl: string;
+  license: string;
+  licenseUrl: string;
+  modification: string;
+};
+
+const commonsCredit = (creator: string, fileTitle: string, licenseVersion: "2.0" | "3.0" | "4.0"): GeographyPhotoCredit => ({
+  creator,
+  sourceUrl: `https://commons.wikimedia.org/wiki/File:${encodeURIComponent(fileTitle.replaceAll(" ", "_"))}`,
+  license: `CC BY-SA ${licenseVersion}`,
+  licenseUrl: `https://creativecommons.org/licenses/by-sa/${licenseVersion}/`,
+  modification: "Redimensionnée et convertie en WebP",
+});
+
 const dvfSummary = "https://www.data.gouv.fr/datasets/prix-immobilier-par-commune-ventes-2014-a-2025-dvf-millesime-2026";
 
 export const geographyGuides: GeographyGuide[] = [
@@ -29,6 +46,7 @@ export const geographyGuides: GeographyGuide[] = [
     id: "le-havre",
     name: "Le Havre",
     pageTitle: "Immobilier au Havre",
+    heroImage: { src: "/images/geography/panorama-le-havre.webp", alt: "Vue panoramique sur Le Havre et le front de mer" },
     listingSearch: { city: "le-havre" },
     subtitle: "Ville portuaire, centre reconstruit et quartiers aux identités contrastées",
     averagePrice: "2 067 €/m²",
@@ -52,6 +70,11 @@ export const geographyGuides: GeographyGuide[] = [
     id: "sainte-adresse",
     name: "Sainte-Adresse",
     pageTitle: "Immobilier à Sainte-Adresse",
+    heroImage: {
+      src: "/images/geography/sainte-adresse-hero.webp",
+      alt: "Maisons de Sainte-Adresse sur le coteau qui domine la mer",
+      credit: commonsCredit("Florian Pépellin", "Sainte-Adresse depuis la plage du Havre (juillet 2024).JPG", "4.0"),
+    },
     listingSearch: { city: "sainte-adresse" },
     subtitle: "Station balnéaire en balcon sur la mer, à la limite ouest du Havre",
     averagePrice: "3 841 €/m²",
@@ -75,6 +98,11 @@ export const geographyGuides: GeographyGuide[] = [
     id: "la-plage",
     name: "La plage et Saint-Vincent",
     pageTitle: "Immobilier plage et Saint-Vincent",
+    heroImage: {
+      src: "/images/geography/la-plage-hero.webp",
+      alt: "Panorama de la plage du Havre et du front de mer de Sainte-Adresse",
+      credit: commonsCredit("Florian Pépellin", "Panorama Plage du Havre et Sainte-Adresse (juillet 2024).JPG", "4.0"),
+    },
     listingSearch: { city: "le-havre", query: "Saint-Vincent" },
     subtitle: "Front de mer, commerces de quartier et promenades",
     averagePrice: "3 065 €/m²",
@@ -98,6 +126,11 @@ export const geographyGuides: GeographyGuide[] = [
     id: "gobelins",
     name: "Les Gobelins",
     pageTitle: "Immobilier aux Gobelins",
+    heroImage: {
+      src: "/images/geography/gobelins-hero.webp",
+      alt: "Vue sur le quartier Saint-Vincent-Gobelins au Havre",
+      credit: commonsCredit("Ville du Havre", "Le quartier Saint-Vincent.jpg", "4.0"),
+    },
     listingSearch: { city: "le-havre", query: "Gobelins" },
     subtitle: "Un quartier résidentiel entre le centre et le littoral",
     averagePrice: "2 547 €/m² en appartement",
@@ -121,6 +154,11 @@ export const geographyGuides: GeographyGuide[] = [
     id: "saint-michel",
     name: "Saint-Michel",
     pageTitle: "Immobilier à Saint-Michel",
+    heroImage: {
+      src: "/images/geography/saint-michel-hero.webp",
+      alt: "Église Saint-Michel et immeubles du centre du Havre",
+      credit: commonsCredit("Alexandre Prevot", "Église Saint-Michel du Havre (52295658762).jpg", "2.0"),
+    },
     listingSearch: { city: "le-havre", query: "Saint-Michel" },
     subtitle: "Un secteur de coteau proche du centre et des transports",
     averagePrice: "2 629 €/m² en appartement",
@@ -144,6 +182,11 @@ export const geographyGuides: GeographyGuide[] = [
     id: "octeville-sur-mer",
     name: "Octeville-sur-Mer",
     pageTitle: "Immobilier à Octeville-sur-Mer",
+    heroImage: {
+      src: "/images/geography/octeville-sur-mer-hero.webp",
+      alt: "Église Saint-Martin et maisons du centre d'Octeville-sur-Mer",
+      credit: commonsCredit("Philippe Alès", "Octeville-sur-Mer (France), center and church.JPG", "3.0"),
+    },
     listingSearch: { query: "Octeville-sur-Mer" },
     subtitle: "Bourg résidentiel entre campagne, falaise et agglomération",
     averagePrice: "3 139 €/m²",
@@ -167,6 +210,11 @@ export const geographyGuides: GeographyGuide[] = [
     id: "montivilliers",
     name: "Montivilliers",
     pageTitle: "Immobilier à Montivilliers",
+    heroImage: {
+      src: "/images/geography/montivilliers-hero.webp",
+      alt: "Abbaye bénédictine et place historique de Montivilliers",
+      credit: commonsCredit("Velvet", "Montivilliers abbaye.JPG", "3.0"),
+    },
     listingSearch: { city: "montivilliers" },
     subtitle: "Ville-centre patrimoniale et pôle de services de l’estuaire",
     averagePrice: "2 528 €/m²",
@@ -190,6 +238,11 @@ export const geographyGuides: GeographyGuide[] = [
     id: "maneglise",
     name: "Manéglise",
     pageTitle: "Immobilier à Manéglise",
+    heroImage: {
+      src: "/images/geography/maneglise-hero.webp",
+      alt: "Église Saint-Germain à Manéglise",
+      credit: commonsCredit("Pymouss", "Manéglise - Église Saint-Germain 01.JPG", "3.0"),
+    },
     listingSearch: { city: "maneglise" },
     subtitle: "Village rural préservé à l’ouest de l’agglomération havraise",
     averagePrice: "≈ 2 355 €/m²",
@@ -213,6 +266,11 @@ export const geographyGuides: GeographyGuide[] = [
     id: "gainneville",
     name: "Gainneville",
     pageTitle: "Immobilier à Gainneville",
+    heroImage: {
+      src: "/images/geography/gainneville-hero.webp",
+      alt: "Ancienne mairie-école de Gainneville en brique et silex",
+      credit: commonsCredit("Pymouss", "Gainneville - mairie-école.jpg", "3.0"),
+    },
     listingSearch: { city: "gainneville" },
     subtitle: "Bourg familial en croissance entre Le Havre et l’estuaire",
     averagePrice: "2 292 €/m²",
@@ -236,6 +294,11 @@ export const geographyGuides: GeographyGuide[] = [
     id: "saint-romain",
     name: "Saint-Romain-de-Colbosc",
     pageTitle: "Immobilier à Saint-Romain-de-Colbosc",
+    heroImage: {
+      src: "/images/geography/saint-romain-hero.webp",
+      alt: "Hôtel de ville sur la place Théodule Benoist à Saint-Romain-de-Colbosc",
+      credit: commonsCredit("ArséniureDeGallium", "Place Benoist Saint-Romain-de-Colsboc 1610.JPG", "3.0"),
+    },
     listingSearch: { query: "Saint-Romain-de-Colbosc" },
     subtitle: "Bourg-centre commerçant au cœur du pays de Caux",
     averagePrice: "2 321 €/m²",
@@ -259,6 +322,11 @@ export const geographyGuides: GeographyGuide[] = [
     id: "etretat",
     name: "Étretat",
     pageTitle: "Immobilier à Étretat",
+    heroImage: {
+      src: "/images/geography/etretat-hero.webp",
+      alt: "Vue panoramique sur le village, la plage et les falaises d'Étretat",
+      credit: commonsCredit("Jörg Braukmann", "Vue d'Étretat.jpg", "4.0"),
+    },
     listingSearch: { query: "Étretat" },
     subtitle: "Station littorale et village de vallée au pied des falaises",
     averagePrice: "3 322 €/m²",
@@ -282,6 +350,11 @@ export const geographyGuides: GeographyGuide[] = [
     id: "deauville",
     name: "Deauville",
     pageTitle: "Immobilier à Deauville",
+    heroImage: {
+      src: "/images/geography/deauville-hero.webp",
+      alt: "Les Planches et la plage de Deauville",
+      credit: commonsCredit("Remi Mathis", "2023 Deauville 03.jpg", "4.0"),
+    },
     listingSearch: { query: "Deauville" },
     subtitle: "Station balnéaire, commerces, courses hippiques et vie culturelle",
     averagePrice: "7 386 €/m²",
@@ -305,6 +378,11 @@ export const geographyGuides: GeographyGuide[] = [
     id: "trouville",
     name: "Trouville-sur-Mer",
     pageTitle: "Immobilier à Trouville-sur-Mer",
+    heroImage: {
+      src: "/images/geography/trouville-hero.webp",
+      alt: "Quais, maisons anciennes et bateaux dans le port de Trouville-sur-Mer",
+      credit: commonsCredit("W. Bulach", "00 3496 Trouville-sur-Mer - Frankreich.jpg", "4.0"),
+    },
     listingSearch: { query: "Trouville-sur-Mer" },
     subtitle: "Port de pêche, station de bord de mer et quartiers en coteau",
     averagePrice: "5 740 €/m²",

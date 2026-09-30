@@ -15,8 +15,84 @@ import { PlaceAtmosphereLayer } from "@/components/visuals/PlaceAtmosphereLayer"
 import { ContextAwareParallax } from "@/components/visuals/ContextAwareParallax";
 import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
 import { getMotionDirectorProfile } from "@/lib/visuals/motionDirector";
-import { geographyGuides } from "@/features/content/data/geographyGuides";
+import { geographyGuides, type GeographyPhotoCredit } from "@/features/content/data/geographyGuides";
 import { GeographyGuideDetails } from "@/features/content/components/GeographyGuideDetails";
+
+type LocationHeroProps = {
+  pageTitle: string;
+  locationName: string;
+  locationSlug: string;
+  locationLabel: string;
+  imageUrl: string;
+  imageAlt: string;
+  credit?: GeographyPhotoCredit;
+  reducedMotion: boolean;
+};
+
+function LocationHero({ pageTitle, locationName, locationSlug, locationLabel, imageUrl, imageAlt, credit, reducedMotion }: LocationHeroProps) {
+  const heroMood = inferPlaceImageMood(locationName, locationSlug);
+  const heroMotionPreset = getPlaceImageMotionPreset(heroMood);
+  const motionDirector = getMotionDirectorProfile(heroMood);
+
+  return (
+    <header className="relative overflow-hidden rounded-2xl border border-border">
+      <ContextAwareParallax mood={heroMood} reducedMotion={reducedMotion} intensity="immersive" scrollReactive className="z-[0]">
+        <motion.img
+          src={imageUrl}
+          alt={imageAlt}
+          className="h-64 w-full object-cover md:h-80"
+          initial={reducedMotion ? { opacity: 0.9 } : { opacity: 0, scale: heroMotionPreset.enterScale, y: heroMotionPreset.enterY }}
+          animate={
+            reducedMotion
+              ? { opacity: 1 }
+              : { opacity: 1, scale: [1, heroMotionPreset.hoverScale - 0.01, 1], y: [0, heroMotionPreset.hoverY, 0] }
+          }
+          transition={
+            reducedMotion
+              ? { duration: 0.34, ease: "easeOut" }
+              : {
+                  opacity: { duration: motionDirector.revealDuration + 0.16, ease: [0.22, 1, 0.36, 1] },
+                  scale: { duration: heroMotionPreset.floatDuration, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" },
+                  y: { duration: heroMotionPreset.floatDuration, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" },
+                }
+          }
+        />
+      </ContextAwareParallax>
+      <PlaceAtmosphereLayer mood={heroMood} animated={!reducedMotion} className="z-[1]" />
+      <motion.div
+        className={cn("absolute inset-0 z-[2] bg-gradient-to-br", heroMotionPreset.overlayClassName)}
+        animate={reducedMotion ? { opacity: 0.66 } : { opacity: [0.6, 0.74, 0.6] }}
+        transition={{
+          duration: Math.max(heroMotionPreset.floatDuration - 2, motionDirector.revealDuration + 8),
+          repeat: Number.POSITIVE_INFINITY,
+          ease: "easeInOut",
+        }}
+      />
+      {credit && (
+        <div className="absolute right-3 top-3 z-[4] rounded-full bg-black/50 px-2.5 py-1 text-[10px] text-white/90 backdrop-blur-sm">
+          <span className="sr-only">Crédit photo : </span>
+          <a href={credit.sourceUrl} target="_blank" rel="noreferrer" className="underline decoration-white/50 underline-offset-2">
+            {credit.creator}
+          </a>
+          <span aria-hidden="true"> · </span>
+          <a href={credit.licenseUrl} target="_blank" rel="noreferrer" className="underline decoration-white/50 underline-offset-2">
+            {credit.license}
+          </a>
+          <span className="ml-1 text-white/75" title={credit.modification}>· adaptée</span>
+        </div>
+      )}
+      <div className="absolute inset-0 z-[3] flex flex-col justify-end p-6 text-white md:p-8">
+        <p className="inline-flex items-center gap-1 text-xs uppercase tracking-[0.2em] text-white/85">
+          <MapPin className="h-3.5 w-3.5" /> {locationLabel}
+        </p>
+        <h1 className="mt-2 font-display text-4xl md:text-5xl">{pageTitle}</h1>
+        <p className="mt-2 text-sm text-white/85">
+          Une sélection de biens et un accompagnement local sur mesure pour vendre, acheter ou louer dans ce secteur.
+        </p>
+      </div>
+    </header>
+  );
+}
 
 export default function CityHubPage() {
   const { ville } = useParams();
@@ -129,11 +205,16 @@ export default function CityHubPage() {
 
     return (
       <section className="container mx-auto px-4 py-10">
-        <header className="border-b border-border pb-7">
-          <p className="text-xs uppercase tracking-[0.2em] text-brand-strong">Guide local</p>
-          <h1 className="mt-2 font-display text-4xl md:text-5xl">{cityGuide.pageTitle}</h1>
-          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted-foreground">{cityGuide.subtitle}</p>
-        </header>
+        <LocationHero
+          pageTitle={cityGuide.pageTitle}
+          locationName={cityGuide.name}
+          locationSlug={cityGuide.id}
+          locationLabel={["la-plage", "gobelins", "saint-michel"].includes(cityGuide.id) ? "Secteur" : "Ville"}
+          imageUrl={cityGuide.heroImage.src}
+          imageAlt={cityGuide.heroImage.alt}
+          credit={cityGuide.heroImage.credit}
+          reducedMotion={reducedMotion}
+        />
 
         <section className="mt-8 rounded-2xl border border-border bg-card p-6 sm:p-8" aria-labelledby="city-guide-title">
           <header className="mb-6 max-w-3xl">
@@ -168,55 +249,18 @@ export default function CityHubPage() {
     );
   }
 
-  const heroMood = inferPlaceImageMood(city.name, city.slug);
-  const heroMotionPreset = getPlaceImageMotionPreset(heroMood);
-  const motionDirector = getMotionDirectorProfile(heroMood);
-
   return (
     <section className="container mx-auto px-4 py-10">
-      <header className="relative overflow-hidden rounded-2xl border border-border">
-        <ContextAwareParallax mood={heroMood} reducedMotion={reducedMotion} intensity="immersive" scrollReactive className="z-[0]">
-          <motion.img
-            src={city.heroImageUrl}
-            alt={`Immobilier à ${city.name}`}
-            className="h-64 w-full object-cover md:h-80"
-            initial={reducedMotion ? { opacity: 0.9 } : { opacity: 0, scale: heroMotionPreset.enterScale, y: heroMotionPreset.enterY }}
-            animate={
-              reducedMotion
-                ? { opacity: 1 }
-                : { opacity: 1, scale: [1, heroMotionPreset.hoverScale - 0.01, 1], y: [0, heroMotionPreset.hoverY, 0] }
-            }
-            transition={
-              reducedMotion
-                ? { duration: 0.34, ease: "easeOut" }
-                : {
-                    opacity: { duration: motionDirector.revealDuration + 0.16, ease: [0.22, 1, 0.36, 1] },
-                    scale: { duration: heroMotionPreset.floatDuration, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" },
-                    y: { duration: heroMotionPreset.floatDuration, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" },
-                  }
-            }
-          />
-        </ContextAwareParallax>
-        <PlaceAtmosphereLayer mood={heroMood} animated={!reducedMotion} className="z-[1]" />
-        <motion.div
-          className={cn("absolute inset-0 z-[2] bg-gradient-to-br", heroMotionPreset.overlayClassName)}
-          animate={reducedMotion ? { opacity: 0.66 } : { opacity: [0.6, 0.74, 0.6] }}
-          transition={{
-            duration: Math.max(heroMotionPreset.floatDuration - 2, motionDirector.revealDuration + 8),
-            repeat: Number.POSITIVE_INFINITY,
-            ease: "easeInOut",
-          }}
-        />
-        <div className="absolute inset-0 z-[3] flex flex-col justify-end p-6 text-white md:p-8">
-          <p className="inline-flex items-center gap-1 text-xs uppercase tracking-[0.2em] text-white/85">
-            <MapPin className="h-3.5 w-3.5" /> Ville
-          </p>
-          <h1 className="mt-2 font-display text-4xl md:text-5xl">{pageTitle}</h1>
-          <p className="mt-2 text-sm text-white/85">
-            Une sélection de biens et un accompagnement local sur mesure pour vendre, acheter ou louer dans ce secteur.
-          </p>
-        </div>
-      </header>
+      <LocationHero
+        pageTitle={pageTitle}
+        locationName={cityGuide?.name ?? city.name}
+        locationSlug={cityGuide?.id ?? city.slug}
+        locationLabel={["la-plage", "gobelins", "saint-michel"].includes(cityGuide?.id ?? "") ? "Secteur" : "Ville"}
+        imageUrl={cityGuide?.heroImage.src ?? city.heroImageUrl}
+        imageAlt={cityGuide?.heroImage.alt ?? `Vue sur ${city.name}`}
+        credit={cityGuide?.heroImage.credit}
+        reducedMotion={reducedMotion}
+      />
 
       {cityGuide && (
         <section className="mt-8 rounded-2xl border border-border bg-card p-6 sm:p-8" aria-labelledby="city-guide-title">
