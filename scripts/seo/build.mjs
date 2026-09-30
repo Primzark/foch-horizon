@@ -1,5 +1,5 @@
 import { build, createServer, preview } from 'vite';
-import { chromium } from 'playwright';
+import { launchBrowser } from './browser.mjs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
@@ -22,7 +22,7 @@ const server = await preview({ preview: { host: '127.0.0.1', port: 4175, strictP
 let browser;
 const snapshots = [];
 try {
-  browser = await chromium.launch({ headless: true });
+  browser = await launchBrowser();
   const context = await browser.newContext({ reducedMotion: 'reduce' });
   // Prerender editorial content independently of live APIs, remote images and third-party widgets.
   await context.route('**/*', route => {

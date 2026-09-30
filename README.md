@@ -71,7 +71,7 @@ See `supabase/README.md` for migration/functions/worker details.
 
 ## Public HTML and SEO/GEO verification
 
-`npm run build` builds the React application and prerenders the homepage, public information pages and all geographic guides. It requires Chromium: run `npx playwright install chromium` once locally, or `npx playwright install --with-deps chromium` on Linux CI. Vercel’s build command installs the browser and its dependencies automatically. `npm run build:spa` remains available for a client-only diagnostic build.
+`npm run build` builds the React application and prerenders the homepage, public information pages and all geographic guides. It requires Chromium: run `npx playwright install chromium` once locally, or `npx playwright install --with-deps chromium` on Linux CI. Vercel builds use portable Chromium with bundled Linux libraries, without requiring a system package manager. `npm run build:spa` remains available for a client-only diagnostic build.
 
 Set `VITE_PUBLIC_SITE_URL` in the production build environment to the intended canonical HTTPS origin. The default is the repository’s existing deployment origin, `https://foch-horizon.vercel.app`. The build deliberately ignores development localhost URLs, and generates matching canonical URLs, sitemap entries and the robots sitemap declaration. When moving to `www.fochimmobilier.com`, set that origin before rebuilding rather than editing generated files.
 

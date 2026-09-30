@@ -1,7 +1,7 @@
 import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { JSDOM } from 'jsdom';
-import { chromium } from 'playwright';
+import { launchBrowser } from './browser.mjs';
 import { preview } from 'vite';
 
 async function htmlFiles(directory) {
@@ -48,7 +48,7 @@ console.log(`Static audit: ${files.length} pages, ${internalTargets.size} intern
 const server = await preview({ preview: { host: '127.0.0.1', port: 4177, strictPort: true } });
 let browser;
 try {
-  browser = await chromium.launch();
+  browser = await launchBrowser();
   const guideRoutes = files.filter(file => file.includes('/immobilier/')).map(file => '/' + file.slice(5).replace('/index.html', ''));
   const routes = ['/', '/geographie', '/contact', '/vendre', '/estimation', '/biens', '/nos-dernieres-ventes', ...guideRoutes];
   for (const width of [320, 375, 768, 1440]) {

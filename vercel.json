@@ -70,7 +70,7 @@
       "destination": "/spa.html"
     }
   ],
-  "buildCommand": "npx playwright install --with-deps chromium && npm run build",
+  "buildCommand": "npm run build",
   "headers": [
     {
       "source": "/admin/:path*",
