@@ -3,6 +3,30 @@ import { ArrowRight, MapPin, MoveUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSeo, getSiteUrl } from "@/lib/seo/useSeo";
 import { StorefrontPageHero } from "@/features/content/components/StorefrontPageHero";
+import { geographyGuides, geographyPriceMethod } from "@/features/content/data/geographyGuides";
+
+const guideSections = [
+  { title: "Le Havre et Sainte-Adresse", guideIds: ["le-havre", "sainte-adresse", "la-plage", "gobelins", "saint-michel"] },
+  { title: "Autour du Havre", guideIds: ["octeville-sur-mer", "montivilliers", "maneglise", "gainneville"] },
+  { title: "De Saint-Romain à Étretat", guideIds: ["saint-romain", "etretat"] },
+  { title: "Deauville et Trouville-sur-Mer", guideIds: ["deauville", "trouville"] },
+];
+
+const guideFacts = [
+  { key: "historyArchitecture", title: "Histoire et architecture" },
+  { key: "schoolsServices", title: "Écoles et services" },
+  { key: "shopsLeisure", title: "Commerces, loisirs et espaces verts" },
+  { key: "projectsTransport", title: "Projets et accessibilité" },
+] as const;
+
+const guidePrices = [
+  { key: "apartment", title: "Appartements" },
+  { key: "house", title: "Maisons" },
+  { key: "studio", title: "Studios" },
+  { key: "luxury", title: "Haut de gamme" },
+  { key: "newBuild", title: "Neuf" },
+  { key: "older", title: "Ancien" },
+] as const;
 
 const sectors = [
   {
@@ -10,6 +34,7 @@ const sectors = [
     title: "Le Havre et Sainte-Adresse",
     description: "Explorez les quartiers havrais et le littoral tout proche.",
     places: [
+      { name: "Le Havre", query: "Le Havre", city: "le-havre", cityPage: true },
       { name: "Sainte-Adresse", query: "Sainte-Adresse", city: "sainte-adresse", cityPage: true },
       { name: "La plage", query: "plage", city: "le-havre" },
       { name: "Les Gobelins", query: "Les Gobelins", city: "le-havre" },
@@ -86,7 +111,7 @@ export default function GeographyPage() {
   useSeo({
     title: "Nos secteurs immobiliers au Havre et alentours | Foch Immobilier",
     description:
-      "Explorez les secteurs accompagnés par Foch Immobilier : Le Havre, Sainte-Adresse, les communes voisines, Étretat et Deauville–Trouville. Consultez les biens ou parlons de votre projet.",
+      "Découvrez l’histoire, l’architecture, les écoles, les projets, les transports et les repères de prix au Havre, à Sainte-Adresse, dans les communes voisines et sur le littoral normand.",
     canonicalPath: "/geographie",
     image: "/images/geography/foch-storefront.png",
     jsonLd: [
@@ -95,7 +120,7 @@ export default function GeographyPage() {
         "@type": "CollectionPage",
         name: "Nos secteurs immobiliers au Havre et alentours",
         description:
-          "Les secteurs cités par Foch Immobilier autour du Havre, de Sainte-Adresse et du littoral normand.",
+          "Guides de vie locale et repères immobiliers pour les villes et quartiers autour du Havre, de Sainte-Adresse et du littoral normand.",
         url: `${siteUrl}/geographie`,
         inLanguage: "fr-FR",
         mainEntity: {
@@ -188,6 +213,103 @@ export default function GeographyPage() {
               </article>
             ))}
           </div>
+        </div>
+      </section>
+
+      <section className="container mx-auto px-4 py-12 md:py-16" aria-labelledby="geography-guides-heading">
+        <div className="max-w-3xl">
+          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Bien choisir son secteur</p>
+          <h2 id="geography-guides-heading" className="mt-2 font-display text-3xl md:text-4xl">Vivre et acheter dans nos secteurs</h2>
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+            Histoire, formes de logements, écoles, commerces, déplacements et projets : ouvrez un guide pour comprendre le quotidien et les repères immobiliers de chaque ville ou quartier.
+          </p>
+        </div>
+
+        <div className="mt-8 rounded-2xl border border-brand-border bg-brand-soft/50 p-5 md:p-6">
+          <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+            <div>
+              <h3 className="font-medium">{geographyPriceMethod.title}</h3>
+              <p className="mt-1 max-w-4xl text-sm leading-relaxed text-muted-foreground">{geographyPriceMethod.description}</p>
+            </div>
+            <p className="shrink-0 text-xs text-muted-foreground">{geographyPriceMethod.date}</p>
+          </div>
+          <a className="mt-3 inline-flex items-center gap-1 text-sm text-brand-strong underline underline-offset-4" href={geographyPriceMethod.dvfLink.href} target="_blank" rel="noreferrer">
+            {geographyPriceMethod.dvfLink.label}<MoveUpRight aria-hidden="true" className="h-3.5 w-3.5" />
+          </a>
+        </div>
+
+        <div className="mt-10 space-y-10">
+          {guideSections.map((section) => (
+            <div key={section.title}>
+              <h3 className="mb-4 border-b border-border pb-3 font-display text-2xl">{section.title}</h3>
+              <div className="grid items-start gap-4 xl:grid-cols-2">
+                {section.guideIds.map((guideId) => {
+                  const guide = geographyGuides.find((item) => item.id === guideId);
+                  if (!guide) return null;
+
+                  return (
+                    <details key={guide.id} className="group overflow-hidden rounded-2xl border border-border bg-card open:shadow-sm">
+                      <summary className="flex min-h-24 cursor-pointer list-none items-center justify-between gap-4 p-5 marker:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
+                        <span className="min-w-0">
+                          <span className="block font-display text-xl md:text-2xl">{guide.name}</span>
+                          <span className="mt-1 block text-sm text-muted-foreground">{guide.subtitle}</span>
+                          <span className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                            <span className="font-medium text-brand-strong">{guide.averagePrice}</span>
+                            <span>{guide.area}</span>
+                          </span>
+                        </span>
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border text-brand-strong transition-transform group-open:rotate-180" aria-hidden="true">
+                          <ArrowRight className="h-4 w-4 rotate-90" />
+                        </span>
+                      </summary>
+
+                      <div className="border-t border-border px-5 pb-5 pt-4">
+                        <div className="grid gap-x-6 gap-y-5 md:grid-cols-2">
+                          {guideFacts.map((fact) => (
+                            <section key={fact.key}>
+                              <h4 className="text-sm font-semibold">{fact.title}</h4>
+                              <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{guide[fact.key]}</p>
+                            </section>
+                          ))}
+                          <section className="md:col-span-2">
+                            <h4 className="text-sm font-semibold">Types de biens courants</h4>
+                            <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{guide.typicalHomes}</p>
+                          </section>
+                        </div>
+
+                        <div className="mt-6 border-t border-border pt-5">
+                          <div className="flex flex-wrap items-end justify-between gap-2">
+                            <div>
+                              <h4 className="font-display text-xl">Repères de prix au m²</h4>
+                              <p className="mt-1 text-xs text-muted-foreground">{guide.marketBasis}</p>
+                            </div>
+                            <span className="text-sm font-semibold text-brand-strong">Repère : {guide.averagePrice}</span>
+                          </div>
+                          <dl className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                            {guidePrices.map((price) => (
+                              <div key={price.key} className="rounded-xl border border-border bg-background p-3">
+                                <dt className="text-xs font-semibold text-foreground">{price.title}</dt>
+                                <dd className="mt-1 text-xs leading-relaxed text-muted-foreground">{guide[price.key]}</dd>
+                              </div>
+                            ))}
+                          </dl>
+                        </div>
+
+                        <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 border-t border-border pt-4 text-sm">
+                          <a className="inline-flex items-center gap-1 text-brand-strong underline underline-offset-4" href={guide.link.href} target="_blank" rel="noreferrer">
+                            {guide.link.label}<MoveUpRight aria-hidden="true" className="h-3.5 w-3.5" />
+                          </a>
+                          <a className="inline-flex items-center gap-1 text-brand-strong underline underline-offset-4" href={guide.priceLink.href} target="_blank" rel="noreferrer">
+                            {guide.priceLink.label}<MoveUpRight aria-hidden="true" className="h-3.5 w-3.5" />
+                          </a>
+                        </div>
+                      </div>
+                    </details>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 

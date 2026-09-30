@@ -1,0 +1,99 @@
+.foch-property-map {
+  background: #e8e7df;
+  font-family: inherit;
+  isolation: isolate;
+}
+
+.foch-property-map .leaflet-control-attribution {
+  margin: 0 8px 8px 0;
+  border: 1px solid rgb(23 35 30 / 8%);
+  border-radius: 999px;
+  padding: 3px 8px;
+  background: rgb(255 255 255 / 91%);
+  color: #35413c;
+  font-size: 10px;
+  box-shadow: 0 2px 9px rgb(14 22 34 / 12%);
+}
+
+.foch-property-map .leaflet-control-attribution a {
+  color: #165f4b;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.foch-property-map .leaflet-control-zoom {
+  overflow: hidden;
+  border: 1px solid rgb(23 35 30 / 10%);
+  border-radius: 12px;
+  box-shadow: 0 3px 12px rgb(14 22 34 / 12%);
+}
+
+.foch-property-map .leaflet-control-zoom a {
+  width: 34px;
+  height: 34px;
+  border: 0;
+  color: #183b31;
+  line-height: 34px;
+}
+
+.foch-property-map .leaflet-control-zoom a + a {
+  border-top: 1px solid rgb(23 35 30 / 10%);
+}
+
+.foch-price-icon {
+  border: 0;
+  background: transparent;
+}
+
+.foch-price-marker {
+  position: relative;
+  display: inline-flex;
+  min-width: 70px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgb(25 57 46 / 15%);
+  border-radius: 999px;
+  padding: 0 11px;
+  background: rgb(255 255 255 / 97%);
+  color: #173b30;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 3px 9px rgb(14 22 34 / 19%);
+  transition: background-color 160ms ease, color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+}
+
+.foch-price-marker::after {
+  position: absolute;
+  z-index: -1;
+  bottom: -4px;
+  left: calc(50% - 4px);
+  width: 8px;
+  height: 8px;
+  transform: rotate(45deg);
+  border-right: 1px solid rgb(25 57 46 / 12%);
+  border-bottom: 1px solid rgb(25 57 46 / 12%);
+  background: #fff;
+  content: "";
+}
+
+.foch-price-marker--selected {
+  transform: translateY(-2px) scale(1.08);
+  border-color: #145f4a;
+  background: #17684f;
+  color: #fff;
+  box-shadow: 0 6px 16px rgb(12 67 48 / 30%);
+}
+
+.foch-price-marker--selected::after {
+  border-color: #145f4a;
+  background: #17684f;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .foch-price-marker {
+    transition: none;
+  }
+}

@@ -8,6 +8,7 @@ import { searchProperties } from "@/features/listings/api/properties.service";
 import { ActiveFiltersChips } from "@/features/listings/components/ActiveFiltersChips";
 import { FiltersBar } from "@/features/listings/components/FiltersBar";
 import { ListingCard } from "@/features/listings/components/ListingCard";
+import { PropertyMapSplitView } from "@/features/listings/components/PropertyMapSplitView";
 import { PaginationBar } from "@/features/listings/components/PaginationBar";
 import { buildSearchParams, parseSearchParams } from "@/features/listings/utils/query";
 import type { PropertySearchParams } from "@/types/api";
@@ -25,7 +26,7 @@ const defaultParams: PropertySearchParams = {
 
 export default function ListingsIndexPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [viewMode, setViewMode] = useState<"grid" | "list" | "map">("grid");
   const { reducedMotion } = useMotionPreference();
   const setSearchDrawerOpen = useUiStore((state) => state.setSearchDrawerOpen);
   const favoriteIds = useFavoritesStore((state) => state.ids);
@@ -33,7 +34,10 @@ export default function ListingsIndexPage() {
 
   const filters = useMemo(() => {
     const parsed = parseSearchParams(searchParams);
-    return { ...defaultParams, ...parsed };
+    const definedParsed = Object.fromEntries(
+      Object.entries(parsed).filter(([, value]) => value !== undefined),
+    ) as PropertySearchParams;
+    return { ...defaultParams, ...definedParsed };
   }, [searchParams]);
 
   const query = useQuery({
@@ -164,35 +168,47 @@ export default function ListingsIndexPage() {
               </div>
             ) : (
               <>
-                <div className={viewMode === "grid" ? "mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3" : "mt-4 space-y-4"}>
-                  {query.data.items.map((item, index) => (
-                    <motion.div
-                      key={item.id}
-                      initial={
-                        reducedMotion
-                          ? { opacity: 1 }
-                          : isPriceSort
-                            ? { opacity: 0, y: sortDirection > 0 ? 20 : 12, scale: 0.975, filter: "blur(10px)" }
-                            : { opacity: 0, y: 10 }
-                      }
-                      animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
-                      transition={{
-                        duration: isPriceSort ? 0.36 : 0.2,
-                        delay: isPriceSort ? Math.min(index * 0.045, 0.26) : 0,
-                        ease: isPriceSort ? [0.22, 1, 0.36, 1] : "easeOut",
-                      }}
-                    >
-                      <ListingCard item={item} viewMode={viewMode} revealIndex={index} />
-                    </motion.div>
-                  ))}
-                </div>
+                {viewMode === "map" ? (
+                  <PropertyMapSplitView
+                    items={query.data.items}
+                    page={query.data.page}
+                    pageSize={query.data.pageSize}
+                    total={query.data.total}
+                    onPageChange={(page) => updateFilters({ page })}
+                  />
+                ) : (
+                  <>
+                    <div className={viewMode === "grid" ? "mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3" : "mt-4 space-y-4"}>
+                      {query.data.items.map((item, index) => (
+                        <motion.div
+                          key={item.id}
+                          initial={
+                            reducedMotion
+                              ? { opacity: 1 }
+                              : isPriceSort
+                                ? { opacity: 0, y: sortDirection > 0 ? 20 : 12, scale: 0.975, filter: "blur(10px)" }
+                                : { opacity: 0, y: 10 }
+                          }
+                          animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+                          transition={{
+                            duration: isPriceSort ? 0.36 : 0.2,
+                            delay: isPriceSort ? Math.min(index * 0.045, 0.26) : 0,
+                            ease: isPriceSort ? [0.22, 1, 0.36, 1] : "easeOut",
+                          }}
+                        >
+                          <ListingCard item={item} viewMode={viewMode} revealIndex={index} />
+                        </motion.div>
+                      ))}
+                    </div>
 
-                <PaginationBar
-                  page={query.data.page}
-                  pageSize={query.data.pageSize}
-                  total={query.data.total}
-                  onChange={(page) => updateFilters({ page })}
-                />
+                    <PaginationBar
+                      page={query.data.page}
+                      pageSize={query.data.pageSize}
+                      total={query.data.total}
+                      onChange={(page) => updateFilters({ page })}
+                    />
+                  </>
+                )}
               </>
             )}
           </motion.div>

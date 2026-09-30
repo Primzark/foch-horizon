@@ -2,15 +2,15 @@ import { useMemo, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, Building2, Compass, Handshake, Search, Sparkles, Star } from "lucide-react";
+import { ArrowRight, Building2, Compass, Handshake } from "lucide-react";
 import { GoogleGIcon } from "@/components/branding/GoogleGIcon";
-import { Button } from "@/components/ui/button";
+import { MainSearchBar } from "@/features/content/components/MainSearchBar";
 import { getFeaturedProperties } from "@/features/listings/api/properties.service";
 import { ListingCard } from "@/features/listings/components/ListingCard";
+import { properties } from "@/features/listings/data/properties";
 import { agents } from "@/features/listings/data/agents";
 import { toSearchItem } from "@/features/listings/utils/mappers";
 import { cities } from "@/features/cities/data/cities";
-import { useUiStore } from "@/lib/state/useUiStore";
 import { getSiteUrl, useSeo } from "@/lib/seo/useSeo";
 import { getAgencyReviews } from "@/features/content/api/googleReviews.service";
 import { inferPlaceImageMood } from "@/lib/visuals/placeImageMotion";
@@ -42,7 +42,6 @@ const serviceCards = [
 const HERO_IMAGE_URL = "/images/dufy-final-pick.jpg";
 
 export default function HomePage() {
-  const setSearchDrawerOpen = useUiStore((state) => state.setSearchDrawerOpen);
   const featuredQuery = useQuery({
     queryKey: ["featured-properties"],
     queryFn: () => getFeaturedProperties(24),
@@ -50,6 +49,13 @@ export default function HomePage() {
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
   });
+  const instantSearchItems = useMemo(
+    () => properties.filter((property) => property.status !== "off_market").map((property) => ({
+      ...toSearchItem(property),
+      description: property.description,
+    })),
+    [],
+  );
   const reviewsQuery = useQuery({ queryKey: ["agency-google-reviews-home"], queryFn: getAgencyReviews });
   const { reducedMotion } = useMotionPreference();
   const siteUrl = getSiteUrl();
@@ -105,7 +111,7 @@ export default function HomePage() {
 
   return (
     <>
-      <section className="relative overflow-hidden">
+      <section className="relative z-20 overflow-visible">
         <img
           src={HERO_IMAGE_URL}
           alt="Scène de plage au Havre, peinture de Raoul Dufy"
@@ -137,19 +143,10 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: reducedMotion ? 0.3 : heroMotionDirector.revealDuration, delay: reducedMotion ? 0.12 : heroMotionDirector.revealStagger * 3 }}
-            className="mt-6 flex flex-wrap gap-3"
+            className="mt-6"
             style={ctaSweepStyle}
           >
-            <Button
-              size="lg"
-              variant="brand"
-              onClick={() => {
-                setSearchDrawerOpen(true);
-              }}
-              className="gap-2"
-            >
-              <Search className="h-4 w-4" /> Rechercher un bien d'exception
-            </Button>
+            <MainSearchBar seedItems={instantSearchItems} />
           </motion.div>
         </div>
       </section>

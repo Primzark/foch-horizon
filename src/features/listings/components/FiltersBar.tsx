@@ -1,4 +1,4 @@
-import { LayoutGrid, List, SlidersHorizontal } from "lucide-react";
+import { LayoutGrid, List, Map as MapIcon, SlidersHorizontal } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -8,8 +8,8 @@ import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
 interface FiltersBarProps {
   sort: string;
   onSortChange: (value: string) => void;
-  viewMode: "grid" | "list";
-  onViewModeChange: (value: "grid" | "list") => void;
+  viewMode: "grid" | "list" | "map";
+  onViewModeChange: (value: "grid" | "list" | "map") => void;
   onOpenDrawer: () => void;
   total: number;
 }
@@ -38,13 +38,13 @@ export function FiltersBar({ sort, onSortChange, viewMode, onViewModeChange, onO
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button variant="outline" className="gap-2" onClick={onOpenDrawer}>
-            <SlidersHorizontal className="h-4 w-4" /> Filtres
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <Button variant="outline" className="gap-2 px-3 sm:px-4" onClick={onOpenDrawer} aria-label="Ouvrir les filtres">
+            <SlidersHorizontal className="h-4 w-4" /> <span className="hidden min-[420px]:inline">Filtres</span>
           </Button>
 
           <Select value={sort} onValueChange={onSortChange}>
-            <SelectTrigger className="w-[170px]">
+            <SelectTrigger className="w-[136px] sm:w-[170px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -56,9 +56,10 @@ export function FiltersBar({ sort, onSortChange, viewMode, onViewModeChange, onO
             </SelectContent>
           </Select>
 
-          <div className="hidden items-center rounded-lg border border-border p-1 md:flex">
+          <div role="group" aria-label="Mode d’affichage" className="flex items-center rounded-lg border border-border p-1">
             <button
               type="button"
+              aria-pressed={viewMode === "grid"}
               className={`rounded-md p-2 ${viewMode === "grid" ? "bg-muted text-foreground" : "text-muted-foreground"}`}
               onClick={() => onViewModeChange("grid")}
               aria-label="Vue grille"
@@ -67,11 +68,21 @@ export function FiltersBar({ sort, onSortChange, viewMode, onViewModeChange, onO
             </button>
             <button
               type="button"
+              aria-pressed={viewMode === "list"}
               className={`rounded-md p-2 ${viewMode === "list" ? "bg-muted text-foreground" : "text-muted-foreground"}`}
               onClick={() => onViewModeChange("list")}
               aria-label="Vue liste"
             >
               <List className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              aria-pressed={viewMode === "map"}
+              className={`rounded-md p-2 ${viewMode === "map" ? "bg-muted text-foreground" : "text-muted-foreground"}`}
+              onClick={() => onViewModeChange("map")}
+              aria-label="Vue carte"
+            >
+              <MapIcon className="h-4 w-4" />
             </button>
           </div>
         </div>
