@@ -117,6 +117,12 @@ function extractFirstNumber(value) {
   return toNumber(match[0]);
 }
 
+function extractSurfaceFromDescription(value) {
+  if (!value) return null;
+  const match = cleanText(value).match(/\bsurface(?:\s+habitable)?\s*(?:de|:)\s*(\d+(?:[.,]\d+)?)\s*m(?:2|²)/i);
+  return match ? toNumber(match[1]) : null;
+}
+
 function extractMetaContent(html, name) {
   const tagRegex = new RegExp(`<meta[^>]*name=["']${name}["'][^>]*>`, "i");
   const tag = tagRegex.exec(html)?.[0] ?? "";
@@ -256,7 +262,13 @@ function parsePropertyDetail(id, html, orderIndex) {
     toNumber(extractKeywordsValue(keywords, "Prix")) ??
     0;
 
+  const description =
+    cleanText(html.match(/<p class="description color-text-a no-margin">([\s\S]*?)<\/p>/i)?.[1] ?? "") ||
+    cleanText(html.match(/<meta[^>]+name="description"[^>]+content="([^"]*)"/i)?.[1] ?? "") ||
+    title;
+
   const surfaceM2 =
+    extractSurfaceFromDescription(description) ??
     toNumber(extractKeywordsValue(keywords, "SurfaceHab")) ??
     extractFirstNumber(summary.get("surface") || "") ??
     0;
@@ -277,11 +289,6 @@ function parsePropertyDetail(id, html, orderIndex) {
 
   const dpe = pickEnergy(dpeFromSummaryLabel || extractKeywordsValue(keywords, "LettreDPE"), dpeFromSummaryValue || extractKeywordsValue(keywords, "ValeurDPE"));
   const ges = pickEnergy(gesFromSummaryLabel || extractKeywordsValue(keywords, "LettreGES"), gesFromSummaryValue || extractKeywordsValue(keywords, "ValeurGES"));
-
-  const description =
-    cleanText(html.match(/<p class="description color-text-a no-margin">([\s\S]*?)<\/p>/i)?.[1] ?? "") ||
-    cleanText(html.match(/<meta[^>]+name="description"[^>]+content="([^"]*)"/i)?.[1] ?? "") ||
-    title;
 
   const images = parseImages(html);
   const contactToken = extractKeywordsValue(keywords, "Contact");

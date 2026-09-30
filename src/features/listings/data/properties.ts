@@ -5,13 +5,2446 @@ import type { Property } from "@/types/domain";
 
 export const properties: Property[] = [
   {
+    "id": 6667,
+    "title": "Nouveauté Harfleur",
+    "slug": "nouveaute-harfleur",
+    "transactionType": "vente",
+    "propertyType": "maison_villa",
+    "status": "active",
+    "sourceStatus": "Vente",
+    "priceAmount": 240000,
+    "priceCurrency": "EUR",
+    "surfaceM2": 110,
+    "terrainM2": null,
+    "rooms": 5,
+    "bedrooms": 3,
+    "bathrooms": 0,
+    "parkingCount": 0,
+    "garageCount": 1,
+    "dpeLabel": "D",
+    "dpeValue": 225,
+    "gesLabel": "E",
+    "gesValue": 46,
+    "description": "Au calme, sur une parcelle d'environ 500m2, maison offrant une entrée, une cuisine am?nagé, un séjour salon avec accès à une terrasse exposée Sud, 3 chambres (possibilité 4), une buanderie. Un garage. Agent co Emma Vasselin",
+    "cityId": "city-le-havre",
+    "postalCode": "76700",
+    "lat": null,
+    "lng": null,
+    "agentId": "agent-lucas-bernard",
+    "publishedAt": "2026-09-30T16:45:54.781Z",
+    "updatedAt": "2026-09-30T16:45:54.781Z",
+    "isFeatured": true,
+    "images": [
+      {
+        "id": "6667-1",
+        "propertyId": 6667,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/b35042e9b3ff523e8c8b0f937bd17c97/photo_bb436ab06125a36ec1fc6803fabf9171.jpg",
+        "sortOrder": 0,
+        "altText": "Nouveauté Harfleur - photo 1"
+      },
+      {
+        "id": "6667-2",
+        "propertyId": 6667,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/b35042e9b3ff523e8c8b0f937bd17c97/photo_04d726cbe6134b0052f2d26b681ee3c4.jpg",
+        "sortOrder": 1,
+        "altText": "Nouveauté Harfleur - photo 2"
+      },
+      {
+        "id": "6667-3",
+        "propertyId": 6667,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/b35042e9b3ff523e8c8b0f937bd17c97/photo_ce93627ad7877904331df36db2baae9e.jpg",
+        "sortOrder": 2,
+        "altText": "Nouveauté Harfleur - photo 3"
+      }
+    ],
+    "features": [
+      {
+        "propertyId": 6667,
+        "featureKey": "maison",
+        "labelFr": "Maison"
+      }
+    ]
+  },
+  {
+    "id": 5209,
+    "title": "EXCLUSIVITE SAINT VINCENT",
+    "slug": "exclusivite-saint-vincent",
+    "transactionType": "vente",
+    "propertyType": "appartement",
+    "status": "active",
+    "sourceStatus": "Vente",
+    "priceAmount": 79500,
+    "priceCurrency": "EUR",
+    "surfaceM2": 25,
+    "terrainM2": null,
+    "rooms": 2,
+    "bedrooms": 1,
+    "bathrooms": 0,
+    "parkingCount": 0,
+    "garageCount": 0,
+    "dpeLabel": "G",
+    "dpeValue": 680,
+    "gesLabel": "D",
+    "gesValue": 27,
+    "description": "A DEUX PAS DE LA PLAGE BEL APPARTEMENT DE TYPE T2 D'UNE SURFACE DE 25 M2 HABITABLE ET 36 M2 AU SOL. UNE CUISINE - UN SEJOUR - UNE CHAMBRE - UNE SSDDCHES - WC. LE TOUT EN PARFAIT ETAT AVEC DE FAIBLES CHARGES ET FONCIER. UNE BUANDERIE DE 4 M2 ET UN CELLIER DE 7 M2 S'AJOUTE A CE BIEN. A DECOUVRIR Agent Co Véronique FOGT",
+    "cityId": "city-le-havre",
+    "postalCode": "76600",
+    "lat": null,
+    "lng": null,
+    "agentId": "agent-clara-durand",
+    "publishedAt": "2026-09-30T16:44:55.385Z",
+    "updatedAt": "2026-09-30T16:44:55.385Z",
+    "isFeatured": true,
+    "images": [
+      {
+        "id": "5209-1",
+        "propertyId": 5209,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/ef499597b8f228c8179e9fad56ff5502/photo_3a6d33bdaac35670a299b341bf71d11a.jpg",
+        "sortOrder": 0,
+        "altText": "EXCLUSIVITE SAINT VINCENT - photo 1"
+      },
+      {
+        "id": "5209-2",
+        "propertyId": 5209,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/ef499597b8f228c8179e9fad56ff5502/photo_2ee326bcb6429eee08661b918925542f.jpg",
+        "sortOrder": 1,
+        "altText": "EXCLUSIVITE SAINT VINCENT - photo 2"
+      },
+      {
+        "id": "5209-3",
+        "propertyId": 5209,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/ef499597b8f228c8179e9fad56ff5502/photo_6f18b547eeb6718f83b056621f798be0.jpg",
+        "sortOrder": 2,
+        "altText": "EXCLUSIVITE SAINT VINCENT - photo 3"
+      },
+      {
+        "id": "5209-4",
+        "propertyId": 5209,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/ef499597b8f228c8179e9fad56ff5502/photo_86a96193f60ef48a6e92ca11ec901ae6.jpg",
+        "sortOrder": 3,
+        "altText": "EXCLUSIVITE SAINT VINCENT - photo 4"
+      }
+    ],
+    "features": [
+      {
+        "propertyId": 5209,
+        "featureKey": "cave",
+        "labelFr": "Cave"
+      }
+    ]
+  },
+  {
+    "id": 5208,
+    "title": "NOUVEAUTE PLACE DE BLEVILLE",
+    "slug": "nouveaute-place-de-bleville",
+    "transactionType": "vente",
+    "propertyType": "appartement",
+    "status": "active",
+    "sourceStatus": "Vente",
+    "priceAmount": 212000,
+    "priceCurrency": "EUR",
+    "surfaceM2": 83,
+    "terrainM2": null,
+    "rooms": 5,
+    "bedrooms": 4,
+    "bathrooms": 1,
+    "parkingCount": 0,
+    "garageCount": 0,
+    "dpeLabel": null,
+    "dpeValue": null,
+    "gesLabel": "A",
+    "gesValue": 0,
+    "description": "DUPLEX TRES LUMINEUX EXPO OUEST D'UNE SURFACE HABITABLE DE 83 M2 ET D'UNE SURFACE AU SOL DE 105 M2 OFFRANT SUR UN NIVEAU UNE CUISINE AMENAGEE - UN SEJOUR/SALON - DEUX CHAMBRES - UNE SDDCHES -WC ET AU DESSUS DEUX CHAMBRES - UNE SALLE DE BAINS - WC CE BIEN EST ENTIEREMENT RENOVE AVEC UNE BELLE PROXIMITE DES COMMERCES ET DES ECOLES",
+    "cityId": "city-le-havre",
+    "postalCode": "76620",
+    "lat": null,
+    "lng": null,
+    "agentId": "agent-jeanne-morel",
+    "publishedAt": "2026-09-30T16:43:54.972Z",
+    "updatedAt": "2026-09-30T16:43:54.972Z",
+    "isFeatured": true,
+    "images": [
+      {
+        "id": "5208-1",
+        "propertyId": 5208,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/1aa7c4372a1f48943dbe930a36034101/photo_834b54959b64ffcd90e35fbe06026c66.jpg",
+        "sortOrder": 0,
+        "altText": "NOUVEAUTE PLACE DE BLEVILLE - photo 1"
+      },
+      {
+        "id": "5208-2",
+        "propertyId": 5208,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/1aa7c4372a1f48943dbe930a36034101/photo_e824f2057b43a2c266c621c8339788ef.jpg",
+        "sortOrder": 1,
+        "altText": "NOUVEAUTE PLACE DE BLEVILLE - photo 2"
+      },
+      {
+        "id": "5208-3",
+        "propertyId": 5208,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/1aa7c4372a1f48943dbe930a36034101/photo_6686508e827333bad9c3111369b67892.jpg",
+        "sortOrder": 2,
+        "altText": "NOUVEAUTE PLACE DE BLEVILLE - photo 3"
+      },
+      {
+        "id": "5208-4",
+        "propertyId": 5208,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/1aa7c4372a1f48943dbe930a36034101/photo_1725d0132f336c3ccec39c580222bb7f.jpg",
+        "sortOrder": 3,
+        "altText": "NOUVEAUTE PLACE DE BLEVILLE - photo 4"
+      },
+      {
+        "id": "5208-5",
+        "propertyId": 5208,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/1aa7c4372a1f48943dbe930a36034101/photo_f7153b137b3c9427a81f1473fea3e208.jpg",
+        "sortOrder": 4,
+        "altText": "NOUVEAUTE PLACE DE BLEVILLE - photo 5"
+      },
+      {
+        "id": "5208-6",
+        "propertyId": 5208,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/1aa7c4372a1f48943dbe930a36034101/photo_0075a15cd7887abcb2f38671a1718b81.jpg",
+        "sortOrder": 5,
+        "altText": "NOUVEAUTE PLACE DE BLEVILLE - photo 6"
+      },
+      {
+        "id": "5208-7",
+        "propertyId": 5208,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/1aa7c4372a1f48943dbe930a36034101/photo_dcecbfe45d2c6924fba4c357326d7440.jpg",
+        "sortOrder": 6,
+        "altText": "NOUVEAUTE PLACE DE BLEVILLE - photo 7"
+      },
+      {
+        "id": "5208-8",
+        "propertyId": 5208,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/1aa7c4372a1f48943dbe930a36034101/photo_99ccc2108801ca8f2a31d47e4c5b9a16.jpg",
+        "sortOrder": 7,
+        "altText": "NOUVEAUTE PLACE DE BLEVILLE - photo 8"
+      },
+      {
+        "id": "5208-9",
+        "propertyId": 5208,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/1aa7c4372a1f48943dbe930a36034101/photo_cfdeff21c9b6295890af14a0c3dae2d5.jpg",
+        "sortOrder": 8,
+        "altText": "NOUVEAUTE PLACE DE BLEVILLE - photo 9"
+      }
+    ],
+    "features": [
+      {
+        "propertyId": 5208,
+        "featureKey": "appartement",
+        "labelFr": "Appartement"
+      }
+    ]
+  },
+  {
+    "id": 5207,
+    "title": "EXCLUSIVITE CENTRE D'HARFLEUR",
+    "slug": "exclusivite-centre-d-harfleur",
+    "transactionType": "vente",
+    "propertyType": "appartement",
+    "status": "active",
+    "sourceStatus": "Vente",
+    "priceAmount": 92000,
+    "priceCurrency": "EUR",
+    "surfaceM2": 55,
+    "terrainM2": null,
+    "rooms": 2,
+    "bedrooms": 1,
+    "bathrooms": 1,
+    "parkingCount": 1,
+    "garageCount": 0,
+    "dpeLabel": "D",
+    "dpeValue": 168,
+    "gesLabel": "D",
+    "gesValue": 32,
+    "description": "VUE DEGAGEE POUR CET APPARTEMENT DE TYPE T2 EN PARFAIT ETAT D'UNE SURFACE DE 55 M2 OFFRANT : UNE CUISINE AMENAGEE - UN SEJOUR/SALON - UNE CHAMBRE - DRESSING - SDBAINS - WC SEPARE. UNE PLACE DE PARKING ATTITREE AU SEIN DE LA COPRO COMPLETE CE BIEN FAIBLES CHARGES ET BONNE ISOLATION DPE D IDEAL POUR UNE PREMIERE ACQUISITION OU INVESTISSEMENT LOCATIF. Agent Co VéronIque FOGT",
+    "cityId": "city-le-havre",
+    "postalCode": "76700",
+    "lat": null,
+    "lng": null,
+    "agentId": "agent-clara-durand",
+    "publishedAt": "2026-09-30T16:42:55.100Z",
+    "updatedAt": "2026-09-30T16:42:55.100Z",
+    "isFeatured": true,
+    "images": [
+      {
+        "id": "5207-1",
+        "propertyId": 5207,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/10c5f98c08fe0e7e91350bb36fdebb43/photo_2e35444538c4ae7ca3fbb55391809be4.jpg",
+        "sortOrder": 0,
+        "altText": "EXCLUSIVITE CENTRE D'HARFLEUR - photo 1"
+      },
+      {
+        "id": "5207-2",
+        "propertyId": 5207,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/10c5f98c08fe0e7e91350bb36fdebb43/photo_1e2e31496d4fe374f3c06ca2b87f0336.jpg",
+        "sortOrder": 1,
+        "altText": "EXCLUSIVITE CENTRE D'HARFLEUR - photo 2"
+      },
+      {
+        "id": "5207-3",
+        "propertyId": 5207,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/10c5f98c08fe0e7e91350bb36fdebb43/photo_c0d1b04d90d4fecd45560cc379a57282.jpg",
+        "sortOrder": 2,
+        "altText": "EXCLUSIVITE CENTRE D'HARFLEUR - photo 3"
+      },
+      {
+        "id": "5207-4",
+        "propertyId": 5207,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/10c5f98c08fe0e7e91350bb36fdebb43/photo_2608c305309e5d4b4363b3268b7ae265.jpg",
+        "sortOrder": 3,
+        "altText": "EXCLUSIVITE CENTRE D'HARFLEUR - photo 4"
+      },
+      {
+        "id": "5207-5",
+        "propertyId": 5207,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/10c5f98c08fe0e7e91350bb36fdebb43/photo_693cf4fb9c4671a395053292daadf9e0.jpg",
+        "sortOrder": 4,
+        "altText": "EXCLUSIVITE CENTRE D'HARFLEUR - photo 5"
+      },
+      {
+        "id": "5207-6",
+        "propertyId": 5207,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/10c5f98c08fe0e7e91350bb36fdebb43/photo_a27188c4ef677621d2763b97d9475b4c.jpg",
+        "sortOrder": 5,
+        "altText": "EXCLUSIVITE CENTRE D'HARFLEUR - photo 6"
+      }
+    ],
+    "features": [
+      {
+        "propertyId": 5207,
+        "featureKey": "appartement",
+        "labelFr": "Appartement"
+      }
+    ]
+  },
+  {
+    "id": 5206,
+    "title": "Entre Coty Et Danton",
+    "slug": "entre-coty-et-danton",
+    "transactionType": "vente",
+    "propertyType": "appartement",
+    "status": "active",
+    "sourceStatus": "Vente",
+    "priceAmount": 169000,
+    "priceCurrency": "EUR",
+    "surfaceM2": 59,
+    "terrainM2": null,
+    "rooms": 3,
+    "bedrooms": 2,
+    "bathrooms": 0,
+    "parkingCount": 1,
+    "garageCount": 0,
+    "dpeLabel": "D",
+    "dpeValue": 209,
+    "gesLabel": "D",
+    "gesValue": 45,
+    "description": "Joli appartement de 3 pièces principales au dernier étage avec ascenseur et jolie vue dégagée: entrée, séjour avec Balcon, deux chambres, cuisine aménagée, salle d'eau (récente) .DPE D Charges copro/an 2995 EUR",
+    "cityId": "city-le-havre",
+    "postalCode": "76600",
+    "lat": null,
+    "lng": null,
+    "agentId": "agent-jeanne-morel",
+    "publishedAt": "2026-09-30T16:41:55.593Z",
+    "updatedAt": "2026-09-30T16:41:55.593Z",
+    "isFeatured": true,
+    "images": [
+      {
+        "id": "5206-1",
+        "propertyId": 5206,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/c65c479cd588ad3ed9d8a62f0e468dc2/photo_1f948ccfe94e7f645296dea5e5a698b5.jpg",
+        "sortOrder": 0,
+        "altText": "Entre Coty Et Danton - photo 1"
+      },
+      {
+        "id": "5206-2",
+        "propertyId": 5206,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/c65c479cd588ad3ed9d8a62f0e468dc2/photo_05b727e5c97c4eb8b4d6071d17c5b079.jpg",
+        "sortOrder": 1,
+        "altText": "Entre Coty Et Danton - photo 2"
+      },
+      {
+        "id": "5206-3",
+        "propertyId": 5206,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/c65c479cd588ad3ed9d8a62f0e468dc2/photo_216fcaadcc8795226aca8a013fecf03e.jpg",
+        "sortOrder": 2,
+        "altText": "Entre Coty Et Danton - photo 3"
+      },
+      {
+        "id": "5206-4",
+        "propertyId": 5206,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/c65c479cd588ad3ed9d8a62f0e468dc2/photo_f21c65eb8e9be7dde9c48b39bdd62cc6.jpg",
+        "sortOrder": 3,
+        "altText": "Entre Coty Et Danton - photo 4"
+      },
+      {
+        "id": "5206-5",
+        "propertyId": 5206,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/c65c479cd588ad3ed9d8a62f0e468dc2/photo_ae2e714b1c767c08cf4454159917642c.jpg",
+        "sortOrder": 4,
+        "altText": "Entre Coty Et Danton - photo 5"
+      },
+      {
+        "id": "5206-6",
+        "propertyId": 5206,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/c65c479cd588ad3ed9d8a62f0e468dc2/photo_f185aa8a61317947d9bd588032c7399b.jpg",
+        "sortOrder": 5,
+        "altText": "Entre Coty Et Danton - photo 6"
+      }
+    ],
+    "features": [
+      {
+        "propertyId": 5206,
+        "featureKey": "chauffage",
+        "labelFr": "Chauffage"
+      },
+      {
+        "propertyId": 5206,
+        "featureKey": "balcon",
+        "labelFr": "Balcon"
+      },
+      {
+        "propertyId": 5206,
+        "featureKey": "cave",
+        "labelFr": "Cave"
+      },
+      {
+        "propertyId": 5206,
+        "featureKey": "ascenseur",
+        "labelFr": "Ascenseur"
+      }
+    ]
+  },
+  {
+    "id": 5205,
+    "title": "Les docks, dernier étage",
+    "slug": "les-docks-dernier-etage",
+    "transactionType": "vente",
+    "propertyType": "appartement",
+    "status": "active",
+    "sourceStatus": "Vente",
+    "priceAmount": 213000,
+    "priceCurrency": "EUR",
+    "surfaceM2": 71,
+    "terrainM2": null,
+    "rooms": 3,
+    "bedrooms": 2,
+    "bathrooms": 0,
+    "parkingCount": 0,
+    "garageCount": 1,
+    "dpeLabel": "C",
+    "dpeValue": 171,
+    "gesLabel": "B",
+    "gesValue": 6,
+    "description": "Proche des commerces et écoles, au 4ème et dernier étage, bel appartement lumineux offrant une entrée avec rangement, une cuisine ouverte sur un séjour salon avec accès à une loggia, deux chambres, une salle de douche. Un grand garage complète ce bien. Agent co Emma Vasselin",
+    "cityId": "city-le-havre",
+    "postalCode": "76600",
+    "lat": null,
+    "lng": null,
+    "agentId": "agent-lucas-bernard",
+    "publishedAt": "2026-09-30T16:40:55.465Z",
+    "updatedAt": "2026-09-30T16:40:55.465Z",
+    "isFeatured": true,
+    "images": [
+      {
+        "id": "5205-1",
+        "propertyId": 5205,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/ed79f91741fae32ef3d0093fbce3a8b8/photo_d91f52caa88fe1485cbfc7fda384a752.jpg",
+        "sortOrder": 0,
+        "altText": "Les docks, dernier étage - photo 1"
+      },
+      {
+        "id": "5205-2",
+        "propertyId": 5205,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/ed79f91741fae32ef3d0093fbce3a8b8/photo_c5c9a7818cf1b0a4987f8dcc1ae35d98.jpg",
+        "sortOrder": 1,
+        "altText": "Les docks, dernier étage - photo 2"
+      },
+      {
+        "id": "5205-3",
+        "propertyId": 5205,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/ed79f91741fae32ef3d0093fbce3a8b8/photo_ada0590e50697d73e9da14e317da42ca.jpg",
+        "sortOrder": 2,
+        "altText": "Les docks, dernier étage - photo 3"
+      },
+      {
+        "id": "5205-4",
+        "propertyId": 5205,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/ed79f91741fae32ef3d0093fbce3a8b8/photo_53ec9e6b45a95d28faaebe87e3d4bad5.jpg",
+        "sortOrder": 3,
+        "altText": "Les docks, dernier étage - photo 4"
+      },
+      {
+        "id": "5205-5",
+        "propertyId": 5205,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/ed79f91741fae32ef3d0093fbce3a8b8/photo_c7d8e6232b3e719e40a7c1092f91a827.jpg",
+        "sortOrder": 4,
+        "altText": "Les docks, dernier étage - photo 5"
+      },
+      {
+        "id": "5205-6",
+        "propertyId": 5205,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/ed79f91741fae32ef3d0093fbce3a8b8/photo_9a9546b3d5373611f482a3da59b7b7fc.jpg",
+        "sortOrder": 5,
+        "altText": "Les docks, dernier étage - photo 6"
+      }
+    ],
+    "features": [
+      {
+        "propertyId": 5205,
+        "featureKey": "ascenseur",
+        "labelFr": "Ascenseur"
+      }
+    ]
+  },
+  {
+    "id": 5203,
+    "title": "Entre Palais de justice et Bassin du Commerce",
+    "slug": "entre-palais-de-justice-et-bassin-du-commerce",
+    "transactionType": "vente",
+    "propertyType": "appartement",
+    "status": "active",
+    "sourceStatus": "Vente",
+    "priceAmount": 219000,
+    "priceCurrency": "EUR",
+    "surfaceM2": 64,
+    "terrainM2": null,
+    "rooms": 3,
+    "bedrooms": 2,
+    "bathrooms": 0,
+    "parkingCount": 1,
+    "garageCount": 0,
+    "dpeLabel": "C",
+    "dpeValue": 117,
+    "gesLabel": "C",
+    "gesValue": 13,
+    "description": "Accès PMR dans résidence de bon standing- Bel apartement au dernier étage avec ascenseur: entrée, cuisine aménagée ouverte sur le séjour ouvrant sur un balcon exposé Ouest, joie vue dégagée, deux chambres, salle d'eau récente,wc. Parking . Charges copro 2800 EUR/an.DPE C",
+    "cityId": "city-le-havre",
+    "postalCode": "76600",
+    "lat": null,
+    "lng": null,
+    "agentId": "agent-jeanne-morel",
+    "publishedAt": "2026-09-30T16:39:55.587Z",
+    "updatedAt": "2026-09-30T16:39:55.587Z",
+    "isFeatured": true,
+    "images": [
+      {
+        "id": "5203-1",
+        "propertyId": 5203,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/5a54990aea371a5edbc3e868e75961fb/photo_12bfb55bb07921100e22f0b542a41f6f.jpg",
+        "sortOrder": 0,
+        "altText": "Entre Palais de justice et Bassin du Commerce - photo 1"
+      },
+      {
+        "id": "5203-2",
+        "propertyId": 5203,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/5a54990aea371a5edbc3e868e75961fb/photo_cd80f70b38fcd04ab08af21529f7b739.jpg",
+        "sortOrder": 1,
+        "altText": "Entre Palais de justice et Bassin du Commerce - photo 2"
+      },
+      {
+        "id": "5203-3",
+        "propertyId": 5203,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/5a54990aea371a5edbc3e868e75961fb/photo_1490b35936043a3cbd40cc5d689ba091.jpg",
+        "sortOrder": 2,
+        "altText": "Entre Palais de justice et Bassin du Commerce - photo 3"
+      },
+      {
+        "id": "5203-4",
+        "propertyId": 5203,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/5a54990aea371a5edbc3e868e75961fb/photo_da5cc08afa311bf5fa05900587cc74d8.jpg",
+        "sortOrder": 3,
+        "altText": "Entre Palais de justice et Bassin du Commerce - photo 4"
+      },
+      {
+        "id": "5203-5",
+        "propertyId": 5203,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/5a54990aea371a5edbc3e868e75961fb/photo_1071feb017506ed8df7bbdc0f4e88223.jpg",
+        "sortOrder": 4,
+        "altText": "Entre Palais de justice et Bassin du Commerce - photo 5"
+      }
+    ],
+    "features": [
+      {
+        "propertyId": 5203,
+        "featureKey": "chauffage",
+        "labelFr": "Chauffage"
+      },
+      {
+        "propertyId": 5203,
+        "featureKey": "balcon",
+        "labelFr": "Balcon"
+      },
+      {
+        "propertyId": 5203,
+        "featureKey": "ascenseur",
+        "labelFr": "Ascenseur"
+      }
+    ]
+  },
+  {
+    "id": 5202,
+    "title": "MONTMORENCY",
+    "slug": "montmorency",
+    "transactionType": "vente",
+    "propertyType": "maison_villa",
+    "status": "active",
+    "sourceStatus": "Vente",
+    "priceAmount": 247000,
+    "priceCurrency": "EUR",
+    "surfaceM2": 108,
+    "terrainM2": null,
+    "rooms": 5,
+    "bedrooms": 4,
+    "bathrooms": 1,
+    "parkingCount": 0,
+    "garageCount": 1,
+    "dpeLabel": "E",
+    "dpeValue": 263,
+    "gesLabel": "F",
+    "gesValue": 70,
+    "description": "Au calme , maison lumineuse exposée plein sud offrant une cuisine ammenagée equipée , un sejour-salon donnant sur un balcon , 4 chambres , sdb , sdd . Une cave , un garage et un jardin completent ce bien. La chaudiere est neuve et la toiture est de 2009 Le bien est en très bon état",
+    "cityId": "city-le-havre",
+    "postalCode": "76600",
+    "lat": null,
+    "lng": null,
+    "agentId": "agent-jeanne-morel",
+    "publishedAt": "2026-09-30T16:38:55.801Z",
+    "updatedAt": "2026-09-30T16:38:55.801Z",
+    "isFeatured": true,
+    "images": [
+      {
+        "id": "5202-1",
+        "propertyId": 5202,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/82f9b031cf5eacc9d2e1d91e5f93425a/photo_2802573d3f9f961c1260eb5ac2735ffd.jpg",
+        "sortOrder": 0,
+        "altText": "MONTMORENCY - photo 1"
+      },
+      {
+        "id": "5202-2",
+        "propertyId": 5202,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/82f9b031cf5eacc9d2e1d91e5f93425a/photo_1e889a5c71b03ade6803cdf1c955d7ff.jpg",
+        "sortOrder": 1,
+        "altText": "MONTMORENCY - photo 2"
+      },
+      {
+        "id": "5202-3",
+        "propertyId": 5202,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/82f9b031cf5eacc9d2e1d91e5f93425a/photo_5e357e43adc7d4ac4e86ec3919eb6f0b.jpg",
+        "sortOrder": 2,
+        "altText": "MONTMORENCY - photo 3"
+      },
+      {
+        "id": "5202-4",
+        "propertyId": 5202,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/82f9b031cf5eacc9d2e1d91e5f93425a/photo_925bcf152e37258eab8438a754e763e3.jpg",
+        "sortOrder": 3,
+        "altText": "MONTMORENCY - photo 4"
+      },
+      {
+        "id": "5202-5",
+        "propertyId": 5202,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/82f9b031cf5eacc9d2e1d91e5f93425a/photo_f6ef88b501390d9e9c9cd0b7330c97d4.jpg",
+        "sortOrder": 4,
+        "altText": "MONTMORENCY - photo 5"
+      },
+      {
+        "id": "5202-6",
+        "propertyId": 5202,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/82f9b031cf5eacc9d2e1d91e5f93425a/photo_6034ab921e460ced3c713748633e838e.jpg",
+        "sortOrder": 5,
+        "altText": "MONTMORENCY - photo 6"
+      },
+      {
+        "id": "5202-7",
+        "propertyId": 5202,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/82f9b031cf5eacc9d2e1d91e5f93425a/photo_4bbcdd3cea7cd22340a8f1f9bbd2d9d6.jpg",
+        "sortOrder": 6,
+        "altText": "MONTMORENCY - photo 7"
+      }
+    ],
+    "features": [
+      {
+        "propertyId": 5202,
+        "featureKey": "cave",
+        "labelFr": "Cave"
+      }
+    ]
+  },
+  {
+    "id": 5200,
+    "title": "TRIPLE EXPOSITION VUE MER",
+    "slug": "triple-exposition-vue-mer",
+    "transactionType": "vente",
+    "propertyType": "appartement",
+    "status": "active",
+    "sourceStatus": "Vente",
+    "priceAmount": 565000,
+    "priceCurrency": "EUR",
+    "surfaceM2": 140,
+    "terrainM2": null,
+    "rooms": 5,
+    "bedrooms": 3,
+    "bathrooms": 1,
+    "parkingCount": 2,
+    "garageCount": 0,
+    "dpeLabel": "C",
+    "dpeValue": 166,
+    "gesLabel": "B",
+    "gesValue": 6,
+    "description": "Dans une résidence de standing à l'adresse recherchée au dernier étage avec ascenseur, spacieux appartement bénéficiant d'une triple exposition et de magnifiques vues offrant une entrée, une cuisine équipée et un vaste séjour/salon (57m2) avec accès à une terrasse vue mer, 3 chambres avec terrasses, salle de bains, salle de douche et toilettes. Deux caves et deux places de parking réservées en sous/sol complètent ce bien. Agent co Emma Vasselin",
+    "cityId": "city-le-havre",
+    "postalCode": "76600",
+    "lat": null,
+    "lng": null,
+    "agentId": "agent-lucas-bernard",
+    "publishedAt": "2026-09-30T16:37:55.687Z",
+    "updatedAt": "2026-09-30T16:37:55.687Z",
+    "isFeatured": true,
+    "images": [
+      {
+        "id": "5200-1",
+        "propertyId": 5200,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/9d1d807d74793210314c1d8fc1c2acec/photo_b781b12b4a10b2a6669e729609065088_Inc_0.jpg",
+        "sortOrder": 0,
+        "altText": "TRIPLE EXPOSITION VUE MER - photo 1"
+      }
+    ],
+    "features": [
+      {
+        "propertyId": 5200,
+        "featureKey": "cave",
+        "labelFr": "Cave"
+      },
+      {
+        "propertyId": 5200,
+        "featureKey": "ascenseur",
+        "labelFr": "Ascenseur"
+      }
+    ]
+  },
+  {
+    "id": 5199,
+    "title": "JOFFRE/ PARC HAUSER",
+    "slug": "joffre-parc-hauser",
+    "transactionType": "vente",
+    "propertyType": "appartement",
+    "status": "active",
+    "sourceStatus": "Vente",
+    "priceAmount": 237000,
+    "priceCurrency": "EUR",
+    "surfaceM2": 95,
+    "terrainM2": null,
+    "rooms": 5,
+    "bedrooms": 4,
+    "bathrooms": 1,
+    "parkingCount": 0,
+    "garageCount": 0,
+    "dpeLabel": "D",
+    "dpeValue": 206,
+    "gesLabel": "E",
+    "gesValue": 41,
+    "description": "Dans une petite rue calme , jolie maison de ville avec une cour bien exposée. Elle se compose d'un sejour-salon , une cuisine amenagée , 4 chambres , une sdb avec large baignore. Toiture et chaudiere récente. La maison est en très bon état et dispose d'une grande cave A découvrir",
+    "cityId": "city-le-havre",
+    "postalCode": "76600",
+    "lat": null,
+    "lng": null,
+    "agentId": "agent-jeanne-morel",
+    "publishedAt": "2026-09-30T16:36:55.872Z",
+    "updatedAt": "2026-09-30T16:36:55.872Z",
+    "isFeatured": false,
+    "images": [
+      {
+        "id": "5199-1",
+        "propertyId": 5199,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/669e9b7c70ab830be48764104f1fb498/photo_df786b248147b7ae4c270f78ad4c64b5.jpg",
+        "sortOrder": 0,
+        "altText": "JOFFRE/ PARC HAUSER - photo 1"
+      },
+      {
+        "id": "5199-2",
+        "propertyId": 5199,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/669e9b7c70ab830be48764104f1fb498/photo_1032212a75b0cbab9063b9581a63966f.jpg",
+        "sortOrder": 1,
+        "altText": "JOFFRE/ PARC HAUSER - photo 2"
+      },
+      {
+        "id": "5199-3",
+        "propertyId": 5199,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/669e9b7c70ab830be48764104f1fb498/photo_74a9a8373421a1c98de3732af108317c.jpg",
+        "sortOrder": 2,
+        "altText": "JOFFRE/ PARC HAUSER - photo 3"
+      },
+      {
+        "id": "5199-4",
+        "propertyId": 5199,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/669e9b7c70ab830be48764104f1fb498/photo_223e6627c0ed09860eaa4964b34220dc.jpg",
+        "sortOrder": 3,
+        "altText": "JOFFRE/ PARC HAUSER - photo 4"
+      },
+      {
+        "id": "5199-5",
+        "propertyId": 5199,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/669e9b7c70ab830be48764104f1fb498/photo_19f74ba6a58d3988a19c365bb6c38db5.jpg",
+        "sortOrder": 4,
+        "altText": "JOFFRE/ PARC HAUSER - photo 5"
+      },
+      {
+        "id": "5199-6",
+        "propertyId": 5199,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/669e9b7c70ab830be48764104f1fb498/photo_f794166f205cd86568ddb5d74be90dfe.jpg",
+        "sortOrder": 5,
+        "altText": "JOFFRE/ PARC HAUSER - photo 6"
+      },
+      {
+        "id": "5199-7",
+        "propertyId": 5199,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/669e9b7c70ab830be48764104f1fb498/photo_aa3e84d26d80f3da4f45784bc66496af.jpg",
+        "sortOrder": 6,
+        "altText": "JOFFRE/ PARC HAUSER - photo 7"
+      },
+      {
+        "id": "5199-8",
+        "propertyId": 5199,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/669e9b7c70ab830be48764104f1fb498/photo_27b5a3a5ea384e41f1e01931a1003c0e.jpg",
+        "sortOrder": 7,
+        "altText": "JOFFRE/ PARC HAUSER - photo 8"
+      },
+      {
+        "id": "5199-9",
+        "propertyId": 5199,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/669e9b7c70ab830be48764104f1fb498/photo_06ac68b7e9079e9fff32af3c775d32c2.jpg",
+        "sortOrder": 8,
+        "altText": "JOFFRE/ PARC HAUSER - photo 9"
+      }
+    ],
+    "features": [
+      {
+        "propertyId": 5199,
+        "featureKey": "chauffage",
+        "labelFr": "Chauffage"
+      },
+      {
+        "propertyId": 5199,
+        "featureKey": "cave",
+        "labelFr": "Cave"
+      }
+    ]
+  },
+  {
+    "id": 5198,
+    "title": "SAINT MICHEL , CENTRE-VILLE",
+    "slug": "saint-michel-centre-ville",
+    "transactionType": "vente",
+    "propertyType": "appartement",
+    "status": "active",
+    "sourceStatus": "Vente",
+    "priceAmount": 266000,
+    "priceCurrency": "EUR",
+    "surfaceM2": 81,
+    "terrainM2": null,
+    "rooms": 3,
+    "bedrooms": 2,
+    "bathrooms": 1,
+    "parkingCount": 0,
+    "garageCount": 0,
+    "dpeLabel": "D",
+    "dpeValue": 220,
+    "gesLabel": "E",
+    "gesValue": 48,
+    "description": "Au calme absolu, dans une petite copropriété proche du funiculaire, appartement lumineux exposé plein sud composé d'un grand séjour-salon avec portes fenêtres d'une superficie de 32,5 m2 et cheminée à foyer ouvert, cuisine amenagée, deux chambres, salle de douche, wc séparé. A cela s'ajoute un jardin collectif et une cave. Chauffage individuel gaz. la toiture est recente , aucun travaux à prevoir. Le centre-ville à deux pas, beaucoup de charme.",
+    "cityId": "city-le-havre",
+    "postalCode": "76600",
+    "lat": null,
+    "lng": null,
+    "agentId": "agent-jeanne-morel",
+    "publishedAt": "2026-09-30T16:35:55.821Z",
+    "updatedAt": "2026-09-30T16:35:55.821Z",
+    "isFeatured": false,
+    "images": [
+      {
+        "id": "5198-1",
+        "propertyId": 5198,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/0ed3f575ea88dbe74a6e1384679d0986/photo_6d2013482e1dbc57329d14520779d1cb.jpg",
+        "sortOrder": 0,
+        "altText": "SAINT MICHEL , CENTRE-VILLE - photo 1"
+      },
+      {
+        "id": "5198-2",
+        "propertyId": 5198,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/0ed3f575ea88dbe74a6e1384679d0986/photo_e2ec587ab901d020347e96d0fa793dbb.jpg",
+        "sortOrder": 1,
+        "altText": "SAINT MICHEL , CENTRE-VILLE - photo 2"
+      },
+      {
+        "id": "5198-3",
+        "propertyId": 5198,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/0ed3f575ea88dbe74a6e1384679d0986/photo_0ea897922110394bed18e6ec83e1e962.jpg",
+        "sortOrder": 2,
+        "altText": "SAINT MICHEL , CENTRE-VILLE - photo 3"
+      },
+      {
+        "id": "5198-4",
+        "propertyId": 5198,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/0ed3f575ea88dbe74a6e1384679d0986/photo_2576490ed68fdcccb946cb20711dab2d.jpg",
+        "sortOrder": 3,
+        "altText": "SAINT MICHEL , CENTRE-VILLE - photo 4"
+      },
+      {
+        "id": "5198-5",
+        "propertyId": 5198,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/0ed3f575ea88dbe74a6e1384679d0986/photo_28d22e12f72b1a7191688062064cfd3c.jpg",
+        "sortOrder": 4,
+        "altText": "SAINT MICHEL , CENTRE-VILLE - photo 5"
+      },
+      {
+        "id": "5198-6",
+        "propertyId": 5198,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/0ed3f575ea88dbe74a6e1384679d0986/photo_cad1ff4c1d0b6f6ed1b37c9f1497265a.jpg",
+        "sortOrder": 5,
+        "altText": "SAINT MICHEL , CENTRE-VILLE - photo 6"
+      },
+      {
+        "id": "5198-7",
+        "propertyId": 5198,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/0ed3f575ea88dbe74a6e1384679d0986/photo_6ae4fdb5d874b9f6875f20b54fcdfb65.jpg",
+        "sortOrder": 6,
+        "altText": "SAINT MICHEL , CENTRE-VILLE - photo 7"
+      },
+      {
+        "id": "5198-8",
+        "propertyId": 5198,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/0ed3f575ea88dbe74a6e1384679d0986/photo_4d83130c1ae16165d038277d61fb2758.jpg",
+        "sortOrder": 7,
+        "altText": "SAINT MICHEL , CENTRE-VILLE - photo 8"
+      },
+      {
+        "id": "5198-9",
+        "propertyId": 5198,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/0ed3f575ea88dbe74a6e1384679d0986/photo_03d543168d617b8754f34828d0f16779.jpg",
+        "sortOrder": 8,
+        "altText": "SAINT MICHEL , CENTRE-VILLE - photo 9"
+      }
+    ],
+    "features": [
+      {
+        "propertyId": 5198,
+        "featureKey": "cave",
+        "labelFr": "Cave"
+      }
+    ]
+  },
+  {
+    "id": 5197,
+    "title": "Sanvic Mairie",
+    "slug": "sanvic-mairie",
+    "transactionType": "vente",
+    "propertyType": "maison_villa",
+    "status": "active",
+    "sourceStatus": "Vente",
+    "priceAmount": 519000,
+    "priceCurrency": "EUR",
+    "surfaceM2": 145,
+    "terrainM2": null,
+    "rooms": 7,
+    "bedrooms": 5,
+    "bathrooms": 0,
+    "parkingCount": 0,
+    "garageCount": 1,
+    "dpeLabel": "E",
+    "dpeValue": 312,
+    "gesLabel": "E",
+    "gesValue": 69,
+    "description": "Dans un quartier calme proche des écoles, sur une parcelle d'environ 500m2, Grande et lumineuse maison Sanvicaise offrant en Rez de chaussée une entrée avec son vestiaire, un toilette indépendant, une cuisine aménagée et équipée ouverte sur un spacieux séjour/salon avec une cheminée et un accès à une terrasse et un jardin Sud, au 1er étage 3 chambres et une salle de douche, un toilette, au second, 2 chambres, une salle de douche avec un toilette. Un garage, un atelier et une cave complètent ce bien. Agent co Emma Vasselin",
+    "cityId": "city-le-havre",
+    "postalCode": "76620",
+    "lat": null,
+    "lng": null,
+    "agentId": "agent-lucas-bernard",
+    "publishedAt": "2026-09-30T16:34:56.396Z",
+    "updatedAt": "2026-09-30T16:34:56.396Z",
+    "isFeatured": false,
+    "images": [
+      {
+        "id": "5197-1",
+        "propertyId": 5197,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/61390384c1e723c2a32f5d7641ce32aa/photo_db45bd40c4df3ec35e788299eceaef32.jpg",
+        "sortOrder": 0,
+        "altText": "Sanvic Mairie - photo 1"
+      },
+      {
+        "id": "5197-2",
+        "propertyId": 5197,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/61390384c1e723c2a32f5d7641ce32aa/photo_2e3a93d9b815f749ef5dedf33a64fb27.jpg",
+        "sortOrder": 1,
+        "altText": "Sanvic Mairie - photo 2"
+      },
+      {
+        "id": "5197-3",
+        "propertyId": 5197,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/61390384c1e723c2a32f5d7641ce32aa/photo_b3374b5165a115ef140550abdece9387.jpg",
+        "sortOrder": 2,
+        "altText": "Sanvic Mairie - photo 3"
+      },
+      {
+        "id": "5197-4",
+        "propertyId": 5197,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/61390384c1e723c2a32f5d7641ce32aa/photo_39f637badf3569a189cc31140a753690.jpg",
+        "sortOrder": 3,
+        "altText": "Sanvic Mairie - photo 4"
+      },
+      {
+        "id": "5197-5",
+        "propertyId": 5197,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/61390384c1e723c2a32f5d7641ce32aa/photo_17b0c00f2109e85fcebcf800b9ca5cd2.jpg",
+        "sortOrder": 4,
+        "altText": "Sanvic Mairie - photo 5"
+      },
+      {
+        "id": "5197-6",
+        "propertyId": 5197,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/61390384c1e723c2a32f5d7641ce32aa/photo_b873affcc55a875db3ee037eadde32d0.jpg",
+        "sortOrder": 5,
+        "altText": "Sanvic Mairie - photo 6"
+      },
+      {
+        "id": "5197-7",
+        "propertyId": 5197,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/61390384c1e723c2a32f5d7641ce32aa/photo_7a7b7438d6dcc6a969eb5f01ac1be9ab.jpg",
+        "sortOrder": 6,
+        "altText": "Sanvic Mairie - photo 7"
+      },
+      {
+        "id": "5197-8",
+        "propertyId": 5197,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/61390384c1e723c2a32f5d7641ce32aa/photo_66add5ea658dea7023dd32c44e04ab72.jpg",
+        "sortOrder": 7,
+        "altText": "Sanvic Mairie - photo 8"
+      },
+      {
+        "id": "5197-9",
+        "propertyId": 5197,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/61390384c1e723c2a32f5d7641ce32aa/photo_9e185d58cc814b834b65887e15c45452.jpg",
+        "sortOrder": 8,
+        "altText": "Sanvic Mairie - photo 9"
+      }
+    ],
+    "features": [
+      {
+        "propertyId": 5197,
+        "featureKey": "maison",
+        "labelFr": "Maison"
+      }
+    ]
+  },
+  {
+    "id": 5196,
+    "title": "Nouveauté A deux pas de Saint Vincent",
+    "slug": "nouveaute-a-deux-pas-de-saint-vincent",
+    "transactionType": "vente",
+    "propertyType": "maison_villa",
+    "status": "active",
+    "sourceStatus": "Vente",
+    "priceAmount": 232000,
+    "priceCurrency": "EUR",
+    "surfaceM2": 111,
+    "terrainM2": null,
+    "rooms": 5,
+    "bedrooms": 4,
+    "bathrooms": 0,
+    "parkingCount": 0,
+    "garageCount": 0,
+    "dpeLabel": "C",
+    "dpeValue": 166,
+    "gesLabel": "D",
+    "gesValue": 35,
+    "description": "Maison de ville d'environ 111m2 située proche des commerces offrant en Rez de chaussée, deux chambres, une salle de bain, un toilette, au 1er étage, une cuisine aménagée et un séjour/salon, à mi étage, un toilette et une salle de bains et au 2ème étage, deux chambres .",
+    "cityId": "city-le-havre",
+    "postalCode": "76620",
+    "lat": null,
+    "lng": null,
+    "agentId": "agent-jeanne-morel",
+    "publishedAt": "2026-09-30T16:33:56.528Z",
+    "updatedAt": "2026-09-30T16:33:56.528Z",
+    "isFeatured": false,
+    "images": [
+      {
+        "id": "5196-1",
+        "propertyId": 5196,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/23b44e87cacba0bb06357ac680d9ca5e/photo_9202a7203740070eaf322b63fe872568.jpg",
+        "sortOrder": 0,
+        "altText": "Nouveauté A deux pas de Saint Vincent - photo 1"
+      },
+      {
+        "id": "5196-2",
+        "propertyId": 5196,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/23b44e87cacba0bb06357ac680d9ca5e/photo_67759ce61aea2306118744637050cbd2.jpg",
+        "sortOrder": 1,
+        "altText": "Nouveauté A deux pas de Saint Vincent - photo 2"
+      },
+      {
+        "id": "5196-3",
+        "propertyId": 5196,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/23b44e87cacba0bb06357ac680d9ca5e/photo_9b3e00504ca6ffb2a0a8426b21a6a37d.jpg",
+        "sortOrder": 2,
+        "altText": "Nouveauté A deux pas de Saint Vincent - photo 3"
+      },
+      {
+        "id": "5196-4",
+        "propertyId": 5196,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/23b44e87cacba0bb06357ac680d9ca5e/photo_674dc1411c65d8d36fc99dc6673557f6.jpg",
+        "sortOrder": 3,
+        "altText": "Nouveauté A deux pas de Saint Vincent - photo 4"
+      },
+      {
+        "id": "5196-5",
+        "propertyId": 5196,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/23b44e87cacba0bb06357ac680d9ca5e/photo_24d62ff620a45058323263723f90ed91.jpg",
+        "sortOrder": 4,
+        "altText": "Nouveauté A deux pas de Saint Vincent - photo 5"
+      },
+      {
+        "id": "5196-6",
+        "propertyId": 5196,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/23b44e87cacba0bb06357ac680d9ca5e/photo_bd92af2c68b4d6568dc353ddd3184e7f.jpg",
+        "sortOrder": 5,
+        "altText": "Nouveauté A deux pas de Saint Vincent - photo 6"
+      }
+    ],
+    "features": [
+      {
+        "propertyId": 5196,
+        "featureKey": "maison",
+        "labelFr": "Maison"
+      }
+    ]
+  },
+  {
+    "id": 5191,
+    "title": "EXCLUSIVITE SAINT MICHEL",
+    "slug": "exclusivite-saint-michel",
+    "transactionType": "vente",
+    "propertyType": "appartement",
+    "status": "active",
+    "sourceStatus": "Vente",
+    "priceAmount": 195000,
+    "priceCurrency": "EUR",
+    "surfaceM2": 71,
+    "terrainM2": null,
+    "rooms": 3,
+    "bedrooms": 2,
+    "bathrooms": 0,
+    "parkingCount": 0,
+    "garageCount": 1,
+    "dpeLabel": "D",
+    "dpeValue": 202,
+    "gesLabel": "E",
+    "gesValue": 42,
+    "description": "EN EXCLUSIVITE BEL APPARTEMENT DE TYPE T3 AVEC ASCENSEUR ET LOGGIA. VOUS AVEZ UNE CUISINE AMENAGEE OUVERTE SUR SEJOUR/SALON - 2 CHAMBRES - 1 SDDCHES - 1 WC. 1 CAVE ET UN STATIONNEMENT ATTITRE EN SOUS:SOL COMPLETENT CE BIEN BELLE LUMINOSITE ET ETAT IMPECCABLE. A DECOUVRIR Agent Co VéronIque FOGT",
+    "cityId": "city-le-havre",
+    "postalCode": "76600",
+    "lat": null,
+    "lng": null,
+    "agentId": "agent-clara-durand",
+    "publishedAt": "2026-09-30T16:32:56.476Z",
+    "updatedAt": "2026-09-30T16:32:56.476Z",
+    "isFeatured": false,
+    "images": [
+      {
+        "id": "5191-1",
+        "propertyId": 5191,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/90f4fe17c042132e1d1413341b19ac09/photo_ce48f95b60fd2f2b677312f38532eeac.jpg",
+        "sortOrder": 0,
+        "altText": "EXCLUSIVITE SAINT MICHEL - photo 1"
+      },
+      {
+        "id": "5191-2",
+        "propertyId": 5191,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/90f4fe17c042132e1d1413341b19ac09/photo_3eb32ac311fc1a11b291d4afeb288877.jpg",
+        "sortOrder": 1,
+        "altText": "EXCLUSIVITE SAINT MICHEL - photo 2"
+      },
+      {
+        "id": "5191-3",
+        "propertyId": 5191,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/90f4fe17c042132e1d1413341b19ac09/photo_a2ce85d7391deaa073ae8fb573910c8f.jpg",
+        "sortOrder": 2,
+        "altText": "EXCLUSIVITE SAINT MICHEL - photo 3"
+      },
+      {
+        "id": "5191-4",
+        "propertyId": 5191,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/90f4fe17c042132e1d1413341b19ac09/photo_3f0d0f61fa28b4ff52cd0fd5e3c789b3.jpg",
+        "sortOrder": 3,
+        "altText": "EXCLUSIVITE SAINT MICHEL - photo 4"
+      },
+      {
+        "id": "5191-5",
+        "propertyId": 5191,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/90f4fe17c042132e1d1413341b19ac09/photo_0c1e6acf36c6e6cd64dfd2e9877d978a.jpg",
+        "sortOrder": 4,
+        "altText": "EXCLUSIVITE SAINT MICHEL - photo 5"
+      }
+    ],
+    "features": [
+      {
+        "propertyId": 5191,
+        "featureKey": "cave",
+        "labelFr": "Cave"
+      },
+      {
+        "propertyId": 5191,
+        "featureKey": "ascenseur",
+        "labelFr": "Ascenseur"
+      }
+    ]
+  },
+  {
+    "id": 5189,
+    "title": "EXCLUSIVITE PLACE SAINTE CECILE",
+    "slug": "exclusivite-place-sainte-cecile",
+    "transactionType": "vente",
+    "propertyType": "maison_villa",
+    "status": "active",
+    "sourceStatus": "Vente",
+    "priceAmount": 298000,
+    "priceCurrency": "EUR",
+    "surfaceM2": 149,
+    "terrainM2": null,
+    "rooms": 7,
+    "bedrooms": 5,
+    "bathrooms": 0,
+    "parkingCount": 0,
+    "garageCount": 1,
+    "dpeLabel": "F",
+    "dpeValue": 358,
+    "gesLabel": "F",
+    "gesValue": 79,
+    "description": "EN EXCLUSIVITE DANS UN QUARTIER RECHERCHE PLACE SAINTE CECILE MAISON NON MITOYENNE AVEC VIE DE PLAIN-PIED DE 149 M2 SUR UN EXTERIEUR ARBORE DE 187 M2 OFFRANT : AU RDC : 1 CUISINE - 1 SEJOUR/SALON - 1 CHAMBRE - 1 SDDCHES - WC A L ETAGE :4 CHAMBRES -1 SDDCHES - WC A CE BIEN S'AJOUTE UN GRENIER - UNE CAVE ET UN GARAGE. BELLE CONSTRUCTION - FORT POTENTIEL - CONVIENDRAIT EGALEMENT POUR UNE PROFESSION LIBERALE ACCES PMR. A VISITER SANS TARDER Agent co Véronique FOGT",
+    "cityId": "city-le-havre",
+    "postalCode": "76610",
+    "lat": null,
+    "lng": null,
+    "agentId": "agent-clara-durand",
+    "publishedAt": "2026-09-30T16:31:56.271Z",
+    "updatedAt": "2026-09-30T16:31:56.271Z",
+    "isFeatured": false,
+    "images": [
+      {
+        "id": "5189-1",
+        "propertyId": 5189,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/6ad8c36b11e334d9f06f867de387d733/photo_eaf1272c96e1bb4580b71e78a0108061.jpg",
+        "sortOrder": 0,
+        "altText": "EXCLUSIVITE PLACE SAINTE CECILE - photo 1"
+      },
+      {
+        "id": "5189-2",
+        "propertyId": 5189,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/6ad8c36b11e334d9f06f867de387d733/photo_bdda4e121d863f33fa5f827907964afb.jpg",
+        "sortOrder": 1,
+        "altText": "EXCLUSIVITE PLACE SAINTE CECILE - photo 2"
+      },
+      {
+        "id": "5189-3",
+        "propertyId": 5189,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/6ad8c36b11e334d9f06f867de387d733/photo_fdd5ab18886846ff5612e32494fae531.jpg",
+        "sortOrder": 2,
+        "altText": "EXCLUSIVITE PLACE SAINTE CECILE - photo 3"
+      }
+    ],
+    "features": [
+      {
+        "propertyId": 5189,
+        "featureKey": "maison",
+        "labelFr": "Maison"
+      }
+    ]
+  },
+  {
+    "id": 5186,
+    "title": "NOUVEAUTE EXCLUSIVITE",
+    "slug": "nouveaute-exclusivite",
+    "transactionType": "vente",
+    "propertyType": "appartement",
+    "status": "active",
+    "sourceStatus": "Vente",
+    "priceAmount": 295000,
+    "priceCurrency": "EUR",
+    "surfaceM2": 96,
+    "terrainM2": null,
+    "rooms": 4,
+    "bedrooms": 3,
+    "bathrooms": 0,
+    "parkingCount": 0,
+    "garageCount": 0,
+    "dpeLabel": "C",
+    "dpeValue": 149,
+    "gesLabel": "D",
+    "gesValue": 33,
+    "description": "Rue de Paris, bel appartement PERRET de 96m2 au deuxième étage offrant une belle entrée, une cuisine aménagée ouverte sur un séjour /salon, trois chambres, une salle de douche et une lingerie, nombreux placards. Une cave. Charges copro annuelles 3824EUR, DPE en cours. Agent co Emma Vasselin",
+    "cityId": "city-le-havre",
+    "postalCode": "76600",
+    "lat": null,
+    "lng": null,
+    "agentId": "agent-lucas-bernard",
+    "publishedAt": "2026-09-30T16:30:56.358Z",
+    "updatedAt": "2026-09-30T16:30:56.358Z",
+    "isFeatured": false,
+    "images": [
+      {
+        "id": "5186-1",
+        "propertyId": 5186,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/5d5a6005a34ea247abb584a9b7e5dcd0/photo_3d51e358f4452288b3daaec8ac94433a.jpg",
+        "sortOrder": 0,
+        "altText": "NOUVEAUTE EXCLUSIVITE - photo 1"
+      },
+      {
+        "id": "5186-2",
+        "propertyId": 5186,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/5d5a6005a34ea247abb584a9b7e5dcd0/photo_1fe2c65b80250d722ff8916ea0dff777.jpg",
+        "sortOrder": 1,
+        "altText": "NOUVEAUTE EXCLUSIVITE - photo 2"
+      },
+      {
+        "id": "5186-3",
+        "propertyId": 5186,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/5d5a6005a34ea247abb584a9b7e5dcd0/photo_ae44dfb9703a783f7fc4dac8b915ffea.jpg",
+        "sortOrder": 2,
+        "altText": "NOUVEAUTE EXCLUSIVITE - photo 3"
+      },
+      {
+        "id": "5186-4",
+        "propertyId": 5186,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/5d5a6005a34ea247abb584a9b7e5dcd0/photo_74e03acf50b04b6b33641d949cf055b2.jpg",
+        "sortOrder": 3,
+        "altText": "NOUVEAUTE EXCLUSIVITE - photo 4"
+      },
+      {
+        "id": "5186-5",
+        "propertyId": 5186,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/5d5a6005a34ea247abb584a9b7e5dcd0/photo_fd8e88cc0f23ba5abbf914790bacf730.jpg",
+        "sortOrder": 4,
+        "altText": "NOUVEAUTE EXCLUSIVITE - photo 5"
+      },
+      {
+        "id": "5186-6",
+        "propertyId": 5186,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/5d5a6005a34ea247abb584a9b7e5dcd0/photo_d5b9905c56fec21d6023cea61523d0fe.jpg",
+        "sortOrder": 5,
+        "altText": "NOUVEAUTE EXCLUSIVITE - photo 6"
+      },
+      {
+        "id": "5186-7",
+        "propertyId": 5186,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/5d5a6005a34ea247abb584a9b7e5dcd0/photo_426e758b8931c61962c388201ad37c23.jpg",
+        "sortOrder": 6,
+        "altText": "NOUVEAUTE EXCLUSIVITE - photo 7"
+      },
+      {
+        "id": "5186-8",
+        "propertyId": 5186,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/5d5a6005a34ea247abb584a9b7e5dcd0/photo_92bc27432adb13a6d80e7a9be1ce31ef.jpg",
+        "sortOrder": 7,
+        "altText": "NOUVEAUTE EXCLUSIVITE - photo 8"
+      },
+      {
+        "id": "5186-9",
+        "propertyId": 5186,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/5d5a6005a34ea247abb584a9b7e5dcd0/photo_b60d802d65e8a340b17d9740646d299a.jpg",
+        "sortOrder": 8,
+        "altText": "NOUVEAUTE EXCLUSIVITE - photo 9"
+      }
+    ],
+    "features": [
+      {
+        "propertyId": 5186,
+        "featureKey": "chauffage",
+        "labelFr": "Chauffage"
+      },
+      {
+        "propertyId": 5186,
+        "featureKey": "cave",
+        "labelFr": "Cave"
+      }
+    ]
+  },
+  {
+    "id": 5184,
+    "title": "Place de l'Hôtel de Ville, Vue Ouest",
+    "slug": "place-de-l-hotel-de-ville-vue-ouest",
+    "transactionType": "vente",
+    "propertyType": "appartement",
+    "status": "active",
+    "sourceStatus": "Vente",
+    "priceAmount": 358000,
+    "priceCurrency": "EUR",
+    "surfaceM2": 111,
+    "terrainM2": null,
+    "rooms": 5,
+    "bedrooms": 3,
+    "bathrooms": 1,
+    "parkingCount": 1,
+    "garageCount": 0,
+    "dpeLabel": "F",
+    "dpeValue": 357,
+    "gesLabel": "G",
+    "gesValue": 100,
+    "description": "1ère mise en vente en Exclusivité, bel appartement PERRET de 111m2 au dernier étage avec ascenseur: belle entrée parquetée, séjour /salon 45m2 exposé Ouest avec balcon et vue dégagée, cuisine aménagée, deux chambres (possibilité 3 avec séjour 32m2), bureau, salle de bains, nombreux placards. Charges copro/an 3600 EUR",
+    "cityId": "city-le-havre",
+    "postalCode": "76600",
+    "lat": null,
+    "lng": null,
+    "agentId": "agent-jeanne-morel",
+    "publishedAt": "2026-09-30T16:29:56.223Z",
+    "updatedAt": "2026-09-30T16:29:56.223Z",
+    "isFeatured": false,
+    "images": [
+      {
+        "id": "5184-1",
+        "propertyId": 5184,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/b09105565b3a79d906d36e4219d4dcd3/photo_6e240905cd2b07c65173e56711dbaa0c.jpg",
+        "sortOrder": 0,
+        "altText": "Place de l'Hôtel de Ville, Vue Ouest - photo 1"
+      },
+      {
+        "id": "5184-2",
+        "propertyId": 5184,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/b09105565b3a79d906d36e4219d4dcd3/photo_ed82ad912b3d4e6cd46c0857525a92d6.jpg",
+        "sortOrder": 1,
+        "altText": "Place de l'Hôtel de Ville, Vue Ouest - photo 2"
+      },
+      {
+        "id": "5184-3",
+        "propertyId": 5184,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/b09105565b3a79d906d36e4219d4dcd3/photo_4a275dbf36d734fa7a89f7b142c69676.jpg",
+        "sortOrder": 2,
+        "altText": "Place de l'Hôtel de Ville, Vue Ouest - photo 3"
+      },
+      {
+        "id": "5184-4",
+        "propertyId": 5184,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/b09105565b3a79d906d36e4219d4dcd3/photo_d03b707e3881e711e898c51575921ec0.jpg",
+        "sortOrder": 3,
+        "altText": "Place de l'Hôtel de Ville, Vue Ouest - photo 4"
+      },
+      {
+        "id": "5184-5",
+        "propertyId": 5184,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/b09105565b3a79d906d36e4219d4dcd3/photo_d222588247f7a660af4c532d0d700c9a.jpg",
+        "sortOrder": 4,
+        "altText": "Place de l'Hôtel de Ville, Vue Ouest - photo 5"
+      },
+      {
+        "id": "5184-6",
+        "propertyId": 5184,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/b09105565b3a79d906d36e4219d4dcd3/photo_483af7c88f14c68dd0904cce75d5ad49.jpg",
+        "sortOrder": 5,
+        "altText": "Place de l'Hôtel de Ville, Vue Ouest - photo 6"
+      }
+    ],
+    "features": [
+      {
+        "propertyId": 5184,
+        "featureKey": "chauffage",
+        "labelFr": "Chauffage"
+      },
+      {
+        "propertyId": 5184,
+        "featureKey": "cave",
+        "labelFr": "Cave"
+      },
+      {
+        "propertyId": 5184,
+        "featureKey": "ascenseur",
+        "labelFr": "Ascenseur"
+      }
+    ]
+  },
+  {
+    "id": 5182,
+    "title": "EXCLUSIVITE LES ORMEAUX",
+    "slug": "exclusivite-les-ormeaux",
+    "transactionType": "vente",
+    "propertyType": "appartement",
+    "status": "active",
+    "sourceStatus": "Vente",
+    "priceAmount": 258000,
+    "priceCurrency": "EUR",
+    "surfaceM2": 91,
+    "terrainM2": null,
+    "rooms": 4,
+    "bedrooms": 2,
+    "bathrooms": 1,
+    "parkingCount": 0,
+    "garageCount": 1,
+    "dpeLabel": "E",
+    "dpeValue": 325,
+    "gesLabel": "F",
+    "gesValue": 69,
+    "description": "Dans une impasse, au calme , appartement lumineux avec balcon sud offrant un grand séjour salon de 35m2 , une cuisine , deux chambres , une salle de bain , un toillette indépendant. Une cave et un garage complete ce bien. Charges annuelles 1800EUR/année chauffage eau chaude compris.",
+    "cityId": "city-le-havre",
+    "postalCode": "76600",
+    "lat": null,
+    "lng": null,
+    "agentId": "agent-jeanne-morel",
+    "publishedAt": "2026-09-30T16:28:57.161Z",
+    "updatedAt": "2026-09-30T16:28:57.161Z",
+    "isFeatured": false,
+    "images": [
+      {
+        "id": "5182-1",
+        "propertyId": 5182,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/861c1f0a640663d7de6a27593262ed8b/photo_29b889537b2a3a3a137dd3845fbf3975.jpg",
+        "sortOrder": 0,
+        "altText": "EXCLUSIVITE LES ORMEAUX - photo 1"
+      },
+      {
+        "id": "5182-2",
+        "propertyId": 5182,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/861c1f0a640663d7de6a27593262ed8b/photo_9638e01b465a559695122bb762e4f374.jpg",
+        "sortOrder": 1,
+        "altText": "EXCLUSIVITE LES ORMEAUX - photo 2"
+      },
+      {
+        "id": "5182-3",
+        "propertyId": 5182,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/861c1f0a640663d7de6a27593262ed8b/photo_f6fe41becc98116f42624bbf22381bfe.jpg",
+        "sortOrder": 2,
+        "altText": "EXCLUSIVITE LES ORMEAUX - photo 3"
+      },
+      {
+        "id": "5182-4",
+        "propertyId": 5182,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/861c1f0a640663d7de6a27593262ed8b/photo_2baef81ec9fa33b1d27f0ea178b003ff.jpg",
+        "sortOrder": 3,
+        "altText": "EXCLUSIVITE LES ORMEAUX - photo 4"
+      },
+      {
+        "id": "5182-5",
+        "propertyId": 5182,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/861c1f0a640663d7de6a27593262ed8b/photo_3171e73c5dbd03ff276284759b110e69.jpg",
+        "sortOrder": 4,
+        "altText": "EXCLUSIVITE LES ORMEAUX - photo 5"
+      }
+    ],
+    "features": [
+      {
+        "propertyId": 5182,
+        "featureKey": "chauffage",
+        "labelFr": "Chauffage"
+      },
+      {
+        "propertyId": 5182,
+        "featureKey": "balcon",
+        "labelFr": "Balcon"
+      },
+      {
+        "propertyId": 5182,
+        "featureKey": "cave",
+        "labelFr": "Cave"
+      }
+    ]
+  },
+  {
+    "id": 5179,
+    "title": "Face Casino",
+    "slug": "face-casino",
+    "transactionType": "vente",
+    "propertyType": "appartement",
+    "status": "active",
+    "sourceStatus": "Vente",
+    "priceAmount": 176000,
+    "priceCurrency": "EUR",
+    "surfaceM2": 76,
+    "terrainM2": null,
+    "rooms": 3,
+    "bedrooms": 2,
+    "bathrooms": 1,
+    "parkingCount": 1,
+    "garageCount": 1,
+    "dpeLabel": "E",
+    "dpeValue": 282,
+    "gesLabel": "E",
+    "gesValue": 61,
+    "description": "Nouveauté en Exclusivité, appartement duplex au dernier étage avec Vue dégagée sur le bassin: au premier niveau: entrée, cuisine ouverte sur séjour ave une double exposition, à l'étage,deux chambres dont une pouvant faire chambre/bureau, salle de bains (petit grenier au dessus).chauffage individuel , faibles charges 840 EUR/an. DPE E",
+    "cityId": "city-le-havre",
+    "postalCode": "76600",
+    "lat": null,
+    "lng": null,
+    "agentId": "agent-jeanne-morel",
+    "publishedAt": "2026-09-30T16:27:56.755Z",
+    "updatedAt": "2026-09-30T16:27:56.755Z",
+    "isFeatured": false,
+    "images": [
+      {
+        "id": "5179-1",
+        "propertyId": 5179,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/9d7774e391935c3726e6f587ecf6a303/photo_0d6c5a7a9d1074f50c1e018790b013c2.jpg",
+        "sortOrder": 0,
+        "altText": "Face Casino - photo 1"
+      },
+      {
+        "id": "5179-2",
+        "propertyId": 5179,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/9d7774e391935c3726e6f587ecf6a303/photo_5ef4c2219bd4f7def4581d07e41fca47.jpg",
+        "sortOrder": 1,
+        "altText": "Face Casino - photo 2"
+      },
+      {
+        "id": "5179-3",
+        "propertyId": 5179,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/9d7774e391935c3726e6f587ecf6a303/photo_6ae7ff1428535e986ea3af44019a3af2.jpg",
+        "sortOrder": 2,
+        "altText": "Face Casino - photo 3"
+      }
+    ],
+    "features": [
+      {
+        "propertyId": 5179,
+        "featureKey": "appartement",
+        "labelFr": "Appartement"
+      }
+    ]
+  },
+  {
+    "id": 5177,
+    "title": "Début Graville, rue J.Mazarin",
+    "slug": "debut-graville-rue-j-mazarin",
+    "transactionType": "vente",
+    "propertyType": "appartement",
+    "status": "active",
+    "sourceStatus": "Vente",
+    "priceAmount": 119000,
+    "priceCurrency": "EUR",
+    "surfaceM2": 69,
+    "terrainM2": null,
+    "rooms": 4,
+    "bedrooms": 2,
+    "bathrooms": 1,
+    "parkingCount": 1,
+    "garageCount": 0,
+    "dpeLabel": "D",
+    "dpeValue": 232,
+    "gesLabel": "E",
+    "gesValue": 64,
+    "description": "A 2 pas de la nouvelle ligne de tramway, dans petite résidence, appartement dans petite résidence,de cinq pièces principales:avec 2 balcons un exposé Sud de 7 m2 et un Ouest : entrée, séjour/salon avec une double exposition (S/O), cuisine aménagée et séchoir, deux chambres, salle de bains, wc. Charges par an 2800 EUR/an chauffage et eau chaude...) DPE E",
+    "cityId": "city-le-havre",
+    "postalCode": "76600",
+    "lat": null,
+    "lng": null,
+    "agentId": "agent-jeanne-morel",
+    "publishedAt": "2026-09-30T16:26:56.716Z",
+    "updatedAt": "2026-09-30T16:26:56.716Z",
+    "isFeatured": false,
+    "images": [
+      {
+        "id": "5177-1",
+        "propertyId": 5177,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/77b52e6b1554cf989f4ca2a028cff28c/photo_5f77f15294966bdd7a6fdccc467786f7.jpg",
+        "sortOrder": 0,
+        "altText": "Début Graville, rue J.Mazarin - photo 1"
+      },
+      {
+        "id": "5177-2",
+        "propertyId": 5177,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/77b52e6b1554cf989f4ca2a028cff28c/photo_4dfa629542fbae973af6088bed938aad.jpg",
+        "sortOrder": 1,
+        "altText": "Début Graville, rue J.Mazarin - photo 2"
+      },
+      {
+        "id": "5177-3",
+        "propertyId": 5177,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/77b52e6b1554cf989f4ca2a028cff28c/photo_72ac8c993a9f5796e559dd93ceefef5a.jpg",
+        "sortOrder": 2,
+        "altText": "Début Graville, rue J.Mazarin - photo 3"
+      },
+      {
+        "id": "5177-4",
+        "propertyId": 5177,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/77b52e6b1554cf989f4ca2a028cff28c/photo_7b226b59443c593474ea54721162d991.jpg",
+        "sortOrder": 3,
+        "altText": "Début Graville, rue J.Mazarin - photo 4"
+      },
+      {
+        "id": "5177-5",
+        "propertyId": 5177,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/77b52e6b1554cf989f4ca2a028cff28c/photo_7e2e17d87a1f2ca51a78c98b124aff2b.jpg",
+        "sortOrder": 4,
+        "altText": "Début Graville, rue J.Mazarin - photo 5"
+      }
+    ],
+    "features": [
+      {
+        "propertyId": 5177,
+        "featureKey": "balcon",
+        "labelFr": "Balcon"
+      },
+      {
+        "propertyId": 5177,
+        "featureKey": "cave",
+        "labelFr": "Cave"
+      }
+    ]
+  },
+  {
+    "id": 5176,
+    "title": "Nouveauté , exclusivité",
+    "slug": "nouveaute-exclusivite-5176",
+    "transactionType": "vente",
+    "propertyType": "appartement",
+    "status": "active",
+    "sourceStatus": "Vente",
+    "priceAmount": 314000,
+    "priceCurrency": "EUR",
+    "surfaceM2": 95,
+    "terrainM2": null,
+    "rooms": 3,
+    "bedrooms": 2,
+    "bathrooms": 0,
+    "parkingCount": 0,
+    "garageCount": 0,
+    "dpeLabel": "C",
+    "dpeValue": 176,
+    "gesLabel": "D",
+    "gesValue": 30,
+    "description": "Face au volcan, Bel appartement lumineux avec ascenseur offrant une grande entrée, une cuisine aménagée et équipée, un séjour salon, deux chambres (dont une avec rangement et balcon), un dressing, une salle de douche. Une Cave. L'ensemble est en parfat état. Agent co Emma Vasselin",
+    "cityId": "city-le-havre",
+    "postalCode": "76600",
+    "lat": null,
+    "lng": null,
+    "agentId": "agent-lucas-bernard",
+    "publishedAt": "2026-09-30T16:25:56.772Z",
+    "updatedAt": "2026-09-30T16:25:56.772Z",
+    "isFeatured": false,
+    "images": [
+      {
+        "id": "5176-1",
+        "propertyId": 5176,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/550c63df5325dbba1e51fe0ba44dbaed/photo_5554c5bc1ee6f0a2b4770bf490f9e658_Inc_0.jpg",
+        "sortOrder": 0,
+        "altText": "Nouveauté , exclusivité - photo 1"
+      },
+      {
+        "id": "5176-2",
+        "propertyId": 5176,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/550c63df5325dbba1e51fe0ba44dbaed/photo_2e9de500da832cb2429c89018abbde37.jpg",
+        "sortOrder": 1,
+        "altText": "Nouveauté , exclusivité - photo 2"
+      },
+      {
+        "id": "5176-3",
+        "propertyId": 5176,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/550c63df5325dbba1e51fe0ba44dbaed/photo_c05abd036124d3779e83da8a4121e7d3.jpg",
+        "sortOrder": 2,
+        "altText": "Nouveauté , exclusivité - photo 3"
+      },
+      {
+        "id": "5176-4",
+        "propertyId": 5176,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/550c63df5325dbba1e51fe0ba44dbaed/photo_9d953830ff7351e8999f7161db22bde0_Inc_0.jpg",
+        "sortOrder": 3,
+        "altText": "Nouveauté , exclusivité - photo 4"
+      },
+      {
+        "id": "5176-5",
+        "propertyId": 5176,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/550c63df5325dbba1e51fe0ba44dbaed/photo_520ac0c072c85b516097ef0ec581d2df.jpg",
+        "sortOrder": 4,
+        "altText": "Nouveauté , exclusivité - photo 5"
+      },
+      {
+        "id": "5176-6",
+        "propertyId": 5176,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/550c63df5325dbba1e51fe0ba44dbaed/photo_14ba44554092b50506c40e4e24706af4.jpg",
+        "sortOrder": 5,
+        "altText": "Nouveauté , exclusivité - photo 6"
+      },
+      {
+        "id": "5176-7",
+        "propertyId": 5176,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/550c63df5325dbba1e51fe0ba44dbaed/photo_ba9fa0cc5bc0f3ef29782c48e902ccc1.jpg",
+        "sortOrder": 6,
+        "altText": "Nouveauté , exclusivité - photo 7"
+      }
+    ],
+    "features": [
+      {
+        "propertyId": 5176,
+        "featureKey": "cave",
+        "labelFr": "Cave"
+      },
+      {
+        "propertyId": 5176,
+        "featureKey": "ascenseur",
+        "labelFr": "Ascenseur"
+      }
+    ]
+  },
+  {
+    "id": 5174,
+    "title": "EXCLUSIVITE FELIX FAURE / PARC D'OR , PROXIMITE DES LYCEES",
+    "slug": "exclusivite-felix-faure-parc-d-or-proximite-des-lycees",
+    "transactionType": "vente",
+    "propertyType": "maison_villa",
+    "status": "active",
+    "sourceStatus": "Vente",
+    "priceAmount": 425000,
+    "priceCurrency": "EUR",
+    "surfaceM2": 143,
+    "terrainM2": null,
+    "rooms": 5,
+    "bedrooms": 3,
+    "bathrooms": 1,
+    "parkingCount": 0,
+    "garageCount": 1,
+    "dpeLabel": "F",
+    "dpeValue": 332,
+    "gesLabel": "F",
+    "gesValue": 71,
+    "description": "Magnifique maison de style art deco à proximité des lycées Claude Monet et St Joseph d'une surface de 143 m2 Habitable sur une parcelle totale de 315 m2. Ce bien non mitoyen exposé plein sud avec terrasse et jardin se compose d'un large séjour salon d'une surface de 38m2 avec sa belle cheminée fonctionnelle en pierre , cuisine récente de qualité. A l'étage, 3 chambres possibilité 4 , une salle de bain ainsi qu'une seconde à créer (arrivée d'eau installée) permettant une suite parentale , bureau. Accès sous sol complet par un escalier en bois d'orme avec second bureau , atelier , cave à vin et enfin un garage de 4m70 de longueur sur 4m30 de largeur. La toiture est neuve. Cette maison familliale dispose d'un cachet certain avec son style année 30 préservé , ses parquets massifs et sa hauteur sous plafond avec arrondis.",
+    "cityId": "city-le-havre",
+    "postalCode": "76620",
+    "lat": null,
+    "lng": null,
+    "agentId": "agent-jeanne-morel",
+    "publishedAt": "2026-09-30T16:24:57.303Z",
+    "updatedAt": "2026-09-30T16:24:57.303Z",
+    "isFeatured": false,
+    "images": [
+      {
+        "id": "5174-1",
+        "propertyId": 5174,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/4a03d4038e302f7f0a5802a2dde128af/photo_3edf78a21e1e4e8106f262839c30554f.jpg",
+        "sortOrder": 0,
+        "altText": "EXCLUSIVITE FELIX FAURE / PARC D'OR , PROXIMITE DES LYCEES - photo 1"
+      },
+      {
+        "id": "5174-2",
+        "propertyId": 5174,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/4a03d4038e302f7f0a5802a2dde128af/photo_34b0d3696652ff8324c4599eedbcad0c.jpg",
+        "sortOrder": 1,
+        "altText": "EXCLUSIVITE FELIX FAURE / PARC D'OR , PROXIMITE DES LYCEES - photo 2"
+      },
+      {
+        "id": "5174-3",
+        "propertyId": 5174,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/4a03d4038e302f7f0a5802a2dde128af/photo_ae844bbca9a5f4a30d15de317f5b6966.jpg",
+        "sortOrder": 2,
+        "altText": "EXCLUSIVITE FELIX FAURE / PARC D'OR , PROXIMITE DES LYCEES - photo 3"
+      },
+      {
+        "id": "5174-4",
+        "propertyId": 5174,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/4a03d4038e302f7f0a5802a2dde128af/photo_ee95cb50dbc69343c60d1169a0e4b587.jpg",
+        "sortOrder": 3,
+        "altText": "EXCLUSIVITE FELIX FAURE / PARC D'OR , PROXIMITE DES LYCEES - photo 4"
+      },
+      {
+        "id": "5174-5",
+        "propertyId": 5174,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/4a03d4038e302f7f0a5802a2dde128af/photo_257d04d105a7cae2f6274bcb08d26562.jpg",
+        "sortOrder": 4,
+        "altText": "EXCLUSIVITE FELIX FAURE / PARC D'OR , PROXIMITE DES LYCEES - photo 5"
+      },
+      {
+        "id": "5174-6",
+        "propertyId": 5174,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/4a03d4038e302f7f0a5802a2dde128af/photo_d22439ce7b4dd3c03965852668e438d7.jpg",
+        "sortOrder": 5,
+        "altText": "EXCLUSIVITE FELIX FAURE / PARC D'OR , PROXIMITE DES LYCEES - photo 6"
+      },
+      {
+        "id": "5174-7",
+        "propertyId": 5174,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/4a03d4038e302f7f0a5802a2dde128af/photo_49d2e4637349fed8a24087e461f5858a.jpg",
+        "sortOrder": 6,
+        "altText": "EXCLUSIVITE FELIX FAURE / PARC D'OR , PROXIMITE DES LYCEES - photo 7"
+      },
+      {
+        "id": "5174-8",
+        "propertyId": 5174,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/4a03d4038e302f7f0a5802a2dde128af/photo_d66d36065fcbe7d93f3ff95cb5109177.jpg",
+        "sortOrder": 7,
+        "altText": "EXCLUSIVITE FELIX FAURE / PARC D'OR , PROXIMITE DES LYCEES - photo 8"
+      },
+      {
+        "id": "5174-9",
+        "propertyId": 5174,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/4a03d4038e302f7f0a5802a2dde128af/photo_86bb50cbb3f89435f859de80eb926bf9.jpg",
+        "sortOrder": 8,
+        "altText": "EXCLUSIVITE FELIX FAURE / PARC D'OR , PROXIMITE DES LYCEES - photo 9"
+      }
+    ],
+    "features": [
+      {
+        "propertyId": 5174,
+        "featureKey": "cave",
+        "labelFr": "Cave"
+      }
+    ]
+  },
+  {
+    "id": 5173,
+    "title": "FONTAINE LA MALLET",
+    "slug": "fontaine-la-mallet",
+    "transactionType": "vente",
+    "propertyType": "maison_villa",
+    "status": "active",
+    "sourceStatus": "Vente",
+    "priceAmount": 495000,
+    "priceCurrency": "EUR",
+    "surfaceM2": 212,
+    "terrainM2": null,
+    "rooms": 5,
+    "bedrooms": 4,
+    "bathrooms": 1,
+    "parkingCount": 0,
+    "garageCount": 2,
+    "dpeLabel": "D",
+    "dpeValue": 200,
+    "gesLabel": "E",
+    "gesValue": 62,
+    "description": "Grande et belle maison édifiée sur un sous-sol total sise sur une parcelle arborée (environ 1600m2) comprenant : En rez-de-chaussée : un hall d'entrée, un séjour et un salon avec cheminée donnant sur une terrasse exposée Sud, une cuisine aménagée, une suite parentale avec sa salle de douche, un toilette indépendant; Au premier étage : une grande pièce palière (bureau), trois chambres, une salle de bain, un toilette; Un sous-sol total avec une buanderie, une chaufferie, un espace détente avec un sauna et une douche, un double garage. Un joli jardin arboré. Un bâtiment extérieur. La maison est en parfait état.",
+    "cityId": "city-le-havre",
+    "postalCode": "76290",
+    "lat": null,
+    "lng": null,
+    "agentId": "agent-jeanne-morel",
+    "publishedAt": "2026-09-30T16:23:57.438Z",
+    "updatedAt": "2026-09-30T16:23:57.438Z",
+    "isFeatured": false,
+    "images": [
+      {
+        "id": "5173-1",
+        "propertyId": 5173,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/ac3920df6d7270bd1d203e66ee72e47d/photo_34179c42e9115390189792f9966b01c0.jpg",
+        "sortOrder": 0,
+        "altText": "FONTAINE LA MALLET - photo 1"
+      },
+      {
+        "id": "5173-2",
+        "propertyId": 5173,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/ac3920df6d7270bd1d203e66ee72e47d/photo_b0c06b90fe7d1b2cfcfe7142e900b0b0.jpg",
+        "sortOrder": 1,
+        "altText": "FONTAINE LA MALLET - photo 2"
+      },
+      {
+        "id": "5173-3",
+        "propertyId": 5173,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/ac3920df6d7270bd1d203e66ee72e47d/photo_2d115b2de3e7c22cc6e0235d005714a2.jpg",
+        "sortOrder": 2,
+        "altText": "FONTAINE LA MALLET - photo 3"
+      },
+      {
+        "id": "5173-4",
+        "propertyId": 5173,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/ac3920df6d7270bd1d203e66ee72e47d/photo_03f931067a2ecb88bffbfbfffd645ec9.jpg",
+        "sortOrder": 3,
+        "altText": "FONTAINE LA MALLET - photo 4"
+      },
+      {
+        "id": "5173-5",
+        "propertyId": 5173,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/ac3920df6d7270bd1d203e66ee72e47d/photo_60c8436208bbd37ec6ccd45110150ebd.jpg",
+        "sortOrder": 4,
+        "altText": "FONTAINE LA MALLET - photo 5"
+      },
+      {
+        "id": "5173-6",
+        "propertyId": 5173,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/ac3920df6d7270bd1d203e66ee72e47d/photo_1eceaa40982f64efaecf93218a1f14c8.jpg",
+        "sortOrder": 5,
+        "altText": "FONTAINE LA MALLET - photo 6"
+      },
+      {
+        "id": "5173-7",
+        "propertyId": 5173,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/ac3920df6d7270bd1d203e66ee72e47d/photo_50a5bbea8e4c136613f315f5fdb6d558.jpg",
+        "sortOrder": 6,
+        "altText": "FONTAINE LA MALLET - photo 7"
+      },
+      {
+        "id": "5173-8",
+        "propertyId": 5173,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/ac3920df6d7270bd1d203e66ee72e47d/photo_7c6dc9f4811fb753820c99971274b90b.jpg",
+        "sortOrder": 7,
+        "altText": "FONTAINE LA MALLET - photo 8"
+      },
+      {
+        "id": "5173-9",
+        "propertyId": 5173,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/ac3920df6d7270bd1d203e66ee72e47d/photo_a9adf6e4d1839c9e5e8785d8dc0eb94e.jpg",
+        "sortOrder": 8,
+        "altText": "FONTAINE LA MALLET - photo 9"
+      }
+    ],
+    "features": [
+      {
+        "propertyId": 5173,
+        "featureKey": "maison",
+        "labelFr": "Maison"
+      }
+    ]
+  },
+  {
+    "id": 5170,
+    "title": "EXCLUSIVITE AVENUE RENE COTY",
+    "slug": "exclusivite-avenue-rene-coty",
+    "transactionType": "vente",
+    "propertyType": "autre",
+    "status": "active",
+    "sourceStatus": "Vente",
+    "priceAmount": 380000,
+    "priceCurrency": "EUR",
+    "surfaceM2": 44,
+    "terrainM2": null,
+    "rooms": null,
+    "bedrooms": 0,
+    "bathrooms": 0,
+    "parkingCount": 0,
+    "garageCount": 0,
+    "dpeLabel": null,
+    "dpeValue": null,
+    "gesLabel": "A",
+    "gesValue": 0,
+    "description": "A DEUX PAS DU CENTRE COTY IMMEUBLE DE RAPPORT COMPRENANT UN LOCAL COMMERCIAL EN RDC AINSI QUE TROIS APPARTEMENTS DE TYPE T2. AU RDC : UN LOCAL COMMERCIAL D'UNE SURFACE DE 44 M2 AVEC UN LOYER DE 1100 EUROS / MOIS HC AU 1ER : UN APPARTEMENT DE TYPE T2 D'UNE SURPERFICIE DE 40 M2 AVEC UN LOYER DE 544EUR/ MOIS HC DPE E AU 2EME : UN APPARTEMENT DE TYPE T2 D'UNE SUPERFICIE DE 40 M2 AVEC UN LOYER DE 482EUR/ MOIS HC DPE D AU 3EME : UN APPARTEMENT DE TYPE T2 D'UNE SUPERFICIE DE 41 M2 AVEC UN LOYER DE 558EUR/ MOIS HC DPE E CET IMMEUBLE EST EN BON ETAT ET L'ENSEMBLE EST LOUE - LE REVENU ANNUEL EST DE 32 200 EUROS HC AVEC UN FONCIER DE 4400 EUROS EXCELLENT PLACEMENT Agent Commercial Véronique FOGT",
+    "cityId": "city-le-havre",
+    "postalCode": "76600",
+    "lat": null,
+    "lng": null,
+    "agentId": "agent-clara-durand",
+    "publishedAt": "2026-09-30T16:22:57.516Z",
+    "updatedAt": "2026-09-30T16:22:57.516Z",
+    "isFeatured": false,
+    "images": [
+      {
+        "id": "5170-1",
+        "propertyId": 5170,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/cdc467ce8d3b18852edc5b94d025f7b2/photo_8b5f4e8bd21abdf61dfbe27515ace78b.jpg",
+        "sortOrder": 0,
+        "altText": "EXCLUSIVITE AVENUE RENE COTY - photo 1"
+      },
+      {
+        "id": "5170-2",
+        "propertyId": 5170,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/cdc467ce8d3b18852edc5b94d025f7b2/photo_a75048d57b0efc99307e926e9db5ce9d.jpg",
+        "sortOrder": 1,
+        "altText": "EXCLUSIVITE AVENUE RENE COTY - photo 2"
+      }
+    ],
+    "features": [
+      {
+        "propertyId": 5170,
+        "featureKey": "maison",
+        "labelFr": "Maison"
+      }
+    ]
+  },
+  {
+    "id": 5168,
+    "title": "EXCLUSIVITE HARFLEUR CENTRE",
+    "slug": "exclusivite-harfleur-centre",
+    "transactionType": "vente",
+    "propertyType": "appartement",
+    "status": "active",
+    "sourceStatus": "Vente",
+    "priceAmount": 69000,
+    "priceCurrency": "EUR",
+    "surfaceM2": 33,
+    "terrainM2": null,
+    "rooms": 1,
+    "bedrooms": 0,
+    "bathrooms": 0,
+    "parkingCount": 1,
+    "garageCount": 0,
+    "dpeLabel": "E",
+    "dpeValue": 324,
+    "gesLabel": "F",
+    "gesValue": 70,
+    "description": "APPARTEMENT DE TYPE T1 SITUE AU 3EME ETAGE OFFRANT CUISINE SIMPLE - PIECE DE VIE ACCES BALCON - SDDCHES - WC SEPARE UNE CAVE ET UN PARKING ATTITRE EXTERIEUR COMPLETENT CE BIEN. PROCHE COMMERCES ET ECOLES Agent Co Véronique FOGT",
+    "cityId": "city-le-havre",
+    "postalCode": "76700",
+    "lat": null,
+    "lng": null,
+    "agentId": "agent-clara-durand",
+    "publishedAt": "2026-09-30T16:21:57.304Z",
+    "updatedAt": "2026-09-30T16:21:57.304Z",
+    "isFeatured": false,
+    "images": [
+      {
+        "id": "5168-1",
+        "propertyId": 5168,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/79886b63f5ba1f71e2c5e511860c5660/photo_0b9e586a6e8000481717cd37393508db.jpg",
+        "sortOrder": 0,
+        "altText": "EXCLUSIVITE HARFLEUR CENTRE - photo 1"
+      },
+      {
+        "id": "5168-2",
+        "propertyId": 5168,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/79886b63f5ba1f71e2c5e511860c5660/photo_edf70c12409f3e5af97e9b4a5ce8a920.jpg",
+        "sortOrder": 1,
+        "altText": "EXCLUSIVITE HARFLEUR CENTRE - photo 2"
+      },
+      {
+        "id": "5168-3",
+        "propertyId": 5168,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/79886b63f5ba1f71e2c5e511860c5660/photo_8dca7394da2a708fdac87fffbc6954a3.jpg",
+        "sortOrder": 2,
+        "altText": "EXCLUSIVITE HARFLEUR CENTRE - photo 3"
+      },
+      {
+        "id": "5168-4",
+        "propertyId": 5168,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/79886b63f5ba1f71e2c5e511860c5660/photo_7e6cddb104503c6df07fde400f545ce9.jpg",
+        "sortOrder": 3,
+        "altText": "EXCLUSIVITE HARFLEUR CENTRE - photo 4"
+      },
+      {
+        "id": "5168-5",
+        "propertyId": 5168,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/79886b63f5ba1f71e2c5e511860c5660/photo_539f695787c4fe5535ba5c9a3ca7bdf5.jpg",
+        "sortOrder": 4,
+        "altText": "EXCLUSIVITE HARFLEUR CENTRE - photo 5"
+      }
+    ],
+    "features": [
+      {
+        "propertyId": 5168,
+        "featureKey": "cave",
+        "labelFr": "Cave"
+      }
+    ]
+  },
+  {
+    "id": 5165,
+    "title": "EXCLUSIVITE SAINTE CECILE",
+    "slug": "exclusivite-sainte-cecile",
+    "transactionType": "vente",
+    "propertyType": "maison_villa",
+    "status": "active",
+    "sourceStatus": "Vente",
+    "priceAmount": 129500,
+    "priceCurrency": "EUR",
+    "surfaceM2": 55,
+    "terrainM2": null,
+    "rooms": 3,
+    "bedrooms": 2,
+    "bathrooms": 0,
+    "parkingCount": 0,
+    "garageCount": 1,
+    "dpeLabel": "G",
+    "dpeValue": 710,
+    "gesLabel": "D",
+    "gesValue": 29,
+    "description": "EXCLUSIVITE - A DEUX PAS DE LA PLACE, ADORABLE MAISON Avec Terrasse Sans Vis à vis Offrant 1 Cuisine Aménagée - 1 Séjour/salon - 1 Chambre - 1 Bureau - 1 Sddch - 1 Wc 1 GARAGE et 1 CAVE Complètent ce Bien Le Secteur Prisé - Une vie de Plain-Pied - Un calme Absolu. Agent Co Véronique FOGT",
+    "cityId": "city-le-havre",
+    "postalCode": "76610",
+    "lat": null,
+    "lng": null,
+    "agentId": "agent-clara-durand",
+    "publishedAt": "2026-09-30T16:20:57.305Z",
+    "updatedAt": "2026-09-30T16:20:57.305Z",
+    "isFeatured": false,
+    "images": [
+      {
+        "id": "5165-1",
+        "propertyId": 5165,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/35a0497cd24ade4b9d7ff7edb2e43ea6/photo_bf87d5f5ef6d29827b75c961e2e82e94.jpg",
+        "sortOrder": 0,
+        "altText": "EXCLUSIVITE SAINTE CECILE - photo 1"
+      },
+      {
+        "id": "5165-2",
+        "propertyId": 5165,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/35a0497cd24ade4b9d7ff7edb2e43ea6/photo_5c210ca83d72f3de94c1e9f871ca5823.jpg",
+        "sortOrder": 1,
+        "altText": "EXCLUSIVITE SAINTE CECILE - photo 2"
+      },
+      {
+        "id": "5165-3",
+        "propertyId": 5165,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/35a0497cd24ade4b9d7ff7edb2e43ea6/photo_8939f09011cc34b05501da1df679fec7.jpg",
+        "sortOrder": 2,
+        "altText": "EXCLUSIVITE SAINTE CECILE - photo 3"
+      },
+      {
+        "id": "5165-4",
+        "propertyId": 5165,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/35a0497cd24ade4b9d7ff7edb2e43ea6/photo_7ee3722b23576c499e0fdc2feb458349.jpg",
+        "sortOrder": 3,
+        "altText": "EXCLUSIVITE SAINTE CECILE - photo 4"
+      }
+    ],
+    "features": [
+      {
+        "propertyId": 5165,
+        "featureKey": "maison",
+        "labelFr": "Maison"
+      }
+    ]
+  },
+  {
+    "id": 5163,
+    "title": "NOUVEAUTE PROX UNIVERSITE",
+    "slug": "nouveaute-prox-universite",
+    "transactionType": "vente",
+    "propertyType": "autre",
+    "status": "active",
+    "sourceStatus": "Vente",
+    "priceAmount": 195000,
+    "priceCurrency": "EUR",
+    "surfaceM2": 72,
+    "terrainM2": null,
+    "rooms": null,
+    "bedrooms": 0,
+    "bathrooms": 0,
+    "parkingCount": 0,
+    "garageCount": 0,
+    "dpeLabel": "G",
+    "dpeValue": 656,
+    "gesLabel": "A",
+    "gesValue": 0,
+    "description": "A DEUX MINUTES DE L'UNIVERSITE DECOUVREZ CET IMMEUBLE DE RAPPORT IDEAL POUR ETUDIANTS COMPOSE DE : 2 STUDIOS MEUBLES LOUES 630 EUROS LES DEUX (soit 315 euros l'un) 2 APPARTEMENTS DE TYPE T2 LOUES 780 EUROS LES DEUX (soit 390 euros l'un) LES REVENUS LOCATIFS SONT DE 17 000 EUROS PAR AN PERMETTANT UNE BONNE RENTABILITE LA COPROPRIETE EST PARFAITEMENT ENTRETENUE ET LE LIEU TRES CALME N'HESITEZ PAS A NOUS CONTACTER POUR DE PLUS AMPLES RENSEIGNEMENTS. Agent Co Véronique FOGT",
+    "cityId": "city-le-havre",
+    "postalCode": "76600",
+    "lat": null,
+    "lng": null,
+    "agentId": "agent-clara-durand",
+    "publishedAt": "2026-09-30T16:19:57.957Z",
+    "updatedAt": "2026-09-30T16:19:57.957Z",
+    "isFeatured": false,
+    "images": [
+      {
+        "id": "5163-1",
+        "propertyId": 5163,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/be9fde59ce587b6387c767a2ab0c97f9/photo_7adf499e505147fb33b665d664c5c67d.jpg",
+        "sortOrder": 0,
+        "altText": "NOUVEAUTE PROX UNIVERSITE - photo 1"
+      },
+      {
+        "id": "5163-2",
+        "propertyId": 5163,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/be9fde59ce587b6387c767a2ab0c97f9/photo_3abf58fdff323ab43564b6f55b16c169.jpg",
+        "sortOrder": 1,
+        "altText": "NOUVEAUTE PROX UNIVERSITE - photo 2"
+      },
+      {
+        "id": "5163-3",
+        "propertyId": 5163,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/be9fde59ce587b6387c767a2ab0c97f9/photo_ac9831c23cf7b0fc02c6750e4f898fd2.jpg",
+        "sortOrder": 2,
+        "altText": "NOUVEAUTE PROX UNIVERSITE - photo 3"
+      },
+      {
+        "id": "5163-4",
+        "propertyId": 5163,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/be9fde59ce587b6387c767a2ab0c97f9/photo_8dca30d0b5efe3bfba451ce126434449.jpg",
+        "sortOrder": 3,
+        "altText": "NOUVEAUTE PROX UNIVERSITE - photo 4"
+      },
+      {
+        "id": "5163-5",
+        "propertyId": 5163,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/be9fde59ce587b6387c767a2ab0c97f9/photo_64d616af2fb47396071ca3d468a905bd.jpg",
+        "sortOrder": 4,
+        "altText": "NOUVEAUTE PROX UNIVERSITE - photo 5"
+      },
+      {
+        "id": "5163-6",
+        "propertyId": 5163,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/be9fde59ce587b6387c767a2ab0c97f9/photo_b3d137fc45ebc226609899f2ad4376f6.jpg",
+        "sortOrder": 5,
+        "altText": "NOUVEAUTE PROX UNIVERSITE - photo 6"
+      }
+    ],
+    "features": [
+      {
+        "propertyId": 5163,
+        "featureKey": "maison",
+        "labelFr": "Maison"
+      }
+    ]
+  },
+  {
+    "id": 5162,
+    "title": "Proche forêt de Montgeon",
+    "slug": "proche-foret-de-montgeon",
+    "transactionType": "vente",
+    "propertyType": "maison_villa",
+    "status": "active",
+    "sourceStatus": "Vente",
+    "priceAmount": 295000,
+    "priceCurrency": "EUR",
+    "surfaceM2": 180,
+    "terrainM2": null,
+    "rooms": 5,
+    "bedrooms": 4,
+    "bathrooms": 1,
+    "parkingCount": 0,
+    "garageCount": 1,
+    "dpeLabel": "D",
+    "dpeValue": 246,
+    "gesLabel": "B",
+    "gesValue": 7,
+    "description": "Au calme, grande maison de famille avec jardin et double garage offrant de belles pièces de vie avec cheminées, 4 chambres, une véranda. A découvrir ! Agent co Emma Vasselin",
+    "cityId": "city-le-havre",
+    "postalCode": "76620",
+    "lat": null,
+    "lng": null,
+    "agentId": "agent-lucas-bernard",
+    "publishedAt": "2026-09-30T16:18:57.653Z",
+    "updatedAt": "2026-09-30T16:18:57.653Z",
+    "isFeatured": false,
+    "images": [
+      {
+        "id": "5162-1",
+        "propertyId": 5162,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/477341e2620a2f3b68ed15f21878dd37/photo_a74f3229880ef2ef760b2d1e399a7051.jpg",
+        "sortOrder": 0,
+        "altText": "Proche forêt de Montgeon - photo 1"
+      },
+      {
+        "id": "5162-2",
+        "propertyId": 5162,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/477341e2620a2f3b68ed15f21878dd37/photo_e74c286328ed7ee8fd8675552ad4715c.jpg",
+        "sortOrder": 1,
+        "altText": "Proche forêt de Montgeon - photo 2"
+      },
+      {
+        "id": "5162-3",
+        "propertyId": 5162,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/477341e2620a2f3b68ed15f21878dd37/photo_6c637d5edeb81c5635d5d952585cefae.jpg",
+        "sortOrder": 2,
+        "altText": "Proche forêt de Montgeon - photo 3"
+      },
+      {
+        "id": "5162-4",
+        "propertyId": 5162,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/477341e2620a2f3b68ed15f21878dd37/photo_64d79baa5134afc1940b13ca0b2ec2f2.jpg",
+        "sortOrder": 3,
+        "altText": "Proche forêt de Montgeon - photo 4"
+      },
+      {
+        "id": "5162-5",
+        "propertyId": 5162,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/477341e2620a2f3b68ed15f21878dd37/photo_d0b1c1b475ad87e61748256ad5106dce.jpg",
+        "sortOrder": 4,
+        "altText": "Proche forêt de Montgeon - photo 5"
+      },
+      {
+        "id": "5162-6",
+        "propertyId": 5162,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/477341e2620a2f3b68ed15f21878dd37/photo_e8e392ce2663ce2410ec77896be9f833.jpg",
+        "sortOrder": 5,
+        "altText": "Proche forêt de Montgeon - photo 6"
+      }
+    ],
+    "features": [
+      {
+        "propertyId": 5162,
+        "featureKey": "maison",
+        "labelFr": "Maison"
+      }
+    ]
+  },
+  {
+    "id": 5161,
+    "title": "Rouelles",
+    "slug": "rouelles",
+    "transactionType": "vente",
+    "propertyType": "maison_villa",
+    "status": "active",
+    "sourceStatus": "Vente",
+    "priceAmount": 299000,
+    "priceCurrency": "EUR",
+    "surfaceM2": 143,
+    "terrainM2": null,
+    "rooms": 6,
+    "bedrooms": 4,
+    "bathrooms": 1,
+    "parkingCount": 0,
+    "garageCount": 2,
+    "dpeLabel": "D",
+    "dpeValue": 231,
+    "gesLabel": "D",
+    "gesValue": 35,
+    "description": "Proche du parc de Rouelles, sur une parcelle de 750 m2 arborée, maison de famille offrant en RDC une entrée, une cuisine aménagée, un séjour salon avec cheminée et un accès à une terrasse, deux chambres, une salle de bains, un bureau; à l'étage, deux chambres, une salle de douche; un sous sol total comprenant un cellier, une cave, une buanderie, une chaufferie et un garage deux voitures complète ce bien. Agent co Emma Vasselin",
+    "cityId": "city-le-havre",
+    "postalCode": "76610",
+    "lat": null,
+    "lng": null,
+    "agentId": "agent-lucas-bernard",
+    "publishedAt": "2026-09-30T16:17:58.220Z",
+    "updatedAt": "2026-09-30T16:17:58.220Z",
+    "isFeatured": false,
+    "images": [
+      {
+        "id": "5161-1",
+        "propertyId": 5161,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/a4ba476c8e3e37a44094676d6043f5f1/photo_4c22a4f00a7c843f8186cbd9521ce3fb.jpg",
+        "sortOrder": 0,
+        "altText": "Rouelles - photo 1"
+      },
+      {
+        "id": "5161-2",
+        "propertyId": 5161,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/a4ba476c8e3e37a44094676d6043f5f1/photo_1595139010684d940392db8c859b5656.jpg",
+        "sortOrder": 1,
+        "altText": "Rouelles - photo 2"
+      },
+      {
+        "id": "5161-3",
+        "propertyId": 5161,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/a4ba476c8e3e37a44094676d6043f5f1/photo_97101155a9efc33cc3de7671421c6d70.jpg",
+        "sortOrder": 2,
+        "altText": "Rouelles - photo 3"
+      },
+      {
+        "id": "5161-4",
+        "propertyId": 5161,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/a4ba476c8e3e37a44094676d6043f5f1/photo_34cce83aa37c135a6b9c08bc0dac7804.jpg",
+        "sortOrder": 3,
+        "altText": "Rouelles - photo 4"
+      },
+      {
+        "id": "5161-5",
+        "propertyId": 5161,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/a4ba476c8e3e37a44094676d6043f5f1/photo_1b9a47fe5967c4aefa953d6200250067.jpg",
+        "sortOrder": 4,
+        "altText": "Rouelles - photo 5"
+      },
+      {
+        "id": "5161-6",
+        "propertyId": 5161,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/a4ba476c8e3e37a44094676d6043f5f1/photo_5743fabec64eed6c88c91c4ac5619c52.jpg",
+        "sortOrder": 5,
+        "altText": "Rouelles - photo 6"
+      },
+      {
+        "id": "5161-7",
+        "propertyId": 5161,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/a4ba476c8e3e37a44094676d6043f5f1/photo_5fe460a21d1f4bed3f006dcbb1f6f747.jpg",
+        "sortOrder": 6,
+        "altText": "Rouelles - photo 7"
+      }
+    ],
+    "features": [
+      {
+        "propertyId": 5161,
+        "featureKey": "chauffage",
+        "labelFr": "Chauffage"
+      }
+    ]
+  },
+  {
     "id": 5159,
     "title": "NOUVEAUTE Place de l'hôtel de ville",
     "slug": "nouveaute-place-de-l-hotel-de-ville",
     "transactionType": "vente",
     "propertyType": "appartement",
     "status": "active",
-    "priceAmount": 315000,
+    "sourceStatus": "Vente",
+    "priceAmount": 297000,
     "priceCurrency": "EUR",
     "surfaceM2": 96,
     "terrainM2": null,
@@ -21,44 +2454,44 @@ export const properties: Property[] = [
     "parkingCount": 0,
     "garageCount": 0,
     "dpeLabel": "D",
-    "dpeValue": 200,
+    "dpeValue": 180,
     "gesLabel": "D",
-    "gesValue": 40,
+    "gesValue": 49,
     "description": "Appartement Perret de 96m2, idéalement situé avec une triple exposition, lumineux, offrant une entrée, une cuisine aménagée et équipée avec une arrière cuisine, un séjour salon, 3 chambres, une salle de bains, une douche, un toilette séparé. Une cave Charges de copropriété annuelles 3920EUR (chauffage et eau chaude) Agent co Emma Vasselin",
     "cityId": "city-le-havre",
     "postalCode": "76600",
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-24T08:22:01.629Z",
-    "updatedAt": "2026-02-24T08:22:01.629Z",
-    "isFeatured": true,
+    "publishedAt": "2026-09-30T16:16:58.097Z",
+    "updatedAt": "2026-09-30T16:16:58.097Z",
+    "isFeatured": false,
     "images": [
       {
         "id": "5159-1",
         "propertyId": 5159,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/b6ba6e0330e347f92ee3cb0b80ec4ef6/photo_0979b94472201d9f2c6372a46c6c66d8_Inc_0.jpg",
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/b6ba6e0330e347f92ee3cb0b80ec4ef6/photo_4c7d16a975a23d0c514b17e6e990fcaf_Inc_0.jpg",
         "sortOrder": 0,
         "altText": "NOUVEAUTE Place de l'hôtel de ville - photo 1"
       },
       {
         "id": "5159-2",
         "propertyId": 5159,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/b6ba6e0330e347f92ee3cb0b80ec4ef6/photo_da0ad62031eb8e139c125afba7f2e068_Inc_0.jpg",
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/b6ba6e0330e347f92ee3cb0b80ec4ef6/photo_1085118d59a8fcb3e4c94a00471aec65.jpg",
         "sortOrder": 1,
         "altText": "NOUVEAUTE Place de l'hôtel de ville - photo 2"
       },
       {
         "id": "5159-3",
         "propertyId": 5159,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/b6ba6e0330e347f92ee3cb0b80ec4ef6/photo_4c7d16a975a23d0c514b17e6e990fcaf_Inc_0.jpg",
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/b6ba6e0330e347f92ee3cb0b80ec4ef6/photo_0979b94472201d9f2c6372a46c6c66d8_Inc_0.jpg",
         "sortOrder": 2,
         "altText": "NOUVEAUTE Place de l'hôtel de ville - photo 3"
       },
       {
         "id": "5159-4",
         "propertyId": 5159,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/b6ba6e0330e347f92ee3cb0b80ec4ef6/photo_1085118d59a8fcb3e4c94a00471aec65.jpg",
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/b6ba6e0330e347f92ee3cb0b80ec4ef6/photo_da0ad62031eb8e139c125afba7f2e068_Inc_0.jpg",
         "sortOrder": 3,
         "altText": "NOUVEAUTE Place de l'hôtel de ville - photo 4"
       },
@@ -89,345 +2522,84 @@ export const properties: Property[] = [
     ]
   },
   {
-    "id": 5158,
-    "title": "EXCLUSIVITE LES ORMEAUX",
-    "slug": "exclusivite-les-ormeaux",
+    "id": 5154,
+    "title": "CENTRE DE SAINT ROMAIN DE COLBOSC",
+    "slug": "centre-de-saint-romain-de-colbosc",
     "transactionType": "vente",
     "propertyType": "maison_villa",
     "status": "active",
-    "priceAmount": 298000,
+    "sourceStatus": "Vente",
+    "priceAmount": 370000,
     "priceCurrency": "EUR",
-    "surfaceM2": 100,
+    "surfaceM2": 176,
     "terrainM2": null,
-    "rooms": 5,
-    "bedrooms": 3,
+    "rooms": 8,
+    "bedrooms": 6,
     "bathrooms": 1,
-    "parkingCount": 0,
-    "garageCount": 1,
+    "parkingCount": 3,
+    "garageCount": 2,
     "dpeLabel": "D",
-    "dpeValue": 180,
-    "gesLabel": "B",
-    "gesValue": 7,
-    "description": "EXCLUSIVITE SUPERBE MAISON DE CARACTERE PLEINE DE CACHET ET D'AUTHENTICITE OFFRANT UNE ENTREE SPACIEUSE - UNE CUISINE AMENAGEE OUVERTE SUR UN SEJOUR/SALON ACCES TERRASSE POUR LES BEAUX JOURS. UNE BELLE SUITE PARENTALE TRES COSY AVEC SDBAINS ET DOUCHES - UNE CHAMBRE - UN BUREAU - 1 SDDCHES - WC. A CELA S'AJOUTE UN GRAND GARAGE ET UNE CAVE. LE CHARME FOU DE L'ANCIEN - UNE AMBIANCE CHALEUREUSE ET ELEGANTE POUR CE BIEN D'EXCEPTION. Agent Co Véronique FOGT",
-    "cityId": "city-le-havre",
-    "postalCode": "76600",
-    "lat": null,
-    "lng": null,
-    "agentId": "agent-clara-durand",
-    "publishedAt": "2026-02-24T08:21:01.904Z",
-    "updatedAt": "2026-02-24T08:21:01.904Z",
-    "isFeatured": true,
-    "images": [
-      {
-        "id": "5158-1",
-        "propertyId": 5158,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/770b06ddc81e17ed2ba2667629e676c5/photo_882451e157e9859b61cc6988ae8e1ccf.jpg",
-        "sortOrder": 0,
-        "altText": "EXCLUSIVITE LES ORMEAUX - photo 1"
-      },
-      {
-        "id": "5158-2",
-        "propertyId": 5158,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/770b06ddc81e17ed2ba2667629e676c5/photo_a3e88330b60eb6827a11e7bc8b51ccf5.jpg",
-        "sortOrder": 1,
-        "altText": "EXCLUSIVITE LES ORMEAUX - photo 2"
-      },
-      {
-        "id": "5158-3",
-        "propertyId": 5158,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/770b06ddc81e17ed2ba2667629e676c5/photo_6d3b57df5f0198fe50f6e0a0dbb47361.jpg",
-        "sortOrder": 2,
-        "altText": "EXCLUSIVITE LES ORMEAUX - photo 3"
-      },
-      {
-        "id": "5158-4",
-        "propertyId": 5158,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/770b06ddc81e17ed2ba2667629e676c5/photo_3e61d141e666fd82a5b50410ea8d9502.jpg",
-        "sortOrder": 3,
-        "altText": "EXCLUSIVITE LES ORMEAUX - photo 4"
-      },
-      {
-        "id": "5158-5",
-        "propertyId": 5158,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/770b06ddc81e17ed2ba2667629e676c5/photo_8184939d8224f6f01a8d7b27ce531b0c.jpg",
-        "sortOrder": 4,
-        "altText": "EXCLUSIVITE LES ORMEAUX - photo 5"
-      },
-      {
-        "id": "5158-6",
-        "propertyId": 5158,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/770b06ddc81e17ed2ba2667629e676c5/photo_cdac97b3b900b14d9ce3c5af0f26c578.jpg",
-        "sortOrder": 5,
-        "altText": "EXCLUSIVITE LES ORMEAUX - photo 6"
-      },
-      {
-        "id": "5158-7",
-        "propertyId": 5158,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/770b06ddc81e17ed2ba2667629e676c5/photo_a342f4312da71e4c4b59c3f5c3639b65.jpg",
-        "sortOrder": 6,
-        "altText": "EXCLUSIVITE LES ORMEAUX - photo 7"
-      },
-      {
-        "id": "5158-8",
-        "propertyId": 5158,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/770b06ddc81e17ed2ba2667629e676c5/photo_23bac1be7ef37909531c0247f4387fd1.jpg",
-        "sortOrder": 7,
-        "altText": "EXCLUSIVITE LES ORMEAUX - photo 8"
-      },
-      {
-        "id": "5158-9",
-        "propertyId": 5158,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/770b06ddc81e17ed2ba2667629e676c5/photo_10fc5175d9565d350758ce4100c342ae.jpg",
-        "sortOrder": 8,
-        "altText": "EXCLUSIVITE LES ORMEAUX - photo 9"
-      }
-    ],
-    "features": [
-      {
-        "propertyId": 5158,
-        "featureKey": "maison",
-        "labelFr": "Maison"
-      }
-    ]
-  },
-  {
-    "id": 5157,
-    "title": "NOUVEAUTE LES ACCACIAS",
-    "slug": "nouveaute-les-accacias",
-    "transactionType": "vente",
-    "propertyType": "maison_villa",
-    "status": "active",
-    "priceAmount": 145000,
-    "priceCurrency": "EUR",
-    "surfaceM2": 52,
-    "terrainM2": null,
-    "rooms": 2,
-    "bedrooms": 1,
-    "bathrooms": 0,
-    "parkingCount": 0,
-    "garageCount": 1,
-    "dpeLabel": "D",
-    "dpeValue": 200,
+    "dpeValue": 210,
     "gesLabel": "D",
-    "gesValue": 28,
-    "description": "AGREABLE MAISON OFFFRANT CUISINE OUVERTE SUR SEJOUR/SALON ACCES TERRASSE SUD DE 30 M2 - 1 CHAMBRE - 1 BUREAU - 1 SDCHES - WC CHAUFFAGE INDIVIDUEL AU GAZ - POELE A BOIS - GRAND GARAGE A DECOUVRIR Agent Co Véronique FOGT",
+    "gesValue": 31,
+    "description": "BELLE PROPRIETE FAMILIALE de 176 m2 sur un GRAND JARDIN ARBORE de 1600 m2 Avec Vie de Plain-pied Offrant Au RDC une Cuisine Aménagée et équipée - Une Arrière Cuisine avec Placards - Un Séjour/salon Poêle à bois - 1 Suite Parentale avec Sddches à l'italienne - Wc A l'étage 5 Chambres - 1 sdbains - 1 sddches - Wc - Grands Placards dans le couloir. Sous-sol Complet avec garage 2 voitures - Cave à Vins - Laverie - Chaufferie - buanderie. GARAGE EXTERIEUR pour une voiture avec abri bois. La Situation est Idéale Proche de toutes Commodités Ecoles Commerces et Transports..... Une Visite S'Impose... Agent Co Véronique FOGT",
     "cityId": "city-le-havre",
-    "postalCode": "76620",
+    "postalCode": "76430",
     "lat": null,
     "lng": null,
     "agentId": "agent-clara-durand",
-    "publishedAt": "2026-02-24T08:20:01.806Z",
-    "updatedAt": "2026-02-24T08:20:01.806Z",
-    "isFeatured": true,
+    "publishedAt": "2026-09-30T16:15:58.356Z",
+    "updatedAt": "2026-09-30T16:15:58.356Z",
+    "isFeatured": false,
     "images": [
       {
-        "id": "5157-1",
-        "propertyId": 5157,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/48ec71a8a7f5b4313538a124404ca837/photo_ac71a9027ce11b8b4d91015049d7bbb8.jpg",
+        "id": "5154-1",
+        "propertyId": 5154,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/a70cd3874a270fe08b776c1e0ab0afd1/photo_c2b23a0ae9f4fa8f6a7c78b7834b1621.jpg",
         "sortOrder": 0,
-        "altText": "NOUVEAUTE LES ACCACIAS - photo 1"
+        "altText": "CENTRE DE SAINT ROMAIN DE COLBOSC - photo 1"
       },
       {
-        "id": "5157-2",
-        "propertyId": 5157,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/48ec71a8a7f5b4313538a124404ca837/photo_9da8695b36f87af4dcb874a9ea95709b.jpg",
+        "id": "5154-2",
+        "propertyId": 5154,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/a70cd3874a270fe08b776c1e0ab0afd1/photo_ffa9808b2b26edd185cfd3e1dc101565.jpg",
         "sortOrder": 1,
-        "altText": "NOUVEAUTE LES ACCACIAS - photo 2"
+        "altText": "CENTRE DE SAINT ROMAIN DE COLBOSC - photo 2"
       },
       {
-        "id": "5157-3",
-        "propertyId": 5157,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/48ec71a8a7f5b4313538a124404ca837/photo_ecbcd65193377fe2705302abc48673da.jpg",
+        "id": "5154-3",
+        "propertyId": 5154,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/a70cd3874a270fe08b776c1e0ab0afd1/photo_b88bd0a1cd75e385b4e7b4da8ac98c8c.jpg",
         "sortOrder": 2,
-        "altText": "NOUVEAUTE LES ACCACIAS - photo 3"
+        "altText": "CENTRE DE SAINT ROMAIN DE COLBOSC - photo 3"
+      },
+      {
+        "id": "5154-4",
+        "propertyId": 5154,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/a70cd3874a270fe08b776c1e0ab0afd1/photo_3fd010074aaea8f311100e7f34f65eea.jpg",
+        "sortOrder": 3,
+        "altText": "CENTRE DE SAINT ROMAIN DE COLBOSC - photo 4"
+      },
+      {
+        "id": "5154-5",
+        "propertyId": 5154,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/a70cd3874a270fe08b776c1e0ab0afd1/photo_17382f57bc56c480ebd23d3058f76452.jpg",
+        "sortOrder": 4,
+        "altText": "CENTRE DE SAINT ROMAIN DE COLBOSC - photo 5"
+      },
+      {
+        "id": "5154-6",
+        "propertyId": 5154,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/a70cd3874a270fe08b776c1e0ab0afd1/photo_2322705dabb2a3299314f2539ec716d8.jpg",
+        "sortOrder": 5,
+        "altText": "CENTRE DE SAINT ROMAIN DE COLBOSC - photo 6"
       }
     ],
     "features": [
       {
-        "propertyId": 5157,
+        "propertyId": 5154,
         "featureKey": "maison",
         "labelFr": "Maison"
-      }
-    ]
-  },
-  {
-    "id": 5155,
-    "title": "SAINTE ADRESSE CENTRE - MAGNIFIQUE APPARTEMENT OFFRANT UNE V",
-    "slug": "sainte-adresse-centre-magnifique-appartement-offrant-une-v",
-    "transactionType": "vente",
-    "propertyType": "appartement",
-    "status": "active",
-    "priceAmount": 595000,
-    "priceCurrency": "EUR",
-    "surfaceM2": 156,
-    "terrainM2": null,
-    "rooms": 7,
-    "bedrooms": 4,
-    "bathrooms": 1,
-    "parkingCount": 0,
-    "garageCount": 1,
-    "dpeLabel": "D",
-    "dpeValue": 171,
-    "gesLabel": "E",
-    "gesValue": 40,
-    "description": "DANS UNE RESIDENCE DE GRAND STANDING AVEC ASCENSEUR CE SPLENDIDE APPARTEMENT D'ANGLE SITUE AU DERNIER ETAGE AVEC BALCON TRIPLE EXPOSITION VUE MER OFFRE UNE ENTREE UNE CUISINE OUVERTE SUR UN SPACIEUX SEJOUR/SALON. NOUS POSSEDONS UNE SUITE PARENTALE AVEC SDCHES ET DBAINS - 2 CHAMBRES POSSIBILITE 3 - WC. UNE CAVE ET UN GARAGE COMPLETENT CE PRESTIGIEUX APPARTEMENT. TRES BELLE LUMINOSITE - ETAGE ELEVE - LA PROXIMITE DE TOUS LES COMMERCES. UN BIEN TRES RARE OU VOUS N'AVEZ PLUS QU'A POSER VOS VALISES ET CONTEMPLER CETTE VUE EPOUSTOUFLANTE. Agent Co Véronique FOGT",
-    "cityId": "city-sainte-adresse",
-    "postalCode": "76310",
-    "lat": null,
-    "lng": null,
-    "agentId": "agent-clara-durand",
-    "publishedAt": "2026-02-24T08:19:01.813Z",
-    "updatedAt": "2026-02-24T08:19:01.813Z",
-    "isFeatured": true,
-    "images": [
-      {
-        "id": "5155-1",
-        "propertyId": 5155,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/55791e4857e07321d8eb8a227144da0f/photo_492c01494af0dccdb2f5f36ce924b3af.jpg",
-        "sortOrder": 0,
-        "altText": "SAINTE ADRESSE CENTRE - MAGNIFIQUE APPARTEMENT OFFRANT UNE V - photo 1"
-      },
-      {
-        "id": "5155-2",
-        "propertyId": 5155,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/55791e4857e07321d8eb8a227144da0f/photo_1b92cb28e09caac00c2008e3eba957a0.jpg",
-        "sortOrder": 1,
-        "altText": "SAINTE ADRESSE CENTRE - MAGNIFIQUE APPARTEMENT OFFRANT UNE V - photo 2"
-      },
-      {
-        "id": "5155-3",
-        "propertyId": 5155,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/55791e4857e07321d8eb8a227144da0f/photo_64cf28200e9ab0aad126dcef1012c7be.jpg",
-        "sortOrder": 2,
-        "altText": "SAINTE ADRESSE CENTRE - MAGNIFIQUE APPARTEMENT OFFRANT UNE V - photo 3"
-      },
-      {
-        "id": "5155-4",
-        "propertyId": 5155,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/55791e4857e07321d8eb8a227144da0f/photo_a93ca98f6febb5a1a16d15d94b7e3d25.jpg",
-        "sortOrder": 3,
-        "altText": "SAINTE ADRESSE CENTRE - MAGNIFIQUE APPARTEMENT OFFRANT UNE V - photo 4"
-      },
-      {
-        "id": "5155-5",
-        "propertyId": 5155,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/55791e4857e07321d8eb8a227144da0f/photo_468454cdd192dc26089ceb23d722f392.jpg",
-        "sortOrder": 4,
-        "altText": "SAINTE ADRESSE CENTRE - MAGNIFIQUE APPARTEMENT OFFRANT UNE V - photo 5"
-      },
-      {
-        "id": "5155-6",
-        "propertyId": 5155,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/55791e4857e07321d8eb8a227144da0f/photo_1bd1d6c132249208aefde935a3327c3a.jpg",
-        "sortOrder": 5,
-        "altText": "SAINTE ADRESSE CENTRE - MAGNIFIQUE APPARTEMENT OFFRANT UNE V - photo 6"
-      },
-      {
-        "id": "5155-7",
-        "propertyId": 5155,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/55791e4857e07321d8eb8a227144da0f/photo_70bced2e0aab6074b6eeba27e3cdae70.jpg",
-        "sortOrder": 6,
-        "altText": "SAINTE ADRESSE CENTRE - MAGNIFIQUE APPARTEMENT OFFRANT UNE V - photo 7"
-      },
-      {
-        "id": "5155-8",
-        "propertyId": 5155,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/55791e4857e07321d8eb8a227144da0f/photo_642c6f0bbd5d23612d90a91e8a552bf5.jpg",
-        "sortOrder": 7,
-        "altText": "SAINTE ADRESSE CENTRE - MAGNIFIQUE APPARTEMENT OFFRANT UNE V - photo 8"
-      }
-    ],
-    "features": [
-      {
-        "propertyId": 5155,
-        "featureKey": "cave",
-        "labelFr": "Cave"
-      },
-      {
-        "propertyId": 5155,
-        "featureKey": "ascenseur",
-        "labelFr": "Ascenseur"
-      }
-    ]
-  },
-  {
-    "id": 5153,
-    "title": "Quartier Saint François",
-    "slug": "quartier-saint-francois",
-    "transactionType": "vente",
-    "propertyType": "appartement",
-    "status": "active",
-    "priceAmount": 97000,
-    "priceCurrency": "EUR",
-    "surfaceM2": 39,
-    "terrainM2": null,
-    "rooms": 1,
-    "bedrooms": 0,
-    "bathrooms": 0,
-    "parkingCount": 0,
-    "garageCount": 0,
-    "dpeLabel": "F",
-    "dpeValue": 341,
-    "gesLabel": "C",
-    "gesValue": 13,
-    "description": "F1bis avec jolie vue sur le bassin du Roy au 1er étage en bon état. Idéal investisseur. Agent co Emma Vasselin",
-    "cityId": "city-le-havre",
-    "postalCode": "76600",
-    "lat": null,
-    "lng": null,
-    "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-24T08:18:01.990Z",
-    "updatedAt": "2026-02-24T08:18:01.990Z",
-    "isFeatured": true,
-    "images": [
-      {
-        "id": "5153-1",
-        "propertyId": 5153,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/d4a4d58c6f7851db6d008e65db72e9dc/photo_797754b9608320c770caf4eb52e37046.jpg",
-        "sortOrder": 0,
-        "altText": "Quartier Saint François - photo 1"
-      },
-      {
-        "id": "5153-2",
-        "propertyId": 5153,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/d4a4d58c6f7851db6d008e65db72e9dc/photo_cdfb14a7bda89632684846487610e953.jpg",
-        "sortOrder": 1,
-        "altText": "Quartier Saint François - photo 2"
-      },
-      {
-        "id": "5153-3",
-        "propertyId": 5153,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/d4a4d58c6f7851db6d008e65db72e9dc/photo_6fe4c32ad3280943565fa0afb6378314.jpg",
-        "sortOrder": 2,
-        "altText": "Quartier Saint François - photo 3"
-      },
-      {
-        "id": "5153-4",
-        "propertyId": 5153,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/d4a4d58c6f7851db6d008e65db72e9dc/photo_ae48ca3296bfc886b4cc120efccb7ca7.jpg",
-        "sortOrder": 3,
-        "altText": "Quartier Saint François - photo 4"
-      },
-      {
-        "id": "5153-5",
-        "propertyId": 5153,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/d4a4d58c6f7851db6d008e65db72e9dc/photo_3609e1a4a97365da6c6b33a4fb56a35e.jpg",
-        "sortOrder": 4,
-        "altText": "Quartier Saint François - photo 5"
-      },
-      {
-        "id": "5153-6",
-        "propertyId": 5153,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/d4a4d58c6f7851db6d008e65db72e9dc/photo_7536262ba64bd0bb99aa964a4180717d.jpg",
-        "sortOrder": 5,
-        "altText": "Quartier Saint François - photo 6"
-      }
-    ],
-    "features": [
-      {
-        "propertyId": 5153,
-        "featureKey": "appartement",
-        "labelFr": "Appartement"
       }
     ]
   },
@@ -438,9 +2610,10 @@ export const properties: Property[] = [
     "transactionType": "vente",
     "propertyType": "autre",
     "status": "active",
-    "priceAmount": 337000,
+    "sourceStatus": "Vente",
+    "priceAmount": 315000,
     "priceCurrency": "EUR",
-    "surfaceM2": 54,
+    "surfaceM2": 48,
     "terrainM2": null,
     "rooms": null,
     "bedrooms": 0,
@@ -457,9 +2630,9 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-02-24T08:17:01.988Z",
-    "updatedAt": "2026-02-24T08:17:01.988Z",
-    "isFeatured": true,
+    "publishedAt": "2026-09-30T16:14:58.322Z",
+    "updatedAt": "2026-09-30T16:14:58.322Z",
+    "isFeatured": false,
     "images": [
       {
         "id": "5152-1",
@@ -521,12 +2694,13 @@ export const properties: Property[] = [
   },
   {
     "id": 5150,
-    "title": "EXCLUSIVITE - NOUVEAUTE SAINTE ADRESSE",
-    "slug": "exclusivite-nouveaute-sainte-adresse",
+    "title": "SAINTE ADRESSE",
+    "slug": "sainte-adresse",
     "transactionType": "vente",
     "propertyType": "maison_villa",
     "status": "active",
-    "priceAmount": 455000,
+    "sourceStatus": "Vente",
+    "priceAmount": 433000,
     "priceCurrency": "EUR",
     "surfaceM2": 117,
     "terrainM2": null,
@@ -545,58 +2719,72 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-24T08:16:02.025Z",
-    "updatedAt": "2026-02-24T08:16:02.025Z",
-    "isFeatured": true,
+    "publishedAt": "2026-09-30T16:13:58.586Z",
+    "updatedAt": "2026-09-30T16:13:58.586Z",
+    "isFeatured": false,
     "images": [
       {
         "id": "5150-1",
         "propertyId": 5150,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/dc09cdac30f0c82f68c80b9b7038eed8/photo_65daf7b5c0f33bafacfd2994189a471a_Inc_0.jpg",
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/dc09cdac30f0c82f68c80b9b7038eed8/photo_01a3c3b91f72455840e634b0d05c901b.jpg",
         "sortOrder": 0,
-        "altText": "EXCLUSIVITE - NOUVEAUTE SAINTE ADRESSE - photo 1"
+        "altText": "SAINTE ADRESSE - photo 1"
       },
       {
         "id": "5150-2",
         "propertyId": 5150,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/dc09cdac30f0c82f68c80b9b7038eed8/photo_d0763442e9812f7d63fdb70b7ce3b17d_Inc_1.jpg",
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/dc09cdac30f0c82f68c80b9b7038eed8/photo_60eb71b819831d667a90bdd1a4e7035d.jpg",
         "sortOrder": 1,
-        "altText": "EXCLUSIVITE - NOUVEAUTE SAINTE ADRESSE - photo 2"
+        "altText": "SAINTE ADRESSE - photo 2"
       },
       {
         "id": "5150-3",
         "propertyId": 5150,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/dc09cdac30f0c82f68c80b9b7038eed8/photo_0a2f3eee8101e744ac1f3e1a2d635dcc.jpg",
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/dc09cdac30f0c82f68c80b9b7038eed8/photo_cd5b904fdac79eeb18c4726df0c75273.jpg",
         "sortOrder": 2,
-        "altText": "EXCLUSIVITE - NOUVEAUTE SAINTE ADRESSE - photo 3"
+        "altText": "SAINTE ADRESSE - photo 3"
       },
       {
         "id": "5150-4",
         "propertyId": 5150,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/dc09cdac30f0c82f68c80b9b7038eed8/photo_9febb9163cd3a8f548a68fb3b5c1b148_Inc_0.jpg",
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/dc09cdac30f0c82f68c80b9b7038eed8/photo_507ea30d899de4c2f4679ad2057da04b.jpg",
         "sortOrder": 3,
-        "altText": "EXCLUSIVITE - NOUVEAUTE SAINTE ADRESSE - photo 4"
+        "altText": "SAINTE ADRESSE - photo 4"
       },
       {
         "id": "5150-5",
         "propertyId": 5150,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/dc09cdac30f0c82f68c80b9b7038eed8/photo_1b7ce2dd5eeabd6a8c35bb16b16be289.jpg",
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/dc09cdac30f0c82f68c80b9b7038eed8/photo_978b54334b55a5343c17aa92410ba5f6.jpg",
         "sortOrder": 4,
-        "altText": "EXCLUSIVITE - NOUVEAUTE SAINTE ADRESSE - photo 5"
+        "altText": "SAINTE ADRESSE - photo 5"
       },
       {
         "id": "5150-6",
         "propertyId": 5150,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/dc09cdac30f0c82f68c80b9b7038eed8/photo_aa15e3ba79d7369a57405ca127f0d9b8.jpg",
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/dc09cdac30f0c82f68c80b9b7038eed8/photo_65daf7b5c0f33bafacfd2994189a471a_Inc_0.jpg",
         "sortOrder": 5,
-        "altText": "EXCLUSIVITE - NOUVEAUTE SAINTE ADRESSE - photo 6"
+        "altText": "SAINTE ADRESSE - photo 6"
       },
       {
         "id": "5150-7",
         "propertyId": 5150,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/dc09cdac30f0c82f68c80b9b7038eed8/photo_d02f57dd73aad1b33418ca0162429946.jpg",
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/dc09cdac30f0c82f68c80b9b7038eed8/photo_d0763442e9812f7d63fdb70b7ce3b17d_Inc_1.jpg",
         "sortOrder": 6,
-        "altText": "EXCLUSIVITE - NOUVEAUTE SAINTE ADRESSE - photo 7"
+        "altText": "SAINTE ADRESSE - photo 7"
+      },
+      {
+        "id": "5150-8",
+        "propertyId": 5150,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/dc09cdac30f0c82f68c80b9b7038eed8/photo_9febb9163cd3a8f548a68fb3b5c1b148_Inc_0.jpg",
+        "sortOrder": 7,
+        "altText": "SAINTE ADRESSE - photo 8"
+      },
+      {
+        "id": "5150-9",
+        "propertyId": 5150,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/dc09cdac30f0c82f68c80b9b7038eed8/photo_1b7ce2dd5eeabd6a8c35bb16b16be289.jpg",
+        "sortOrder": 8,
+        "altText": "SAINTE ADRESSE - photo 9"
       }
     ],
     "features": [
@@ -609,12 +2797,13 @@ export const properties: Property[] = [
   },
   {
     "id": 5149,
-    "title": "EXCLUSIVITE SAINT VINCENT",
-    "slug": "exclusivite-saint-vincent",
+    "title": "SAINT VINCENT",
+    "slug": "saint-vincent",
     "transactionType": "vente",
     "propertyType": "appartement",
     "status": "active",
-    "priceAmount": 129000,
+    "sourceStatus": "Vente",
+    "priceAmount": 98000,
     "priceCurrency": "EUR",
     "surfaceM2": 51,
     "terrainM2": null,
@@ -623,8 +2812,8 @@ export const properties: Property[] = [
     "bathrooms": 0,
     "parkingCount": 0,
     "garageCount": 0,
-    "dpeLabel": "E",
-    "dpeValue": 244,
+    "dpeLabel": "D",
+    "dpeValue": 230,
     "gesLabel": "B",
     "gesValue": 9,
     "description": "APPARTEMENT EN REZ-DE-CHAUSSEE DE TYPE T2 D'UNE SURFACE DE 51 M2 OFFRANT UNE CUISINE - UN SEJOUR - UNE CHAMBRE EN SOUS-SOL - UNE SALLE DE DOUCHES - WC. BEAUX VOLUMES - LA PROXIMITE DE LA PLAGE. Agent Co Véronique FOGT",
@@ -633,30 +2822,51 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-clara-durand",
-    "publishedAt": "2026-02-24T08:15:02.199Z",
-    "updatedAt": "2026-02-24T08:15:02.199Z",
-    "isFeatured": true,
+    "publishedAt": "2026-09-30T16:12:58.343Z",
+    "updatedAt": "2026-09-30T16:12:58.343Z",
+    "isFeatured": false,
     "images": [
       {
         "id": "5149-1",
         "propertyId": 5149,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/80034de1eeea7da3925e2241606e1eee/photo_c87b4f26d8dbef69fdf2508535da8649.jpg",
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/80034de1eeea7da3925e2241606e1eee/photo_952d336ab3a75c9b22d48a218db4f1eb.jpg",
         "sortOrder": 0,
-        "altText": "EXCLUSIVITE SAINT VINCENT - photo 1"
+        "altText": "SAINT VINCENT - photo 1"
       },
       {
         "id": "5149-2",
         "propertyId": 5149,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/80034de1eeea7da3925e2241606e1eee/photo_a932b80226564cb05967d5bc4cd69ff3.jpg",
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/80034de1eeea7da3925e2241606e1eee/photo_37d5e60dcad8a1159d88c5763f159ecd.jpg",
         "sortOrder": 1,
-        "altText": "EXCLUSIVITE SAINT VINCENT - photo 2"
+        "altText": "SAINT VINCENT - photo 2"
       },
       {
         "id": "5149-3",
         "propertyId": 5149,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/80034de1eeea7da3925e2241606e1eee/photo_2866c92137f47746ef62ae2e0bd9e6ef.jpg",
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/80034de1eeea7da3925e2241606e1eee/photo_706c2e076c50413aaaa36717f3dcd209.jpg",
         "sortOrder": 2,
-        "altText": "EXCLUSIVITE SAINT VINCENT - photo 3"
+        "altText": "SAINT VINCENT - photo 3"
+      },
+      {
+        "id": "5149-4",
+        "propertyId": 5149,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/80034de1eeea7da3925e2241606e1eee/photo_611378652dc719686394f87834442394.jpg",
+        "sortOrder": 3,
+        "altText": "SAINT VINCENT - photo 4"
+      },
+      {
+        "id": "5149-5",
+        "propertyId": 5149,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/80034de1eeea7da3925e2241606e1eee/photo_197a3be64c15660900159fba84228e54.jpg",
+        "sortOrder": 4,
+        "altText": "SAINT VINCENT - photo 5"
+      },
+      {
+        "id": "5149-6",
+        "propertyId": 5149,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/80034de1eeea7da3925e2241606e1eee/photo_542cf795f2d904123e22639f7e612e68.jpg",
+        "sortOrder": 5,
+        "altText": "SAINT VINCENT - photo 6"
       }
     ],
     "features": [
@@ -668,581 +2878,89 @@ export const properties: Property[] = [
     ]
   },
   {
-    "id": 5147,
-    "title": "Nouveauté Jardins suspendus",
-    "slug": "nouveaute-jardins-suspendus",
+    "id": 5148,
+    "title": "EXCLUSIVITE SANVIC",
+    "slug": "exclusivite-sanvic",
     "transactionType": "vente",
-    "propertyType": "maison_villa",
+    "propertyType": "autre",
     "status": "active",
-    "priceAmount": 189000,
+    "sourceStatus": "Vente",
+    "priceAmount": 450000,
     "priceCurrency": "EUR",
-    "surfaceM2": 55,
+    "surfaceM2": 46,
     "terrainM2": null,
-    "rooms": 3,
-    "bedrooms": 1,
-    "bathrooms": 0,
-    "parkingCount": 0,
-    "garageCount": 0,
-    "dpeLabel": "F",
-    "dpeValue": 363,
-    "gesLabel": "C",
-    "gesValue": 13,
-    "description": "Sur une parcelle de 327m2, charmante maison comprenant une cuisine aménagée, un séjour, un salon avec poële, une salle de douche, un toilette indépendant, à l'étage, une chambre et un bureau, possibilité d'agrandir. Une cave.Idéal 1ère acquisition. Agent co Emma Vasselin",
-    "cityId": "city-le-havre",
-    "postalCode": "76620",
-    "lat": null,
-    "lng": null,
-    "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-24T08:14:02.203Z",
-    "updatedAt": "2026-02-24T08:14:02.203Z",
-    "isFeatured": true,
-    "images": [
-      {
-        "id": "5147-1",
-        "propertyId": 5147,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/f83f7ee816f3e73c9e0d2564e6bd2fc6/photo_710da723ff11abeaf5c28b1727e39264.jpg",
-        "sortOrder": 0,
-        "altText": "Nouveauté Jardins suspendus - photo 1"
-      },
-      {
-        "id": "5147-2",
-        "propertyId": 5147,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/f83f7ee816f3e73c9e0d2564e6bd2fc6/photo_af47a9bca677395a557d2cd28e7615d1.jpg",
-        "sortOrder": 1,
-        "altText": "Nouveauté Jardins suspendus - photo 2"
-      },
-      {
-        "id": "5147-3",
-        "propertyId": 5147,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/f83f7ee816f3e73c9e0d2564e6bd2fc6/photo_61af7397f6cc760adeb9b4eb062eff63.jpg",
-        "sortOrder": 2,
-        "altText": "Nouveauté Jardins suspendus - photo 3"
-      },
-      {
-        "id": "5147-4",
-        "propertyId": 5147,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/f83f7ee816f3e73c9e0d2564e6bd2fc6/photo_5f28a77dffc2a210093336e113891ddb.jpg",
-        "sortOrder": 3,
-        "altText": "Nouveauté Jardins suspendus - photo 4"
-      }
-    ],
-    "features": [
-      {
-        "propertyId": 5147,
-        "featureKey": "maison",
-        "labelFr": "Maison"
-      }
-    ]
-  },
-  {
-    "id": 5145,
-    "title": "Sanvic Eglise",
-    "slug": "sanvic-eglise-5145",
-    "transactionType": "vente",
-    "propertyType": "maison_villa",
-    "status": "active",
-    "priceAmount": 324000,
-    "priceCurrency": "EUR",
-    "surfaceM2": 95,
-    "terrainM2": null,
-    "rooms": 6,
-    "bedrooms": 4,
-    "bathrooms": 1,
-    "parkingCount": 0,
-    "garageCount": 1,
-    "dpeLabel": "D",
-    "dpeValue": 212,
-    "gesLabel": "D",
-    "gesValue": 46,
-    "description": "Sanvic Eglise, proche des commerces, charmante maison sanvicaise avec jardin et garage offrant une cuisine semi ouverte sur un séjour, un salon avec cheminée, 4 chambres, une salle de bain, une salle de douche. Un sous-sol avec cave et buanderie. Agent co Emma Vasselin.",
-    "cityId": "city-le-havre",
-    "postalCode": "76620",
-    "lat": null,
-    "lng": null,
-    "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-24T08:13:02.328Z",
-    "updatedAt": "2026-02-24T08:13:02.328Z",
-    "isFeatured": false,
-    "images": [
-      {
-        "id": "5145-1",
-        "propertyId": 5145,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/3218c9de3bdfd31c5ba8db969c0114a4/photo_354b1b230bfc373c38e1e5ded2562da2.jpg",
-        "sortOrder": 0,
-        "altText": "Sanvic Eglise - photo 1"
-      },
-      {
-        "id": "5145-2",
-        "propertyId": 5145,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/3218c9de3bdfd31c5ba8db969c0114a4/photo_3afe06130fe025c0bb44832f0ace9d41.jpg",
-        "sortOrder": 1,
-        "altText": "Sanvic Eglise - photo 2"
-      },
-      {
-        "id": "5145-3",
-        "propertyId": 5145,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/3218c9de3bdfd31c5ba8db969c0114a4/photo_91b1c1107c9a009ebcdd38e97427e7ba.jpg",
-        "sortOrder": 2,
-        "altText": "Sanvic Eglise - photo 3"
-      },
-      {
-        "id": "5145-4",
-        "propertyId": 5145,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/3218c9de3bdfd31c5ba8db969c0114a4/photo_f1057a1993401f3d0eee63f46c79b74f.jpg",
-        "sortOrder": 3,
-        "altText": "Sanvic Eglise - photo 4"
-      },
-      {
-        "id": "5145-5",
-        "propertyId": 5145,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/3218c9de3bdfd31c5ba8db969c0114a4/photo_b360c6e333b821b4b81b7796db87f697.jpg",
-        "sortOrder": 4,
-        "altText": "Sanvic Eglise - photo 5"
-      },
-      {
-        "id": "5145-6",
-        "propertyId": 5145,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/3218c9de3bdfd31c5ba8db969c0114a4/photo_a3b29e4b1a900902c43cd4c5a29e81d7.jpg",
-        "sortOrder": 5,
-        "altText": "Sanvic Eglise - photo 6"
-      }
-    ],
-    "features": [
-      {
-        "propertyId": 5145,
-        "featureKey": "maison",
-        "labelFr": "Maison"
-      }
-    ]
-  },
-  {
-    "id": 5144,
-    "title": "EXCLUSIVITE Saint Nicolas",
-    "slug": "exclusivite-saint-nicolas",
-    "transactionType": "vente",
-    "propertyType": "appartement",
-    "status": "active",
-    "priceAmount": 59500,
-    "priceCurrency": "EUR",
-    "surfaceM2": 28,
-    "terrainM2": null,
-    "rooms": 2,
-    "bedrooms": 1,
-    "bathrooms": 0,
-    "parkingCount": 0,
-    "garageCount": 0,
-    "dpeLabel": "D",
-    "dpeValue": 262,
-    "gesLabel": "B",
-    "gesValue": 10,
-    "description": "Dans une petite copropriété, Quartier des docks, Appartement de 28m2 vendu meublé avec un cellier, proche des commerces et écoles . Charges annuelles 520EUR. Bon État , idéal pour un investissement locatif . Agent co Emma Vasselin.",
-    "cityId": "city-le-havre",
-    "postalCode": "76600",
-    "lat": null,
-    "lng": null,
-    "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-24T08:12:02.391Z",
-    "updatedAt": "2026-02-24T08:12:02.391Z",
-    "isFeatured": false,
-    "images": [
-      {
-        "id": "5144-1",
-        "propertyId": 5144,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/87aa6a32929cc14f80d7f137388adcba/photo_e305c1f530c4ae1b0518ddaa55d2f500.jpg",
-        "sortOrder": 0,
-        "altText": "EXCLUSIVITE Saint Nicolas - photo 1"
-      },
-      {
-        "id": "5144-2",
-        "propertyId": 5144,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/87aa6a32929cc14f80d7f137388adcba/photo_caf270018f41b6c693a646123848e0ef.jpg",
-        "sortOrder": 1,
-        "altText": "EXCLUSIVITE Saint Nicolas - photo 2"
-      },
-      {
-        "id": "5144-3",
-        "propertyId": 5144,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/87aa6a32929cc14f80d7f137388adcba/photo_35cb60e4e3a220310128bf29992df51d.jpg",
-        "sortOrder": 2,
-        "altText": "EXCLUSIVITE Saint Nicolas - photo 3"
-      },
-      {
-        "id": "5144-4",
-        "propertyId": 5144,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/87aa6a32929cc14f80d7f137388adcba/photo_6de76f4f7cd09f9f7b0031c185d7d2d6.jpg",
-        "sortOrder": 3,
-        "altText": "EXCLUSIVITE Saint Nicolas - photo 4"
-      }
-    ],
-    "features": [
-      {
-        "propertyId": 5144,
-        "featureKey": "cave",
-        "labelFr": "Cave"
-      }
-    ]
-  },
-  {
-    "id": 5143,
-    "title": "Hôtel de ville",
-    "slug": "hotel-de-ville",
-    "transactionType": "vente",
-    "propertyType": "appartement",
-    "status": "active",
-    "priceAmount": 321000,
-    "priceCurrency": "EUR",
-    "surfaceM2": 123,
-    "terrainM2": null,
-    "rooms": 5,
-    "bedrooms": 4,
-    "bathrooms": 0,
-    "parkingCount": 0,
-    "garageCount": 0,
-    "dpeLabel": "D",
-    "dpeValue": 224,
-    "gesLabel": "D",
-    "gesValue": 49,
-    "description": "Authenticité pour ce bel appartement Perret de 123m2, idéalement situé avec une triple exposition et des balcons offrant une grande entrée, une cuisine aménagée et équipée, un séjour salon, 4 chambres, une salle de douche, un toilette séparé .Rare sur le marché, ce logement conserve l'ensemble des caractéristiques et éléments d'origine faisant le charme du style Perret .Charges de copropriété annuelles 5100EUR.",
-    "cityId": "city-le-havre",
-    "postalCode": "76600",
-    "lat": null,
-    "lng": null,
-    "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-02-24T08:11:02.397Z",
-    "updatedAt": "2026-02-24T08:11:02.397Z",
-    "isFeatured": false,
-    "images": [
-      {
-        "id": "5143-1",
-        "propertyId": 5143,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/580f35c5c3d20e6299bab182006098cc/photo_ec1e3eb1b2b3f712a2a85eb8b39cb5de.jpg",
-        "sortOrder": 0,
-        "altText": "Hôtel de ville - photo 1"
-      },
-      {
-        "id": "5143-2",
-        "propertyId": 5143,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/580f35c5c3d20e6299bab182006098cc/photo_17d261562adf6897a5e994fcc999e96e.jpg",
-        "sortOrder": 1,
-        "altText": "Hôtel de ville - photo 2"
-      },
-      {
-        "id": "5143-3",
-        "propertyId": 5143,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/580f35c5c3d20e6299bab182006098cc/photo_90d1c2accca75ce21f2384421aad124a.jpg",
-        "sortOrder": 2,
-        "altText": "Hôtel de ville - photo 3"
-      },
-      {
-        "id": "5143-4",
-        "propertyId": 5143,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/580f35c5c3d20e6299bab182006098cc/photo_e37e2c18e9f6a440d062b9e9859d2cfd.jpg",
-        "sortOrder": 3,
-        "altText": "Hôtel de ville - photo 4"
-      },
-      {
-        "id": "5143-5",
-        "propertyId": 5143,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/580f35c5c3d20e6299bab182006098cc/photo_bc93b367a01dba274c76c46d0502cd3d.jpg",
-        "sortOrder": 4,
-        "altText": "Hôtel de ville - photo 5"
-      }
-    ],
-    "features": [
-      {
-        "propertyId": 5143,
-        "featureKey": "balcon",
-        "labelFr": "Balcon"
-      },
-      {
-        "propertyId": 5143,
-        "featureKey": "cave",
-        "labelFr": "Cave"
-      }
-    ]
-  },
-  {
-    "id": 5142,
-    "title": "ST-Roch/AV.Foch",
-    "slug": "st-roch-av-foch",
-    "transactionType": "vente",
-    "propertyType": "appartement",
-    "status": "active",
-    "priceAmount": 169000,
-    "priceCurrency": "EUR",
-    "surfaceM2": 75,
-    "terrainM2": null,
-    "rooms": 2,
-    "bedrooms": 1,
-    "bathrooms": 0,
-    "parkingCount": 0,
-    "garageCount": 0,
-    "dpeLabel": "C",
-    "dpeValue": 173,
-    "gesLabel": "D",
-    "gesValue": 31,
-    "description": "Spacieux appartement de deux pièces principales 74m2 (possibilité de créer une seconde chambre avec quelques travaux): belle entrée, séjour parqueté avec vue sur le square , chambre 19 m2, cuisine , salle d'eau, dressing.Cave.DPE D. Charges copro/an 1800 EUR",
-    "cityId": "city-le-havre",
-    "postalCode": "76600",
-    "lat": null,
-    "lng": null,
-    "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-02-24T08:10:02.487Z",
-    "updatedAt": "2026-02-24T08:10:02.487Z",
-    "isFeatured": false,
-    "images": [
-      {
-        "id": "5142-1",
-        "propertyId": 5142,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/b431cf040049354057a71fab5f364d35/photo_e984683d2a432ed136910a040826d1b6.jpg",
-        "sortOrder": 0,
-        "altText": "ST-Roch/AV.Foch - photo 1"
-      }
-    ],
-    "features": [
-      {
-        "propertyId": 5142,
-        "featureKey": "chauffage",
-        "labelFr": "Chauffage"
-      },
-      {
-        "propertyId": 5142,
-        "featureKey": "cave",
-        "labelFr": "Cave"
-      }
-    ]
-  },
-  {
-    "id": 5141,
-    "title": "Place des Halles",
-    "slug": "place-des-halles",
-    "transactionType": "vente",
-    "propertyType": "appartement",
-    "status": "active",
-    "priceAmount": 82000,
-    "priceCurrency": "EUR",
-    "surfaceM2": 26,
-    "terrainM2": null,
-    "rooms": 1,
+    "rooms": null,
     "bedrooms": 0,
-    "bathrooms": 1,
+    "bathrooms": 0,
     "parkingCount": 0,
     "garageCount": 0,
-    "dpeLabel": "D",
-    "dpeValue": 217,
-    "gesLabel": "D",
-    "gesValue": 45,
-    "description": "1 ère mse en vente en Exclusivité, idéal investisseur: entrée, une pièce principale avec une alcove permettant un espace couchage, cuisine aménahgée US, jolie Vue sud sur les Halles. cave. Chauffage Individuel gaz. Faible charge 40 EUR/mois. DPE D Charges copro/an 480 EUR",
+    "dpeLabel": "E",
+    "dpeValue": 280,
+    "gesLabel": "A",
+    "gesValue": 0,
+    "description": "RARE SUR LE MARCHE BEL ENSEMBLE IMMOBILIER EN COPROPRIETE QUI SE COMPOSE DE 6 APPARTEMENTS ET DE 6 PARKINGS EXTERIEURS A SAVOIR : - 1 APPARTEMENT DE TYPE T2 D'UNE SURFACE DE 46 M2 LOUE 328 EUROS HC - 1 APPARTEMENT DE TYPE T2 D'UNE SURFACE DE 54 M2 LOUE 440 EUROS HC - 1 APPARTEMENT DE TYPE T2 D'UNE SURFACE DE 52 M2 LOUE 289 EUROS HC - 1 APPARTEMENT DE TYPE T5 D'UNE SURFACE DE 88 M2 LOUE 777 EUROS HC - 1 APPARTEMENT DE YTPE T5 D'UNE SURFACE DE 110 M2 LOUE 727 EUROS HC - 1 APPARTEMENT DE TYPE T5 D'UNE SURFACE DE 93 M2 LOUE 795 EUROS HC - 6 PLACES DE PARKING NUMEROTES EN EXTERIEUR AVEC BARRIERE AUTOMATIQUE. TOUS LES LOGEMENTS SONT LOUES. LE REVENU ANNUEL EST DE 40 272 EUROS. BEL EMPLACEMENT AU CALME. Agent Co Véronique FOGT",
     "cityId": "city-le-havre",
-    "postalCode": "76600",
+    "postalCode": "76620",
     "lat": null,
     "lng": null,
-    "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-02-24T08:09:02.590Z",
-    "updatedAt": "2026-02-24T08:09:02.590Z",
+    "agentId": "agent-clara-durand",
+    "publishedAt": "2026-09-30T16:11:58.584Z",
+    "updatedAt": "2026-09-30T16:11:58.584Z",
     "isFeatured": false,
     "images": [
       {
-        "id": "5141-1",
-        "propertyId": 5141,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/ba54e0b86a2415a0a44c0b349f88764a/photo_fadb035abd29d9f0406af27e77999fe1.jpg",
+        "id": "5148-1",
+        "propertyId": 5148,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/83d05b6d61d5bb502468127248bddef7/photo_376e9b7eeff5ec9a9ae347241b2bdca6.jpg",
         "sortOrder": 0,
-        "altText": "Place des Halles - photo 1"
+        "altText": "EXCLUSIVITE SANVIC - photo 1"
       },
       {
-        "id": "5141-2",
-        "propertyId": 5141,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/ba54e0b86a2415a0a44c0b349f88764a/photo_e3cdeaee0b5f167c59744fed67b78766.jpg",
+        "id": "5148-2",
+        "propertyId": 5148,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/83d05b6d61d5bb502468127248bddef7/photo_68d7cdd04ca02a24c434fbbb987924a9.jpg",
         "sortOrder": 1,
-        "altText": "Place des Halles - photo 2"
+        "altText": "EXCLUSIVITE SANVIC - photo 2"
       },
       {
-        "id": "5141-3",
-        "propertyId": 5141,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/ba54e0b86a2415a0a44c0b349f88764a/photo_e384c13186d0c2144cd82bc92b269366.jpg",
+        "id": "5148-3",
+        "propertyId": 5148,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/83d05b6d61d5bb502468127248bddef7/photo_feabb6ac74b5a9bab3099e8f477e3f63.jpg",
         "sortOrder": 2,
-        "altText": "Place des Halles - photo 3"
+        "altText": "EXCLUSIVITE SANVIC - photo 3"
       },
       {
-        "id": "5141-4",
-        "propertyId": 5141,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/ba54e0b86a2415a0a44c0b349f88764a/photo_2eb0f914e50413965aef47b3e3dc9bf0.jpg",
+        "id": "5148-4",
+        "propertyId": 5148,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/83d05b6d61d5bb502468127248bddef7/photo_82afc0b9986bfb8949189e193e10db89.jpg",
         "sortOrder": 3,
-        "altText": "Place des Halles - photo 4"
-      }
-    ],
-    "features": [
-      {
-        "propertyId": 5141,
-        "featureKey": "cave",
-        "labelFr": "Cave"
-      }
-    ]
-  },
-  {
-    "id": 5139,
-    "title": "A deux pas de la plage",
-    "slug": "a-deux-pas-de-la-plage",
-    "transactionType": "vente",
-    "propertyType": "appartement",
-    "status": "active",
-    "priceAmount": 550000,
-    "priceCurrency": "EUR",
-    "surfaceM2": 123,
-    "terrainM2": null,
-    "rooms": 4,
-    "bedrooms": 3,
-    "bathrooms": 1,
-    "parkingCount": 0,
-    "garageCount": 0,
-    "dpeLabel": "D",
-    "dpeValue": 165,
-    "gesLabel": "D",
-    "gesValue": 27,
-    "description": "Charme, élégance et calme pour ce bel appartement duplex, au dernier étage avec Vue mer : entrée, séjour exposé Sud avec balcon, cuisine aménagée, trois chambres, salle de bains, dressing.Cave.Dpe C. Ce bien au cachet certain fait 123m2 carrez pour 157m2 au sol",
-    "cityId": "city-le-havre",
-    "postalCode": "76600",
-    "lat": null,
-    "lng": null,
-    "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-02-24T08:08:02.588Z",
-    "updatedAt": "2026-02-24T08:08:02.588Z",
-    "isFeatured": false,
-    "images": [
-      {
-        "id": "5139-1",
-        "propertyId": 5139,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/b80ebf5308842fcc33f8a5bee6796b5d/photo_ae526c7f52375611e5e0d434e55eac0f.jpg",
-        "sortOrder": 0,
-        "altText": "A deux pas de la plage - photo 1"
+        "altText": "EXCLUSIVITE SANVIC - photo 4"
       },
       {
-        "id": "5139-2",
-        "propertyId": 5139,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/b80ebf5308842fcc33f8a5bee6796b5d/photo_1617d60b889f2370ae873090095d87f6.jpg",
-        "sortOrder": 1,
-        "altText": "A deux pas de la plage - photo 2"
-      },
-      {
-        "id": "5139-3",
-        "propertyId": 5139,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/b80ebf5308842fcc33f8a5bee6796b5d/photo_b1fe3cd0f23f6f12f9ce6875f629a6f0.jpg",
-        "sortOrder": 2,
-        "altText": "A deux pas de la plage - photo 3"
-      },
-      {
-        "id": "5139-4",
-        "propertyId": 5139,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/b80ebf5308842fcc33f8a5bee6796b5d/photo_e0d06b9c03371a895581abf359b9be0b.jpg",
-        "sortOrder": 3,
-        "altText": "A deux pas de la plage - photo 4"
-      },
-      {
-        "id": "5139-5",
-        "propertyId": 5139,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/b80ebf5308842fcc33f8a5bee6796b5d/photo_94de14c8a2c40d3837d4aacb4dfbf9c2.jpg",
+        "id": "5148-5",
+        "propertyId": 5148,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/83d05b6d61d5bb502468127248bddef7/photo_76624985e25544e58f066671535207c0.jpg",
         "sortOrder": 4,
-        "altText": "A deux pas de la plage - photo 5"
+        "altText": "EXCLUSIVITE SANVIC - photo 5"
       },
       {
-        "id": "5139-6",
-        "propertyId": 5139,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/b80ebf5308842fcc33f8a5bee6796b5d/photo_a684529fcde0e66212eaa57a6e9bc90d.jpg",
+        "id": "5148-6",
+        "propertyId": 5148,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/83d05b6d61d5bb502468127248bddef7/photo_847161ba83dc3c197a45960a04f24ebf.jpg",
         "sortOrder": 5,
-        "altText": "A deux pas de la plage - photo 6"
-      }
-    ],
-    "features": [
-      {
-        "propertyId": 5139,
-        "featureKey": "cave",
-        "labelFr": "Cave"
-      }
-    ]
-  },
-  {
-    "id": 5137,
-    "title": "Nouveauté Sainte Adresse",
-    "slug": "nouveaute-sainte-adresse",
-    "transactionType": "vente",
-    "propertyType": "maison_villa",
-    "status": "active",
-    "priceAmount": 384000,
-    "priceCurrency": "EUR",
-    "surfaceM2": 90,
-    "terrainM2": null,
-    "rooms": 5,
-    "bedrooms": 3,
-    "bathrooms": 1,
-    "parkingCount": 0,
-    "garageCount": 1,
-    "dpeLabel": "C",
-    "dpeValue": 159,
-    "gesLabel": "D",
-    "gesValue": 34,
-    "description": "Proche des commerces et des écoles, sur une parcelle arborée de 514m2, maison en excellent état sur sous sol total avec garage offrant un séjour/salon avec cheminée, une cuisine aménagée et équipée, à l'étage, 3 chbs et une salle de bain avec douche. À voir rapidement. Agent co Emma VASSELIN",
-    "cityId": "city-sainte-adresse",
-    "postalCode": "76310",
-    "lat": null,
-    "lng": null,
-    "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-24T08:07:02.724Z",
-    "updatedAt": "2026-02-24T08:07:02.724Z",
-    "isFeatured": false,
-    "images": [
-      {
-        "id": "5137-1",
-        "propertyId": 5137,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/3e32b49f78d0c8a63d6c24ff94bc6233/photo_c260d958b9b596129a26a92800460e6b_Inc_0.jpg",
-        "sortOrder": 0,
-        "altText": "Nouveauté Sainte Adresse - photo 1"
+        "altText": "EXCLUSIVITE SANVIC - photo 6"
       },
       {
-        "id": "5137-2",
-        "propertyId": 5137,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/3e32b49f78d0c8a63d6c24ff94bc6233/photo_d3871dc3152bd0260d95e183cfd9f396.jpg",
-        "sortOrder": 1,
-        "altText": "Nouveauté Sainte Adresse - photo 2"
-      },
-      {
-        "id": "5137-3",
-        "propertyId": 5137,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/3e32b49f78d0c8a63d6c24ff94bc6233/photo_267a9df1c95082b81ee9f00295991d4e.jpg",
-        "sortOrder": 2,
-        "altText": "Nouveauté Sainte Adresse - photo 3"
-      },
-      {
-        "id": "5137-4",
-        "propertyId": 5137,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/3e32b49f78d0c8a63d6c24ff94bc6233/photo_7cb4de9f5561e347f323f38398cf2e92.jpg",
-        "sortOrder": 3,
-        "altText": "Nouveauté Sainte Adresse - photo 4"
-      },
-      {
-        "id": "5137-5",
-        "propertyId": 5137,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/3e32b49f78d0c8a63d6c24ff94bc6233/photo_35860cf7f58bd10035e67e864202e438.jpg",
-        "sortOrder": 4,
-        "altText": "Nouveauté Sainte Adresse - photo 5"
-      },
-      {
-        "id": "5137-6",
-        "propertyId": 5137,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/3e32b49f78d0c8a63d6c24ff94bc6233/photo_5c993b0b9d1d4773180b6db1ea2dbb85.jpg",
-        "sortOrder": 5,
-        "altText": "Nouveauté Sainte Adresse - photo 6"
-      },
-      {
-        "id": "5137-7",
-        "propertyId": 5137,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/3e32b49f78d0c8a63d6c24ff94bc6233/photo_90daf9398a85d2aced5811d1e18f82ad.jpg",
+        "id": "5148-7",
+        "propertyId": 5148,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/83d05b6d61d5bb502468127248bddef7/photo_01f79ecee87cc8adc9cbbb50d3244d47.jpg",
         "sortOrder": 6,
-        "altText": "Nouveauté Sainte Adresse - photo 7"
+        "altText": "EXCLUSIVITE SANVIC - photo 7"
       }
     ],
     "features": [
       {
-        "propertyId": 5137,
+        "propertyId": 5148,
         "featureKey": "maison",
         "labelFr": "Maison"
       }
@@ -1250,12 +2968,13 @@ export const properties: Property[] = [
   },
   {
     "id": 5136,
-    "title": "Nouveauté Saint Vincent",
-    "slug": "nouveaute-saint-vincent",
+    "title": "Saint Vincent",
+    "slug": "saint-vincent-5136",
     "transactionType": "vente",
     "propertyType": "maison_villa",
     "status": "active",
-    "priceAmount": 855000,
+    "sourceStatus": "Vente",
+    "priceAmount": 765000,
     "priceCurrency": "EUR",
     "surfaceM2": 160,
     "terrainM2": null,
@@ -1274,8 +2993,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-24T08:06:02.843Z",
-    "updatedAt": "2026-02-24T08:06:02.843Z",
+    "publishedAt": "2026-09-30T16:10:59.129Z",
+    "updatedAt": "2026-09-30T16:10:59.129Z",
     "isFeatured": false,
     "images": [
       {
@@ -1283,56 +3002,56 @@ export const properties: Property[] = [
         "propertyId": 5136,
         "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/48729f8cc2d4f7d040b2d03e78fd2483/photo_ad25f401af5d3b6d68d7dbd4ba72dac2.jpg",
         "sortOrder": 0,
-        "altText": "Nouveauté Saint Vincent - photo 1"
+        "altText": "Saint Vincent - photo 1"
       },
       {
         "id": "5136-2",
         "propertyId": 5136,
         "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/48729f8cc2d4f7d040b2d03e78fd2483/photo_5abeefed56a67b8bd8560edbb2c42f21.jpg",
         "sortOrder": 1,
-        "altText": "Nouveauté Saint Vincent - photo 2"
+        "altText": "Saint Vincent - photo 2"
       },
       {
         "id": "5136-3",
         "propertyId": 5136,
         "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/48729f8cc2d4f7d040b2d03e78fd2483/photo_dcc57bf925dbd470695e1cecfff90482.jpg",
         "sortOrder": 2,
-        "altText": "Nouveauté Saint Vincent - photo 3"
+        "altText": "Saint Vincent - photo 3"
       },
       {
         "id": "5136-4",
         "propertyId": 5136,
         "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/48729f8cc2d4f7d040b2d03e78fd2483/photo_ab3d84c495ad5ce5e9171deebc596735.jpg",
         "sortOrder": 3,
-        "altText": "Nouveauté Saint Vincent - photo 4"
+        "altText": "Saint Vincent - photo 4"
       },
       {
         "id": "5136-5",
         "propertyId": 5136,
         "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/48729f8cc2d4f7d040b2d03e78fd2483/photo_db3b05faa89105d602150cd0827e0bce.jpg",
         "sortOrder": 4,
-        "altText": "Nouveauté Saint Vincent - photo 5"
+        "altText": "Saint Vincent - photo 5"
       },
       {
         "id": "5136-6",
         "propertyId": 5136,
         "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/48729f8cc2d4f7d040b2d03e78fd2483/photo_d63c84ebddf358f2e3f23bbee17427c4.jpg",
         "sortOrder": 5,
-        "altText": "Nouveauté Saint Vincent - photo 6"
+        "altText": "Saint Vincent - photo 6"
       },
       {
         "id": "5136-7",
         "propertyId": 5136,
         "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/48729f8cc2d4f7d040b2d03e78fd2483/photo_59889efe955d8b8fa1863dd20eb980d6.jpg",
         "sortOrder": 6,
-        "altText": "Nouveauté Saint Vincent - photo 7"
+        "altText": "Saint Vincent - photo 7"
       },
       {
         "id": "5136-8",
         "propertyId": 5136,
         "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/48729f8cc2d4f7d040b2d03e78fd2483/photo_9453e96e2060f77799c8736e2c8ae7cc.jpg",
         "sortOrder": 7,
-        "altText": "Nouveauté Saint Vincent - photo 8"
+        "altText": "Saint Vincent - photo 8"
       }
     ],
     "features": [
@@ -1344,227 +3063,13 @@ export const properties: Property[] = [
     ]
   },
   {
-    "id": 5132,
-    "title": "NOUVEAUTE SAINTE ADRESSE",
-    "slug": "nouveaute-sainte-adresse-5132",
-    "transactionType": "vente",
-    "propertyType": "maison_villa",
-    "status": "active",
-    "priceAmount": 284000,
-    "priceCurrency": "EUR",
-    "surfaceM2": 117,
-    "terrainM2": null,
-    "rooms": 5,
-    "bedrooms": 4,
-    "bathrooms": 1,
-    "parkingCount": 1,
-    "garageCount": 1,
-    "dpeLabel": "E",
-    "dpeValue": 328,
-    "gesLabel": "F",
-    "gesValue": 72,
-    "description": "Dans un quartier recherché de Sainte adresse, proche des écoles, au calme, maison composée d'une entrée, une cuisine aménagée, un séjour/salon, un toilette indépendant, à l'étage, 3 chambres, une salle de bains avec toilette, en rez de jardin, une chambre, une buanderie, un double garage. Un jardin complète ce bien. Beau potentiel, Prévoir des travaux. Agent co Emma Vasselin.",
-    "cityId": "city-sainte-adresse",
-    "postalCode": "76310",
-    "lat": null,
-    "lng": null,
-    "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-24T08:05:02.782Z",
-    "updatedAt": "2026-02-24T08:05:02.782Z",
-    "isFeatured": false,
-    "images": [
-      {
-        "id": "5132-1",
-        "propertyId": 5132,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/a876693102b446e603797a4f53ac3ce9/photo_0c02476e5bf8bc1f5fcd02f03ffd383c.jpg",
-        "sortOrder": 0,
-        "altText": "NOUVEAUTE SAINTE ADRESSE - photo 1"
-      },
-      {
-        "id": "5132-2",
-        "propertyId": 5132,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/a876693102b446e603797a4f53ac3ce9/photo_8c9df04bf4811cc9285b09140291cc27.jpg",
-        "sortOrder": 1,
-        "altText": "NOUVEAUTE SAINTE ADRESSE - photo 2"
-      },
-      {
-        "id": "5132-3",
-        "propertyId": 5132,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/a876693102b446e603797a4f53ac3ce9/photo_4bb13877b5a16639bc66741924430487.jpg",
-        "sortOrder": 2,
-        "altText": "NOUVEAUTE SAINTE ADRESSE - photo 3"
-      },
-      {
-        "id": "5132-4",
-        "propertyId": 5132,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/a876693102b446e603797a4f53ac3ce9/photo_ac40976abf6d61a46cf2a28ba5a296af.jpg",
-        "sortOrder": 3,
-        "altText": "NOUVEAUTE SAINTE ADRESSE - photo 4"
-      },
-      {
-        "id": "5132-5",
-        "propertyId": 5132,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/a876693102b446e603797a4f53ac3ce9/photo_811395b1cbffc8726a1d9b3b0ea0af8e.jpg",
-        "sortOrder": 4,
-        "altText": "NOUVEAUTE SAINTE ADRESSE - photo 5"
-      },
-      {
-        "id": "5132-6",
-        "propertyId": 5132,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/a876693102b446e603797a4f53ac3ce9/photo_2094b5d90448d99d4912b4ac20c85e37.jpg",
-        "sortOrder": 5,
-        "altText": "NOUVEAUTE SAINTE ADRESSE - photo 6"
-      }
-    ],
-    "features": [
-      {
-        "propertyId": 5132,
-        "featureKey": "chauffage",
-        "labelFr": "Chauffage"
-      }
-    ]
-  },
-  {
-    "id": 5128,
+    "id": 5124,
     "title": "Nouveauté",
     "slug": "nouveaute",
     "transactionType": "vente",
-    "propertyType": "maison_villa",
-    "status": "active",
-    "priceAmount": 230000,
-    "priceCurrency": "EUR",
-    "surfaceM2": 94,
-    "terrainM2": null,
-    "rooms": 4,
-    "bedrooms": 3,
-    "bathrooms": 1,
-    "parkingCount": 0,
-    "garageCount": 1,
-    "dpeLabel": "D",
-    "dpeValue": 229,
-    "gesLabel": "D",
-    "gesValue": 49,
-    "description": "Dans un quartier calme, proche des écoles, charmante maison comprenant une entrée, une cuisine aménagée ouverte sur un séjour salon traversant avec cheminée et accès à une terrasse,un cellier, un toilette indépendant, à l'étage, 3 chambres, une salle de bain, un toilette indépendant. Un garage. DPE D, A voir rapidement. Agent co Emma Vasselin",
-    "cityId": "city-montivilliers",
-    "postalCode": "76290",
-    "lat": null,
-    "lng": null,
-    "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-24T08:04:02.871Z",
-    "updatedAt": "2026-02-24T08:04:02.871Z",
-    "isFeatured": false,
-    "images": [
-      {
-        "id": "5128-1",
-        "propertyId": 5128,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/bb9c51157a17047defbb9f67dec5a406/photo_90ec7bbfc364e72376a3c3b8b80f7ed7.jpg",
-        "sortOrder": 0,
-        "altText": "Nouveauté - photo 1"
-      },
-      {
-        "id": "5128-2",
-        "propertyId": 5128,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/bb9c51157a17047defbb9f67dec5a406/photo_a07e2331c29d5ee1ab738effbe7f855f.jpg",
-        "sortOrder": 1,
-        "altText": "Nouveauté - photo 2"
-      },
-      {
-        "id": "5128-3",
-        "propertyId": 5128,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/bb9c51157a17047defbb9f67dec5a406/photo_9f47aa78cc66fa52e5d09329e3ed0fba.jpg",
-        "sortOrder": 2,
-        "altText": "Nouveauté - photo 3"
-      },
-      {
-        "id": "5128-4",
-        "propertyId": 5128,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/bb9c51157a17047defbb9f67dec5a406/photo_e2162af6122ca0234a4aa498fabdc3de.jpg",
-        "sortOrder": 3,
-        "altText": "Nouveauté - photo 4"
-      }
-    ],
-    "features": [
-      {
-        "propertyId": 5128,
-        "featureKey": "chauffage",
-        "labelFr": "Chauffage"
-      }
-    ]
-  },
-  {
-    "id": 5126,
-    "title": "GOBELINS",
-    "slug": "gobelins",
-    "transactionType": "vente",
     "propertyType": "appartement",
     "status": "active",
-    "priceAmount": 325000,
-    "priceCurrency": "EUR",
-    "surfaceM2": 100,
-    "terrainM2": null,
-    "rooms": 3,
-    "bedrooms": 2,
-    "bathrooms": 1,
-    "parkingCount": 0,
-    "garageCount": 0,
-    "dpeLabel": "D",
-    "dpeValue": 232,
-    "gesLabel": "D",
-    "gesValue": 47,
-    "description": "1 ère mise en vente exclusive, appartement dans immeuble de caractère ouvrant sur un parc: entrée, magnifique séjour-salon avec belle hauteur sous plafond accompagné de boiseries, moulures et cheminée, ce bel espace bénéficie d'une terrasse de 20 m2 exposé Sud avec vue dégagée, cuisine aménagée, lingerie, deux chambres dont une avec mezzanine et l'autre avec bureau, jolie salle de bains DPE D. Charges copro 6960EUR.",
-    "cityId": "city-le-havre",
-    "postalCode": "76600",
-    "lat": null,
-    "lng": null,
-    "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-02-24T08:03:03.034Z",
-    "updatedAt": "2026-02-24T08:03:03.034Z",
-    "isFeatured": false,
-    "images": [
-      {
-        "id": "5126-1",
-        "propertyId": 5126,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/708ecf04f787bbf33a1e9d651fb4b84c/photo_ed888bc3dd3641ed7c96e84780ba0d4a.jpg",
-        "sortOrder": 0,
-        "altText": "GOBELINS - photo 1"
-      },
-      {
-        "id": "5126-2",
-        "propertyId": 5126,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/708ecf04f787bbf33a1e9d651fb4b84c/photo_1676e1fd8e339a3cfdd73d8ebbf624b8.jpg",
-        "sortOrder": 1,
-        "altText": "GOBELINS - photo 2"
-      },
-      {
-        "id": "5126-3",
-        "propertyId": 5126,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/708ecf04f787bbf33a1e9d651fb4b84c/photo_7d97c9f1a4f93832e58e491fbcabb4b4.jpg",
-        "sortOrder": 2,
-        "altText": "GOBELINS - photo 3"
-      },
-      {
-        "id": "5126-4",
-        "propertyId": 5126,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/708ecf04f787bbf33a1e9d651fb4b84c/photo_1dfe88abe45d9dc346f18f4fd7f9ba90.jpg",
-        "sortOrder": 3,
-        "altText": "GOBELINS - photo 4"
-      }
-    ],
-    "features": [
-      {
-        "propertyId": 5126,
-        "featureKey": "ascenseur",
-        "labelFr": "Ascenseur"
-      }
-    ]
-  },
-  {
-    "id": 5124,
-    "title": "Nouveauté",
-    "slug": "nouveaute-5124",
-    "transactionType": "vente",
-    "propertyType": "appartement",
-    "status": "active",
+    "sourceStatus": "Vente",
     "priceAmount": 220000,
     "priceCurrency": "EUR",
     "surfaceM2": 93,
@@ -1584,8 +3089,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-02-24T08:02:03.756Z",
-    "updatedAt": "2026-02-24T08:02:03.756Z",
+    "publishedAt": "2026-09-30T16:09:59.325Z",
+    "updatedAt": "2026-09-30T16:09:59.325Z",
     "isFeatured": false,
     "images": [
       {
@@ -1624,185 +3129,56 @@ export const properties: Property[] = [
     ]
   },
   {
-    "id": 5123,
-    "title": "NOUVEAUTE A CINQ MINUTES DE LA PLACE DE SAINTE CECILE",
-    "slug": "nouveaute-a-cinq-minutes-de-la-place-de-sainte-cecile",
+    "id": 5122,
+    "title": "PROXIMITE DU CENTRE COTY",
+    "slug": "proximite-du-centre-coty",
     "transactionType": "vente",
-    "propertyType": "maison_villa",
+    "propertyType": "autre",
     "status": "active",
-    "priceAmount": 283000,
+    "sourceStatus": "Vente",
+    "priceAmount": 845000,
     "priceCurrency": "EUR",
-    "surfaceM2": 120,
+    "surfaceM2": 450,
     "terrainM2": null,
-    "rooms": 5,
-    "bedrooms": 3,
-    "bathrooms": 1,
+    "rooms": null,
+    "bedrooms": 0,
+    "bathrooms": 0,
     "parkingCount": 0,
     "garageCount": 0,
-    "dpeLabel": "D",
-    "dpeValue": 212,
-    "gesLabel": "B",
-    "gesValue": 7,
-    "description": "LE CACHET DE L ANCIEN POUR CETTE AGREABLE MAISON LUMINEUSE SUR JARDIN ARBORE PLEIN SUD AVEC BELLE VUE DEGAGEE SUR VILLE ET ESTUAIRE OFFRANT CUISINE AMENAGEE - SEJOUR/SALON - 3 CHAMBRES - DRESSING - SALLE DE BAINS - WC LAVERIE - CAVE - GRENIER - POMPE A CHALEUR - BALLON THERMODYNAMIQUE - DIAGNOSTIQUE ENERGETIQUE D. EXCELLENT ETAT - A DECOUVRIR Agent Co Véronique FOGT",
+    "dpeLabel": "E",
+    "dpeValue": 310,
+    "gesLabel": "F",
+    "gesValue": 64,
+    "description": "PROXIMITE CENTRE COTY ET ECOLES TRES BEL IMMEUBLE ART DECO AVEC CAGE D ESCALIER EN FORME DE U OFFRANT 3 APPARTEMENTS DE TYPE F3 D 'ENVIRON 64 M2 ET 5 APPARTEMENTS DE TYPE F2 D'ENVIRON 50 M2. TOUS EN TRES BON ETAT. CLASSE ENERGETIQUE E SUR L'ENSEMBLE. LES REVENUS ANNUELS SONT DE 50 000.00 EUROS HC ET LE FONCIER EST DE 8500.00 EUROS. LES CHAUFFAGES SONT INDIVIDUELS AU GAZ AVEC CONTRAT D ENTRETIEN ET LA TOITURE TERRASSE A ETE REVISEE ET EN BON ETAT. CHAQUE APPARTEMENT DISPOSE D UN CELLIER ET L IMMEUBLE EST SUR UN VIDE SANITAIRE SANS CAVE. CET IMMEUBLE CONSTITUE UN TRES BON COMPROMIS ENTRE INVESTISSEMENT PATRIMONIAL DE QUALITE ET INVESTISSEMENT LOCATIF. Agent Co Véronique FOGT",
     "cityId": "city-le-havre",
     "postalCode": "76600",
     "lat": null,
     "lng": null,
     "agentId": "agent-clara-durand",
-    "publishedAt": "2026-02-24T08:01:03.126Z",
-    "updatedAt": "2026-02-24T08:01:03.126Z",
+    "publishedAt": "2026-09-30T16:08:59.294Z",
+    "updatedAt": "2026-09-30T16:08:59.294Z",
     "isFeatured": false,
     "images": [
       {
-        "id": "5123-1",
-        "propertyId": 5123,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/6524d1ecd54ca7bc82ce8fab858733f9/photo_837a8fb7d1d720a4ef0501836cc0385d.jpg",
+        "id": "5122-1",
+        "propertyId": 5122,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/3d3abdce3b29ba86ed803db861cdc360/photo_9f57130d54f6ecb25d51dd39b73e45ad.jpg",
         "sortOrder": 0,
-        "altText": "NOUVEAUTE A CINQ MINUTES DE LA PLACE DE SAINTE CECILE - photo 1"
+        "altText": "PROXIMITE DU CENTRE COTY - photo 1"
       },
       {
-        "id": "5123-2",
-        "propertyId": 5123,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/6524d1ecd54ca7bc82ce8fab858733f9/photo_d3b9da801600c9816b3fe48ad2da9029.jpg",
+        "id": "5122-2",
+        "propertyId": 5122,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/3d3abdce3b29ba86ed803db861cdc360/photo_d0bfc358ada065b5812301cf39f290f1.jpg",
         "sortOrder": 1,
-        "altText": "NOUVEAUTE A CINQ MINUTES DE LA PLACE DE SAINTE CECILE - photo 2"
-      },
-      {
-        "id": "5123-3",
-        "propertyId": 5123,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/6524d1ecd54ca7bc82ce8fab858733f9/photo_2166f97da2bd163c44ae84de58f186b0.jpg",
-        "sortOrder": 2,
-        "altText": "NOUVEAUTE A CINQ MINUTES DE LA PLACE DE SAINTE CECILE - photo 3"
-      },
-      {
-        "id": "5123-4",
-        "propertyId": 5123,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/6524d1ecd54ca7bc82ce8fab858733f9/photo_cfafcc23eb31c9fa8d0c589c8135e00f.jpg",
-        "sortOrder": 3,
-        "altText": "NOUVEAUTE A CINQ MINUTES DE LA PLACE DE SAINTE CECILE - photo 4"
-      },
-      {
-        "id": "5123-5",
-        "propertyId": 5123,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/6524d1ecd54ca7bc82ce8fab858733f9/photo_07cec5ce08f97c010408c8cd1296a449.jpg",
-        "sortOrder": 4,
-        "altText": "NOUVEAUTE A CINQ MINUTES DE LA PLACE DE SAINTE CECILE - photo 5"
-      },
-      {
-        "id": "5123-6",
-        "propertyId": 5123,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/6524d1ecd54ca7bc82ce8fab858733f9/photo_100f5c56ad041113790d5c72bdcaf195.jpg",
-        "sortOrder": 5,
-        "altText": "NOUVEAUTE A CINQ MINUTES DE LA PLACE DE SAINTE CECILE - photo 6"
-      },
-      {
-        "id": "5123-7",
-        "propertyId": 5123,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/6524d1ecd54ca7bc82ce8fab858733f9/photo_c34d2546e9d6e7f971bc2c22a70ecf0a.jpg",
-        "sortOrder": 6,
-        "altText": "NOUVEAUTE A CINQ MINUTES DE LA PLACE DE SAINTE CECILE - photo 7"
-      },
-      {
-        "id": "5123-8",
-        "propertyId": 5123,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/6524d1ecd54ca7bc82ce8fab858733f9/photo_8039427fee6cb72efd6d3150104baadc.jpg",
-        "sortOrder": 7,
-        "altText": "NOUVEAUTE A CINQ MINUTES DE LA PLACE DE SAINTE CECILE - photo 8"
-      },
-      {
-        "id": "5123-9",
-        "propertyId": 5123,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/6524d1ecd54ca7bc82ce8fab858733f9/photo_4164d6bb8a84b691aacdc8f6de042b66.jpg",
-        "sortOrder": 8,
-        "altText": "NOUVEAUTE A CINQ MINUTES DE LA PLACE DE SAINTE CECILE - photo 9"
+        "altText": "PROXIMITE DU CENTRE COTY - photo 2"
       }
     ],
     "features": [
       {
-        "propertyId": 5123,
+        "propertyId": 5122,
         "featureKey": "maison",
         "labelFr": "Maison"
-      }
-    ]
-  },
-  {
-    "id": 5121,
-    "title": "QUARTIER SAINT NICOLAS",
-    "slug": "quartier-saint-nicolas",
-    "transactionType": "vente",
-    "propertyType": "appartement",
-    "status": "active",
-    "priceAmount": 155000,
-    "priceCurrency": "EUR",
-    "surfaceM2": 63,
-    "terrainM2": null,
-    "rooms": 3,
-    "bedrooms": 2,
-    "bathrooms": 0,
-    "parkingCount": 1,
-    "garageCount": 0,
-    "dpeLabel": "B",
-    "dpeValue": 78,
-    "gesLabel": "C",
-    "gesValue": 14,
-    "description": "Dans Résidence Récente de 2015 avec ASCENSEUR et Place de Parking Couvert. Bel APPARTEMENT de type T3 Offrant Cuisine Américaine ouverte sur Séjour/Salon Accès LOGGIA SUD 2 Chambres - Salle de Douches - Wc. Etat Impeccable. A découvrir Rapidement Agent CO Véronique FOGT",
-    "cityId": "city-le-havre",
-    "postalCode": "76600",
-    "lat": null,
-    "lng": null,
-    "agentId": "agent-clara-durand",
-    "publishedAt": "2026-02-24T08:00:03.167Z",
-    "updatedAt": "2026-02-24T08:00:03.167Z",
-    "isFeatured": false,
-    "images": [
-      {
-        "id": "5121-1",
-        "propertyId": 5121,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/0e3c797cf2a76da56d05779f721ac28a/photo_102ded3d7c79429da65ad15a846bde1e.jpg",
-        "sortOrder": 0,
-        "altText": "QUARTIER SAINT NICOLAS - photo 1"
-      },
-      {
-        "id": "5121-2",
-        "propertyId": 5121,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/0e3c797cf2a76da56d05779f721ac28a/photo_d78377ed894a8e8d1c5504692d860008.jpg",
-        "sortOrder": 1,
-        "altText": "QUARTIER SAINT NICOLAS - photo 2"
-      },
-      {
-        "id": "5121-3",
-        "propertyId": 5121,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/0e3c797cf2a76da56d05779f721ac28a/photo_ae5ecee5f6145ecd0c629d5be01a3bb5.jpg",
-        "sortOrder": 2,
-        "altText": "QUARTIER SAINT NICOLAS - photo 3"
-      },
-      {
-        "id": "5121-4",
-        "propertyId": 5121,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/0e3c797cf2a76da56d05779f721ac28a/photo_fa8db694b15c61241557191bbe2bcbd2.jpg",
-        "sortOrder": 3,
-        "altText": "QUARTIER SAINT NICOLAS - photo 4"
-      },
-      {
-        "id": "5121-5",
-        "propertyId": 5121,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/0e3c797cf2a76da56d05779f721ac28a/photo_bab2f40104cdad1cbc65a65806aac00d.jpg",
-        "sortOrder": 4,
-        "altText": "QUARTIER SAINT NICOLAS - photo 5"
-      },
-      {
-        "id": "5121-6",
-        "propertyId": 5121,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/0e3c797cf2a76da56d05779f721ac28a/photo_3ed89832e12fb70524dae422e34ab637.jpg",
-        "sortOrder": 5,
-        "altText": "QUARTIER SAINT NICOLAS - photo 6"
-      }
-    ],
-    "features": [
-      {
-        "propertyId": 5121,
-        "featureKey": "ascenseur",
-        "labelFr": "Ascenseur"
       }
     ]
   },
@@ -1813,6 +3189,7 @@ export const properties: Property[] = [
     "transactionType": "vente",
     "propertyType": "maison_villa",
     "status": "active",
+    "sourceStatus": "Vente",
     "priceAmount": 545000,
     "priceCurrency": "EUR",
     "surfaceM2": 220,
@@ -1822,18 +3199,18 @@ export const properties: Property[] = [
     "bathrooms": 1,
     "parkingCount": 0,
     "garageCount": 2,
-    "dpeLabel": null,
-    "dpeValue": null,
+    "dpeLabel": "C",
+    "dpeValue": 123,
     "gesLabel": "A",
-    "gesValue": 0,
-    "description": "Proche LE HAVRE, Authentique chaumière normande du 17 ème siècle (restaurée en 2007) sur une parcelle arborée de 6800m2 offrant en rez-de-chaussée un bel espace de vie composé de 3 salons, un séjour, une cuisine séparée et une salle de douche (possibilité vie de plain-pied), à l'étage, une pièce palière, 4 chambres, une salle de bains, un dressing, nombreux rangements. Une dépendance avec abri de voitures et atelier ainsi que d'anciennes écuries complètent ce bien. Agent Co Emma Vasselin",
+    "gesValue": 4,
+    "description": "Proche LE HAVRE, Authentique chaumière normande du 17ème siècle (restaurée en 2007) sur une parcelle arborée de 6800m2 offrant en rez-de-chaussée un bel espace de vie composé de 3 salons, un séjour, une cuisine séparée et une salle de douche (possibilité vie de plain-pied), à l'étage, une pièce palière, 4 chambres, une salle de bains, un dressing, nombreux rangements. Une dépendance avec abri de voitures et atelier ainsi que d'anciennes écuries complètent ce bien. Agent Co Emma Vasselin",
     "cityId": "city-montivilliers",
     "postalCode": "76290",
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-24T07:59:03.246Z",
-    "updatedAt": "2026-02-24T07:59:03.246Z",
+    "publishedAt": "2026-09-30T16:07:58.894Z",
+    "updatedAt": "2026-09-30T16:07:58.894Z",
     "isFeatured": false,
     "images": [
       {
@@ -1881,101 +3258,14 @@ export const properties: Property[] = [
     ]
   },
   {
-    "id": 5116,
-    "title": "A deux pas de la place Sainte Cécile",
-    "slug": "a-deux-pas-de-la-place-sainte-cecile",
-    "transactionType": "vente",
-    "propertyType": "maison_villa",
-    "status": "active",
-    "priceAmount": 267000,
-    "priceCurrency": "EUR",
-    "surfaceM2": 80,
-    "terrainM2": null,
-    "rooms": 3,
-    "bedrooms": 2,
-    "bathrooms": 0,
-    "parkingCount": 0,
-    "garageCount": 1,
-    "dpeLabel": "D",
-    "dpeValue": 235,
-    "gesLabel": "C",
-    "gesValue": 16,
-    "description": "Au calme, proche de la place Sainte Cécile, beaucoup de charme pour cette maison en excellent état sur sous-sol comprenant une entrée, une cuisine aménagée et équipée, un salon avec poêle, un séjour, deux chambres à l'étage et une salle de douche. Un garage. Agent co Emma Vasselin",
-    "cityId": "city-le-havre",
-    "postalCode": "76610",
-    "lat": null,
-    "lng": null,
-    "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-24T07:58:03.311Z",
-    "updatedAt": "2026-02-24T07:58:03.311Z",
-    "isFeatured": false,
-    "images": [
-      {
-        "id": "5116-1",
-        "propertyId": 5116,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/488ef613dea62cc6e568bb2b3f939c8e/photo_960d33f5a4f6cbc61711acad5c000ac8.jpg",
-        "sortOrder": 0,
-        "altText": "A deux pas de la place Sainte Cécile - photo 1"
-      },
-      {
-        "id": "5116-2",
-        "propertyId": 5116,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/488ef613dea62cc6e568bb2b3f939c8e/photo_079961215caba062612e7bed7961e77c.jpg",
-        "sortOrder": 1,
-        "altText": "A deux pas de la place Sainte Cécile - photo 2"
-      },
-      {
-        "id": "5116-3",
-        "propertyId": 5116,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/488ef613dea62cc6e568bb2b3f939c8e/photo_19c126ad8bb2854035a7ef5c72808930.jpg",
-        "sortOrder": 2,
-        "altText": "A deux pas de la place Sainte Cécile - photo 3"
-      },
-      {
-        "id": "5116-4",
-        "propertyId": 5116,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/488ef613dea62cc6e568bb2b3f939c8e/photo_e99f065980f5f8d30cc3e30af1804527.jpg",
-        "sortOrder": 3,
-        "altText": "A deux pas de la place Sainte Cécile - photo 4"
-      },
-      {
-        "id": "5116-5",
-        "propertyId": 5116,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/488ef613dea62cc6e568bb2b3f939c8e/photo_091c3a50516207f20618c81f3f4f12ea.jpg",
-        "sortOrder": 4,
-        "altText": "A deux pas de la place Sainte Cécile - photo 5"
-      },
-      {
-        "id": "5116-6",
-        "propertyId": 5116,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/488ef613dea62cc6e568bb2b3f939c8e/photo_2a35dfc0cfb436a31d69e87a83583914.jpg",
-        "sortOrder": 5,
-        "altText": "A deux pas de la place Sainte Cécile - photo 6"
-      },
-      {
-        "id": "5116-7",
-        "propertyId": 5116,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/488ef613dea62cc6e568bb2b3f939c8e/photo_e51e00e706f2fb4100d8eee4e0042cbd.jpg",
-        "sortOrder": 6,
-        "altText": "A deux pas de la place Sainte Cécile - photo 7"
-      }
-    ],
-    "features": [
-      {
-        "propertyId": 5116,
-        "featureKey": "chauffage",
-        "labelFr": "Chauffage"
-      }
-    ]
-  },
-  {
     "id": 5115,
     "title": "Proche du phare de Sainte Adresse",
     "slug": "proche-du-phare-de-sainte-adresse",
     "transactionType": "vente",
     "propertyType": "maison_villa",
     "status": "active",
-    "priceAmount": 485000,
+    "sourceStatus": "Vente",
+    "priceAmount": 439000,
     "priceCurrency": "EUR",
     "surfaceM2": 140,
     "terrainM2": null,
@@ -1994,8 +3284,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-24T07:57:03.429Z",
-    "updatedAt": "2026-02-24T07:57:03.429Z",
+    "publishedAt": "2026-09-30T16:06:59.401Z",
+    "updatedAt": "2026-09-30T16:06:59.401Z",
     "isFeatured": false,
     "images": [
       {
@@ -2043,66 +3333,14 @@ export const properties: Property[] = [
     ]
   },
   {
-    "id": 5113,
-    "title": "Nouveauté Sanvic Église",
-    "slug": "nouveaute-sanvic-eglise",
-    "transactionType": "vente",
-    "propertyType": "maison_villa",
-    "status": "active",
-    "priceAmount": 129000,
-    "priceCurrency": "EUR",
-    "surfaceM2": 80,
-    "terrainM2": null,
-    "rooms": 4,
-    "bedrooms": 2,
-    "bathrooms": 0,
-    "parkingCount": 0,
-    "garageCount": 0,
-    "dpeLabel": null,
-    "dpeValue": null,
-    "gesLabel": "A",
-    "gesValue": 0,
-    "description": "Maison de ville comprenant un local de 50m2 avec un appartement à l'étage . Prévoir travaux. Possibilité d'un grand garage en plus . DPE en cours. Agent co Emma Vaselin",
-    "cityId": "city-le-havre",
-    "postalCode": "76620",
-    "lat": null,
-    "lng": null,
-    "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-02-24T07:56:03.531Z",
-    "updatedAt": "2026-02-24T07:56:03.531Z",
-    "isFeatured": false,
-    "images": [
-      {
-        "id": "5113-1",
-        "propertyId": 5113,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/cc2341a575c73b2341ba5c3c011520cb/photo_b518c6822d57ce8f0dcd1d0ea998decf.jpg",
-        "sortOrder": 0,
-        "altText": "Nouveauté Sanvic Église - photo 1"
-      },
-      {
-        "id": "5113-2",
-        "propertyId": 5113,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/cc2341a575c73b2341ba5c3c011520cb/photo_ec6b19ba1ba66b591018348ae2e46fd3.jpg",
-        "sortOrder": 1,
-        "altText": "Nouveauté Sanvic Église - photo 2"
-      }
-    ],
-    "features": [
-      {
-        "propertyId": 5113,
-        "featureKey": "maison",
-        "labelFr": "Maison"
-      }
-    ]
-  },
-  {
     "id": 5112,
     "title": "À deux pas de Saint Vincent",
     "slug": "a-deux-pas-de-saint-vincent",
     "transactionType": "vente",
     "propertyType": "maison_villa",
     "status": "active",
-    "priceAmount": 362000,
+    "sourceStatus": "Vente",
+    "priceAmount": 349000,
     "priceCurrency": "EUR",
     "surfaceM2": 110,
     "terrainM2": null,
@@ -2121,8 +3359,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-24T07:55:03.593Z",
-    "updatedAt": "2026-02-24T07:55:03.593Z",
+    "publishedAt": "2026-09-30T16:05:58.949Z",
+    "updatedAt": "2026-09-30T16:05:58.949Z",
     "isFeatured": false,
     "images": [
       {
@@ -2197,7 +3435,8 @@ export const properties: Property[] = [
     "transactionType": "vente",
     "propertyType": "maison_villa",
     "status": "active",
-    "priceAmount": 262000,
+    "sourceStatus": "Vente",
+    "priceAmount": 210000,
     "priceCurrency": "EUR",
     "surfaceM2": 228,
     "terrainM2": null,
@@ -2216,8 +3455,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-02-24T07:54:03.645Z",
-    "updatedAt": "2026-02-24T07:54:03.645Z",
+    "publishedAt": "2026-09-30T16:04:59.689Z",
+    "updatedAt": "2026-09-30T16:04:59.689Z",
     "isFeatured": false,
     "images": [
       {
@@ -2251,391 +3490,14 @@ export const properties: Property[] = [
     ]
   },
   {
-    "id": 5106,
-    "title": "Nouveauté proche Sainte Adresse",
-    "slug": "nouveaute-proche-sainte-adresse",
-    "transactionType": "vente",
-    "propertyType": "maison_villa",
-    "status": "active",
-    "priceAmount": 399000,
-    "priceCurrency": "EUR",
-    "surfaceM2": 170,
-    "terrainM2": null,
-    "rooms": 7,
-    "bedrooms": 5,
-    "bathrooms": 1,
-    "parkingCount": 0,
-    "garageCount": 1,
-    "dpeLabel": "C",
-    "dpeValue": 123,
-    "gesLabel": "C",
-    "gesValue": 24,
-    "description": "Sur une parcelle arborée de 490m2, beaux volumes pour cette maison lumineuse, au calme sur sous-sol total offrant en rez-de-chaussée une cuisine aménagée, un séjour/salon (49m2) avec accès à une terrasse Sud et une terrasse Est, une chambre et sa salle de douche, à l'étage, 4 chambres, une salle de bain, une salle de douche, un dressing. Un grand garage, une buanderie et une cave complètent ce bien. Agent Co Emma Vasselin",
-    "cityId": "city-le-havre",
-    "postalCode": "76620",
-    "lat": null,
-    "lng": null,
-    "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-24T07:53:03.694Z",
-    "updatedAt": "2026-02-24T07:53:03.694Z",
-    "isFeatured": false,
-    "images": [
-      {
-        "id": "5106-1",
-        "propertyId": 5106,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/e59c47d7d081a0d460c93f0355e65c0b/photo_f1ae90e0aee36c0e2c055448f9657af4.jpg",
-        "sortOrder": 0,
-        "altText": "Nouveauté proche Sainte Adresse - photo 1"
-      },
-      {
-        "id": "5106-2",
-        "propertyId": 5106,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/e59c47d7d081a0d460c93f0355e65c0b/photo_61bc386f12c3ef7eabbc6b54e5c7d69a.jpg",
-        "sortOrder": 1,
-        "altText": "Nouveauté proche Sainte Adresse - photo 2"
-      },
-      {
-        "id": "5106-3",
-        "propertyId": 5106,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/e59c47d7d081a0d460c93f0355e65c0b/photo_773a26def8178c22d79ecf56aa07006c.jpg",
-        "sortOrder": 2,
-        "altText": "Nouveauté proche Sainte Adresse - photo 3"
-      },
-      {
-        "id": "5106-4",
-        "propertyId": 5106,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/e59c47d7d081a0d460c93f0355e65c0b/photo_77bafb2780d5638be3d366e30fff082f.jpg",
-        "sortOrder": 3,
-        "altText": "Nouveauté proche Sainte Adresse - photo 4"
-      },
-      {
-        "id": "5106-5",
-        "propertyId": 5106,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/e59c47d7d081a0d460c93f0355e65c0b/photo_bc9d0647f4c33c2d70a4691b1649898c.jpg",
-        "sortOrder": 4,
-        "altText": "Nouveauté proche Sainte Adresse - photo 5"
-      },
-      {
-        "id": "5106-6",
-        "propertyId": 5106,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/e59c47d7d081a0d460c93f0355e65c0b/photo_6d2ee8d74e75919bdb386ca9f478b2ac.jpg",
-        "sortOrder": 5,
-        "altText": "Nouveauté proche Sainte Adresse - photo 6"
-      },
-      {
-        "id": "5106-7",
-        "propertyId": 5106,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/e59c47d7d081a0d460c93f0355e65c0b/photo_ed0200661d895083e9ef49cdae5002c2.jpg",
-        "sortOrder": 6,
-        "altText": "Nouveauté proche Sainte Adresse - photo 7"
-      }
-    ],
-    "features": [
-      {
-        "propertyId": 5106,
-        "featureKey": "maison",
-        "labelFr": "Maison"
-      }
-    ]
-  },
-  {
-    "id": 5104,
-    "title": "NOUVEAUTE CENTRE VILLE",
-    "slug": "nouveaute-centre-ville",
-    "transactionType": "vente",
-    "propertyType": "appartement",
-    "status": "active",
-    "priceAmount": 425000,
-    "priceCurrency": "EUR",
-    "surfaceM2": 123,
-    "terrainM2": null,
-    "rooms": 5,
-    "bedrooms": 4,
-    "bathrooms": 0,
-    "parkingCount": 0,
-    "garageCount": 0,
-    "dpeLabel": "C",
-    "dpeValue": 134,
-    "gesLabel": "C",
-    "gesValue": 28,
-    "description": "PLACE DES HALLES - Belles vues sur la ville pour cet appartement lumineux et traversant de 123m2 situé au 3ème étage d'une copropriété avec ascenseur, offrant une entrée, une cuisine aménagée et équipée ouverte sur un séjour salon, 4 chambres, deux salles de douche, nombreux rangements, le tout en parfait état. Une cave. Charges annuelles de copropriétés 3600EUR (Chauffage et chaude compris) Agent co Emma Vasselin",
-    "cityId": "city-le-havre",
-    "postalCode": "76600",
-    "lat": null,
-    "lng": null,
-    "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-24T07:52:03.830Z",
-    "updatedAt": "2026-02-24T07:52:03.830Z",
-    "isFeatured": false,
-    "images": [
-      {
-        "id": "5104-1",
-        "propertyId": 5104,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/6de070146e821777456f44508e748d0b/photo_4e81ff19427732678def588f1a53c2fa_Inc_0.jpg",
-        "sortOrder": 0,
-        "altText": "NOUVEAUTE CENTRE VILLE - photo 1"
-      },
-      {
-        "id": "5104-2",
-        "propertyId": 5104,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/6de070146e821777456f44508e748d0b/photo_80fbfd33c5e143f9e005781d1295d677_Inc_0.jpg",
-        "sortOrder": 1,
-        "altText": "NOUVEAUTE CENTRE VILLE - photo 2"
-      },
-      {
-        "id": "5104-3",
-        "propertyId": 5104,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/6de070146e821777456f44508e748d0b/photo_c3e68f1d32ee3a4d02ded3fa9a1375ab_Inc_0.jpg",
-        "sortOrder": 2,
-        "altText": "NOUVEAUTE CENTRE VILLE - photo 3"
-      },
-      {
-        "id": "5104-4",
-        "propertyId": 5104,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/6de070146e821777456f44508e748d0b/photo_da93bc36edc95a29fa167d90fb0e1463_Inc_0.jpg",
-        "sortOrder": 3,
-        "altText": "NOUVEAUTE CENTRE VILLE - photo 4"
-      },
-      {
-        "id": "5104-5",
-        "propertyId": 5104,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/6de070146e821777456f44508e748d0b/photo_f2e7994bba4661ebafdab362e8ceda13.jpg",
-        "sortOrder": 4,
-        "altText": "NOUVEAUTE CENTRE VILLE - photo 5"
-      },
-      {
-        "id": "5104-6",
-        "propertyId": 5104,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/6de070146e821777456f44508e748d0b/photo_fafbc6f11a867f487955e06622404ca8_Inc_0.jpg",
-        "sortOrder": 5,
-        "altText": "NOUVEAUTE CENTRE VILLE - photo 6"
-      }
-    ],
-    "features": [
-      {
-        "propertyId": 5104,
-        "featureKey": "cave",
-        "labelFr": "Cave"
-      },
-      {
-        "propertyId": 5104,
-        "featureKey": "ascenseur",
-        "labelFr": "Ascenseur"
-      }
-    ]
-  },
-  {
-    "id": 5099,
-    "title": "Plage - Vue mer",
-    "slug": "plage-vue-mer",
-    "transactionType": "vente",
-    "propertyType": "maison_villa",
-    "status": "active",
-    "priceAmount": 599000,
-    "priceCurrency": "EUR",
-    "surfaceM2": 150,
-    "terrainM2": null,
-    "rooms": 5,
-    "bedrooms": 4,
-    "bathrooms": 0,
-    "parkingCount": 0,
-    "garageCount": 0,
-    "dpeLabel": "D",
-    "dpeValue": 231,
-    "gesLabel": "D",
-    "gesValue": 37,
-    "description": "A quelques pas de la plage, Belle maison ancienne à la décoration actuelle, avec une vue mer offrant une cuisine aménagée et équipee ouverte sur un salon avec poële, une arrière cuisine, quatre chambres, quatre salles de douche, une terrasse, un sous-sol et une cour ensoleillée. Agent co Emma Vasselin",
-    "cityId": "city-sainte-adresse",
-    "postalCode": "76310",
-    "lat": null,
-    "lng": null,
-    "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-24T07:51:03.926Z",
-    "updatedAt": "2026-02-24T07:51:03.926Z",
-    "isFeatured": false,
-    "images": [
-      {
-        "id": "5099-1",
-        "propertyId": 5099,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/299d81f0c4e36d866eafb9b473e0c43f/photo_3527715b05f65379dd5f8c14eff91337.jpg",
-        "sortOrder": 0,
-        "altText": "Plage - Vue mer - photo 1"
-      }
-    ],
-    "features": [
-      {
-        "propertyId": 5099,
-        "featureKey": "maison",
-        "labelFr": "Maison"
-      }
-    ]
-  },
-  {
-    "id": 5095,
-    "title": "VUE MER",
-    "slug": "vue-mer",
-    "transactionType": "vente",
-    "propertyType": "appartement",
-    "status": "active",
-    "priceAmount": 399000,
-    "priceCurrency": "EUR",
-    "surfaceM2": 89,
-    "terrainM2": null,
-    "rooms": 4,
-    "bedrooms": 3,
-    "bathrooms": 1,
-    "parkingCount": 1,
-    "garageCount": 1,
-    "dpeLabel": "E",
-    "dpeValue": 271,
-    "gesLabel": "E",
-    "gesValue": 55,
-    "description": "Magnifique vue MER, port et ville pour cet appartement de 90m2 situé au dernier étage d'une résidence de standing composé d'une entrée, une cuisine aménagée et équipée, un séjour salon exposé Sud prolongé d'une terrasse et loggia avec une vue exceptionnelle, 3 chambres dont une avec une salle de douche, une salle de bain, un toilette indépendant, rangements. Une cave, un garage et un parking extérieur privatif complètent ce bien. Charges copro annuelles 3216 EUR. A VOIR RAPIDEMENT. Agent co Emma Vasselin",
-    "cityId": "city-le-havre",
-    "postalCode": "76620",
-    "lat": null,
-    "lng": null,
-    "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-24T07:50:03.986Z",
-    "updatedAt": "2026-02-24T07:50:03.986Z",
-    "isFeatured": false,
-    "images": [
-      {
-        "id": "5095-1",
-        "propertyId": 5095,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/d9e34b55a1f2ec41fa5fb8c7861575b3/photo_88fd8adcadff628afbb613f21d8a7fcb.jpg",
-        "sortOrder": 0,
-        "altText": "VUE MER - photo 1"
-      },
-      {
-        "id": "5095-2",
-        "propertyId": 5095,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/d9e34b55a1f2ec41fa5fb8c7861575b3/photo_e2e1d26c253b8d4c8136a45046cd0d9a_Inc_0.jpg",
-        "sortOrder": 1,
-        "altText": "VUE MER - photo 2"
-      },
-      {
-        "id": "5095-3",
-        "propertyId": 5095,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/d9e34b55a1f2ec41fa5fb8c7861575b3/photo_b956b19d8a6f02f7e7509b3976aac6dd_Inc_0.jpg",
-        "sortOrder": 2,
-        "altText": "VUE MER - photo 3"
-      },
-      {
-        "id": "5095-4",
-        "propertyId": 5095,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/d9e34b55a1f2ec41fa5fb8c7861575b3/photo_da33b8e5ce53457b9b69aa99260d5740.jpg",
-        "sortOrder": 3,
-        "altText": "VUE MER - photo 4"
-      },
-      {
-        "id": "5095-5",
-        "propertyId": 5095,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/d9e34b55a1f2ec41fa5fb8c7861575b3/photo_f866620f937dd7a942b115d2ebadd73a.jpg",
-        "sortOrder": 4,
-        "altText": "VUE MER - photo 5"
-      }
-    ],
-    "features": [
-      {
-        "propertyId": 5095,
-        "featureKey": "cave",
-        "labelFr": "Cave"
-      },
-      {
-        "propertyId": 5095,
-        "featureKey": "ascenseur",
-        "labelFr": "Ascenseur"
-      }
-    ]
-  },
-  {
-    "id": 5090,
-    "title": "EXCLUSIVITE LES DOCKS",
-    "slug": "exclusivite-les-docks",
-    "transactionType": "vente",
-    "propertyType": "appartement",
-    "status": "active",
-    "priceAmount": 189000,
-    "priceCurrency": "EUR",
-    "surfaceM2": 98,
-    "terrainM2": null,
-    "rooms": 5,
-    "bedrooms": 3,
-    "bathrooms": 1,
-    "parkingCount": 2,
-    "garageCount": 2,
-    "dpeLabel": "D",
-    "dpeValue": 169,
-    "gesLabel": "B",
-    "gesValue": 7,
-    "description": "EXCLUSIVITE LES DOCKS Dans une Résidence Récente Au Dernier Etage Avec ASCENSEUR Découvrez ce Beau Duplex Vendu Loué d'une surface de 98 m2. Il se compose d'une Cuisine Aménagée - d'un Grand Séjour/Salon Accès Balcon Ouest - 3 Chambres dont 1 avec Balcon - Sdbains - Wc. Vous avez également 2 Places de Parking en Sous/sol L'état est impeccable - Une Belle Vue Dégagée - A 2 minutes des Docks. A Découvrir Rapidement Agent Co Véronique FOGT",
-    "cityId": "city-le-havre",
-    "postalCode": "76600",
-    "lat": null,
-    "lng": null,
-    "agentId": "agent-clara-durand",
-    "publishedAt": "2026-02-24T07:49:04.048Z",
-    "updatedAt": "2026-02-24T07:49:04.048Z",
-    "isFeatured": false,
-    "images": [
-      {
-        "id": "5090-1",
-        "propertyId": 5090,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/1bbac3eda5d52ef00b4370dafd794719/photo_a2b047c5d9fe08d94fd534984337745d.jpg",
-        "sortOrder": 0,
-        "altText": "EXCLUSIVITE LES DOCKS - photo 1"
-      },
-      {
-        "id": "5090-2",
-        "propertyId": 5090,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/1bbac3eda5d52ef00b4370dafd794719/photo_539ed8f41a07d56e33e65d97152f53e2.jpg",
-        "sortOrder": 1,
-        "altText": "EXCLUSIVITE LES DOCKS - photo 2"
-      },
-      {
-        "id": "5090-3",
-        "propertyId": 5090,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/1bbac3eda5d52ef00b4370dafd794719/photo_0085e74c5aaf393280c5a640dd5406a5.jpg",
-        "sortOrder": 2,
-        "altText": "EXCLUSIVITE LES DOCKS - photo 3"
-      },
-      {
-        "id": "5090-4",
-        "propertyId": 5090,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/1bbac3eda5d52ef00b4370dafd794719/photo_1dea3894b7f2e7445493541719b3a959.jpg",
-        "sortOrder": 3,
-        "altText": "EXCLUSIVITE LES DOCKS - photo 4"
-      },
-      {
-        "id": "5090-5",
-        "propertyId": 5090,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/1bbac3eda5d52ef00b4370dafd794719/photo_dcfc84535fa7db7cb89797e09cb5c6e3.jpg",
-        "sortOrder": 4,
-        "altText": "EXCLUSIVITE LES DOCKS - photo 5"
-      }
-    ],
-    "features": [
-      {
-        "propertyId": 5090,
-        "featureKey": "balcon",
-        "labelFr": "Balcon"
-      },
-      {
-        "propertyId": 5090,
-        "featureKey": "ascenseur",
-        "labelFr": "Ascenseur"
-      }
-    ]
-  },
-  {
     "id": 5086,
-    "title": "Charme de l'ancien",
-    "slug": "charme-de-l-ancien",
+    "title": "Belle PROPRIETE",
+    "slug": "belle-propriete",
     "transactionType": "vente",
     "propertyType": "maison_villa",
     "status": "active",
-    "priceAmount": 750000,
+    "sourceStatus": "Vente",
+    "priceAmount": 699000,
     "priceCurrency": "EUR",
     "surfaceM2": 250,
     "terrainM2": null,
@@ -2654,44 +3516,51 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-24T07:48:04.109Z",
-    "updatedAt": "2026-02-24T07:48:04.109Z",
+    "publishedAt": "2026-09-30T16:03:59.303Z",
+    "updatedAt": "2026-09-30T16:03:59.303Z",
     "isFeatured": false,
     "images": [
       {
         "id": "5086-1",
         "propertyId": 5086,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/a8755957eba6f6846a45ceaa79367a7d/photo_4d43ec07fb1fb0e5fc397c928b9f20ed.jpg",
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/a8755957eba6f6846a45ceaa79367a7d/photo_9ccda58191a0f53049ccc6bed0fc5b41.jpg",
         "sortOrder": 0,
-        "altText": "Charme de l'ancien - photo 1"
+        "altText": "Belle PROPRIETE - photo 1"
       },
       {
         "id": "5086-2",
         "propertyId": 5086,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/a8755957eba6f6846a45ceaa79367a7d/photo_9ccda58191a0f53049ccc6bed0fc5b41.jpg",
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/a8755957eba6f6846a45ceaa79367a7d/photo_5b5240ac65c1f62bef1edd6083c4bfbf.jpg",
         "sortOrder": 1,
-        "altText": "Charme de l'ancien - photo 2"
+        "altText": "Belle PROPRIETE - photo 2"
       },
       {
         "id": "5086-3",
         "propertyId": 5086,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/a8755957eba6f6846a45ceaa79367a7d/photo_aaf01083cdc83fbd7b15b3ab5f1169c1.jpg",
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/a8755957eba6f6846a45ceaa79367a7d/photo_4d43ec07fb1fb0e5fc397c928b9f20ed.jpg",
         "sortOrder": 2,
-        "altText": "Charme de l'ancien - photo 3"
+        "altText": "Belle PROPRIETE - photo 3"
       },
       {
         "id": "5086-4",
         "propertyId": 5086,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/a8755957eba6f6846a45ceaa79367a7d/photo_e0af5fde310b9af16fab9c12050992b2.jpg",
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/a8755957eba6f6846a45ceaa79367a7d/photo_aaf01083cdc83fbd7b15b3ab5f1169c1.jpg",
         "sortOrder": 3,
-        "altText": "Charme de l'ancien - photo 4"
+        "altText": "Belle PROPRIETE - photo 4"
       },
       {
         "id": "5086-5",
         "propertyId": 5086,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/a8755957eba6f6846a45ceaa79367a7d/photo_c409ee24d48868cf739af58fb0ee68a2.jpg",
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/a8755957eba6f6846a45ceaa79367a7d/photo_e0af5fde310b9af16fab9c12050992b2.jpg",
         "sortOrder": 4,
-        "altText": "Charme de l'ancien - photo 5"
+        "altText": "Belle PROPRIETE - photo 5"
+      },
+      {
+        "id": "5086-6",
+        "propertyId": 5086,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/a8755957eba6f6846a45ceaa79367a7d/photo_c409ee24d48868cf739af58fb0ee68a2.jpg",
+        "sortOrder": 5,
+        "altText": "Belle PROPRIETE - photo 6"
       }
     ],
     "features": [
@@ -2703,279 +3572,138 @@ export const properties: Property[] = [
     ]
   },
   {
-    "id": 5071,
-    "title": "Hotel de Ville",
-    "slug": "hotel-de-ville-5071",
+    "id": 5079,
+    "title": "NOUVEAUTE QUARTIER DANTON",
+    "slug": "nouveaute-quartier-danton",
     "transactionType": "vente",
-    "propertyType": "appartement",
+    "propertyType": "autre",
     "status": "active",
-    "priceAmount": 199000,
+    "sourceStatus": "Vente",
+    "priceAmount": 675000,
     "priceCurrency": "EUR",
-    "surfaceM2": 80,
+    "surfaceM2": 400,
     "terrainM2": null,
-    "rooms": 4,
-    "bedrooms": 3,
-    "bathrooms": 1,
-    "parkingCount": 1,
-    "garageCount": 0,
-    "dpeLabel": "D",
-    "dpeValue": 232,
-    "gesLabel": "D",
-    "gesValue": 49,
-    "description": "bel appartement de 4/5 pièces principales avec petite terrasse exposée Ouest, comprenant: entrée, séjour/salon avec double exposition et 2 balcons, cuisine aménagée, deux chambres et un bureau, salle de bains (baignoire et douche). Emplcement de parking extérieur collectif DPE D charges de copro /an 2540 EUR.",
-    "cityId": "city-le-havre",
-    "postalCode": "76600",
-    "lat": null,
-    "lng": null,
-    "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-02-24T07:47:04.147Z",
-    "updatedAt": "2026-02-24T07:47:04.147Z",
-    "isFeatured": false,
-    "images": [
-      {
-        "id": "5071-1",
-        "propertyId": 5071,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/3c27d1568a3e5abdb47e855b37f45611/photo_0dfd11577c01cae7b731ada9373526cf.jpg",
-        "sortOrder": 0,
-        "altText": "Hotel de Ville - photo 1"
-      },
-      {
-        "id": "5071-2",
-        "propertyId": 5071,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/3c27d1568a3e5abdb47e855b37f45611/photo_10bdaa4c2e7f2a5b57f7410b566a24d8.jpg",
-        "sortOrder": 1,
-        "altText": "Hotel de Ville - photo 2"
-      },
-      {
-        "id": "5071-3",
-        "propertyId": 5071,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/3c27d1568a3e5abdb47e855b37f45611/photo_d2066a4623d1a3a4c3b277548083183f.jpg",
-        "sortOrder": 2,
-        "altText": "Hotel de Ville - photo 3"
-      },
-      {
-        "id": "5071-4",
-        "propertyId": 5071,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/3c27d1568a3e5abdb47e855b37f45611/photo_a94bbc250cb209ef0066c50706d82c59.jpg",
-        "sortOrder": 3,
-        "altText": "Hotel de Ville - photo 4"
-      },
-      {
-        "id": "5071-5",
-        "propertyId": 5071,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/3c27d1568a3e5abdb47e855b37f45611/photo_ddd3a047a8e5411c6a5a30147a2d673e.jpg",
-        "sortOrder": 4,
-        "altText": "Hotel de Ville - photo 5"
-      }
-    ],
-    "features": [
-      {
-        "propertyId": 5071,
-        "featureKey": "chauffage",
-        "labelFr": "Chauffage"
-      },
-      {
-        "propertyId": 5071,
-        "featureKey": "balcon",
-        "labelFr": "Balcon"
-      },
-      {
-        "propertyId": 5071,
-        "featureKey": "cave",
-        "labelFr": "Cave"
-      }
-    ]
-  },
-  {
-    "id": 5069,
-    "title": "SAINT VINCENT",
-    "slug": "saint-vincent",
-    "transactionType": "vente",
-    "propertyType": "maison_villa",
-    "status": "active",
-    "priceAmount": 319000,
-    "priceCurrency": "EUR",
-    "surfaceM2": 97,
-    "terrainM2": null,
-    "rooms": 3,
-    "bedrooms": 2,
+    "rooms": null,
+    "bedrooms": 0,
     "bathrooms": 0,
     "parkingCount": 0,
     "garageCount": 0,
-    "dpeLabel": "C",
-    "dpeValue": 116,
-    "gesLabel": "C",
-    "gesValue": 23,
-    "description": "SAINT VINCENT Maison à la décoration actuelle entièrement rénovée idéalement placée comprenant une cuisine ouverte sur un séjour/salon, une buanderie avec rangement, à l'étage, deux chambres, une salle de douche, un bureau et un dressing. Une cour Sud/Ouest et une loggia Est. Belles prestations. Agent co Emma Vasselin.",
+    "dpeLabel": "D",
+    "dpeValue": 220,
+    "gesLabel": "A",
+    "gesValue": 0,
+    "description": "DANS UN SECTEUR EN PLEINE MUTATION A PROXIMITE DE LA GARE ET DU TRAMWAY, IMMEUBLE DE RAPPORT EN BON ETAT. IL SE COMPOSE DE 9 APPARTEMENTS TOUS LOUES - 5 T2 - 2T3 - 2 T4 AVEC EGALEMENT 5 PLACES DE PARKING EN COUR INTERIEURE SA SURFACE EST D ENVIRON 400 M2. REVENUS LOYERS ANNUELS 50 000.00 EUROS HC. LA TOITURE DATE DE 2000. Agent Co Véronique FOGT",
     "cityId": "city-le-havre",
     "postalCode": "76600",
     "lat": null,
     "lng": null,
-    "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-24T07:46:05.038Z",
-    "updatedAt": "2026-02-24T07:46:05.038Z",
+    "agentId": "agent-clara-durand",
+    "publishedAt": "2026-09-30T16:02:59.613Z",
+    "updatedAt": "2026-09-30T16:02:59.613Z",
     "isFeatured": false,
     "images": [
       {
-        "id": "5069-1",
-        "propertyId": 5069,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/3663ac6dd579989426033d300b7b2863/photo_c81a5615ca85499c9cbc42ba7753c632_Inc_0.jpg",
+        "id": "5079-1",
+        "propertyId": 5079,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/6972d65ae90501d18b07442aeb47852a/photo_28b5ee6313cbea861c1db2b82c97c3e1.jpg",
         "sortOrder": 0,
-        "altText": "SAINT VINCENT - photo 1"
-      },
-      {
-        "id": "5069-2",
-        "propertyId": 5069,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/3663ac6dd579989426033d300b7b2863/photo_27c8b378be89508511313eebb1b2e387_Inc_1.jpg",
-        "sortOrder": 1,
-        "altText": "SAINT VINCENT - photo 2"
-      },
-      {
-        "id": "5069-3",
-        "propertyId": 5069,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/3663ac6dd579989426033d300b7b2863/photo_ef001115854fedb24ef387a46067260e_Inc_0.jpg",
-        "sortOrder": 2,
-        "altText": "SAINT VINCENT - photo 3"
-      },
-      {
-        "id": "5069-4",
-        "propertyId": 5069,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/3663ac6dd579989426033d300b7b2863/photo_c1cef19d7b1d6f42e14b63dd6d431b1f.jpg",
-        "sortOrder": 3,
-        "altText": "SAINT VINCENT - photo 4"
-      },
-      {
-        "id": "5069-5",
-        "propertyId": 5069,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/3663ac6dd579989426033d300b7b2863/photo_150246cb9bdbc9093edabaf84467197a.jpg",
-        "sortOrder": 4,
-        "altText": "SAINT VINCENT - photo 5"
-      },
-      {
-        "id": "5069-6",
-        "propertyId": 5069,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/3663ac6dd579989426033d300b7b2863/photo_846a4998fa97aaedc9a6225d7d2ddba2.jpg",
-        "sortOrder": 5,
-        "altText": "SAINT VINCENT - photo 6"
-      },
-      {
-        "id": "5069-7",
-        "propertyId": 5069,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/3663ac6dd579989426033d300b7b2863/photo_f8b87332905dcf908d859b39a889403b.jpg",
-        "sortOrder": 6,
-        "altText": "SAINT VINCENT - photo 7"
+        "altText": "NOUVEAUTE QUARTIER DANTON - photo 1"
       }
     ],
     "features": [
       {
-        "propertyId": 5069,
+        "propertyId": 5079,
         "featureKey": "maison",
         "labelFr": "Maison"
       }
     ]
   },
   {
-    "id": 5068,
-    "title": "HALLES CENTRALES",
-    "slug": "halles-centrales",
+    "id": 5065,
+    "title": "MAGNIFIQUE VUE SUR HONFLEUR",
+    "slug": "magnifique-vue-sur-honfleur",
     "transactionType": "vente",
-    "propertyType": "appartement",
+    "propertyType": "maison_villa",
     "status": "active",
-    "priceAmount": 331000,
+    "sourceStatus": "Vente",
+    "priceAmount": 835000,
     "priceCurrency": "EUR",
-    "surfaceM2": 64.8,
+    "surfaceM2": 175,
     "terrainM2": null,
-    "rooms": 3,
-    "bedrooms": 2,
-    "bathrooms": 0,
-    "parkingCount": 1,
+    "rooms": 7,
+    "bedrooms": 4,
+    "bathrooms": 1,
+    "parkingCount": 5,
     "garageCount": 0,
-    "dpeLabel": "B",
-    "dpeValue": 70,
-    "gesLabel": "B",
-    "gesValue": 6,
-    "description": "Nouvelle residence 'Scenes de Vie' - Ultra centre Appartement de type T3 avec ascenseur dans residence neuve de standing d'une surface de 64,70 m2 au quatrieme étage disposant d'un beau sejour de 31m2 donnant sur une loggia éxposée sud, entrée , deux chambres , sdb. Une place de parking est incluse. Belles prestations.",
+    "dpeLabel": "C",
+    "dpeValue": 168,
+    "gesLabel": "E",
+    "gesValue": 50,
+    "description": "jolie maison contemporaine au coeur de la nature, au calme, à proximité des chemins de randonnés et du Centre de HONFLEUR. Cette maison d'architecte, vous surprendra par sa vue exceptionnelle sur HONFLEUR et la baie de SEINE. Elle est composée d'une entrée, d'une spacieuse pièce de réception baignée par le soleil et offrant une vue panoramique, une cuisine aménagée avec son coin repas et un bureau. A l'étage, une pièce palière, quatre chambres, une salle de bains et un dressing. Elevée sur un sous-sol complet, distribué en :atelier, cave à vins, salle de douche et buanderie.une pièce d'eau.DPE E .Pour les petits et les grands très belle piscine couverte et chauffée. En dépendance: une pièce(bureau/atelier) et un garage,",
     "cityId": "city-le-havre",
-    "postalCode": "76600",
+    "postalCode": "14600",
     "lat": null,
     "lng": null,
     "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-02-24T07:45:04.311Z",
-    "updatedAt": "2026-02-24T07:45:04.311Z",
+    "publishedAt": "2026-09-30T16:02:00.229Z",
+    "updatedAt": "2026-09-30T16:02:00.229Z",
     "isFeatured": false,
     "images": [
       {
-        "id": "5068-1",
-        "propertyId": 5068,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/82db85e549a360f099432cdf257154b4/photo_a513dba5520aaf94a50898a0b04e6b38.jpg",
+        "id": "5065-1",
+        "propertyId": 5065,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/2d7fb3a2c1fc92159957a658d62dd12b/photo_59e28b3a7f6fa52a335760a071b90ddc.jpg",
         "sortOrder": 0,
-        "altText": "HALLES CENTRALES - photo 1"
+        "altText": "MAGNIFIQUE VUE SUR HONFLEUR - photo 1"
       },
       {
-        "id": "5068-2",
-        "propertyId": 5068,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/82db85e549a360f099432cdf257154b4/photo_d923c2513d2bd963d3326429d791a42b.jpg",
+        "id": "5065-2",
+        "propertyId": 5065,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/2d7fb3a2c1fc92159957a658d62dd12b/photo_5c695730d7269549ffd2dc38287e553a.jpg",
         "sortOrder": 1,
-        "altText": "HALLES CENTRALES - photo 2"
+        "altText": "MAGNIFIQUE VUE SUR HONFLEUR - photo 2"
       },
       {
-        "id": "5068-3",
-        "propertyId": 5068,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/82db85e549a360f099432cdf257154b4/photo_0e075462e8663eeeaa03af6e74857258.jpg",
+        "id": "5065-3",
+        "propertyId": 5065,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/2d7fb3a2c1fc92159957a658d62dd12b/photo_647a04ee1ba3ce83f15b3427ed48557f.jpg",
         "sortOrder": 2,
-        "altText": "HALLES CENTRALES - photo 3"
+        "altText": "MAGNIFIQUE VUE SUR HONFLEUR - photo 3"
       },
       {
-        "id": "5068-4",
-        "propertyId": 5068,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/82db85e549a360f099432cdf257154b4/photo_c4a5bc33fdf346f53718fd265d41b917.jpg",
+        "id": "5065-4",
+        "propertyId": 5065,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/2d7fb3a2c1fc92159957a658d62dd12b/photo_5ba7605e6f8347988e31c1f431a69b7f.jpg",
         "sortOrder": 3,
-        "altText": "HALLES CENTRALES - photo 4"
+        "altText": "MAGNIFIQUE VUE SUR HONFLEUR - photo 4"
       },
       {
-        "id": "5068-5",
-        "propertyId": 5068,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/82db85e549a360f099432cdf257154b4/photo_640fc263b20c500e2abc4c75e037a233.jpg",
+        "id": "5065-5",
+        "propertyId": 5065,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/2d7fb3a2c1fc92159957a658d62dd12b/photo_55abd8472453a74388841f50e58a835b.jpg",
         "sortOrder": 4,
-        "altText": "HALLES CENTRALES - photo 5"
+        "altText": "MAGNIFIQUE VUE SUR HONFLEUR - photo 5"
       },
       {
-        "id": "5068-6",
-        "propertyId": 5068,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/82db85e549a360f099432cdf257154b4/photo_8b4b1f7da3d88c475f180273422964ee.jpg",
+        "id": "5065-6",
+        "propertyId": 5065,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/2d7fb3a2c1fc92159957a658d62dd12b/photo_d045482499e31268e96de5f7b1eda862.jpg",
         "sortOrder": 5,
-        "altText": "HALLES CENTRALES - photo 6"
+        "altText": "MAGNIFIQUE VUE SUR HONFLEUR - photo 6"
       },
       {
-        "id": "5068-7",
-        "propertyId": 5068,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/82db85e549a360f099432cdf257154b4/photo_d20330c60c15c2e81b5e2bd9b05af8b0.jpg",
+        "id": "5065-7",
+        "propertyId": 5065,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/2d7fb3a2c1fc92159957a658d62dd12b/photo_c387640f43014059d831b2df000d0c8e.jpg",
         "sortOrder": 6,
-        "altText": "HALLES CENTRALES - photo 7"
-      },
-      {
-        "id": "5068-8",
-        "propertyId": 5068,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/82db85e549a360f099432cdf257154b4/photo_1d80ff3cf2040858ece1b65f653bb3a9_Inc_0.jpg",
-        "sortOrder": 7,
-        "altText": "HALLES CENTRALES - photo 8"
+        "altText": "MAGNIFIQUE VUE SUR HONFLEUR - photo 7"
       }
     ],
     "features": [
       {
-        "propertyId": 5068,
-        "featureKey": "chauffage",
-        "labelFr": "Chauffage"
-      },
-      {
-        "propertyId": 5068,
-        "featureKey": "balcon",
-        "labelFr": "Balcon"
-      },
-      {
-        "propertyId": 5068,
-        "featureKey": "cave",
-        "labelFr": "Cave"
+        "propertyId": 5065,
+        "featureKey": "maison",
+        "labelFr": "Maison"
       }
     ]
   },
@@ -2986,6 +3714,7 @@ export const properties: Property[] = [
     "transactionType": "vente",
     "propertyType": "appartement",
     "status": "active",
+    "sourceStatus": "Vente",
     "priceAmount": 212000,
     "priceCurrency": "EUR",
     "surfaceM2": 90,
@@ -3005,8 +3734,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-24T07:44:04.367Z",
-    "updatedAt": "2026-02-24T07:44:04.367Z",
+    "publishedAt": "2026-09-30T16:00:59.770Z",
+    "updatedAt": "2026-09-30T16:00:59.770Z",
     "isFeatured": false,
     "images": [
       {
@@ -3065,7 +3794,8 @@ export const properties: Property[] = [
     "transactionType": "vente",
     "propertyType": "appartement",
     "status": "active",
-    "priceAmount": 475000,
+    "sourceStatus": "Vente",
+    "priceAmount": 448000,
     "priceCurrency": "EUR",
     "surfaceM2": 107,
     "terrainM2": null,
@@ -3084,8 +3814,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-02-24T07:43:04.435Z",
-    "updatedAt": "2026-02-24T07:43:04.435Z",
+    "publishedAt": "2026-09-30T16:00:00.180Z",
+    "updatedAt": "2026-09-30T16:00:00.180Z",
     "isFeatured": false,
     "images": [
       {
@@ -3144,7 +3874,8 @@ export const properties: Property[] = [
     "transactionType": "vente",
     "propertyType": "appartement",
     "status": "active",
-    "priceAmount": 420000,
+    "sourceStatus": "Vente",
+    "priceAmount": 399000,
     "priceCurrency": "EUR",
     "surfaceM2": 123.77,
     "terrainM2": null,
@@ -3157,64 +3888,78 @@ export const properties: Property[] = [
     "dpeValue": 200,
     "gesLabel": "D",
     "gesValue": 30,
-    "description": "Exceptionnel appartement en plein coeur de Felix Faure au dernier étage avec ascenseur et grand balcon vue mer d'une surface de 123,77m2 comprenant une entrée avec placard, un séjour de 38 m2 exposé sud, arriere cuisine , cheminée, trois chambres de 12, 12 et 15m2, salle de bain , salle de douche et wc séparé. Une cave et un emplacement de parking privatif sont inclus pour ce bien de qualité. DPE D Rare sur le marché",
+    "description": "Exceptionnel appartement en plein coeur de Felix Faure au dernier étage avec ascenseur et grand balcon. Vue ville et mer sans aucun vis à vis . D'une surface de 123,77m2 comprenant une entrée avec placard, un séjour de 38 m2 exposé sud, arriere cuisine , cheminée, trois chambres de 12, 12 et 15m2, salle de bain , salle de douche et wc séparé. Une cave et un emplacement de parking privatif sont inclus pour ce bien de qualité. DPE D Rare sur le marché.",
     "cityId": "city-le-havre",
     "postalCode": "76600",
     "lat": null,
     "lng": null,
     "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-02-24T07:42:04.514Z",
-    "updatedAt": "2026-02-24T07:42:04.514Z",
+    "publishedAt": "2026-09-30T15:59:00.314Z",
+    "updatedAt": "2026-09-30T15:59:00.314Z",
     "isFeatured": false,
     "images": [
       {
         "id": "5061-1",
         "propertyId": 5061,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/0248a0961124f7824c481616e54d157a/photo_fe2b553827d5368dff13087af72de0a3.jpg",
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/0248a0961124f7824c481616e54d157a/photo_2454e674256cf6b14aeab01a24dddaa0.jpg",
         "sortOrder": 0,
         "altText": "APPARTEMENT DE STANDING VUE VILLE ET MER - photo 1"
       },
       {
         "id": "5061-2",
         "propertyId": 5061,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/0248a0961124f7824c481616e54d157a/photo_3b93ae16033d95c6fa3d5352bd7c9893.jpg",
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/0248a0961124f7824c481616e54d157a/photo_d91a190ad0c8b76ba95a6413ff724d59.jpg",
         "sortOrder": 1,
         "altText": "APPARTEMENT DE STANDING VUE VILLE ET MER - photo 2"
       },
       {
         "id": "5061-3",
         "propertyId": 5061,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/0248a0961124f7824c481616e54d157a/photo_11f44595203d108f5586c4932bae40b7.jpg",
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/0248a0961124f7824c481616e54d157a/photo_8efded28bc6a5c28e97761d61f9087d3.jpg",
         "sortOrder": 2,
         "altText": "APPARTEMENT DE STANDING VUE VILLE ET MER - photo 3"
       },
       {
         "id": "5061-4",
         "propertyId": 5061,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/0248a0961124f7824c481616e54d157a/photo_df94c2012df897078f4cc51ab0d563ff.jpg",
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/0248a0961124f7824c481616e54d157a/photo_511a32914de2ae61faade706f802c6ad.jpg",
         "sortOrder": 3,
         "altText": "APPARTEMENT DE STANDING VUE VILLE ET MER - photo 4"
       },
       {
         "id": "5061-5",
         "propertyId": 5061,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/0248a0961124f7824c481616e54d157a/photo_d7b90df4e1212e0e90784c34fe3e5ea4.jpg",
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/0248a0961124f7824c481616e54d157a/photo_b3f4f00cedeec3facc688fe7e54babf3.jpg",
         "sortOrder": 4,
         "altText": "APPARTEMENT DE STANDING VUE VILLE ET MER - photo 5"
       },
       {
         "id": "5061-6",
         "propertyId": 5061,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/0248a0961124f7824c481616e54d157a/photo_c01396ddc8097f2ce19cb05a2cec2664.jpg",
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/0248a0961124f7824c481616e54d157a/photo_618e01d220f2924c41716e170b025788.jpg",
         "sortOrder": 5,
         "altText": "APPARTEMENT DE STANDING VUE VILLE ET MER - photo 6"
       },
       {
         "id": "5061-7",
         "propertyId": 5061,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/0248a0961124f7824c481616e54d157a/photo_22532026739a27b1154222bc9452aedd.jpg",
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/0248a0961124f7824c481616e54d157a/photo_83ced38f9c7b38f73b0d6bc98435d2b4.jpg",
         "sortOrder": 6,
         "altText": "APPARTEMENT DE STANDING VUE VILLE ET MER - photo 7"
+      },
+      {
+        "id": "5061-8",
+        "propertyId": 5061,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/0248a0961124f7824c481616e54d157a/photo_a9d114108715474129bb0f2a6563177f.jpg",
+        "sortOrder": 7,
+        "altText": "APPARTEMENT DE STANDING VUE VILLE ET MER - photo 8"
+      },
+      {
+        "id": "5061-9",
+        "propertyId": 5061,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/0248a0961124f7824c481616e54d157a/photo_422f3cd011720ebab6aeaf131bdf9d78.jpg",
+        "sortOrder": 8,
+        "altText": "APPARTEMENT DE STANDING VUE VILLE ET MER - photo 9"
       }
     ],
     "features": [
@@ -3241,86 +3986,13 @@ export const properties: Property[] = [
     ]
   },
   {
-    "id": 5046,
-    "title": "SANVIC",
-    "slug": "sanvic",
-    "transactionType": "vente",
-    "propertyType": "maison_villa",
-    "status": "active",
-    "priceAmount": 254000,
-    "priceCurrency": "EUR",
-    "surfaceM2": 110,
-    "terrainM2": null,
-    "rooms": 5,
-    "bedrooms": 3,
-    "bathrooms": 1,
-    "parkingCount": 0,
-    "garageCount": 1,
-    "dpeLabel": "D",
-    "dpeValue": 197,
-    "gesLabel": "D",
-    "gesValue": 40,
-    "description": "Au calme, secteur pavillonnaire,maison non mitoyenne de 110 m2 en Exclusivité: Entrée avec dressing, spacieux séjour /salon exposé SUD accès terrasse er jardin, cuisine aménagée, 3 chambres, bureau, salle de bains et salle d'eau, 2wc. DPE D. Cave .garage. Chauffage Gaz (2024)",
-    "cityId": "city-le-havre",
-    "postalCode": "76620",
-    "lat": null,
-    "lng": null,
-    "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-02-24T07:41:04.532Z",
-    "updatedAt": "2026-02-24T07:41:04.532Z",
-    "isFeatured": false,
-    "images": [
-      {
-        "id": "5046-1",
-        "propertyId": 5046,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/eb96e4c2f0097f1408216a803566d8a4/photo_2f4b905192f88b3059f173602af5e917.jpg",
-        "sortOrder": 0,
-        "altText": "SANVIC - photo 1"
-      },
-      {
-        "id": "5046-2",
-        "propertyId": 5046,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/eb96e4c2f0097f1408216a803566d8a4/photo_caa4e07527e2eb0c7b6432c1ab817811.jpg",
-        "sortOrder": 1,
-        "altText": "SANVIC - photo 2"
-      },
-      {
-        "id": "5046-3",
-        "propertyId": 5046,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/eb96e4c2f0097f1408216a803566d8a4/photo_4ccfa9b0a92dec1bdfaece461f769dd1.jpg",
-        "sortOrder": 2,
-        "altText": "SANVIC - photo 3"
-      },
-      {
-        "id": "5046-4",
-        "propertyId": 5046,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/eb96e4c2f0097f1408216a803566d8a4/photo_a5360b1761af959e0d30ad3284f71b33.jpg",
-        "sortOrder": 3,
-        "altText": "SANVIC - photo 4"
-      },
-      {
-        "id": "5046-5",
-        "propertyId": 5046,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/eb96e4c2f0097f1408216a803566d8a4/photo_813b667f6cfb3d9938ad154577c5dcd6.jpg",
-        "sortOrder": 4,
-        "altText": "SANVIC - photo 5"
-      }
-    ],
-    "features": [
-      {
-        "propertyId": 5046,
-        "featureKey": "maison",
-        "labelFr": "Maison"
-      }
-    ]
-  },
-  {
     "id": 4990,
     "title": "PROPRIETE DE CARACTERE",
     "slug": "propriete-de-caractere",
     "transactionType": "vente",
     "propertyType": "maison_villa",
     "status": "active",
+    "sourceStatus": "Vente",
     "priceAmount": 595000,
     "priceCurrency": "EUR",
     "surfaceM2": 220,
@@ -3340,8 +4012,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-24T07:40:04.700Z",
-    "updatedAt": "2026-02-24T07:40:04.700Z",
+    "publishedAt": "2026-09-30T15:58:00.398Z",
+    "updatedAt": "2026-09-30T15:58:00.398Z",
     "isFeatured": false,
     "images": [
       {
@@ -3361,37 +4033,51 @@ export const properties: Property[] = [
       {
         "id": "4990-3",
         "propertyId": 4990,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/89da7d359915f616708c0c0dad9fa322/photo_eb66593180012e42f444b85d2b84c9c2.jpg",
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/89da7d359915f616708c0c0dad9fa322/photo_a4e3641f59bc1f9ead0e5ebce5668fef.jpg",
         "sortOrder": 2,
         "altText": "PROPRIETE DE CARACTERE - photo 3"
       },
       {
         "id": "4990-4",
         "propertyId": 4990,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/89da7d359915f616708c0c0dad9fa322/photo_7e12966168331188b9408fd535911386.jpg",
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/89da7d359915f616708c0c0dad9fa322/photo_eb66593180012e42f444b85d2b84c9c2.jpg",
         "sortOrder": 3,
         "altText": "PROPRIETE DE CARACTERE - photo 4"
       },
       {
         "id": "4990-5",
         "propertyId": 4990,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/89da7d359915f616708c0c0dad9fa322/photo_898dabb5fd8f365f44866a4d2649b098.jpg",
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/89da7d359915f616708c0c0dad9fa322/photo_040d56b9ea183ce723b0e3c2578f4e81.jpg",
         "sortOrder": 4,
         "altText": "PROPRIETE DE CARACTERE - photo 5"
       },
       {
         "id": "4990-6",
         "propertyId": 4990,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/89da7d359915f616708c0c0dad9fa322/photo_040d56b9ea183ce723b0e3c2578f4e81.jpg",
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/89da7d359915f616708c0c0dad9fa322/photo_7dd1a95a01d2ac6295e4d6e7188a8e59.jpg",
         "sortOrder": 5,
         "altText": "PROPRIETE DE CARACTERE - photo 6"
       },
       {
         "id": "4990-7",
         "propertyId": 4990,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/89da7d359915f616708c0c0dad9fa322/photo_7dd1a95a01d2ac6295e4d6e7188a8e59.jpg",
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/89da7d359915f616708c0c0dad9fa322/photo_71c04a4a3d0465fbbd09a676344cb89c.jpg",
         "sortOrder": 6,
         "altText": "PROPRIETE DE CARACTERE - photo 7"
+      },
+      {
+        "id": "4990-8",
+        "propertyId": 4990,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/89da7d359915f616708c0c0dad9fa322/photo_3c33750f49c80e4b319f775cff5e6400.jpg",
+        "sortOrder": 7,
+        "altText": "PROPRIETE DE CARACTERE - photo 8"
+      },
+      {
+        "id": "4990-9",
+        "propertyId": 4990,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/89da7d359915f616708c0c0dad9fa322/photo_abfb0082d22defd47541f5e961dd581e.jpg",
+        "sortOrder": 8,
+        "altText": "PROPRIETE DE CARACTERE - photo 9"
       }
     ],
     "features": [
@@ -3403,373 +4089,105 @@ export const properties: Property[] = [
     ]
   },
   {
-    "id": 4965,
-    "title": "Hotel de ville",
-    "slug": "hotel-de-ville-4965",
-    "transactionType": "vente",
-    "propertyType": "appartement",
-    "status": "active",
-    "priceAmount": 485000,
-    "priceCurrency": "EUR",
-    "surfaceM2": 154,
-    "terrainM2": null,
-    "rooms": 6,
-    "bedrooms": 3,
-    "bathrooms": 0,
-    "parkingCount": 0,
-    "garageCount": 0,
-    "dpeLabel": "E",
-    "dpeValue": 255,
-    "gesLabel": "E",
-    "gesValue": 53,
-    "description": "Charme, authenticité et jolies prestations pour cet appartement de 153 m2 de style Haussmanien: belle entrée, pièces de réception avec moulures, boiseries et cheminées, trois chambres dont 2 avec salle d'eau privative. Une chambre de service. Deux caves. DPE E. Charges copro/an 1600 EUR",
-    "cityId": "city-le-havre",
-    "postalCode": "76600",
-    "lat": null,
-    "lng": null,
-    "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-02-24T07:39:04.742Z",
-    "updatedAt": "2026-02-24T07:39:04.742Z",
-    "isFeatured": false,
-    "images": [
-      {
-        "id": "4965-1",
-        "propertyId": 4965,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/0d9610bd23ea2a98459327f86fcf60bb/photo_1f9c9f838af6ce11cfcc8e3b34c1e3ab.jpg",
-        "sortOrder": 0,
-        "altText": "Hotel de ville - photo 1"
-      },
-      {
-        "id": "4965-2",
-        "propertyId": 4965,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/0d9610bd23ea2a98459327f86fcf60bb/photo_d730f0e0bf5b84357fe80ea1e29ebc65.jpg",
-        "sortOrder": 1,
-        "altText": "Hotel de ville - photo 2"
-      },
-      {
-        "id": "4965-3",
-        "propertyId": 4965,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/0d9610bd23ea2a98459327f86fcf60bb/photo_20664cd55a8a92bdca548fedb49dbad8.jpg",
-        "sortOrder": 2,
-        "altText": "Hotel de ville - photo 3"
-      },
-      {
-        "id": "4965-4",
-        "propertyId": 4965,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/0d9610bd23ea2a98459327f86fcf60bb/photo_eea07280f0a0a931921eac067f85ff4f.jpg",
-        "sortOrder": 3,
-        "altText": "Hotel de ville - photo 4"
-      },
-      {
-        "id": "4965-5",
-        "propertyId": 4965,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/0d9610bd23ea2a98459327f86fcf60bb/photo_d2db16a08ea7bb4fcc31a7ca078681ff.jpg",
-        "sortOrder": 4,
-        "altText": "Hotel de ville - photo 5"
-      },
-      {
-        "id": "4965-6",
-        "propertyId": 4965,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/0d9610bd23ea2a98459327f86fcf60bb/photo_2fc3b286e477a014c0e109f7b9e73c7e.jpg",
-        "sortOrder": 5,
-        "altText": "Hotel de ville - photo 6"
-      },
-      {
-        "id": "4965-7",
-        "propertyId": 4965,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/0d9610bd23ea2a98459327f86fcf60bb/photo_dd565b8efdbd275f41e1300e6e5cf1ac.jpg",
-        "sortOrder": 6,
-        "altText": "Hotel de ville - photo 7"
-      }
-    ],
-    "features": [
-      {
-        "propertyId": 4965,
-        "featureKey": "cave",
-        "labelFr": "Cave"
-      }
-    ]
-  },
-  {
-    "id": 4955,
-    "title": "Proximité des Ormeaux",
-    "slug": "proximite-des-ormeaux",
-    "transactionType": "vente",
-    "propertyType": "appartement",
-    "status": "active",
-    "priceAmount": 102000,
-    "priceCurrency": "EUR",
-    "surfaceM2": 46,
-    "terrainM2": null,
-    "rooms": 2,
-    "bedrooms": 1,
-    "bathrooms": 0,
-    "parkingCount": 1,
-    "garageCount": 0,
-    "dpeLabel": "D",
-    "dpeValue": 241,
-    "gesLabel": "D",
-    "gesValue": 49,
-    "description": "Bel appartement en parfait état de deux pièces principales envion 46 m2: entrée, joli séjour exposé Sud, balcon, cuisine, chambre et salle d'eau. Cave et Parking privatif.. DPE D. Charges copro/ an: 2052EUR",
-    "cityId": "city-le-havre",
-    "postalCode": "76600",
-    "lat": null,
-    "lng": null,
-    "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-02-24T07:38:04.830Z",
-    "updatedAt": "2026-02-24T07:38:04.830Z",
-    "isFeatured": false,
-    "images": [
-      {
-        "id": "4955-1",
-        "propertyId": 4955,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/e83a84f02816c89ce37761d86d2e9220/photo_1c36fb5d03ecb6f4aa342ad60ea87371.jpg",
-        "sortOrder": 0,
-        "altText": "Proximité des Ormeaux - photo 1"
-      },
-      {
-        "id": "4955-2",
-        "propertyId": 4955,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/e83a84f02816c89ce37761d86d2e9220/photo_849a41b31e47db3cf703abec927cb9c4.jpg",
-        "sortOrder": 1,
-        "altText": "Proximité des Ormeaux - photo 2"
-      },
-      {
-        "id": "4955-3",
-        "propertyId": 4955,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/e83a84f02816c89ce37761d86d2e9220/photo_8e3efbb8e784365591081c4710c37aac.jpg",
-        "sortOrder": 2,
-        "altText": "Proximité des Ormeaux - photo 3"
-      },
-      {
-        "id": "4955-4",
-        "propertyId": 4955,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/e83a84f02816c89ce37761d86d2e9220/photo_8a9dd63dfcaa76f9ba5614f5f0fa4cbe.jpg",
-        "sortOrder": 3,
-        "altText": "Proximité des Ormeaux - photo 4"
-      },
-      {
-        "id": "4955-5",
-        "propertyId": 4955,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/e83a84f02816c89ce37761d86d2e9220/photo_020ba8751de05bce0f600b0700d95fb5.jpg",
-        "sortOrder": 4,
-        "altText": "Proximité des Ormeaux - photo 5"
-      }
-    ],
-    "features": [
-      {
-        "propertyId": 4955,
-        "featureKey": "chauffage",
-        "labelFr": "Chauffage"
-      },
-      {
-        "propertyId": 4955,
-        "featureKey": "cave",
-        "labelFr": "Cave"
-      },
-      {
-        "propertyId": 4955,
-        "featureKey": "ascenseur",
-        "labelFr": "Ascenseur"
-      }
-    ]
-  },
-  {
-    "id": 4923,
-    "title": "Saint Michel",
-    "slug": "saint-michel",
+    "id": 814,
+    "title": "NOUVEAUTE GAINNEVILLE CENTRE",
+    "slug": "nouveaute-gainneville-centre",
     "transactionType": "vente",
     "propertyType": "maison_villa",
     "status": "active",
-    "priceAmount": 595960,
+    "sourceStatus": "Vente",
+    "priceAmount": 487000,
     "priceCurrency": "EUR",
-    "surfaceM2": 200,
+    "surfaceM2": 220,
     "terrainM2": null,
-    "rooms": 9,
-    "bedrooms": 5,
+    "rooms": 8,
+    "bedrooms": 6,
     "bathrooms": 1,
-    "parkingCount": 0,
-    "garageCount": 1,
-    "dpeLabel": "F",
-    "dpeValue": 340,
-    "gesLabel": "F",
-    "gesValue": 88,
-    "description": "Située dans un secteur calme et recherché, belle maison de maître (avec beaux parquets, moulures, cheminées) sur parcelle arborée de 240 m2 comprenant : En rez-de-chaussée: une cuisine, un séjour, un salon, une chambre. A l'étage: 3 chambres, une salle de bains. Au deuxième: 3 chambres et un grenier. Sous sol total et un garage. Prévoir travaux de rénovation. Agent co emma Vasselin.",
-    "cityId": "city-le-havre",
-    "postalCode": "76600",
-    "lat": null,
-    "lng": null,
-    "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-24T07:37:04.905Z",
-    "updatedAt": "2026-02-24T07:37:04.905Z",
-    "isFeatured": false,
-    "images": [
-      {
-        "id": "4923-1",
-        "propertyId": 4923,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/13ef0d0b43627ea9c22ee779b191cd16/photo_c31af4ab20937f1ea94456e33c578e3a_Inc_0.jpg",
-        "sortOrder": 0,
-        "altText": "Saint Michel - photo 1"
-      },
-      {
-        "id": "4923-2",
-        "propertyId": 4923,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/13ef0d0b43627ea9c22ee779b191cd16/photo_85929611b474517c34fbb77201033a81.jpg",
-        "sortOrder": 1,
-        "altText": "Saint Michel - photo 2"
-      },
-      {
-        "id": "4923-3",
-        "propertyId": 4923,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/13ef0d0b43627ea9c22ee779b191cd16/photo_b066422072b2c1a4ed28b81c47a79118.jpg",
-        "sortOrder": 2,
-        "altText": "Saint Michel - photo 3"
-      }
-    ],
-    "features": [
-      {
-        "propertyId": 4923,
-        "featureKey": "maison",
-        "labelFr": "Maison"
-      }
-    ]
-  },
-  {
-    "id": 4916,
-    "title": "Annonce 4916",
-    "slug": "annonce-4916",
-    "transactionType": "vente",
-    "propertyType": "appartement",
-    "status": "active",
-    "priceAmount": 84000,
-    "priceCurrency": "EUR",
-    "surfaceM2": 39,
-    "terrainM2": null,
-    "rooms": 2,
-    "bedrooms": 1,
-    "bathrooms": 0,
-    "parkingCount": 0,
-    "garageCount": 0,
-    "dpeLabel": "E",
-    "dpeValue": 316,
-    "gesLabel": "C",
-    "gesValue": 12,
-    "description": "Appartement en parfait état vendu meublé et loué comprenant une cuisine aménagée et équipée, un séjour, une salle de douche, une chambre, un cellier à mi étage, un cellier ds la cour. Agent co Emma Vasselin",
-    "cityId": "city-le-havre",
-    "postalCode": "76600",
-    "lat": null,
-    "lng": null,
-    "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-02-24T07:36:04.908Z",
-    "updatedAt": "2026-02-24T07:36:04.908Z",
-    "isFeatured": false,
-    "images": [
-      {
-        "id": "4916-1",
-        "propertyId": 4916,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/fd49c07409c7ec09214b2aba1aa9eb8e/photo_d6579162b7534532e4d13652b8e3e3ff.jpg",
-        "sortOrder": 0,
-        "altText": "Annonce 4916 - photo 1"
-      },
-      {
-        "id": "4916-2",
-        "propertyId": 4916,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/fd49c07409c7ec09214b2aba1aa9eb8e/photo_088228a92c6d38e3d01eab361d71d4ff.jpg",
-        "sortOrder": 1,
-        "altText": "Annonce 4916 - photo 2"
-      },
-      {
-        "id": "4916-3",
-        "propertyId": 4916,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/fd49c07409c7ec09214b2aba1aa9eb8e/photo_ba2e7921c978a8a38ef6ea0c66cd7843.jpg",
-        "sortOrder": 2,
-        "altText": "Annonce 4916 - photo 3"
-      },
-      {
-        "id": "4916-4",
-        "propertyId": 4916,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/fd49c07409c7ec09214b2aba1aa9eb8e/photo_5a846ae874c8de30eaba573c6d8ca391.jpg",
-        "sortOrder": 3,
-        "altText": "Annonce 4916 - photo 4"
-      }
-    ],
-    "features": [
-      {
-        "propertyId": 4916,
-        "featureKey": "appartement",
-        "labelFr": "Appartement"
-      }
-    ]
-  },
-  {
-    "id": 809,
-    "title": "- APPARTEMENT T4 - PLACE DES GOBELINS",
-    "slug": "appartement-t4-place-des-gobelins",
-    "transactionType": "vente",
-    "propertyType": "appartement",
-    "status": "active",
-    "priceAmount": 231000,
-    "priceCurrency": "EUR",
-    "surfaceM2": 80,
-    "terrainM2": null,
-    "rooms": 4,
-    "bedrooms": 2,
-    "bathrooms": 1,
-    "parkingCount": 0,
-    "garageCount": 1,
-    "dpeLabel": "E",
-    "dpeValue": 299,
-    "gesLabel": "E",
-    "gesValue": 65,
-    "description": "LES GOBELINS Superbe appartement lumineux offrant cuisine aménagée - grand séjour/salon donnant accès a une terrasse plein Sud - deux chambres - dressing - sdbains - WC - cave. Etat impeccable. Agent Co Véronique FOGT",
-    "cityId": "city-le-havre",
-    "postalCode": "76600",
+    "parkingCount": 4,
+    "garageCount": 2,
+    "dpeLabel": "D",
+    "dpeValue": 210,
+    "gesLabel": "B",
+    "gesValue": 7,
+    "description": "SUPERBE MAISON DE CARACTERE DE 220 M2 SUR JARDIN PAYSAGE DE 2200 M2 OFFRANT UNE CUISINE AMENAGEE - UN SEJOUR - UN SALON AVEC CHEMINEE - GRANDE VERANDA - CINQ CHAMBRES - UNE SUITE PARENTALE - DRESSING - SDDCHES - SDBAINS - WC. UNE CAVE UNE LINGERIE ET UN GRAND GARAGE ATTENANT DE 40 M2 COMPLETENT CE BIEN. CHAUFFAGE POMPE A CHALEUR. VENEZ DECOUVRIR CETTE DEMEURE TRES LUMINEUSE EN EXCELLENT ETAT REMPLIE DE CHARME AVEC DE BELLES HAUTEURS SOUS PLAFOND. UN VRAI COUP DE COEUR. Agent Co Véronique FOGT",
+    "cityId": "city-gainneville",
+    "postalCode": "76700",
     "lat": null,
     "lng": null,
     "agentId": "agent-clara-durand",
-    "publishedAt": "2026-02-24T07:35:05.956Z",
-    "updatedAt": "2026-02-24T07:35:05.956Z",
+    "publishedAt": "2026-09-30T15:57:00.053Z",
+    "updatedAt": "2026-09-30T15:57:00.053Z",
     "isFeatured": false,
     "images": [
       {
-        "id": "809-1",
-        "propertyId": 809,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/93835c8e47233afc5bfda7e0abded4ff/photo_58c772b5d524c942250adc1e6931e51c.jpg",
+        "id": "814-1",
+        "propertyId": 814,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/3517d9622d8e1a9bb76498c6acaee6ca/photo_5c494cf5969e8dff4a47a383ec64017f.jpg",
         "sortOrder": 0,
-        "altText": "- APPARTEMENT T4 - PLACE DES GOBELINS - photo 1"
+        "altText": "NOUVEAUTE GAINNEVILLE CENTRE - photo 1"
       },
       {
-        "id": "809-2",
-        "propertyId": 809,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/93835c8e47233afc5bfda7e0abded4ff/photo_ddb9e09a9f598969af73515c632d8ea1.jpg",
+        "id": "814-2",
+        "propertyId": 814,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/3517d9622d8e1a9bb76498c6acaee6ca/photo_e248446f95d03f7f014e8a7fec24e121.jpg",
         "sortOrder": 1,
-        "altText": "- APPARTEMENT T4 - PLACE DES GOBELINS - photo 2"
+        "altText": "NOUVEAUTE GAINNEVILLE CENTRE - photo 2"
       },
       {
-        "id": "809-3",
-        "propertyId": 809,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/93835c8e47233afc5bfda7e0abded4ff/photo_52906d778e2a485d99d3934538f2f8e9.jpg",
+        "id": "814-3",
+        "propertyId": 814,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/3517d9622d8e1a9bb76498c6acaee6ca/photo_60dc132ae3e5a34227b75cf9ae7821d8.jpg",
         "sortOrder": 2,
-        "altText": "- APPARTEMENT T4 - PLACE DES GOBELINS - photo 3"
+        "altText": "NOUVEAUTE GAINNEVILLE CENTRE - photo 3"
       },
       {
-        "id": "809-4",
-        "propertyId": 809,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/93835c8e47233afc5bfda7e0abded4ff/photo_2ec94e0299acb5a62e20cf0a56a44418.jpg",
+        "id": "814-4",
+        "propertyId": 814,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/3517d9622d8e1a9bb76498c6acaee6ca/photo_b1fdb383e660d613b581dbf34c8b20e6.jpg",
         "sortOrder": 3,
-        "altText": "- APPARTEMENT T4 - PLACE DES GOBELINS - photo 4"
+        "altText": "NOUVEAUTE GAINNEVILLE CENTRE - photo 4"
+      },
+      {
+        "id": "814-5",
+        "propertyId": 814,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/3517d9622d8e1a9bb76498c6acaee6ca/photo_b05adb9a619872f8b28f917a90425290.jpg",
+        "sortOrder": 4,
+        "altText": "NOUVEAUTE GAINNEVILLE CENTRE - photo 5"
+      },
+      {
+        "id": "814-6",
+        "propertyId": 814,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/3517d9622d8e1a9bb76498c6acaee6ca/photo_18c71223bb27d0ac8e67064dbe3e1044.jpg",
+        "sortOrder": 5,
+        "altText": "NOUVEAUTE GAINNEVILLE CENTRE - photo 6"
+      },
+      {
+        "id": "814-7",
+        "propertyId": 814,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/3517d9622d8e1a9bb76498c6acaee6ca/photo_b3f3539b5f2c82d246468e0cb7b38fdf.jpg",
+        "sortOrder": 6,
+        "altText": "NOUVEAUTE GAINNEVILLE CENTRE - photo 7"
+      },
+      {
+        "id": "814-8",
+        "propertyId": 814,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/3517d9622d8e1a9bb76498c6acaee6ca/photo_e7a212b2711960a729f8a7060a99e0ad.jpg",
+        "sortOrder": 7,
+        "altText": "NOUVEAUTE GAINNEVILLE CENTRE - photo 8"
+      },
+      {
+        "id": "814-9",
+        "propertyId": 814,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/3517d9622d8e1a9bb76498c6acaee6ca/photo_6929744c996a6ebb4d2b18714a4dc105.jpg",
+        "sortOrder": 8,
+        "altText": "NOUVEAUTE GAINNEVILLE CENTRE - photo 9"
       }
     ],
     "features": [
       {
-        "propertyId": 809,
-        "featureKey": "balcon",
-        "labelFr": "Balcon"
-      },
-      {
-        "propertyId": 809,
-        "featureKey": "cave",
-        "labelFr": "Cave"
+        "propertyId": 814,
+        "featureKey": "maison",
+        "labelFr": "Maison"
       }
     ]
   }
