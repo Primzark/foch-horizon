@@ -3,8 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cityBySlug } from "@/features/cities/data/cities";
 import { getCityBySlug } from "@/features/cities/api/cities.service";
-import { getPropertiesByCitySlug } from "@/features/listings/api/properties.service";
+import { getPropertiesByCitySlug, searchProperties } from "@/features/listings/api/properties.service";
 import { ListingCard } from "@/features/listings/components/ListingCard";
 import { toSearchItem } from "@/features/listings/utils/mappers";
 import { getSiteUrl, useSeo } from "@/lib/seo/useSeo";
@@ -28,25 +29,43 @@ export default function CityHubPage() {
 
   const cityQuery = useQuery({
     queryKey: ["city", citySlug],
-    enabled: citySlug.length > 0,
+    enabled: cityBySlug.has(citySlug),
     queryFn: () => getCityBySlug(citySlug),
   });
 
   const propertiesQuery = useQuery({
-    queryKey: ["city-properties", citySlug],
+    queryKey: ["city-properties", citySlug, cityGuide?.id],
     enabled: citySlug.length > 0,
-    queryFn: () => getPropertiesByCitySlug(citySlug),
+    queryFn: async () => {
+      const listingSearch = cityGuide?.listingSearch ?? { city: citySlug };
+      if (listingSearch.city && !listingSearch.query) {
+        const properties = await getPropertiesByCitySlug(listingSearch.city);
+        return properties.map(toSearchItem);
+      }
+
+      const response = await searchProperties({
+        city: listingSearch.city,
+        q: listingSearch.query,
+        page: 1,
+        pageSize: 48,
+        sort: "newest",
+      });
+      return response.items;
+    },
   });
 
   const city = cityQuery.data;
   const siteUrl = getSiteUrl();
+  const pageTitle = cityGuide?.pageTitle ?? `Immobilier à ${city?.name ?? ""}`;
 
   useSeo(
     city
       ? {
-          title: `Immobilier ${city.name} | Foch Immobilier`,
-          description: `Découvrez nos biens et notre accompagnement immobilier premium à ${city.name}.`,
-          canonicalPath: `/immobilier/${city.slug}`,
+          title: `${pageTitle} | Foch Immobilier`,
+          description: cityGuide
+            ? `${cityGuide.subtitle}. Prix, habitat, écoles, commerces et déplacements à ${cityGuide.name}.`
+            : `Découvrez nos biens et notre accompagnement immobilier premium à ${city.name}.`,
+          canonicalPath: `/immobilier/${cityGuide?.id ?? city.slug}`,
           jsonLd: [
             {
               "@context": "https://schema.org",
@@ -62,16 +81,16 @@ export default function CityHubPage() {
             {
               "@context": "https://schema.org",
               "@type": "CollectionPage",
-              name: `Immobilier ${city.name}`,
-              url: `${siteUrl}/immobilier/${city.slug}`,
+              name: pageTitle,
+              url: `${siteUrl}/immobilier/${cityGuide?.id ?? city.slug}`,
             },
           ],
         }
       : cityGuide
         ? {
-            title: `Immobilier ${cityGuide.name} | Foch Immobilier`,
+            title: `${cityGuide.pageTitle} | Foch Immobilier`,
             description: `${cityGuide.subtitle}. Repères de prix, habitat, écoles, commerces et déplacements à ${cityGuide.name}.`,
-            canonicalPath: `/immobilier/${citySlug}`,
+            canonicalPath: `/immobilier/${cityGuide.id}`,
             jsonLd: {
               "@context": "https://schema.org",
               "@type": "Place",
@@ -100,6 +119,11 @@ export default function CityHubPage() {
   }
 
   const cityProperties = propertiesQuery.data ?? [];
+  const allResultsParams = new URLSearchParams({
+    ...(cityGuide?.listingSearch.city ? { city: cityGuide.listingSearch.city } : city?.slug ? { city: city.slug } : {}),
+    ...(cityGuide?.listingSearch.query ? { q: cityGuide.listingSearch.query } : {}),
+    ...(cityGuide ? { guide: cityGuide.id } : {}),
+  });
   if (!city) {
     if (!cityGuide) return <Navigate to="/biens" replace />;
 
@@ -107,9 +131,17 @@ export default function CityHubPage() {
       <section className="container mx-auto px-4 py-10">
         <header className="border-b border-border pb-7">
           <p className="text-xs uppercase tracking-[0.2em] text-brand-strong">Guide local</p>
-          <h1 className="mt-2 font-display text-4xl md:text-5xl">Immobilier à {cityGuide.name}</h1>
+          <h1 className="mt-2 font-display text-4xl md:text-5xl">{cityGuide.pageTitle}</h1>
           <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted-foreground">{cityGuide.subtitle}</p>
         </header>
+
+        <section className="mt-8 rounded-2xl border border-border bg-card p-6 sm:p-8" aria-labelledby="city-guide-title">
+          <header className="mb-6 max-w-3xl">
+            <p className="text-xs font-medium uppercase tracking-[0.18em] text-brand-strong">Repères sur le secteur · {cityGuide.area}</p>
+            <h2 id="city-guide-title" className="mt-2 font-display text-3xl">Vivre à {cityGuide.name}</h2>
+          </header>
+          <GeographyGuideDetails guide={cityGuide} />
+        </section>
 
         {cityProperties.length === 0 ? (
           <p className="mt-6 rounded-xl border border-border bg-card p-5 text-sm text-muted-foreground">
@@ -121,23 +153,15 @@ export default function CityHubPage() {
           <section className="mt-8" aria-labelledby="city-properties-title">
             <h2 id="city-properties-title" className="mb-4 font-display text-3xl">Biens à {cityGuide.name}</h2>
             <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-              {cityProperties.map((property, index) => (
-                <ListingCard key={property.id} item={toSearchItem(property)} revealIndex={index} />
+              {cityProperties.map((item, index) => (
+                <ListingCard key={item.id} item={item} revealIndex={index} />
               ))}
             </div>
           </section>
         )}
 
-        <section className="mt-8 rounded-2xl border border-border bg-card p-6 sm:p-8" aria-labelledby="city-guide-title">
-          <header className="mb-6 max-w-3xl">
-            <p className="text-xs font-medium uppercase tracking-[0.18em] text-brand-strong">Repères sur le secteur · {cityGuide.area}</p>
-            <h2 id="city-guide-title" className="mt-2 font-display text-3xl">Vivre à {cityGuide.name}</h2>
-          </header>
-          <GeographyGuideDetails guide={cityGuide} />
-        </section>
-
         <div className="mt-8 flex flex-wrap gap-3">
-          <Button variant="outline" asChild><Link to="/biens">Tous les biens</Link></Button>
+          <Button variant="outline" asChild><Link to="/geographie">Tous les secteurs</Link></Button>
           <Button variant="brand" asChild><Link to="/contact">Parler à l’agence</Link></Button>
         </div>
       </section>
@@ -187,12 +211,23 @@ export default function CityHubPage() {
           <p className="inline-flex items-center gap-1 text-xs uppercase tracking-[0.2em] text-white/85">
             <MapPin className="h-3.5 w-3.5" /> Ville
           </p>
-          <h1 className="mt-2 font-display text-4xl md:text-5xl">Immobilier à {city.name}</h1>
+          <h1 className="mt-2 font-display text-4xl md:text-5xl">{pageTitle}</h1>
           <p className="mt-2 text-sm text-white/85">
             Une sélection de biens et un accompagnement local sur mesure pour vendre, acheter ou louer dans ce secteur.
           </p>
         </div>
       </header>
+
+      {cityGuide && (
+        <section className="mt-8 rounded-2xl border border-border bg-card p-6 sm:p-8" aria-labelledby="city-guide-title">
+          <header className="mb-6 max-w-3xl">
+            <p className="text-xs font-medium uppercase tracking-[0.18em] text-brand-strong">Repères sur le secteur · {cityGuide.area}</p>
+            <h2 id="city-guide-title" className="mt-2 font-display text-3xl">Vivre à {cityGuide.name}</h2>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{cityGuide.subtitle}</p>
+          </header>
+          <GeographyGuideDetails guide={cityGuide} />
+        </section>
+      )}
 
       <section className="mt-8">
         <div className="mb-4 flex items-end justify-between gap-4">
@@ -203,32 +238,20 @@ export default function CityHubPage() {
             </p>
           </div>
           <Button variant="brand" asChild>
-            <Link to={`/biens?${new URLSearchParams({ city: city.slug, ...(cityGuide ? { guide: cityGuide.id } : {}) }).toString()}`}>Voir tous les résultats</Link>
+            <Link to={`/biens?${allResultsParams.toString()}`}>Voir tous les résultats</Link>
           </Button>
         </div>
 
         {cityProperties.length === 0 ? (
-          <>
-            <div className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
-              {propertiesQuery.isError
-                ? "Les annonces ne sont pas disponibles pour le moment. Réessayez un peu plus tard."
-                : "Aucune annonce active pour le moment sur cette ville. Contactez-nous pour recevoir une alerte personnalisée."}
-            </div>
-            {!propertiesQuery.isError && cityGuide && (
-              <section className="mt-8 rounded-2xl border border-border bg-card p-6 sm:p-8" aria-labelledby="city-guide-title">
-                <header className="mb-6 max-w-3xl">
-                  <p className="text-xs font-medium uppercase tracking-[0.18em] text-brand-strong">Repères sur le secteur</p>
-                  <h2 id="city-guide-title" className="mt-2 font-display text-3xl">Vivre à {cityGuide.name}</h2>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{cityGuide.subtitle} · {cityGuide.area}</p>
-                </header>
-                <GeographyGuideDetails guide={cityGuide} />
-              </section>
-            )}
-          </>
+          <div className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
+            {propertiesQuery.isError
+              ? "Les annonces ne sont pas disponibles pour le moment. Réessayez un peu plus tard."
+              : `Aucune annonce active pour le moment à ${cityGuide?.name ?? city.name}. Contactez-nous pour recevoir une alerte personnalisée.`}
+          </div>
         ) : (
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {cityProperties.map((property, index) => (
-              <ListingCard key={property.id} item={toSearchItem(property)} revealIndex={index} />
+            {cityProperties.map((item, index) => (
+              <ListingCard key={item.id} item={item} revealIndex={index} />
             ))}
           </div>
         )}

@@ -1,6 +1,8 @@
 export type GeographyGuide = {
   id: string;
   name: string;
+  pageTitle: string;
+  listingSearch: { city?: string; query?: string };
   subtitle: string;
   averagePrice: string;
   area: string;
@@ -26,6 +28,8 @@ export const geographyGuides: GeographyGuide[] = [
   {
     id: "le-havre",
     name: "Le Havre",
+    pageTitle: "Immobilier au Havre",
+    listingSearch: { city: "le-havre" },
     subtitle: "Ville portuaire, centre reconstruit et quartiers aux identités contrastées",
     averagePrice: "2 067 €/m²",
     area: "Seine-Maritime",
@@ -47,6 +51,8 @@ export const geographyGuides: GeographyGuide[] = [
   {
     id: "sainte-adresse",
     name: "Sainte-Adresse",
+    pageTitle: "Immobilier à Sainte-Adresse",
+    listingSearch: { city: "sainte-adresse" },
     subtitle: "Station balnéaire en balcon sur la mer, à la limite ouest du Havre",
     averagePrice: "3 841 €/m²",
     area: "Seine-Maritime",
@@ -68,6 +74,8 @@ export const geographyGuides: GeographyGuide[] = [
   {
     id: "la-plage",
     name: "La plage et Saint-Vincent",
+    pageTitle: "Immobilier plage et Saint-Vincent",
+    listingSearch: { city: "le-havre", query: "Saint-Vincent" },
     subtitle: "Front de mer, commerces de quartier et promenades",
     averagePrice: "3 065 €/m²",
     area: "Le Havre · estimation du secteur Saint-Vincent",
@@ -89,6 +97,8 @@ export const geographyGuides: GeographyGuide[] = [
   {
     id: "gobelins",
     name: "Les Gobelins",
+    pageTitle: "Immobilier aux Gobelins",
+    listingSearch: { city: "le-havre", query: "Gobelins" },
     subtitle: "Un quartier résidentiel entre le centre et le littoral",
     averagePrice: "2 547 €/m² en appartement",
     area: "Le Havre · repère Place des Gobelins",
@@ -110,6 +120,8 @@ export const geographyGuides: GeographyGuide[] = [
   {
     id: "saint-michel",
     name: "Saint-Michel",
+    pageTitle: "Immobilier à Saint-Michel",
+    listingSearch: { city: "le-havre", query: "Saint-Michel" },
     subtitle: "Un secteur de coteau proche du centre et des transports",
     averagePrice: "2 629 €/m² en appartement",
     area: "Le Havre · repère Parvis Saint-Michel",
@@ -131,6 +143,8 @@ export const geographyGuides: GeographyGuide[] = [
   {
     id: "octeville-sur-mer",
     name: "Octeville-sur-Mer",
+    pageTitle: "Immobilier à Octeville-sur-Mer",
+    listingSearch: { query: "Octeville-sur-Mer" },
     subtitle: "Bourg résidentiel entre campagne, falaise et agglomération",
     averagePrice: "3 139 €/m²",
     area: "Seine-Maritime",
@@ -152,6 +166,8 @@ export const geographyGuides: GeographyGuide[] = [
   {
     id: "montivilliers",
     name: "Montivilliers",
+    pageTitle: "Immobilier à Montivilliers",
+    listingSearch: { city: "montivilliers" },
     subtitle: "Ville-centre patrimoniale et pôle de services de l’estuaire",
     averagePrice: "2 528 €/m²",
     area: "Seine-Maritime",
@@ -173,6 +189,8 @@ export const geographyGuides: GeographyGuide[] = [
   {
     id: "maneglise",
     name: "Manéglise",
+    pageTitle: "Immobilier à Manéglise",
+    listingSearch: { city: "maneglise" },
     subtitle: "Village rural préservé à l’ouest de l’agglomération havraise",
     averagePrice: "≈ 2 355 €/m²",
     area: "Seine-Maritime · repère de ventes DVF",
@@ -194,6 +212,8 @@ export const geographyGuides: GeographyGuide[] = [
   {
     id: "gainneville",
     name: "Gainneville",
+    pageTitle: "Immobilier à Gainneville",
+    listingSearch: { city: "gainneville" },
     subtitle: "Bourg familial en croissance entre Le Havre et l’estuaire",
     averagePrice: "2 292 €/m²",
     area: "Seine-Maritime · 25 ventes DVF en 2025",
@@ -215,6 +235,8 @@ export const geographyGuides: GeographyGuide[] = [
   {
     id: "saint-romain",
     name: "Saint-Romain-de-Colbosc",
+    pageTitle: "Immobilier à Saint-Romain-de-Colbosc",
+    listingSearch: { query: "Saint-Romain-de-Colbosc" },
     subtitle: "Bourg-centre commerçant au cœur du pays de Caux",
     averagePrice: "2 321 €/m²",
     area: "Seine-Maritime",
@@ -236,6 +258,8 @@ export const geographyGuides: GeographyGuide[] = [
   {
     id: "etretat",
     name: "Étretat",
+    pageTitle: "Immobilier à Étretat",
+    listingSearch: { query: "Étretat" },
     subtitle: "Station littorale et village de vallée au pied des falaises",
     averagePrice: "3 322 €/m²",
     area: "Seine-Maritime",
@@ -257,6 +281,8 @@ export const geographyGuides: GeographyGuide[] = [
   {
     id: "deauville",
     name: "Deauville",
+    pageTitle: "Immobilier à Deauville",
+    listingSearch: { query: "Deauville" },
     subtitle: "Station balnéaire, commerces, courses hippiques et vie culturelle",
     averagePrice: "7 386 €/m²",
     area: "Calvados",
@@ -278,6 +304,8 @@ export const geographyGuides: GeographyGuide[] = [
   {
     id: "trouville",
     name: "Trouville-sur-Mer",
+    pageTitle: "Immobilier à Trouville-sur-Mer",
+    listingSearch: { query: "Trouville-sur-Mer" },
     subtitle: "Port de pêche, station de bord de mer et quartiers en coteau",
     averagePrice: "5 740 €/m²",
     area: "Calvados",

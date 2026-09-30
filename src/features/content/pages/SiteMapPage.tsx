@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { cities } from "@/features/cities/data/cities";
+import { geographyGuides } from "@/features/content/data/geographyGuides";
 import { useSeo } from "@/lib/seo/useSeo";
 
 const pages = [
@@ -41,10 +41,10 @@ export default function SiteMapPage() {
             </Link>
           </li>
         ))}
-        {cities.map((city) => (
-          <li key={city.id}>
-            <Link to={`/immobilier/${city.slug}`} className="text-sm hover:underline">
-              Immobilier {city.name}
+        {geographyGuides.map((guide) => (
+          <li key={guide.id}>
+            <Link to={`/immobilier/${guide.id}`} className="text-sm hover:underline">
+              {guide.pageTitle}
             </Link>
           </li>
         ))}

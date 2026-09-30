@@ -19,11 +19,11 @@ const sectors = [
     title: "Le Havre et Sainte-Adresse",
     description: "Explorez les quartiers havrais et le littoral tout proche.",
     places: [
-      { name: "Le Havre", query: "Le Havre", city: "le-havre", cityPage: true, guideId: "le-havre" },
-      { name: "Sainte-Adresse", query: "Sainte-Adresse", city: "sainte-adresse", cityPage: true, guideId: "sainte-adresse" },
-      { name: "La plage", query: "plage", city: "le-havre", guideId: "la-plage" },
-      { name: "Les Gobelins", query: "Les Gobelins", city: "le-havre", guideId: "gobelins" },
-      { name: "Saint-Michel", query: "Saint-Michel", city: "le-havre", guideId: "saint-michel" },
+      { name: "Le Havre", guideId: "le-havre" },
+      { name: "Sainte-Adresse", guideId: "sainte-adresse" },
+      { name: "La plage", guideId: "la-plage" },
+      { name: "Les Gobelins", guideId: "gobelins" },
+      { name: "Saint-Michel", guideId: "saint-michel" },
     ],
   },
   {
@@ -31,10 +31,10 @@ const sectors = [
     title: "Autour du Havre",
     description: "Des communes voisines où l’agence présente également des biens.",
     places: [
-      { name: "Octeville-sur-Mer", query: "Octeville-sur-Mer", guideId: "octeville-sur-mer" },
-      { name: "Montivilliers", query: "Montivilliers", city: "montivilliers", cityPage: true, guideId: "montivilliers" },
-      { name: "Manéglise", query: "Manéglise", city: "maneglise", cityPage: true, guideId: "maneglise" },
-      { name: "Gainneville", query: "Gainneville", city: "gainneville", cityPage: true, guideId: "gainneville" },
+      { name: "Octeville-sur-Mer", guideId: "octeville-sur-mer" },
+      { name: "Montivilliers", guideId: "montivilliers" },
+      { name: "Manéglise", guideId: "maneglise" },
+      { name: "Gainneville", guideId: "gainneville" },
     ],
   },
   {
@@ -42,8 +42,8 @@ const sectors = [
     title: "De Saint-Romain à Étretat",
     description: "Un axe entre l’intérieur des terres et la côte d’Albâtre.",
     places: [
-      { name: "Saint-Romain-de-Colbosc", query: "Saint-Romain-de-Colbosc", guideId: "saint-romain" },
-      { name: "Étretat", query: "Étretat", guideId: "etretat" },
+      { name: "Saint-Romain-de-Colbosc", guideId: "saint-romain" },
+      { name: "Étretat", guideId: "etretat" },
     ],
   },
   {
@@ -51,8 +51,8 @@ const sectors = [
     title: "Deauville et Trouville-sur-Mer",
     description: "Retrouvez aussi ces deux communes parmi les secteurs cités par l’agence.",
     places: [
-      { name: "Deauville", query: "Deauville", guideId: "deauville" },
-      { name: "Trouville-sur-Mer", query: "Trouville-sur-Mer", guideId: "trouville" },
+      { name: "Deauville", guideId: "deauville" },
+      { name: "Trouville-sur-Mer", guideId: "trouville" },
     ],
   },
 ];
@@ -64,7 +64,6 @@ const havrePhotos = [
     caption: "Le centre reconstruit",
     author: "Philippe Roudaut · CC0",
     href: "https://commons.wikimedia.org/wiki/File:Architecture_Perret_Au_Havre_(180697579).jpeg",
-    query: "Perret",
     guideId: "le-havre",
     width: 1000,
     height: 750,
@@ -75,7 +74,6 @@ const havrePhotos = [
     caption: "Saint-François et le bassin du Roy",
     author: "Philippe Ales · CC BY-SA 3.0",
     href: "https://commons.wikimedia.org/wiki/File:Le_Havre_(France),_quarter_Saint-Fran%C3%A7ois_and_Bassin_du_Roy.JPG",
-    query: "Saint-François",
     guideId: "le-havre",
     width: 1000,
     height: 664,
@@ -86,7 +84,6 @@ const havrePhotos = [
     caption: "Saint-Vincent, près de la plage",
     author: "Philippe Ales · CC BY-SA 4.0",
     href: "https://commons.wikimedia.org/wiki/File:Place_Saint-Vincent_(France).jpg",
-    query: "Saint-Vincent",
     guideId: "la-plage",
     width: 1000,
     height: 664,
@@ -188,9 +185,7 @@ export default function GeographyPage() {
                       {sector.places.map((place) => (
                         <li key={place.name}>
                           <Link
-                            to={place.cityPage
-                              ? `/immobilier/${place.city}?guide=${place.guideId}`
-                              : `/biens?${new URLSearchParams({ ...(place.city ? { city: place.city } : {}), q: place.query, guide: place.guideId }).toString()}`}
+                            to={`/immobilier/${place.guideId}`}
                             className="inline-flex min-h-11 items-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-sm transition-colors hover:border-brand-border hover:bg-brand-soft hover:text-brand-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                           >
                             {place.name}<ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
@@ -269,8 +264,8 @@ export default function GeographyPage() {
             <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Quelques repères</p>
             <h2 id="havre-neighborhoods-heading" className="mt-2 font-display text-3xl md:text-4xl">Quartiers du Havre en images</h2>
           </div>
-          <Link to="/biens?city=le-havre&guide=le-havre" className="inline-flex items-center gap-2 text-sm text-brand-strong underline-offset-4 hover:underline">
-            Voir les biens au Havre <ArrowRight aria-hidden="true" className="h-4 w-4" />
+          <Link to="/immobilier/le-havre" className="inline-flex items-center gap-2 text-sm text-brand-strong underline-offset-4 hover:underline">
+            Immobilier au Havre <ArrowRight aria-hidden="true" className="h-4 w-4" />
           </Link>
         </div>
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -282,7 +277,7 @@ export default function GeographyPage() {
                   <h3 className="font-medium">{photo.caption}</h3>
                   <a className="mt-1 inline-block text-xs text-muted-foreground underline underline-offset-2" href={photo.href} target="_blank" rel="noreferrer">Photo : {photo.author} · source</a>
                 </div>
-                <Link to={`/biens?${new URLSearchParams({ city: "le-havre", q: photo.query, guide: photo.guideId }).toString()}`} aria-label={`Voir les biens associés à ${photo.caption}`} className="rounded-full p-2 text-brand-strong hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <Link to={`/immobilier/${photo.guideId}`} aria-label={`Voir les informations sur ${photo.caption}`} className="rounded-full p-2 text-brand-strong hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                   <ArrowRight aria-hidden="true" className="h-4 w-4" />
                 </Link>
               </figcaption>
