@@ -55,8 +55,13 @@ export function GeographyGuideDetails({ guide, className = "", headingLevel = 3 
             <Heading id={`guide-prices-${guide.id}`} className="font-display text-xl">Prix indicatif et repères par type de bien</Heading>
             <p className="mt-1 max-w-3xl text-xs leading-relaxed text-muted-foreground"><ContextualText text={guide.marketBasis} /></p>
           </div>
-          <span className="font-display text-xl font-semibold tracking-tight text-brand-strong">{guide.averagePrice}</span>
+          {guide.averagePrice && <span className="font-display text-xl font-semibold tracking-tight text-brand-strong">{guide.averagePrice}</span>}
         </div>
+        {!guide.averagePrice && isHavreNeighborhood(guide) && (
+          <p className="mt-3 text-sm text-muted-foreground">
+            Pour le prix moyen à l’échelle de la commune, consultez le <Link className="text-brand-strong underline underline-offset-4" to="/immobilier/le-havre">guide immobilier du Havre</Link>.
+          </p>
+        )}
         {priceItems.length > 0 && (
           <dl className="mt-3 grid divide-y divide-border border-y border-border sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-3">
             {priceItems.map((price) => (
