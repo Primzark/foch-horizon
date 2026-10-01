@@ -1,8 +1,9 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { LogOut, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { FormErrorSummary, type FormErrorItem } from "@/components/forms/FormErrorSummary";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,6 +23,35 @@ type CountersForm = {
   underContractCount: string;
 };
 
+type CounterField = keyof CountersForm;
+
+const counterLabels: Record<CounterField, string> = {
+  soldCount: "Biens vendus",
+  underOfferCount: "Biens sous offre",
+  underContractCount: "Compromis en cours",
+};
+
+function validateAdminEmail(value: string): string | undefined {
+  const email = value.trim();
+  if (!email) return "Indiquez l’adresse email de votre compte.";
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return "Vérifiez le format de votre adresse email.";
+  if (email.length > 254) return "L’adresse email doit contenir 254 caractères maximum.";
+  return undefined;
+}
+
+function validatePassword(value: string): string | undefined {
+  return value ? undefined : "Indiquez le mot de passe de votre compte.";
+}
+
+function validateCounterValue(value: string, field: CounterField): string | undefined {
+  const trimmed = value.trim();
+  if (!trimmed) return "Indiquez le nombre de " + counterLabels[field].toLowerCase() + ".";
+  if (!/^[0-9]+$/.test(trimmed) || !Number.isSafeInteger(Number(trimmed))) {
+    return "Saisissez un nombre entier supérieur ou égal à 0.";
+  }
+  return undefined;
+}
+
 const EMPTY_FORM: CountersForm = {
   soldCount: "0",
   underOfferCount: "0",
@@ -38,13 +68,13 @@ function snapshotToForm(snapshot: MarketCountersSnapshot): CountersForm {
 
 function parseNonNegativeInteger(value: string, fieldLabel: string): number {
   const trimmed = value.trim();
-  if (!/^\d+$/.test(trimmed)) {
-    throw new Error(`${fieldLabel} doit être un nombre entier positif.`);
+  if (!/^[0-9]+$/.test(trimmed) || !Number.isSafeInteger(Number(trimmed))) {
+    throw new Error(fieldLabel + " doit être un nombre entier supérieur ou égal à 0.");
   }
 
-  const parsed = Number.parseInt(trimmed, 10);
+  const parsed = Number(trimmed);
   if (!Number.isInteger(parsed) || parsed < 0) {
-    throw new Error(`${fieldLabel} doit être un nombre entier positif.`);
+    throw new Error(fieldLabel + " doit être un nombre entier supérieur ou égal à 0.");
   }
 
   return parsed;
@@ -75,6 +105,14 @@ export default function AdminMarketCountersPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [form, setForm] = useState<CountersForm>(EMPTY_FORM);
+  const [loginValidationAttempted, setLoginValidationAttempted] = useState(false);
+  const [loginEmailBlurred, setLoginEmailBlurred] = useState(false);
+  const [loginServerError, setLoginServerError] = useState<string | null>(null);
+  const [counterValidationAttempted, setCounterValidationAttempted] = useState(false);
+  const [blurredCounters, setBlurredCounters] = useState<Set<CounterField>>(() => new Set());
+  const [saveServerError, setSaveServerError] = useState<string | null>(null);
+  const loginSummaryRef = useRef<HTMLElement | null>(null);
+  const counterSummaryRef = useRef<HTMLElement | null>(null);
 
   useSeo({
     title: "Admin compteurs | Foch Immobilier",
@@ -109,6 +147,28 @@ export default function AdminMarketCountersPage() {
     enabled: Boolean(session?.access_token),
   });
 
+  const loginEmailError =
+    loginValidationAttempted || loginEmailBlurred ? validateAdminEmail(email) : undefined;
+  const loginPasswordError = loginValidationAttempted ? validatePassword(password) : undefined;
+  const counterErrors: Record<CounterField, string | undefined> = {
+    soldCount: validateCounterValue(form.soldCount, "soldCount"),
+    underOfferCount: validateCounterValue(form.underOfferCount, "underOfferCount"),
+    underContractCount: validateCounterValue(form.underContractCount, "underContractCount"),
+  };
+  const counterSummaryErrors: FormErrorItem[] = counterValidationAttempted
+    ? (Object.keys(counterLabels) as CounterField[]).flatMap((field) =>
+        counterErrors[field]
+          ? [{ fieldId: "counter-" + field, label: counterLabels[field], message: counterErrors[field]! }]
+          : [],
+      )
+    : [];
+  const loginSummaryErrors: FormErrorItem[] = loginValidationAttempted
+    ? [
+        loginEmailError ? { fieldId: "admin-email", label: "Email", message: loginEmailError } : null,
+        loginPasswordError ? { fieldId: "admin-password", label: "Mot de passe", message: loginPasswordError } : null,
+      ].filter((error): error is FormErrorItem => error !== null)
+    : [];
+
   useEffect(() => {
     if (countersQuery.data) {
       setForm(snapshotToForm(countersQuery.data));
@@ -131,17 +191,14 @@ export default function AdminMarketCountersPage() {
     },
     onSuccess: () => {
       setPassword("");
+      setLoginServerError(null);
       toast({
         title: "Connexion réussie",
         description: "Vous pouvez maintenant modifier les compteurs.",
       });
     },
-    onError: (error) => {
-      toast({
-        variant: "destructive",
-        title: "Connexion refusée",
-        description: error instanceof Error ? error.message : "Impossible de se connecter.",
-      });
+    onError: () => {
+      setLoginServerError("Connexion impossible. Vérifiez votre adresse email et votre mot de passe, puis réessayez.");
     },
   });
 
@@ -158,17 +215,16 @@ export default function AdminMarketCountersPage() {
       queryClient.setQueryData(["market-counters-admin"], snapshot);
       queryClient.setQueryData(["market-counters"], snapshot);
       void queryClient.invalidateQueries({ queryKey: ["market-counters"] });
+      setSaveServerError(null);
       toast({
         title: "Compteurs mis à jour",
         description: "Les nouveaux chiffres sont publiés sur la page d'accueil.",
       });
     },
-    onError: (error) => {
-      toast({
-        variant: "destructive",
-        title: "Échec de la mise à jour",
-        description: error instanceof Error ? error.message : "Impossible d'enregistrer les compteurs.",
-      });
+    onError: () => {
+      setSaveServerError(
+        "Impossible d’enregistrer ces valeurs. Vérifiez les nombres et votre session administrateur, puis réessayez.",
+      );
     },
   });
 
@@ -195,11 +251,23 @@ export default function AdminMarketCountersPage() {
 
   const onLoginSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setLoginValidationAttempted(true);
+    if (validateAdminEmail(email) || validatePassword(password)) {
+      window.requestAnimationFrame(() => loginSummaryRef.current?.focus());
+      return;
+    }
+    setLoginServerError(null);
     loginMutation.mutate();
   };
 
   const onSaveSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setCounterValidationAttempted(true);
+    if (Object.values(counterErrors).some(Boolean)) {
+      window.requestAnimationFrame(() => counterSummaryRef.current?.focus());
+      return;
+    }
+    setSaveServerError(null);
     saveMutation.mutate();
   };
 
@@ -230,29 +298,61 @@ export default function AdminMarketCountersPage() {
             <CardDescription>Connectez-vous pour modifier les compteurs de performance affichés sur le site.</CardDescription>
           </CardHeader>
           <CardContent>
-            <form className="space-y-4" onSubmit={onLoginSubmit}>
+            <form className="space-y-4" onSubmit={onLoginSubmit} noValidate aria-busy={loginMutation.isPending}>
+              <FormErrorSummary
+                id="admin-login-error-summary"
+                ref={loginSummaryRef}
+                errors={loginSummaryErrors}
+              />
               <div className="space-y-2">
                 <Label htmlFor="admin-email">Email</Label>
                 <Input
                   id="admin-email"
                   type="email"
+                  name="email"
                   autoComplete="email"
+                  maxLength={254}
+                  aria-invalid={loginEmailError ? true : undefined}
+                  aria-describedby={loginEmailError ? "admin-email-error" : undefined}
                   value={email}
-                  onChange={(event) => setEmail(event.target.value)}
+                  onBlur={() => {
+                    if (email.trim()) setLoginEmailBlurred(true);
+                  }}
+                  onChange={(event) => {
+                    setLoginServerError(null);
+                    setEmail(event.target.value);
+                  }}
                   required
                 />
+                {loginEmailError && (
+                  <p id="admin-email-error" className="text-xs text-destructive" aria-live="polite">{loginEmailError}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="admin-password">Mot de passe</Label>
                 <Input
                   id="admin-password"
                   type="password"
+                  name="password"
                   autoComplete="current-password"
+                  aria-invalid={loginValidationAttempted && loginPasswordError ? true : undefined}
+                  aria-describedby={loginValidationAttempted && loginPasswordError ? "admin-password-error" : undefined}
                   value={password}
-                  onChange={(event) => setPassword(event.target.value)}
+                  onChange={(event) => {
+                    setLoginServerError(null);
+                    setPassword(event.target.value);
+                  }}
                   required
                 />
+                {loginValidationAttempted && loginPasswordError && (
+                  <p id="admin-password-error" className="text-xs text-destructive" aria-live="polite">{loginPasswordError}</p>
+                )}
               </div>
+              {loginServerError && (
+                <p role="alert" className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm text-foreground">
+                  {loginServerError}
+                </p>
+              )}
               <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
                 {loginMutation.isPending ? "Connexion..." : "Se connecter"}
               </Button>
@@ -301,40 +401,89 @@ export default function AdminMarketCountersPage() {
           {isLoading ? (
             <p className="text-sm text-muted-foreground">Chargement des compteurs...</p>
           ) : (
-            <form className="space-y-4" onSubmit={onSaveSubmit}>
+            <form className="space-y-4" onSubmit={onSaveSubmit} noValidate aria-busy={saveMutation.isPending}>
+              <FormErrorSummary
+                id="admin-counters-error-summary"
+                ref={counterSummaryRef}
+                errors={counterSummaryErrors}
+              />
               <div className="space-y-2">
                 <Label htmlFor="counter-sold">Biens vendus</Label>
                 <Input
                   id="counter-sold"
+                  name="soldCount"
                   inputMode="numeric"
                   pattern="[0-9]*"
+                  aria-required="true"
+                  aria-invalid={(counterValidationAttempted || blurredCounters.has("soldCount")) && counterErrors.soldCount ? true : undefined}
+                  aria-describedby={(counterValidationAttempted || blurredCounters.has("soldCount")) && counterErrors.soldCount ? "counter-sold-error" : undefined}
                   value={form.soldCount}
-                  onChange={(event) => setForm((current) => ({ ...current, soldCount: event.target.value }))}
+                  onBlur={() => {
+                    if (form.soldCount.trim()) setBlurredCounters((current) => new Set(current).add("soldCount"));
+                  }}
+                  onChange={(event) => {
+                    setSaveServerError(null);
+                    setForm((current) => ({ ...current, soldCount: event.target.value }));
+                  }}
                   required
                 />
+                {(counterValidationAttempted || blurredCounters.has("soldCount")) && counterErrors.soldCount && (
+                  <p id="counter-sold-error" className="text-xs text-destructive" aria-live="polite">{counterErrors.soldCount}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="counter-offer">Biens sous offre</Label>
                 <Input
                   id="counter-offer"
+                  name="underOfferCount"
                   inputMode="numeric"
                   pattern="[0-9]*"
+                  aria-required="true"
+                  aria-invalid={(counterValidationAttempted || blurredCounters.has("underOfferCount")) && counterErrors.underOfferCount ? true : undefined}
+                  aria-describedby={(counterValidationAttempted || blurredCounters.has("underOfferCount")) && counterErrors.underOfferCount ? "counter-offer-error" : undefined}
                   value={form.underOfferCount}
-                  onChange={(event) => setForm((current) => ({ ...current, underOfferCount: event.target.value }))}
+                  onBlur={() => {
+                    if (form.underOfferCount.trim()) setBlurredCounters((current) => new Set(current).add("underOfferCount"));
+                  }}
+                  onChange={(event) => {
+                    setSaveServerError(null);
+                    setForm((current) => ({ ...current, underOfferCount: event.target.value }));
+                  }}
                   required
                 />
+                {(counterValidationAttempted || blurredCounters.has("underOfferCount")) && counterErrors.underOfferCount && (
+                  <p id="counter-offer-error" className="text-xs text-destructive" aria-live="polite">{counterErrors.underOfferCount}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="counter-contract">Compromis en cours</Label>
                 <Input
                   id="counter-contract"
+                  name="underContractCount"
                   inputMode="numeric"
                   pattern="[0-9]*"
+                  aria-required="true"
+                  aria-invalid={(counterValidationAttempted || blurredCounters.has("underContractCount")) && counterErrors.underContractCount ? true : undefined}
+                  aria-describedby={(counterValidationAttempted || blurredCounters.has("underContractCount")) && counterErrors.underContractCount ? "counter-contract-error" : undefined}
                   value={form.underContractCount}
-                  onChange={(event) => setForm((current) => ({ ...current, underContractCount: event.target.value }))}
+                  onBlur={() => {
+                    if (form.underContractCount.trim()) setBlurredCounters((current) => new Set(current).add("underContractCount"));
+                  }}
+                  onChange={(event) => {
+                    setSaveServerError(null);
+                    setForm((current) => ({ ...current, underContractCount: event.target.value }));
+                  }}
                   required
                 />
+                {(counterValidationAttempted || blurredCounters.has("underContractCount")) && counterErrors.underContractCount && (
+                  <p id="counter-contract-error" className="text-xs text-destructive" aria-live="polite">{counterErrors.underContractCount}</p>
+                )}
               </div>
+              {saveServerError && (
+                <p role="alert" className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm text-foreground">
+                  {saveServerError}
+                </p>
+              )}
               <Button type="submit" className="w-full" disabled={saveMutation.isPending}>
                 {saveMutation.isPending ? "Enregistrement..." : "Enregistrer les compteurs"}
               </Button>

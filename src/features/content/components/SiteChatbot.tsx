@@ -3,8 +3,11 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import { BotMessageSquare, Mail, RotateCcw, Send, Sparkles, ThumbsDown, ThumbsUp, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { FormErrorSummary, type FormErrorItem } from "@/components/forms/FormErrorSummary";
 import {
   askAgencyChatbot,
   askAgencyChatbotStream,
@@ -23,6 +26,7 @@ import {
 } from "@/features/content/api/chatbot.service";
 import { flushChatbotTelemetryQueue, queueChatbotTelemetryEvent } from "@/features/content/api/chatbotFeedback.service";
 import { submitLead } from "@/features/leads/api/leads.service";
+import { validateLeadForm } from "@/features/leads/types/lead.schema";
 import { trackEvent } from "@/lib/analytics/events";
 import { useUiStore } from "@/lib/state/useUiStore";
 import { toast } from "sonner";
@@ -1042,6 +1046,10 @@ export function SiteChatbot() {
   const [conversationState, setConversationState] = useState<ChatbotConversationState>(() => readStoredConversationState());
   const [showLeadCapture, setShowLeadCapture] = useState(false);
   const [leadLoading, setLeadLoading] = useState(false);
+  const [leadConsent, setLeadConsent] = useState(false);
+  const [leadValidationAttempted, setLeadValidationAttempted] = useState(false);
+  const [leadEmailBlurred, setLeadEmailBlurred] = useState(false);
+  const [leadServerError, setLeadServerError] = useState<string | null>(null);
   const [leadForm, setLeadForm] = useState({
     firstName: "",
     lastName: "",
@@ -1050,6 +1058,9 @@ export function SiteChatbot() {
   });
   const leadFormStartedAtRef = useRef(Date.now());
   const leadWebsiteRef = useRef<HTMLInputElement | null>(null);
+  const leadErrorSummaryRef = useRef<HTMLElement | null>(null);
+  const leadServerErrorRef = useRef<HTMLParagraphElement | null>(null);
+  const leadSubmissionLockRef = useRef(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const requestSequenceRef = useRef(0);
@@ -1066,8 +1077,34 @@ export function SiteChatbot() {
     if (showLeadCapture) {
       leadFormStartedAtRef.current = Date.now();
       if (leadWebsiteRef.current) leadWebsiteRef.current.value = "";
+      setLeadConsent(false);
+      setLeadValidationAttempted(false);
+      setLeadEmailBlurred(false);
+      setLeadServerError(null);
     }
   }, [showLeadCapture]);
+
+  const assistantLeadMessage = `Demande chatbot - aucun bien trouvé\n\nCritères: ${leadForm.criteria}`;
+  const assistantLeadErrors = validateLeadForm({
+    firstName: leadForm.firstName,
+    lastName: leadForm.lastName,
+    email: leadForm.email,
+    phone: "",
+    message: assistantLeadMessage,
+    consent: leadConsent,
+  });
+  if (!leadForm.criteria.trim()) assistantLeadErrors.message = "Décrivez le bien ou les critères recherchés.";
+  const assistantLeadEmailError =
+    leadValidationAttempted || leadEmailBlurred ? assistantLeadErrors.email : undefined;
+  const assistantLeadSummaryErrors: FormErrorItem[] = leadValidationAttempted
+    ? [
+        { fieldId: "assistant-lead-first-name", label: "Prénom", message: assistantLeadErrors.firstName ?? "" },
+        { fieldId: "assistant-lead-last-name", label: "Nom", message: assistantLeadErrors.lastName ?? "" },
+        { fieldId: "assistant-lead-email", label: "Email", message: assistantLeadErrors.email ?? "" },
+        { fieldId: "assistant-lead-criteria", label: "Critères", message: assistantLeadErrors.message ?? "" },
+        { fieldId: "assistant-lead-consent", label: "Confidentialité", message: assistantLeadErrors.consent ?? "" },
+      ].filter((error) => Boolean(error.message))
+    : [];
 
   const appendMessage = useCallback((message: ChatMessage) => {
     setMessages((current) => trimMessages([...current, message]));
@@ -1873,11 +1910,16 @@ export function SiteChatbot() {
   const handleLeadSubmit = async (event: FormEvent) => {
     event.preventDefault();
 
-    if (!leadForm.firstName || !leadForm.lastName || !leadForm.email || !leadForm.criteria) {
-      toast.error("Merci de remplir tous les champs pour transmettre votre demande.");
+    if (leadSubmissionLockRef.current) return;
+
+    setLeadValidationAttempted(true);
+    if (Object.keys(assistantLeadErrors).length > 0) {
+      window.requestAnimationFrame(() => leadErrorSummaryRef.current?.focus());
       return;
     }
 
+    leadSubmissionLockRef.current = true;
+    setLeadServerError(null);
     setLeadLoading(true);
 
     try {
@@ -1887,7 +1929,7 @@ export function SiteChatbot() {
         lastName: leadForm.lastName,
         email: leadForm.email,
         message: `Demande chatbot - aucun bien trouvé\n\nCritères: ${leadForm.criteria}`,
-        consent: true,
+        consent: leadConsent,
         website: leadWebsiteRef.current?.value || undefined,
         formStartedAt: leadFormStartedAtRef.current,
         chatbotContext: buildLeadChatbotContext(),
@@ -1901,12 +1943,16 @@ export function SiteChatbot() {
       });
 
       setLeadForm({ firstName: "", lastName: "", email: "", criteria: "" });
+      setLeadConsent(false);
+      setLeadValidationAttempted(false);
+      setLeadEmailBlurred(false);
       setShowLeadCapture(false);
       toast.success("Demande envoyée à l'agence.");
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Impossible de transmettre votre demande.";
-      toast.error(message);
+    } catch {
+      setLeadServerError("Votre demande n’a pas pu être envoyée. Vérifiez les champs et réessayez ; vos informations sont conservées.");
+      window.requestAnimationFrame(() => leadServerErrorRef.current?.focus());
     } finally {
+      leadSubmissionLockRef.current = false;
       setLeadLoading(false);
     }
   };
@@ -3209,44 +3255,165 @@ export function SiteChatbot() {
               <section className="border-t border-border bg-muted/30 px-4 py-4">
                 <h3 className="font-medium">Vous ne trouvez pas le bon bien ?</h3>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Laissez votre email et vos critères: la demande part automatiquement à l'agence.
+                  Tous les champs sont obligatoires. Votre demande sera transmise à l'agence.
                 </p>
 
-                <form onSubmit={handleLeadSubmit} className="mt-3 space-y-2.5">
+                <form onSubmit={handleLeadSubmit} noValidate aria-busy={leadLoading} className="mt-3 space-y-2.5">
+                  <FormErrorSummary
+                    id="assistant-lead-error-summary"
+                    ref={leadErrorSummaryRef}
+                    errors={assistantLeadSummaryErrors}
+                    className="text-xs"
+                  />
                   <div aria-hidden="true" className="absolute left-[-10000px] top-auto h-px w-px overflow-hidden">
                     <label htmlFor="assistant-website">Votre site web</label>
                     <Input id="assistant-website" ref={leadWebsiteRef} name="website" tabIndex={-1} autoComplete="off" />
                   </div>
                   <div className="grid grid-cols-2 gap-2">
-                    <Input
-                      placeholder="Prénom"
-                      value={leadForm.firstName}
-                      onChange={(event) =>
-                        setLeadForm((current) => ({ ...current, firstName: event.target.value }))
-                      }
-                    />
-                    <Input
-                      placeholder="Nom"
-                      value={leadForm.lastName}
-                      onChange={(event) =>
-                        setLeadForm((current) => ({ ...current, lastName: event.target.value }))
-                      }
-                    />
+                    <div className="space-y-1">
+                      <Label htmlFor="assistant-lead-first-name" className="sr-only">Prénom</Label>
+                      <Input
+                        id="assistant-lead-first-name"
+                        name="firstName"
+                        placeholder="Prénom"
+                        required
+                        maxLength={80}
+                        autoComplete="given-name"
+                        aria-invalid={leadValidationAttempted && assistantLeadErrors.firstName ? true : undefined}
+                        aria-describedby={leadValidationAttempted && assistantLeadErrors.firstName ? "assistant-lead-first-name-error" : undefined}
+                        value={leadForm.firstName}
+                        onChange={(event) => {
+                          setLeadServerError(null);
+                          setLeadForm((current) => ({ ...current, firstName: event.target.value }));
+                        }}
+                      />
+                      {leadValidationAttempted && assistantLeadErrors.firstName && (
+                        <p id="assistant-lead-first-name-error" className="text-xs text-destructive" aria-live="polite">
+                          {assistantLeadErrors.firstName}
+                        </p>
+                      )}
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="assistant-lead-last-name" className="sr-only">Nom</Label>
+                      <Input
+                        id="assistant-lead-last-name"
+                        name="lastName"
+                        placeholder="Nom"
+                        required
+                        maxLength={80}
+                        autoComplete="family-name"
+                        aria-invalid={leadValidationAttempted && assistantLeadErrors.lastName ? true : undefined}
+                        aria-describedby={leadValidationAttempted && assistantLeadErrors.lastName ? "assistant-lead-last-name-error" : undefined}
+                        value={leadForm.lastName}
+                        onChange={(event) => {
+                          setLeadServerError(null);
+                          setLeadForm((current) => ({ ...current, lastName: event.target.value }));
+                        }}
+                      />
+                      {leadValidationAttempted && assistantLeadErrors.lastName && (
+                        <p id="assistant-lead-last-name-error" className="text-xs text-destructive" aria-live="polite">
+                          {assistantLeadErrors.lastName}
+                        </p>
+                      )}
+                    </div>
                   </div>
 
-                  <Input
-                    type="email"
-                    placeholder="email@exemple.fr"
-                    value={leadForm.email}
-                    onChange={(event) => setLeadForm((current) => ({ ...current, email: event.target.value }))}
-                  />
+                  <div className="space-y-1">
+                    <Label htmlFor="assistant-lead-email" className="sr-only">Adresse email</Label>
+                    <Input
+                      id="assistant-lead-email"
+                      name="email"
+                      type="email"
+                      placeholder="email@exemple.fr"
+                      required
+                      maxLength={254}
+                      autoComplete="email"
+                      aria-invalid={assistantLeadEmailError ? true : undefined}
+                      aria-describedby={assistantLeadEmailError ? "assistant-lead-email-error" : undefined}
+                      value={leadForm.email}
+                      onBlur={() => {
+                        if (leadForm.email.trim()) setLeadEmailBlurred(true);
+                      }}
+                      onChange={(event) => {
+                        setLeadServerError(null);
+                        setLeadForm((current) => ({ ...current, email: event.target.value }));
+                      }}
+                    />
+                    {assistantLeadEmailError && (
+                      <p id="assistant-lead-email-error" className="text-xs text-destructive" aria-live="polite">
+                        {assistantLeadEmailError}
+                      </p>
+                    )}
+                  </div>
 
-                  <Textarea
-                    rows={3}
-                    placeholder="Ex: appartement T3, quartier Perret, budget 260 000 EUR"
-                    value={leadForm.criteria}
-                    onChange={(event) => setLeadForm((current) => ({ ...current, criteria: event.target.value }))}
-                  />
+                  <div className="space-y-1">
+                    <Label htmlFor="assistant-lead-criteria" className="sr-only">Votre recherche</Label>
+                    <Textarea
+                      id="assistant-lead-criteria"
+                      name="criteria"
+                      rows={3}
+                      placeholder="Ex: appartement T3, quartier Perret, budget 260 000 EUR"
+                      required
+                      maxLength={1900}
+                      aria-invalid={leadValidationAttempted && assistantLeadErrors.message ? true : undefined}
+                      aria-describedby={leadValidationAttempted && assistantLeadErrors.message ? "assistant-lead-criteria-error" : undefined}
+                      value={leadForm.criteria}
+                      onChange={(event) => {
+                        setLeadServerError(null);
+                        setLeadForm((current) => ({ ...current, criteria: event.target.value }));
+                      }}
+                    />
+                    {leadValidationAttempted && assistantLeadErrors.message && (
+                      <p id="assistant-lead-criteria-error" className="text-xs text-destructive" aria-live="polite">
+                        {assistantLeadErrors.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="flex items-start gap-2 text-xs text-muted-foreground">
+                      <Checkbox
+                        id="assistant-lead-consent"
+                        checked={leadConsent}
+                        required
+                        aria-required="true"
+                        aria-invalid={leadValidationAttempted && assistantLeadErrors.consent ? true : undefined}
+                        aria-describedby={leadValidationAttempted && assistantLeadErrors.consent ? "assistant-lead-consent-error" : undefined}
+                        aria-labelledby="assistant-lead-consent-label"
+                        onCheckedChange={(checked) => {
+                          setLeadServerError(null);
+                          setLeadConsent(Boolean(checked));
+                        }}
+                      />
+                      <p>
+                        <Label
+                          id="assistant-lead-consent-label"
+                          htmlFor="assistant-lead-consent"
+                          className="cursor-pointer text-xs font-normal leading-relaxed text-muted-foreground"
+                        >
+                          J’accepte l’utilisation de mes données pour traiter ma demande.
+                        </Label>{" "}
+                        Consultez la{" "}
+                        <Link to="/confidentialite" className="underline underline-offset-2">politique de confidentialité</Link>.
+                      </p>
+                    </div>
+                    {leadValidationAttempted && assistantLeadErrors.consent && (
+                      <p id="assistant-lead-consent-error" className="text-xs text-destructive" aria-live="polite">
+                        {assistantLeadErrors.consent}
+                      </p>
+                    )}
+                  </div>
+
+                  {leadServerError && (
+                    <p
+                      ref={leadServerErrorRef}
+                      tabIndex={-1}
+                      role="alert"
+                      className="rounded-md border border-destructive/40 bg-destructive/5 p-2 text-xs text-foreground"
+                    >
+                      {leadServerError}
+                    </p>
+                  )}
 
                   <Button type="submit" size="sm" disabled={leadLoading} className="w-full">
                     <Mail className="mr-1 h-4 w-4" />
@@ -3258,7 +3425,10 @@ export function SiteChatbot() {
 
             <div className="border-t border-border px-4 py-3">
               <form onSubmit={handleSubmit} className="flex items-center gap-2">
+                <Label htmlFor="assistant-question" className="sr-only">Posez une question à l’assistant</Label>
                 <Input
+                  id="assistant-question"
+                  name="question"
                   value={input}
                   onChange={(event) => setInput(event.target.value)}
                   placeholder="Posez une question sur les biens, les quartiers ou les étapes de votre projet..."

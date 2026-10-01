@@ -96,7 +96,7 @@ export function SearchDrawer() {
 
         <div className="grid gap-4 md:grid-cols-3">
           <div>
-            <Label>Transaction</Label>
+            <Label id="listing-search-transaction-label">Transaction</Label>
             <Select
               value={draft.transaction ?? "all"}
               onValueChange={(value) =>
@@ -106,7 +106,7 @@ export function SearchDrawer() {
                 }))
               }
             >
-              <SelectTrigger>
+              <SelectTrigger aria-labelledby="listing-search-transaction-label">
                 <SelectValue placeholder="Toutes transactions" />
               </SelectTrigger>
               <SelectContent>
@@ -121,12 +121,12 @@ export function SearchDrawer() {
           </div>
 
           <div>
-            <Label>Type</Label>
+            <Label id="listing-search-type-label">Type</Label>
             <Select
               value={draft.type ?? "all"}
               onValueChange={(value) => setDraft((current) => ({ ...current, type: value === "all" ? undefined : (value as PropertySearchParams["type"]) }))}
             >
-              <SelectTrigger>
+              <SelectTrigger aria-labelledby="listing-search-type-label">
                 <SelectValue placeholder="Tous types" />
               </SelectTrigger>
               <SelectContent>
@@ -141,12 +141,12 @@ export function SearchDrawer() {
           </div>
 
           <div>
-            <Label>Ville</Label>
+            <Label id="listing-search-city-label">Ville</Label>
             <Select
               value={draft.city ?? "all"}
               onValueChange={(value) => setDraft((current) => ({ ...current, city: value === "all" ? undefined : value }))}
             >
-              <SelectTrigger>
+              <SelectTrigger aria-labelledby="listing-search-city-label">
                 <SelectValue placeholder="Toutes les villes" />
               </SelectTrigger>
               <SelectContent>
@@ -256,13 +256,15 @@ export function SearchDrawer() {
               />
             </div>
             <div className="md:col-span-4">
-              <Label>Caractéristiques</Label>
+              <fieldset>
+                <legend className="text-sm font-medium leading-none">Caractéristiques</legend>
               <div className="mt-2 flex flex-wrap gap-4">
                 {featureOptions.map((feature) => {
                   const checked = selectedFeatures.has(feature.value);
                   return (
                     <label key={feature.value} className="inline-flex items-center gap-2 text-sm">
                       <Checkbox
+                        aria-labelledby={"listing-search-feature-" + feature.value}
                         checked={checked}
                         onCheckedChange={(isChecked) => {
                           setDraft((current) => {
@@ -276,11 +278,12 @@ export function SearchDrawer() {
                           });
                         }}
                       />
-                      {feature.label}
+                      <span id={"listing-search-feature-" + feature.value}>{feature.label}</span>
                     </label>
                   );
                 })}
               </div>
+              </fieldset>
             </div>
           </div>
         )}

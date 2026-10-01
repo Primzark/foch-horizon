@@ -9,7 +9,7 @@ const payloadSchema = z.object({
   firstName: z.string().trim().min(1).max(80),
   lastName: z.string().trim().min(1).max(80),
   email: z.string().trim().email().max(254),
-  phone: z.string().trim().max(40).optional(),
+  phone: z.string().trim().min(7).max(40).optional(),
   message: z.string().trim().min(8).max(2000),
   consent: z.literal(true),
   website: z.string().trim().max(500).optional(),

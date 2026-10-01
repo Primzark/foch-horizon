@@ -8,12 +8,14 @@ const {
   queueTelemetryMock,
   flushTelemetryMock,
   trackEventMock,
+  submitLeadMock,
 } = vi.hoisted(() => ({
   askAgencyChatbotMock: vi.fn(),
   askAgencyChatbotStreamMock: vi.fn(),
   queueTelemetryMock: vi.fn(),
   flushTelemetryMock: vi.fn().mockResolvedValue(undefined),
   trackEventMock: vi.fn(),
+  submitLeadMock: vi.fn(),
 }));
 
 vi.mock("@/features/content/api/chatbot.service", async () => {
@@ -38,7 +40,7 @@ vi.mock("@/lib/analytics/events", () => ({
 }));
 
 vi.mock("@/features/leads/api/leads.service", () => ({
-  submitLead: vi.fn(),
+  submitLead: (...args: unknown[]) => submitLeadMock(...args),
 }));
 
 let SiteChatbotComponent: (typeof import("@/features/content/components/SiteChatbot"))["SiteChatbot"];
@@ -63,6 +65,7 @@ describe("SiteChatbot tool action cards", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     window.localStorage.clear();
+    submitLeadMock.mockResolvedValue({ ok: true, leadId: "test-lead", assignedAgentId: null });
     vi.stubEnv("VITE_CHATBOT_STREAMING_ENABLED", "false");
     vi.stubEnv("VITE_API_MODE", "edge");
     vi.stubEnv("VITE_CHATBOT_ENABLE_EDGE_RAG", "true");
@@ -259,5 +262,61 @@ describe("SiteChatbot tool action cards", () => {
     expect(screen.getByText(/2\+ sdb/i)).toBeInTheDocument();
     expect(screen.getByText(/Surface min 70 m²/i)).toBeInTheDocument();
     expect(screen.getByText("balcon")).toBeInTheDocument();
+  });
+
+  it("validates chatbot lead details and requires an explicit privacy confirmation", async () => {
+    askAgencyChatbotMock.mockResolvedValueOnce({
+      source: "edge",
+      edgeProvider: "gemini",
+      routeCategory: "edge_tools",
+      requestId: "req-lead-1",
+      answer: "Je peux transmettre votre recherche à l'agence.",
+      suggestedPrompts: [],
+      actions: [
+        {
+          id: "lead-draft-1",
+          kind: "lead_handoff_draft",
+          title: "Préparer un contact",
+          data: {
+            draft: { source: "contact_page", criteriaMessage: "Appartement T3 avec balcon au Havre." },
+            prefill: { criteria: "Appartement T3 avec balcon au Havre." },
+            missingFields: ["firstName", "lastName", "email"],
+            contextSummary: "Appartement T3 avec balcon au Havre.",
+          },
+        },
+      ],
+    });
+
+    const view = await renderChatbot();
+    const ui = within(view.container);
+    fireEvent.click(ui.getByRole("button", { name: /assistant/i }));
+    const question = ui.getByPlaceholderText(/posez une question/i);
+    fireEvent.change(question, { target: { value: "Je cherche un T3 avec balcon." } });
+    fireEvent.submit(question.closest("form")!);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Préremplir le formulaire" }));
+    const criteria = screen.getByLabelText("Votre recherche");
+    const leadForm = criteria.closest("form")!;
+    fireEvent.submit(leadForm);
+
+    expect(await screen.findByText("Votre formulaire contient des erreurs.")).toBeInTheDocument();
+    expect(screen.getByLabelText("Prénom")).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByRole("checkbox")).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByRole("checkbox", { name: /J’accepte l’utilisation de mes données/i })).toBeInTheDocument();
+    expect(submitLeadMock).not.toHaveBeenCalled();
+
+    fireEvent.change(screen.getByLabelText("Prénom"), { target: { value: "Camille" } });
+    fireEvent.change(screen.getByLabelText("Nom"), { target: { value: "Martin" } });
+    fireEvent.change(screen.getByLabelText("Adresse email"), { target: { value: "camille@example.fr" } });
+    fireEvent.click(screen.getByRole("checkbox"));
+    fireEvent.submit(leadForm);
+
+    await waitFor(() => expect(submitLeadMock).toHaveBeenCalledTimes(1));
+    expect(submitLeadMock).toHaveBeenCalledWith(expect.objectContaining({
+      firstName: "Camille",
+      email: "camille@example.fr",
+      consent: true,
+      message: expect.stringContaining("Appartement T3 avec balcon au Havre."),
+    }));
   });
 });

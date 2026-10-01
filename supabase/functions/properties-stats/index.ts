@@ -111,7 +111,7 @@ async function readCountersSnapshot(supabase: SupabaseServiceClient): Promise<Ma
 
 function parseCountField(payload: Record<string, unknown>, key: keyof MarketCountersUpdatePayload): number {
   const rawValue = payload[key];
-  if (typeof rawValue !== "number" || !Number.isInteger(rawValue) || rawValue < 0) {
+  if (typeof rawValue !== "number" || !Number.isSafeInteger(rawValue) || rawValue < 0) {
     throw new HttpError(400, `Invalid payload field: ${key}`);
   }
 
