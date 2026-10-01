@@ -7,25 +7,31 @@ type StorefrontPageHeroProps = {
   children?: ReactNode;
 };
 
-/** Full-bleed storefront hero shared by the primary navigation pages. */
+/** Full-bleed storefront hero with an uncropped facade and a separate copy band. */
 export function StorefrontPageHero({ eyebrow, title, description, children }: StorefrontPageHeroProps) {
-  const backgroundImage = "url('/images/geography/foch-storefront.png')";
-
   return (
-    <section className="relative isolate overflow-hidden bg-slate-950">
-      <div
+    <section className="storefront-page-hero bg-slate-950">
+      <img
         aria-hidden="true"
-        className="storefront-page-hero__background absolute inset-0 -z-10 bg-cover bg-no-repeat"
-        style={{ backgroundImage, backgroundPosition: "center top" }}
+        alt=""
+        className="storefront-page-hero__photo block h-auto w-full"
+        decoding="async"
+        fetchPriority="high"
+        height={678}
+        src="/images/geography/foch-storefront.png"
+        width={1448}
       />
-      <div aria-hidden="true" className="storefront-page-hero__scrim pointer-events-none absolute inset-0 -z-[5]" />
-      <div className="page-banner storefront-page-hero__content container mx-auto flex items-center px-4 py-6 md:py-8">
-        <header className="max-w-3xl">
-          <p className="text-xs uppercase tracking-[0.22em] text-white/80">{eyebrow}</p>
-          <h1 className="mt-4 font-display text-3xl leading-tight text-white md:text-5xl">{title}</h1>
-          <p className="mt-4 max-w-xl text-base leading-relaxed text-white/85">{description}</p>
-          {children}
-        </header>
+      <div className="storefront-page-hero__content border-t border-white/10">
+        <div className="container mx-auto grid gap-3 px-4 py-5 md:grid-cols-[minmax(0,1.1fr)_minmax(280px,0.9fr)] md:items-end md:gap-10 md:py-7">
+          <header>
+            <p className="text-xs uppercase tracking-[0.22em] text-white/80">{eyebrow}</p>
+            <h1 className="mt-3 font-display text-3xl leading-tight text-white md:mt-4 md:text-5xl">{title}</h1>
+          </header>
+          <div className="max-w-xl md:justify-self-end">
+            <p className="text-base leading-relaxed text-white/85">{description}</p>
+            {children}
+          </div>
+        </div>
       </div>
     </section>
   );
