@@ -279,11 +279,11 @@
 .storefront-page-hero__background { background-position: center top; }
 
 @media (max-width: 767px) {
-  .storefront-page-hero__background { background-position: center center; }
+  .storefront-page-hero__background { background-position: 55% center; }
   .storefront-page-hero__scrim { background: none; }
   .storefront-page-hero__content {
     height: auto;
-    min-height: clamp(14.5rem, 73vw, 22rem);
+    min-height: clamp(14rem, 71vw, 22rem);
     align-items: flex-end;
     padding-top: 1.25rem;
     padding-bottom: 2.75rem;
