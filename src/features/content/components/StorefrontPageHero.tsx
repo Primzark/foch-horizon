@@ -15,10 +15,11 @@ export function StorefrontPageHero({ eyebrow, title, description, children }: St
     <section className="relative isolate overflow-hidden bg-slate-950">
       <div
         aria-hidden="true"
-        className="absolute inset-0 -z-10 bg-cover bg-no-repeat"
+        className="storefront-page-hero__background absolute inset-0 -z-10 bg-cover bg-no-repeat"
         style={{ backgroundImage, backgroundPosition: "center top" }}
       />
-      <div className="page-banner container mx-auto flex items-center px-4 py-6 md:py-8">
+      <div aria-hidden="true" className="storefront-page-hero__scrim pointer-events-none absolute inset-0 -z-[5]" />
+      <div className="page-banner storefront-page-hero__content container mx-auto flex items-center px-4 py-6 md:py-8">
         <header className="max-w-3xl">
           <p className="text-xs uppercase tracking-[0.22em] text-white/80">{eyebrow}</p>
           <h1 className="mt-4 font-display text-3xl leading-tight text-white md:text-5xl">{title}</h1>

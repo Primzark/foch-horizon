@@ -275,3 +275,24 @@
 
 .homepage-hero-content { height: auto; min-height: 400px; }
 @media (min-width: 768px) { .homepage-hero-content { height: 420px; min-height: 0; } }
+
+@media (max-width: 767px) {
+  .storefront-page-hero__background { background-size: 100% auto; }
+  .storefront-page-hero__scrim {
+    background: linear-gradient(
+      180deg,
+      rgb(2 6 23 / 0.02) 0%,
+      rgb(2 6 23 / 0.02) 18%,
+      rgb(2 6 23 / 0.68) 38%,
+      #020617 58%,
+      #020617 100%
+    );
+  }
+  .storefront-page-hero__content {
+    height: auto;
+    min-height: 360px;
+    align-items: flex-end;
+    padding-top: clamp(6rem, 28vw, 8.25rem);
+    padding-bottom: 1.5rem;
+  }
+}
