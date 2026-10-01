@@ -12,11 +12,11 @@ export function StorefrontPageHero({ eyebrow, title, description, children }: St
   const backgroundImage = "url('/images/geography/foch-storefront.png')";
 
   return (
-    <section className="relative isolate overflow-hidden bg-slate-950">
+    <section className="storefront-page-hero relative isolate overflow-hidden bg-slate-950">
       <div
         aria-hidden="true"
         className="storefront-page-hero__background absolute inset-0 -z-10 bg-cover bg-no-repeat"
-        style={{ backgroundImage, backgroundPosition: "center top" }}
+        style={{ backgroundImage }}
       />
       <div aria-hidden="true" className="storefront-page-hero__scrim pointer-events-none absolute inset-0 -z-[5]" />
       <div className="page-banner storefront-page-hero__content container mx-auto flex items-center px-4 py-6 md:py-8">

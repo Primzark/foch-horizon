@@ -276,23 +276,32 @@
 .homepage-hero-content { height: auto; min-height: 400px; }
 @media (min-width: 768px) { .homepage-hero-content { height: 420px; min-height: 0; } }
 
+.storefront-page-hero__background { background-position: center top; }
+
 @media (max-width: 767px) {
-  .storefront-page-hero__background { background-size: 100% auto; }
-  .storefront-page-hero__scrim {
-    background: linear-gradient(
-      180deg,
-      rgb(2 6 23 / 0.02) 0%,
-      rgb(2 6 23 / 0.02) 18%,
-      rgb(2 6 23 / 0.68) 38%,
-      #020617 58%,
-      #020617 100%
-    );
-  }
+  .storefront-page-hero__background { background-position: center center; }
+  .storefront-page-hero__scrim { background: none; }
   .storefront-page-hero__content {
     height: auto;
-    min-height: 360px;
+    min-height: clamp(14.5rem, 73vw, 22rem);
     align-items: flex-end;
-    padding-top: clamp(6rem, 28vw, 8.25rem);
-    padding-bottom: 1.5rem;
+    padding-top: 1.25rem;
+    padding-bottom: 2.75rem;
+  }
+  .storefront-page-hero__content header > p:first-child { font-size: 0.625rem; }
+  .storefront-page-hero__content h1 {
+    margin-top: 0.625rem;
+    font-size: 1.75rem;
+    line-height: 1.08;
+  }
+  .storefront-page-hero__content header > p:not(:first-child) {
+    margin-top: 0.625rem;
+    font-size: 0.875rem;
+    line-height: 1.45;
+  }
+  .storefront-page-hero__content header > div { margin-top: 1rem; }
+  .storefront-page-hero__content header > p,
+  .storefront-page-hero__content h1 {
+    text-shadow: 0 1px 10px rgb(2 6 23 / 0.65);
   }
 }
