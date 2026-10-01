@@ -272,3 +272,6 @@
 /* Homepage dimensions shared by equivalent photographic page banners. */
 .page-banner { height: 360px; }
 @media (min-width: 768px) { .page-banner { height: 420px; } }
+
+.homepage-hero-content { height: auto; min-height: 400px; }
+@media (min-width: 768px) { .homepage-hero-content { height: 420px; min-height: 0; } }

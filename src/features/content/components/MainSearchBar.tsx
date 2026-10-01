@@ -333,13 +333,13 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
         <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.16em] text-white/80">
           Explorer par critère
         </p>
-        <div role="group" aria-label="Raccourcis de recherche" className="flex gap-2 overflow-x-auto pb-1">
+        <div role="group" aria-label="Raccourcis de recherche" className="flex flex-wrap gap-2">
           {searchShortcuts.map((shortcut) => (
             <button
               key={shortcut.label}
               type="button"
               onClick={() => navigateToShortcut(shortcut.filters)}
-              className="shrink-0 rounded-full border border-white/35 bg-slate-950/20 px-3.5 py-2 text-sm font-medium text-white backdrop-blur-sm transition-colors hover:border-white/70 hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950/20"
+              className="rounded-full border border-white/35 bg-slate-950/20 px-3.5 py-2 text-sm font-medium text-white backdrop-blur-sm transition-colors hover:border-white/70 hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950/20"
             >
               {shortcut.label}
             </button>

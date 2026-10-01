@@ -1037,6 +1037,15 @@ function readStoredMessages(): ChatMessage[] {
 
 export function SiteChatbot() {
   const location = useLocation();
+  const isHomePage = location.pathname === "/";
+  const assistantContainerClassName = cn(
+    "pointer-events-auto fixed z-[160] bottom-[max(0.75rem,env(safe-area-inset-bottom))] right-[max(0.75rem,env(safe-area-inset-right))] max-w-[calc(100vw-env(safe-area-inset-left)-env(safe-area-inset-right)-1.5rem)]",
+    isHomePage && "flex w-[min(420px,calc(100vw-1.5rem))] flex-col items-end",
+  );
+  const assistantPanelClassName = cn(
+    "pointer-events-auto mb-3 flex max-h-[calc(100dvh-5.5rem)] w-[min(94vw,420px)] flex-col rounded-2xl border border-border bg-card shadow-card max-sm:w-full",
+    isHomePage && "w-full min-w-0 max-w-full",
+  );
   const navigate = useNavigate();
   const searchDrawerOpen = useUiStore((state) => state.searchDrawerOpen);
   const [open, setOpen] = useState(false);
@@ -2940,13 +2949,13 @@ export function SiteChatbot() {
       )}
 
       {!searchDrawerOpen && (
-      <div className="pointer-events-auto fixed z-[160] bottom-[max(0.75rem,env(safe-area-inset-bottom))] right-[max(0.75rem,env(safe-area-inset-right))] max-w-[calc(100vw-env(safe-area-inset-left)-env(safe-area-inset-right)-1.5rem)]">
+      <div className={assistantContainerClassName}>
       {open && (
         <motion.section
           initial={{ opacity: 0, y: 18, scale: 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.2, ease: "easeOut" }}
-          className="pointer-events-auto mb-3 flex max-h-[calc(100dvh-5.5rem)] w-[min(94vw,420px)] flex-col rounded-2xl border border-border bg-card shadow-card max-sm:w-full"
+          className={assistantPanelClassName}
         >
             <header className="flex items-center justify-between border-b border-border px-4 py-3">
               <div>

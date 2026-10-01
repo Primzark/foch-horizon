@@ -87,7 +87,7 @@ export default function HomePage() {
   });
 
   return (
-    <>
+    <div className="homepage-page w-full min-w-0 overflow-x-clip">
       <section className="relative z-20 overflow-visible">
         <img
           src={HERO_IMAGE_URL}
@@ -98,11 +98,7 @@ export default function HomePage() {
           fetchPriority="high"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-black/38 via-black/16 to-black/0" />
-        <div className="absolute right-3 top-3 z-[6] max-w-[min(25rem,calc(100%-1.5rem))] rounded-lg bg-black/60 px-3 py-2 text-white/90 backdrop-blur-sm md:right-5 md:top-5">
-          <span className="sr-only">Crédit photo : </span>
-          <PhotoAttribution credit={HERO_IMAGE_CREDIT} />
-        </div>
-        <div className="page-banner container relative z-[5] mx-auto flex flex-col justify-center px-4 py-5 md:py-8">
+        <div className="page-banner homepage-hero-content container relative z-[5] mx-auto flex flex-col justify-center px-4 py-5 md:py-8">
           <motion.h1
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -131,6 +127,10 @@ export default function HomePage() {
           </motion.div>
         </div>
       </section>
+      <div className="container mx-auto px-4 pt-2 text-muted-foreground">
+        <span className="sr-only">Crédit photo : </span>
+        <PhotoAttribution credit={HERO_IMAGE_CREDIT} className="max-w-5xl break-words text-[11px] leading-snug sm:text-xs" />
+      </div>
       <section data-live-content="/biens" className="container mx-auto px-4 pt-5 pb-12 md:pt-8 md:pb-12">
         <ScrollReveal mood={heroMood}>
           <div className="mb-6 flex items-end justify-between gap-4">
@@ -277,6 +277,6 @@ export default function HomePage() {
           ))}
         </div>
       </section>
-    </>
+    </div>
   );
 }
