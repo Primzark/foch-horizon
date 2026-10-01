@@ -60,39 +60,21 @@ try {
     for (const route of routes) {
       const page = await context.newPage();
       await page.goto(`http://127.0.0.1:4177${route}`);
-      await page.waitForSelector('main .page-banner, main .storefront-page-hero');
+      await page.waitForSelector('main .page-banner');
       const result = await page.evaluate(() => {
-        const storefront = document.querySelector('main .storefront-page-hero');
-        const banner = storefront
-          ? storefront.querySelector('.storefront-page-hero__content')
-          : document.querySelector('main .page-banner');
-        const hero = storefront ?? banner;
-        const heroRect = hero.getBoundingClientRect();
-        const bannerRect = banner.getBoundingClientRect();
+        const banner = document.querySelector('main .page-banner');
+        const rect = banner.getBoundingClientRect();
         const title = document.querySelector('main h1').getBoundingClientRect();
-        const photo = storefront?.querySelector('.storefront-page-hero__photo');
-        const photoRect = photo?.getBoundingClientRect();
-        return {
-          storefront: Boolean(storefront),
-          height: storefront ? heroRect.height : bannerRect.height,
-          fullWidthPhoto: Boolean(photo && Math.abs(photoRect.width - innerWidth) <= 1),
-          naturalPhotoRatio: Boolean(photo && Math.abs(photoRect.width / photoRect.height - 1448 / 678) < 0.01),
-          copyBelowPhoto: Boolean(photoRect && bannerRect.top >= photoRect.bottom - 1),
-          overflow: document.documentElement.scrollWidth > innerWidth,
-          titleOutside: title.top < bannerRect.top || title.bottom > bannerRect.bottom,
-          grammar: /(?:à|de)\s+Le Havre\b/i.test(document.querySelector('main').textContent),
-        };
+        return { height: rect.height, overflow: document.documentElement.scrollWidth > innerWidth, titleOutside: title.top < rect.top || title.bottom > rect.bottom, grammar: /(?:à|de)\s+Le Havre\b/i.test(document.querySelector('main').textContent) };
       });
       const responsiveHomeHeight = route === "/" && width < 768 && result.height >= 400 && result.height <= 440;
-      const expectedBannerHeight = responsiveHomeHeight || result.height === (width < 768 ? 360 : 420);
-      const storefrontPhotoFits = result.storefront && result.fullWidthPhoto && result.naturalPhotoRatio && result.copyBelowPhoto;
-      const layoutOkay = result.storefront ? storefrontPhotoFits : expectedBannerHeight;
-      if (!layoutOkay || result.overflow || result.titleOutside || result.grammar) throw new Error(`Banner audit failed: ${width}px ${route} ${JSON.stringify(result)}`);
+      const expectedHeight = responsiveHomeHeight || result.height === (width < 768 ? 360 : 420);
+      if (!expectedHeight || result.overflow || result.titleOutside || result.grammar) throw new Error(`Banner audit failed: ${width}px ${route} ${JSON.stringify(result)}`);
       await page.close();
     }
     await context.close();
   }
-  console.log(`Browser audit: ${routes.length * 4} mobile/tablet/desktop page checks passed; storefront facades remain uncropped and fixed-height banners retain their intended geometry.`);
+  console.log(`Browser audit: ${routes.length * 4} mobile/tablet/desktop page checks passed; all equivalent banners match the homepage.`);
 } finally {
   await browser?.close();
   await new Promise(resolve => server.httpServer.close(resolve));
