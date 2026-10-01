@@ -10,21 +10,15 @@ import { propertyTypeOptions } from "@/features/listings/data/options";
 import { buildSearchParams } from "@/features/listings/utils/query";
 import { formatPrice, formatPropertyTypeLabel, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
 import type { PropertySearchParams } from "@/types/api";
-import type { PropertyType, TransactionType } from "@/types/domain";
-
-const defaultBudgets: Record<TransactionType, string> = {
-  vente: "350000",
-  location: "1200",
-};
+import type { PropertyType } from "@/types/domain";
 
 export function BudgetFinder() {
-  const [transaction, setTransaction] = useState<TransactionType>("vente");
-  const [budgets, setBudgets] = useState(defaultBudgets);
+  const [budgetText, setBudgetText] = useState("350000");
   const [propertyType, setPropertyType] = useState<PropertyType | "">("");
   const [city, setCity] = useState("");
   const [settledBudget, setSettledBudget] = useState<number | null>(350000);
 
-  const budgetText = budgets[transaction];
+  const transaction = "vente" as const;
   const parsedBudget = budgetText.trim() ? Number(budgetText) : Number.NaN;
   const hasValidBudget = Number.isFinite(parsedBudget) && parsedBudget > 0;
   const isBudgetSettled = hasValidBudget && parsedBudget === settledBudget;
@@ -74,27 +68,6 @@ export function BudgetFinder() {
             Parcourez les annonces actuellement publiées et affinez selon votre projet.
           </p>
 
-          <div className="mt-6" role="group" aria-label="Type de projet">
-            <div className="inline-flex rounded-full border border-border bg-background p-1">
-              {([
-                ["vente", "Acheter"],
-                ["location", "Louer"],
-              ] as const).map(([value, label]) => (
-                <button
-                  key={value}
-                  type="button"
-                  aria-pressed={transaction === value}
-                  onClick={() => setTransaction(value)}
-                  className={`min-h-10 rounded-full px-4 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                    transaction === value ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5 sm:col-span-2">
               <label htmlFor="budget-finder-amount" className="text-sm font-medium">Budget maximal</label>
@@ -104,18 +77,18 @@ export function BudgetFinder() {
                   type="number"
                   inputMode="numeric"
                   min="1"
-                  step={transaction === "vente" ? 5000 : 50}
+                  step={5000}
                   value={budgetText}
-                  onChange={(event) => setBudgets((current) => ({ ...current, [transaction]: event.target.value }))}
+                  onChange={(event) => setBudgetText(event.target.value)}
                   aria-describedby="budget-finder-hint"
                   className="pr-28 text-base tabular-nums"
                 />
                 <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground">
-                  {transaction === "location" ? "€ / mois" : "€"}
+                  €
                 </span>
               </div>
               <p id="budget-finder-hint" className="text-xs text-muted-foreground">
-                {transaction === "location" ? "Loyer mensuel maximum" : "Prix d’achat maximum"}
+                Prix d’achat maximum
               </p>
             </div>
 

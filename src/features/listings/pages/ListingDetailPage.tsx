@@ -115,7 +115,7 @@ export default function ListingDetailPage() {
               priceCurrency: property.priceCurrency,
               price: property.priceAmount,
               seller: { "@id": `${siteUrl}/#agency` },
-              businessFunction: property.transactionType === "location" ? "http://purl.org/goodrelations/v1#LeaseOut" : "http://purl.org/goodrelations/v1#Sell",
+              businessFunction: "http://purl.org/goodrelations/v1#Sell",
               itemOffered: { "@id": `${siteUrl}${canonicalPath}#property` },
               availability: property.status === "active" ? "https://schema.org/InStock" : property.status === "under_offer" ? "https://schema.org/LimitedAvailability" : property.status === "off_market" ? "https://schema.org/Discontinued" : "https://schema.org/SoldOut",
             },
@@ -165,7 +165,7 @@ export default function ListingDetailPage() {
   const city = cityById.get(property.cityId);
   const agent = agentById.get(property.agentId);
   const propertyTypeLabel = formatPropertyTypeLabel(property.propertyType);
-  const statusLabel = getPropertyStatusLabel(property.status) ?? (property.transactionType === "location" ? "À louer" : "À vendre");
+  const statusLabel = getPropertyStatusLabel(property.status) ?? "À vendre";
   const sectionReveal = (delay = 0) =>
     reducedMotion
       ? { initial: { opacity: 1 }, whileInView: { opacity: 1 }, viewport: { once: true, amount: 0.2 } }
@@ -320,7 +320,7 @@ export default function ListingDetailPage() {
           <section className="rounded-2xl border border-border bg-card p-5">
             <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Votre interlocuteur</p>
             <p className="mt-2 font-display text-2xl">{agent?.fullName ?? "Foch Immobilier"}</p>
-            <p className="text-sm text-muted-foreground">{agent?.role ?? "Transaction et administration de biens"}</p>
+            <p className="text-sm text-muted-foreground">{agent?.role ?? "Transactions immobilières"}</p>
             <a
               href={`tel:${(agent?.phone ?? "02 35 42 51 76").replace(/\s+/g, "")}`}
               className="mt-3 inline-flex items-center gap-2 rounded-full border border-border px-3 py-1 text-sm"

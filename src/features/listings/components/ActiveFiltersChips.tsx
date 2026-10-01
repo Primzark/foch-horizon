@@ -9,7 +9,6 @@ interface ActiveFiltersChipsProps {
 export function ActiveFiltersChips({ filters, onClear, onClearAll }: ActiveFiltersChipsProps) {
   const entries: Array<{ key: keyof PropertySearchParams; label: string }> = [];
 
-  if (filters.transaction) entries.push({ key: "transaction", label: `Transaction: ${filters.transaction}` });
   if (filters.type) entries.push({ key: "type", label: `Type: ${filters.type}` });
   if (filters.city) entries.push({ key: "city", label: `Ville: ${filters.city}` });
   if (filters.q) entries.push({ key: "q", label: `Mot-clé: ${filters.q}` });

@@ -44,8 +44,8 @@ const PropertyDetail = () => {
         <div className="container mx-auto flex items-center gap-2 px-4 text-sm text-muted-foreground">
           <Link to="/" className="hover:text-accent">Accueil</Link>
           <span>/</span>
-          <Link to={`/${property.transaction_type}`} className="hover:text-accent">
-            {property.transaction_type === "buy" ? "Acheter" : "Louer"}
+          <Link to="/buy" className="hover:text-accent">
+            Acheter
           </Link>
           <span>/</span>
           <span className="text-foreground">{property.title}</span>
@@ -53,7 +53,7 @@ const PropertyDetail = () => {
       </div>
 
       <div className="container mx-auto px-4 py-8">
-        <Link to={`/${property.transaction_type}`} className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-accent">
+        <Link to="/buy" className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-accent">
           <ArrowLeft className="h-4 w-4" /> Retour
         </Link>
 
@@ -100,7 +100,7 @@ const PropertyDetail = () => {
               </div>
 
               <div className="mt-4 font-display text-3xl font-bold text-accent">
-                {formatPrice(property.price, property.transaction_type)}
+                {formatPrice(property.price)}
               </div>
 
               {/* Facts */}

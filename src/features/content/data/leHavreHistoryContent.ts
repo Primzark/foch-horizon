@@ -43,7 +43,7 @@ export const leHavreHistoryPhotos: HistoryPhotoAsset[] = [
     id: "saint-francois-bassin",
     src: "/images/le-havre-history/saint-francois-bassin-du-roy.jpg",
     alt: "Quartier Saint-Francois et Bassin du Roy au Havre",
-    caption: "Saint-François conjugue patrimoine maritime, immeubles anciens et forte demande locative.",
+    caption: "Saint-François conjugue patrimoine maritime, immeubles anciens et vie de quartier animée.",
     title: "Le Havre (France), quarter Saint-François and Bassin du Roy.JPG",
     author: "Philippe Alès",
     license: "CC BY-SA 3.0",
@@ -91,7 +91,7 @@ export const leHavreHistoryPhotos: HistoryPhotoAsset[] = [
     id: "bassin-commerce",
     src: "/images/le-havre-history/bassin-du-commerce.jpg",
     alt: "Bassin du Commerce au Havre avec front urbain reconstruit",
-    caption: "Autour du Bassin du Commerce, la demande reste soutenue pour l'investissement locatif havrais.",
+    caption: "Autour du Bassin du Commerce, le marché immobilier profite de la proximité du centre et des quais.",
     title: "Le Havre Bassin du Commerce.jpg",
     author: "Gfmorin",
     license: "Domaine public",
@@ -146,13 +146,13 @@ export const leHavreHistoryTimeline = [
     period: "1965-2000",
     title: "Structuration résidentielle et mobilités",
     description:
-      "La ville consolide ses quartiers résidentiels : Saint-Vincent côté mer, Sanvic familial, Graville mixte. Les agences immobilières du Havre déploient des services de transaction, gestion locative et syndic à grande échelle.",
+      "La ville consolide ses quartiers résidentiels : Saint-Vincent côté mer, Sanvic familial, Graville mixte. Les agences immobilières du Havre accompagnent les transactions au rythme de ces nouveaux quartiers.",
   },
   {
     period: "2000-aujourd'hui",
-    title: "Renouvellement des docks et attractivité locative",
+    title: "Renouvellement des docks et attractivité résidentielle",
     description:
-      "Les Docks Vauban, le front de mer et les opérations de rénovation énergétique renforcent l'investissement locatif au Havre. Le marché combine rendement, cadre de vie et diversification entre résidences principales et patrimoine à valoriser.",
+      "Les Docks Vauban, le front de mer et les opérations de rénovation énergétique renforcent l'attractivité résidentielle du Havre. Le marché combine cadre de vie, résidences principales et patrimoine à valoriser.",
   },
 ];
 
@@ -166,7 +166,7 @@ export const leHavreDistrictHistory: DistrictHistorySection[] = [
     marketFocus:
       "Marché : appartements familiaux et biens de caractère au cœur du Havre, avec des valeurs stables et une forte profondeur d'acheteurs.",
     investmentAngle:
-      "Pour un investissement locatif, Perret offre une demande régulière, une bonne liquidité à la revente et une lisibilité durable des valeurs au m².",
+      "Pour un achat patrimonial, Perret offre une bonne lisibilité des valeurs au m² et une profondeur de marché à la revente.",
     timeline: [
       "1945-1954 : lancement des grands îlots en béton armé",
       "2005 : inscription UNESCO et accélération de la demande patrimoniale",
@@ -184,13 +184,13 @@ export const leHavreDistrictHistory: DistrictHistorySection[] = [
   {
     id: "saint-francois",
     name: "Quartier Saint-Francois",
-    headline: "Le secteur maritime historique, tension locative forte",
+    headline: "Le secteur maritime historique, recherché pour son cadre de vie",
     summary:
-      "Saint-François est l'un des secteurs les plus singuliers du Havre, entre bassins, patrimoine et vie de quartier. Son parc immobilier mêle immeubles anciens, petites surfaces et biens atypiques avec vues sur l'eau. La demande locative y reste active, portée par les jeunes actifs et les métiers liés à l'économie maritime.",
+      "Saint-François est l'un des secteurs les plus singuliers du Havre, entre bassins, patrimoine et vie de quartier. Son parc immobilier mêle immeubles anciens, petites surfaces et biens atypiques avec vues sur l'eau. Les acquéreurs apprécient sa proximité avec les quais et les commerces.",
     marketFocus:
       "Marché : studios, deux-pièces et appartements de charme dans un environnement à forte identité portuaire.",
     investmentAngle:
-      "Le quartier conserve, sur certaines rues, des tickets d'entrée mesurés avec une rentabilité locative compétitive face aux zones les plus premium du front de mer.",
+      "Le quartier conserve, sur certaines rues, des prix d'entrée mesurés face aux adresses les plus premium du front de mer.",
     timeline: [
       "XVIe-XVIIIe : formation du noyau portuaire",
       "XIXe : densification commerciale et habitat de négoce",
@@ -199,8 +199,8 @@ export const leHavreDistrictHistory: DistrictHistorySection[] = [
     keywordTags: [
       "Immobilier Saint-François",
       "Appartement vue bassin",
-      "Location meublée port",
-      "Investissement locatif",
+      "Achat appartement port",
+      "Immobilier Saint-François",
       "Quartier maritime",
     ],
     photoIds: ["saint-francois-bassin", "bassin-commerce"],
@@ -234,11 +234,11 @@ export const leHavreDistrictHistory: DistrictHistorySection[] = [
     name: "Graville et ville basse",
     headline: "Un marché mixte, résidentiel et patrimonial",
     summary:
-      "Graville offre un positionnement équilibré : maisons de ville, petits collectifs et parc locatif établi. Le secteur attire les ménages recherchant un budget plus contenu tout en restant connecté aux zones d'emploi et aux axes de mobilité.",
+      "Graville offre un positionnement équilibré : maisons de ville, petits collectifs et parc résidentiel établi. Le secteur attire les ménages recherchant un budget plus contenu tout en restant connecté aux zones d'emploi et aux axes de mobilité.",
     marketFocus:
       "Marché : biens familiaux et opportunités de rénovation, adaptés à la primo-accession comme à l'investissement raisonné.",
     investmentAngle:
-      "La profondeur de marché et le niveau de prix d'entrée permettent des stratégies diversifiées : résidence principale, location nue ou meublée longue durée.",
+      "La profondeur de marché et le niveau de prix d'entrée en font un secteur à considérer pour un premier achat ou un projet de rénovation.",
     timeline: [
       "XIXe : intégration progressive au tissu havrais",
       "1950-1980 : urbanisation résidentielle continue",
@@ -280,24 +280,24 @@ export const leHavreDistrictHistory: DistrictHistorySection[] = [
   {
     id: "eure-docks",
     name: "Eure - Docks Vauban",
-    headline: "Le Havre en renouvellement urbain et rendement locatif",
+    headline: "Le Havre en renouvellement urbain et attractivité immobilière",
     summary:
-      "Le secteur Eure - Docks Vauban incarne le nouveau cycle immobilier havrais : programmes récents, commerces, mobilités et mixité habitat-activités. La location y est soutenue par les actifs mobiles et les étudiants, avec une demande régulière sur les petites surfaces proches des transports.",
+      "Le secteur Eure - Docks Vauban incarne le nouveau cycle immobilier havrais : programmes récents, commerces, mobilités et mixité habitat-activités. Les acquéreurs y trouvent des logements récents et des petites surfaces proches des transports.",
     marketFocus:
       "Marché : studios, T2 et résidences récentes dans un secteur en transformation continue.",
     investmentAngle:
-      "La zone combine potentiel de valorisation à moyen terme et stratégie de revenus, notamment pour un portefeuille locatif diversifié.",
+      "La zone combine potentiel de valorisation à moyen terme et accès aux commerces, aux transports et aux équipements du quartier.",
     timeline: [
       "1990-2010 : lancement des reconversions de friches portuaires",
       "2010-2020 : accélération des commerces et résidences récentes",
-      "2020-2026 : renforcement de l'attractivité locative et des projets mixtes",
+      "2020-2026 : renforcement de l'attractivité résidentielle et des projets mixtes",
     ],
     keywordTags: [
       "Immobilier Eure",
       "Docks Vauban",
-      "Location appartement",
-      "Gestion locative",
-      "Investissement locatif",
+      "Achat appartement",
+      "Immobilier Docks Vauban",
+      "Estimation immobilière Eure",
     ],
     photoIds: ["docks-vauban", "panorama-havre"],
   },
@@ -310,9 +310,9 @@ export const leHavreFaq = [
       "Pour un achat en centre-ville, Perret reste une référence. Pour un cadre maritime, Saint-Vincent et Saint-François sont très demandés. Avec un budget plus modulable, Graville et certains secteurs de l'Eure offrent de belles opportunités.",
   },
   {
-    question: "Le Havre est-il pertinent pour un investissement locatif ?",
+    question: "Le Havre est-il une ville intéressante pour acheter ?",
     answer:
-      "Oui. Le marché havrais combine une demande locative active, des prix d'entrée encore accessibles sur plusieurs secteurs et des typologies variées. Le choix du quartier et de la surface reste déterminant pour sécuriser le rendement.",
+      "Oui. Le marché havrais propose des quartiers, des typologies et des niveaux de prix variés. Le choix du secteur, de la surface et de l’état du logement reste déterminant pour un achat adapté à votre projet.",
   },
   {
     question: "Comment optimiser une estimation immobilière au Havre ?",

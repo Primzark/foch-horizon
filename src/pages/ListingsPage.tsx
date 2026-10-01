@@ -9,18 +9,14 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
-interface ListingsPageProps {
-  transactionType: "buy" | "rent";
-}
-
-const ListingsPage = ({ transactionType }: ListingsPageProps) => {
+const ListingsPage = () => {
   const [searchParams] = useSearchParams();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [sortBy, setSortBy] = useState("newest");
   const [showFilters, setShowFilters] = useState(false);
 
   const filtered = useMemo(() => {
-    let result = properties.filter(p => p.transaction_type === transactionType && p.status !== "archived");
+    let result = properties.filter(p => p.transaction_type === "buy" && p.status !== "archived");
     const city = searchParams.get("city");
     if (city) result = result.filter(p => p.city.toLowerCase().includes(city.toLowerCase()));
     
@@ -34,15 +30,13 @@ const ListingsPage = ({ transactionType }: ListingsPageProps) => {
       default: result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     }
     return result;
-  }, [transactionType, searchParams, sortBy]);
-
-  const title = transactionType === "buy" ? "Acheter" : "Louer";
+  }, [searchParams, sortBy]);
 
   return (
     <Layout>
       <div className="border-b border-border bg-muted/30 py-8">
         <div className="container mx-auto px-4">
-          <h1 className="font-display text-3xl font-bold text-foreground">{title} un bien</h1>
+          <h1 className="font-display text-3xl font-bold text-foreground">Acheter un bien</h1>
           <p className="mt-1 text-muted-foreground">
             {filtered.length} bien{filtered.length > 1 ? "s" : ""} disponible{filtered.length > 1 ? "s" : ""}
           </p>

@@ -1,6 +1,5 @@
 export const transactionOptions = [
   { value: "vente", label: "Vente" },
-  { value: "location", label: "Location" },
 ] as const;
 
 export const propertyTypeOptions = [

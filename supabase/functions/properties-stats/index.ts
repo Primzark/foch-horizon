@@ -41,7 +41,7 @@ function extractErrorCode(error: unknown): string | null {
 }
 
 async function countByStatuses(supabase: SupabaseServiceClient, statuses: string[]): Promise<number> {
-  let query = supabase.from("properties").select("id", { count: "exact", head: true });
+  let query = supabase.from("properties").select("id", { count: "exact", head: true }).eq("transaction_type", "vente");
 
   if (statuses.length === 1) {
     query = query.eq("status", statuses[0]);
@@ -86,7 +86,7 @@ async function readManualCountersSnapshot(supabase: SupabaseServiceClient): Prom
 
 async function readAutomaticCountersSnapshot(supabase: SupabaseServiceClient): Promise<MarketCountersSnapshot> {
   const [soldCount, underOfferCount] = await Promise.all([
-    countByStatuses(supabase, ["sold", "rented"]),
+    countByStatuses(supabase, ["sold"]),
     countByStatuses(supabase, ["under_offer"]),
   ]);
 

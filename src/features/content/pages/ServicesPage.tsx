@@ -1,35 +1,28 @@
 import { Link } from "react-router-dom";
-import { BriefcaseBusiness, Building2, KeyRound } from "lucide-react";
+import { BriefcaseBusiness, Compass } from "lucide-react";
 import { useSeo } from "@/lib/seo/useSeo";
 
 const services = [
   {
     title: "Transaction",
     description:
-      "Vente et acquisition de biens résidentiels avec pilotage commercial, technique et juridique de bout en bout.",
+      "Accompagnement à la vente et à l’achat, du premier échange jusqu’à la signature.",
     icon: BriefcaseBusiness,
-    links: [{ href: "/biens?transaction=vente", label: "Biens à acheter" }, { href: "/vendre", label: "Vendre un bien" }, { href: "/estimation", label: "Estimer votre bien" }],
+    links: [{ href: "/biens?transaction=vente", label: "Découvrir nos biens" }, { href: "/vendre", label: "Vendre un bien" }],
   },
   {
-    title: "Location",
+    title: "Avis de valeur",
     description:
-      "Mise en location, sélection des candidats, rédaction des baux et suivi administratif d'entrée et de sortie.",
-    icon: KeyRound,
-    links: [{ href: "/biens?transaction=location", label: "Locations disponibles" }, { href: "/reglementation-immobiliere", label: "Diagnostics et obligations" }],
-  },
-  {
-    title: "Administration de biens",
-    description:
-      "Gestion locative complète, reporting propriétaire et coordination rigoureuse des intervenants.",
-    icon: Building2,
-    links: [{ href: "/contact", label: "Confier votre gestion locative" }, { href: "/honoraires", label: "Consulter les honoraires" }],
+      "Une estimation précise et argumentée pour vous aider à décider du bon prix de vente.",
+    icon: Compass,
+    links: [{ href: "/estimation", label: "Demander un avis de valeur" }, { href: "/contact", label: "Parler à l’agence" }],
   },
 ];
 
 export default function ServicesPage() {
   useSeo({
     title: "Services | Foch Immobilier",
-    description: "Découvrez nos services immobiliers premium en transaction, location et gestion locative.",
+    description: "Découvrez nos services d’achat, de vente et d’estimation immobilière au Havre.",
     canonicalPath: "/services",
   });
 
@@ -43,7 +36,7 @@ export default function ServicesPage() {
         </p>
       </header>
 
-      <div className="mt-8 grid gap-5 md:grid-cols-3">
+      <div className="mt-8 grid gap-5 md:grid-cols-2">
         {services.map((service) => (
           <article key={service.title} className="rounded-2xl border border-border bg-card p-6">
             <service.icon className="h-5 w-5" />

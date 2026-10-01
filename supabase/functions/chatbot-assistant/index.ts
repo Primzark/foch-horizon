@@ -107,7 +107,7 @@ const payloadSchema = z.object({
 
 const systemPrompt = `You are the assistant for Foch Immobilier in Le Havre, France.
 Use concise French.
-Focus on: properties for sale/rent, neighborhoods (Perret, Saint-Francois, Saint-Vincent, Sanvic, Graville, Eure-Docks), services (vente, location, gestion locative), and real-estate process (offre, compromis, notaire, acte).
+Focus on: properties for sale, neighborhoods (Perret, Saint-Francois, Saint-Vincent, Sanvic, Graville, Eure-Docks), services (achat, vente, estimation), and real-estate process (offre, compromis, notaire, acte).
 If no perfect property match, invite the user to leave email + criteria so agency can follow up.
 Do not invent exact legal claims. Keep answers practical.`;
 
@@ -690,6 +690,10 @@ function normalizeText(value: string): string {
     .replace(/[^a-z0-9/\s-]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function isRentalQuestion(value: string): boolean {
+  return /\b(louer|loue|louent|location|locatif|locative|loyer|bailleur|locataire)\b/.test(normalizeText(value));
 }
 
 function tokenize(value: string): string[] {
@@ -1999,9 +2003,7 @@ function sanitizePlannerSearchArgs(rawArgs: unknown): ToolSearchParams {
   const candidate = rawArgs as Record<string, unknown>;
   const parsed: ToolSearchParams = {};
 
-  if (candidate.transaction === "vente" || candidate.transaction === "location") {
-    parsed.transaction = candidate.transaction;
-  }
+  if (candidate.transaction === "vente") parsed.transaction = "vente";
   if (candidate.type === "appartement" || candidate.type === "maison_villa" || candidate.type === "autre") {
     parsed.type = candidate.type;
   }
@@ -2707,13 +2709,13 @@ function buildFallback(question: string) {
     };
   }
 
-  if (/service|gestion|location|vente|estimation/.test(q)) {
+  if (/service|vente|estimation/.test(q)) {
     return {
       answer:
-        "Foch Immobilier accompagne la vente, l'achat, la location et la gestion locative au Havre. Vous pouvez aussi demander une estimation argumentee de votre bien.",
+        "Foch Immobilier accompagne les projets d'achat, de vente et d'estimation au Havre.",
       suggestedPrompts: [
         "Je veux une estimation de mon appartement",
-        "Quels services de gestion locative proposez-vous ?",
+        "Quels services proposez-vous pour vendre ?",
         "Je cherche un bien a acheter au Havre",
       ],
     };
@@ -2724,7 +2726,7 @@ function buildFallback(question: string) {
       "Je peux vous aider sur les biens disponibles, les quartiers du Havre et les etapes de vente/achat. Si vous ne trouvez pas le bon bien, laissez votre email et vos criteres pour un rappel agence.",
     suggestedPrompts: [
       "Je cherche un appartement a vendre quartier Perret",
-      "Quel quartier viser pour un investissement locatif ?",
+      "Quel quartier choisir pour acheter au Havre ?",
       "Comment se passe un compromis de vente ?",
     ],
   };
@@ -2785,7 +2787,7 @@ interface PropertySearchQueryRow {
 }
 
 const toolPropertyIntentPattern =
-  /appartement|maison|villa|studio|t[1-9]\b|bien(?:s)?|acheter|achat|louer|location|vente|budget|chambre|surface|m2|annonce/;
+  /appartement|maison|villa|studio|t[1-9]\b|bien(?:s)?|acheter|achat|vente|budget|chambre|surface|m2|annonce/;
 const toolAggregateIntentPattern =
   /moyenn|average|mediane|median|stat(?:s|istiques)?|prix\s*(?:au|\/)\s*m2|m2\s*(?:moyen|moyenne)|surface\s*(?:moyenne|moyen)/;
 const toolCompareIntentPattern = /compar|compare|lequel est mieux|laquelle est mieux|entre les deux|entre ces biens/;
@@ -2802,9 +2804,12 @@ const toolCityAliases: Array<{ slug: string; aliases: string[] }> = [
 ];
 
 function parseToolSearchParamsFromState(rawState: ToolConversationState | undefined): ToolSearchParams {
+  const { transaction: _savedPreferenceTransaction, ...preferences } = rawState?.preferences ?? {};
+  const { transaction: _savedSearchTransaction, ...recentSearch } = rawState?.recentSearch?.params ?? {};
   return {
-    ...rawState?.preferences,
-    ...(rawState?.recentSearch?.params ?? {}),
+    ...preferences,
+    ...recentSearch,
+    transaction: "vente",
   };
 }
 
@@ -2911,13 +2916,9 @@ function buildKeywordTokenOrFilter(rawKeyword: string): string | null {
   return clauses.length > 0 ? clauses.join(",") : null;
 }
 
-function detectTransaction(question: string): "vente" | "location" | undefined {
+function detectTransaction(question: string): "vente" | undefined {
   const normalized = normalizeText(question);
-  const hasLocation = /\blocation\b|\blouer\b|\bloyer\b|\ba louer\b/.test(normalized);
-  const hasSale = /\bvente\b|\bvendre\b|\bacheter\b|\bachat\b|\ba vendre\b/.test(normalized);
-  if (hasLocation && !hasSale) return "location";
-  if (hasSale && !hasLocation) return "vente";
-  return undefined;
+  return /\bvente\b|\bvendre\b|\bacheter\b|\bachat\b|\ba vendre\b/.test(normalized) ? "vente" : undefined;
 }
 
 function detectPropertyType(question: string): "appartement" | "maison_villa" | "autre" | undefined {
@@ -3045,6 +3046,7 @@ function mergeSearchParams(
   const merged: ToolSearchParams = {
     ...base,
     ...overrides,
+    transaction: "vente",
   };
   if (merged.priceMin && merged.priceMax && merged.priceMin > merged.priceMax) {
     [merged.priceMin, merged.priceMax] = [merged.priceMax, merged.priceMin];
@@ -3111,8 +3113,7 @@ function extractSearchParamsFromQuestion(
 
 function buildCriteriaSummary(params: ToolSearchParams): string {
   const parts: string[] = [];
-  const transactionLabel =
-    params.transaction === "vente" ? "à vendre" : params.transaction === "location" ? "à louer" : undefined;
+  const transactionLabel = params.transaction === "vente" ? "à vendre" : undefined;
   const typeLabel =
     params.type === "appartement" ? "appartement" : params.type === "maison_villa" ? "maison" : params.type;
 
@@ -3249,6 +3250,7 @@ async function executeSearchPropertiesTool(
     supabase,
     {
       ...(params as SharedPropertySearchQueryParams),
+      transaction: "vente",
       page,
       pageSize,
     },
@@ -3261,7 +3263,7 @@ async function executeSearchPropertiesTool(
   return {
     items: sharedResult.rows.map((row) => mapSearchRowToToolItem(row as unknown as PropertySearchQueryRow)),
     total: sharedResult.total,
-    searchParams: { ...params, page: sharedResult.page, pageSize: sharedResult.pageSize },
+    searchParams: { ...params, transaction: "vente", page: sharedResult.page, pageSize: sharedResult.pageSize },
   };
 }
 
@@ -3343,7 +3345,6 @@ function buildStatsSummaryAction(input: {
         ? {
             byTransaction: normalizeAggregateBreakdownBuckets(input.breakdowns.byTransaction, {
               vente: "Vente",
-              location: "Location",
             }),
             byType: normalizeAggregateBreakdownBuckets(input.breakdowns.byType, {
               appartement: "Appartement",
@@ -3811,7 +3812,7 @@ function extractGeminiTextPayload(payload: unknown): string | null {
 
 function memoryFieldExplicitlyMentioned(question: string, field: string): boolean {
   const q = normalizeText(question);
-  if (field === "transaction") return /\b(vente|vendre|achat|acheter|location|louer)\b/.test(q);
+  if (field === "transaction") return /\b(vente|vendre|achat|acheter)\b/.test(q);
   if (field === "type") return /\b(appartement|maison|villa|studio)\b/.test(q);
   if (field === "city") return /\b(havre|sainte adresse|montivilliers|gainneville|harfleur)\b/.test(q);
   if (field === "bedroomsMin") return /\b(t[1-9]|chambre|chambres|pieces|pi[eè]ces?)\b/.test(q);
@@ -5220,9 +5221,9 @@ async function orchestrateToolRequest(input: {
       reasonCode: "deterministic_clarify_invest",
     };
     return applyPlannerMeta({
-      answer: "Pour un investissement, vous visez plutôt l’achat ou la location, et dans quelle ville ?",
-      suggestedPrompts: ["Achat au Havre", "Location au Havre", "Comparer achat et location"],
-      actions: [buildNoticeAction("Précision nécessaire", "Précisez la transaction et la ville cible.", "planner_clarify")],
+      answer: "Pour un projet d’achat, quel type de bien recherchez-vous et dans quelle ville ?",
+      suggestedPrompts: ["Appartement au Havre", "Maison à Sainte-Adresse", "Voir les biens à vendre"],
+      actions: [buildNoticeAction("Précision nécessaire", "Précisez le type de bien et la ville cible.", "planner_clarify")],
       toolTrace,
       agentMode: "tool",
       costHints: { route: "edge_tools", estimatedClass: "low" },
@@ -5452,6 +5453,20 @@ Deno.serve(async (request) => {
     }
 
     const requestId = createRequestId();
+
+    if (isRentalQuestion(payload.question)) {
+      return secureJsonResponse(request, {
+        source: "fallback",
+        edgeProvider: "fallback",
+        retrievalMode: "none",
+        requestId,
+        ragUsed: false,
+        agentMode: "fallback",
+        answer: "L’agence Foch Immobilier accompagne les projets d’achat, de vente et d’estimation immobilière.",
+        suggestedPrompts: ["Voir les biens à vendre", "Je veux vendre mon bien", "Je veux faire estimer mon bien"],
+        streamSupported: parseBooleanEnv("CHATBOT_STREAM_ENABLED", false),
+      });
+    }
 
     let toolResult: ToolOrchestrationResult | null = null;
     try {

@@ -117,7 +117,7 @@ function LocationHero({ pageTitle, locationName, locationSlug, locationLabel, im
         </p>
         <h1 className="mt-2 break-words font-display text-3xl sm:text-4xl md:text-5xl">{pageTitle}</h1>
         <p className="mt-2 text-sm text-white/85">
-          Une sélection de biens et un accompagnement local sur mesure pour vendre, acheter ou louer dans ce secteur.
+          Une sélection de biens et un accompagnement local sur mesure pour vendre ou acheter dans ce secteur.
         </p>
       </div>
     </header>

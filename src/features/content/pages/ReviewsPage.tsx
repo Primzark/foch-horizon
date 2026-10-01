@@ -178,7 +178,7 @@ export default function ReviewsPage() {
   useSeo({
     title: "Avis clients | Foch Immobilier Le Havre",
     description:
-      "Consultez les avis publiés sur la fiche Google de Foch Immobilier au Havre: achat, vente, location et gestion locative.",
+      "Consultez les avis publiés sur la fiche Google de Foch Immobilier au Havre: achat, vente et estimation.",
     canonicalPath: "/avis",
     jsonLd: payload
       ? [

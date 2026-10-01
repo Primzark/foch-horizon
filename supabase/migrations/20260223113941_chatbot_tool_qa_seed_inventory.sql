@@ -154,9 +154,9 @@ values (
   'Honoraires',
   'Honoraires agence',
   0,
-  'Honoraires de transaction et de location : consultez les honoraires de l agence Foch Immobilier sur cette page.',
-  'seed-honoraires-1',
-  24,
+  'Barème des honoraires de négociation pour les ventes : consultez le document publié par l agence Foch Immobilier sur cette page.',
+  'seed-honoraires-sale-only-1',
+  21,
   '{}'::jsonb
 )
 on conflict (document_key, chunk_index) do update set

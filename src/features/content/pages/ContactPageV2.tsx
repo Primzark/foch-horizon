@@ -20,7 +20,7 @@ export default function ContactPageV2() {
       <StorefrontPageHero
         eyebrow="Contact"
         title="Parlons de votre projet immobilier"
-        description="Nous répondons rapidement à vos demandes de vente, d'achat, de location et de gestion locative."
+        description="Nous répondons rapidement à vos demandes d’achat, de vente et d’estimation."
       />
 
       <section className="container mx-auto px-4 py-10">

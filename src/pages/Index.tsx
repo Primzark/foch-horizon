@@ -18,7 +18,7 @@ const heroImageCredit = {
 };
 
 const Index = () => {
-  const latestListings = properties.filter(p => p.status === "available").slice(0, 3);
+  const latestListings = properties.filter(p => p.transaction_type === "buy" && p.status === "available").slice(0, 3);
 
   return (
     <Layout>
@@ -69,7 +69,7 @@ const Index = () => {
           <div className="flex items-end justify-between">
             <div>
               <h2 className="font-display text-3xl font-bold text-foreground">Nos dernières annonces</h2>
-              <p className="mt-2 text-muted-foreground">Découvrez nos biens récemment mis en vente ou en location.</p>
+              <p className="mt-2 text-muted-foreground">Découvrez nos biens récemment mis en vente.</p>
             </div>
             <Link
               to="/buy"

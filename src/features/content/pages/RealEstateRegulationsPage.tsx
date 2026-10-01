@@ -7,9 +7,8 @@ const sources = {
   diagnostics: "https://www.service-public.gouv.fr/particuliers/vosdroits/F10798",
   dpe: "https://www.service-public.gouv.fr/particuliers/vosdroits/F16096",
   dpeMethod: "https://www.ecologie.gouv.fr/presse/evolution-du-calcul-du-dpe-1er-janvier-2026-favoriser-lelectrification-du-chauffage",
-  rentalStandards: "https://www.service-public.gouv.fr/particuliers/vosdroits/F35978/0_0_1",
   audit: "https://www.service-public.gouv.fr/particuliers/vosdroits/F37110",
-  risks: "https://www.georisques.gouv.fr/information-des-acquereurs-et-des-locataires",
+  risks: "https://www.georisques.gouv.fr/",
   coownership: "https://www.service-public.gouv.fr/particuliers/vosdroits/F37190",
   notary: "https://www.notaires.fr/fr/immobilier-fiscalite/achat-et-vente",
   ademe: "https://observatoire-dpe-audit.ademe.fr/accueil",
@@ -112,7 +111,7 @@ export default function RealEstateRegulationsPage() {
               Le DPE informe sur la consommation d’énergie et les émissions de gaz à effet de serre. Il doit être établi par un diagnostiqueur certifié et son classement figure dans les annonces concernées. Depuis le 1er janvier 2026, le coefficient de conversion de l’électricité dans le calcul est passé de 2,3 à 1,9. Un DPE établi antérieurement peut rester valable ; une attestation de nouvelle étiquette peut être téléchargée gratuitement lorsque le logement est concerné, sur le site de l’<ExternalLink href={sources.ademe}>Observatoire DPE-Audit de l’Ademe</ExternalLink>. Le ministère explique cette évolution et les dates d’application dans son <ExternalLink href={sources.dpeMethod}>communiqué sur le calcul du DPE en 2026</ExternalLink>.
             </p>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-              Pour la vente en France métropolitaine, un audit énergétique réglementaire complète le DPE pour certaines maisons individuelles et certains immeubles détenus par un propriétaire unique : depuis 2025, les logements classés E, F ou G sont concernés ; la classe D entrera dans le dispositif en 2034. Cette règle ne s’applique pas de la même façon à un appartement vendu dans une copropriété. La <ExternalLink href={sources.audit}>fiche Service-Public sur l’audit énergétique</ExternalLink> précise le champ à vérifier. Pour la location d’habitation, les seuils de décence énergétique évoluent selon le calendrier officiel : classe G depuis 2025, classe F à partir de 2028 puis classe E à partir de 2034, sous réserve des règles et exceptions applicables au bail concerné (<ExternalLink href={sources.rentalStandards}>logement décent et performance énergétique</ExternalLink>).
+              Pour la vente en France métropolitaine, un audit énergétique réglementaire complète le DPE pour certaines maisons individuelles et certains immeubles détenus par un propriétaire unique : depuis 2025, les logements classés E, F ou G sont concernés ; la classe D entrera dans le dispositif en 2034. Cette règle ne s’applique pas de la même façon à un appartement vendu dans une copropriété. La <ExternalLink href={sources.audit}>fiche Service-Public sur l’audit énergétique</ExternalLink> précise le champ à vérifier.
             </p>
           </section>
 
@@ -143,7 +142,7 @@ export default function RealEstateRegulationsPage() {
           <section aria-labelledby="reg-risks">
             <h2 id="reg-risks" className="font-display text-2xl md:text-3xl">Risques et situation du terrain</h2>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-              L’état des risques est établi à partir de l’adresse et des zonages applicables. Il peut couvrir des risques naturels, miniers ou technologiques, le radon, les sols, le recul du trait de côte ou d’autres informations réglementaires. Il doit être actualisé dans les délais prévus et remis dès la première visite lorsque le bien est concerné. Consultez <ExternalLink href={sources.risks}>Géorisques et le service ERRIAL</ExternalLink> pour rechercher les informations à l’adresse ; la fiche officielle rappelle les obligations du vendeur et du bailleur.
+              L’état des risques est établi à partir de l’adresse et des zonages applicables. Il peut couvrir des risques naturels, miniers ou technologiques, le radon, les sols, le recul du trait de côte ou d’autres informations réglementaires. Il doit être actualisé dans les délais prévus et remis dès la première visite lorsque le bien est concerné. Consultez <ExternalLink href={sources.risks}>Géorisques et le service ERRIAL</ExternalLink> pour rechercher les informations à l’adresse.
             </p>
           </section>
 
@@ -165,9 +164,8 @@ export default function RealEstateRegulationsPage() {
           <ul className="mt-3 space-y-3 text-sm">
             <li><ExternalLink href={sources.diagnostics}>Diagnostics à fournir en cas de vente</ExternalLink></li>
             <li><ExternalLink href={sources.dpe}>Diagnostic de performance énergétique</ExternalLink></li>
-            <li><ExternalLink href={sources.rentalStandards}>Décence énergétique en location</ExternalLink></li>
             <li><ExternalLink href={sources.coownership}>Achat d’un logement en copropriété</ExternalLink></li>
-            <li><ExternalLink href={sources.risks}>Information des acquéreurs et locataires</ExternalLink></li>
+            <li><ExternalLink href={sources.risks}>État des risques par adresse</ExternalLink></li>
           </ul>
         </aside>
       </div>

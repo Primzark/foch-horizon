@@ -198,13 +198,13 @@ const initialMessage: ChatMessage = {
   id: "init-assistant",
   role: "assistant",
   content:
-    "Bonjour 👋 Je suis l'assistant immobilier Foch. Je peux vous guider sur les biens, les quartiers du Havre, nos services et les étapes clés de votre projet.",
+    "Bonjour 👋 Je suis l'assistant immobilier Foch. Je peux vous guider sur les biens à vendre, les quartiers du Havre, l’achat, la vente et l’estimation.",
   suggestedPrompts: chatbotExamplePrompts,
 };
 
 const openingGreetingVariants: OpeningGreetingVariant[] = [
   {
-    content: "Bonjour 👋 Sur quoi avancez-vous aujourd'hui: achat, vente, location ou estimation ?",
+    content: "Bonjour 👋 Sur quoi avancez-vous aujourd'hui : achat, vente ou estimation ?",
     prompts: [
       "Je cherche un appartement à vendre au Havre",
       "Je veux vendre mon bien",
@@ -233,7 +233,7 @@ const openingGreetingVariants: OpeningGreetingVariant[] = [
   {
     content: "Bonjour 🙂 Vous recherchez plutôt un bien, une information de quartier ou une aide sur les étapes ?",
     prompts: [
-      "Quel quartier du Havre est le plus adapté pour un investissement locatif ?",
+      "Quel quartier du Havre choisir pour acheter ?",
       "Je cherche un T3 avec balcon",
       "Où trouver les honoraires ?",
       "Je ne trouve pas de bien adapté",
@@ -793,7 +793,7 @@ function sanitizeConversationState(raw: unknown): ChatbotConversationState {
   if (candidate.preferences && typeof candidate.preferences === "object") {
     const preferences = candidate.preferences as Record<string, unknown>;
     state.preferences = {
-      transaction: preferences.transaction === "vente" || preferences.transaction === "location" ? preferences.transaction : undefined,
+      transaction: preferences.transaction === "vente" ? "vente" : undefined,
       type:
         preferences.type === "appartement" || preferences.type === "maison_villa" || preferences.type === "autre"
           ? preferences.type
@@ -2998,9 +2998,9 @@ export function SiteChatbot() {
               <div className="border-b border-border/70 px-4 py-2">
                 <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
                   <span className="text-muted-foreground">Contexte mémorisé:</span>
-                  {conversationState.preferences?.transaction && (
+                  {conversationState.preferences?.transaction === "vente" && (
                     <span className="rounded-full border border-border bg-background px-2 py-0.5">
-                      {conversationState.preferences.transaction === "vente" ? "Achat" : "Location"}
+                      Achat
                     </span>
                   )}
                   {conversationState.preferences?.type && (

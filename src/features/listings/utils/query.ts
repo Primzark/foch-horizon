@@ -1,7 +1,7 @@
 import type { PropertySearchParams } from "@/types/api";
 import type { PropertyType, TransactionType } from "@/types/domain";
 
-const TRANSACTION_VALUES: TransactionType[] = ["vente", "location"];
+const TRANSACTION_VALUES: TransactionType[] = ["vente"];
 const TYPE_VALUES: PropertyType[] = ["appartement", "maison_villa", "autre"];
 const ALLOWED_PAGE_SIZES = new Set([12, 24, 48]);
 const DEFAULT_LISTINGS_PAGE_SIZE = 12;

@@ -169,11 +169,9 @@ function readCounterEnv(name: string): number | null {
 }
 
 function applyFilters(items: Property[], params: PropertySearchParams): Property[] {
-  let result = items.filter((property) => property.status !== "off_market");
+  let result = items.filter((property) => property.transactionType === "vente" && property.status !== "off_market");
 
-  if (params.transaction) {
-    result = result.filter((property) => property.transactionType === params.transaction);
-  }
+  if (params.transaction && params.transaction !== "vente") return [];
 
   if (params.type) {
     result = result.filter((property) => property.propertyType === params.type);
@@ -280,9 +278,16 @@ function applySort(items: Property[], sort: PropertySearchParams["sort"]): Prope
 }
 
 export async function searchProperties(params: PropertySearchParams): Promise<PropertySearchResponse> {
+  const page = params.page && params.page > 0 ? params.page : DEFAULT_PAGE;
+  const pageSize = params.pageSize && params.pageSize > 0 ? params.pageSize : DEFAULT_PAGE_SIZE;
+
+  if (params.transaction && params.transaction !== "vente") {
+    return { page, pageSize, total: 0, items: [] };
+  }
+
   if (isEdgeApiEnabled()) {
     const query = new URLSearchParams();
-    if (params.transaction) query.set("transaction", params.transaction);
+    query.set("transaction", "vente");
     if (params.type) query.set("type", params.type);
     if (params.city) query.set("city", params.city);
     if (params.q) query.set("q", params.q);
@@ -304,9 +309,6 @@ export async function searchProperties(params: PropertySearchParams): Promise<Pr
   }
 
   await apiDelay();
-
-  const page = params.page && params.page > 0 ? params.page : DEFAULT_PAGE;
-  const pageSize = params.pageSize && params.pageSize > 0 ? params.pageSize : DEFAULT_PAGE_SIZE;
 
   const filtered = applySort(applyFilters(properties, params), params.sort);
   const total = filtered.length;
@@ -350,14 +352,16 @@ export async function getPropertyById(id: number): Promise<Property | null> {
   if (isEdgeApiEnabled()) {
     try {
       const payload = await apiJson<EdgePropertyDetailRow>(`/api/properties/${id}`);
-      return mapEdgePropertyDetailToDomain(payload);
+      const property = mapEdgePropertyDetailToDomain(payload);
+      return property.transactionType === "vente" ? property : null;
     } catch {
       return null;
     }
   }
 
   await apiDelay();
-  return propertyById.get(id) ?? null;
+  const property = propertyById.get(id);
+  return property?.transactionType === "vente" ? property : null;
 }
 
 export async function getPropertyBySlug(slug: string): Promise<Property | null> {
@@ -366,7 +370,8 @@ export async function getPropertyBySlug(slug: string): Promise<Property | null> 
   }
 
   await apiDelay();
-  return propertyBySlug.get(slug) ?? null;
+  const property = propertyBySlug.get(slug);
+  return property?.transactionType === "vente" ? property : null;
 }
 
 export async function getPropertyByCanonicalPathId(idParam: string): Promise<Property | null> {
@@ -376,17 +381,19 @@ export async function getPropertyByCanonicalPathId(idParam: string): Promise<Pro
     return null;
   }
 
-  return propertyById.get(id) ?? null;
+  const property = propertyById.get(id);
+  return property?.transactionType === "vente" ? property : null;
 }
 
 export async function getSimilarProperties(property: Property, limit = 3): Promise<Property[]> {
+  if (property.transactionType !== "vente") return [];
   await apiDelay();
 
   const sameCity = properties.filter(
     (item) =>
       item.id !== property.id &&
       item.cityId === property.cityId &&
-      item.transactionType === property.transactionType &&
+      item.transactionType === "vente" &&
       item.status === "active",
   );
 
@@ -397,7 +404,7 @@ export async function getSimilarProperties(property: Property, limit = 3): Promi
   const sameTransaction = properties.filter(
     (item) =>
       item.id !== property.id &&
-      item.transactionType === property.transactionType &&
+      item.transactionType === "vente" &&
       item.status === "active" &&
       !sameCity.some((candidate) => candidate.id === item.id),
   );
@@ -407,7 +414,7 @@ export async function getSimilarProperties(property: Property, limit = 3): Promi
 
 export async function getFeaturedProperties(limit = 8): Promise<Property[]> {
   await apiDelay();
-  const activeProperties = properties.filter((property) => property.status === "active");
+  const activeProperties = properties.filter((property) => property.status === "active" && property.transactionType === "vente");
   const featured = activeProperties.filter((property) => property.isFeatured);
 
   if (featured.length >= limit) {
@@ -425,6 +432,7 @@ export async function getFeaturedProperties(limit = 8): Promise<Property[]> {
 export async function getPropertiesByCitySlug(citySlug: string): Promise<Property[]> {
   if (isEdgeApiEnabled()) {
     const result = await searchProperties({
+      transaction: "vente",
       city: citySlug,
       page: 1,
       pageSize: 48,
@@ -483,7 +491,9 @@ export async function getPropertiesByCitySlug(citySlug: string): Promise<Propert
     return [];
   }
 
-  return properties.filter((property) => property.cityId === city.id && property.status !== "off_market");
+  return properties.filter(
+    (property) => property.cityId === city.id && property.transactionType === "vente" && property.status !== "off_market",
+  );
 }
 
 export async function resolveLegacySlugToProperty(slug: string): Promise<Property | null> {
@@ -491,6 +501,7 @@ export async function resolveLegacySlugToProperty(slug: string): Promise<Propert
     try {
       const query = new URLSearchParams({
         slug,
+        transaction: "vente",
         page: "1",
         pageSize: "1",
       });
@@ -507,7 +518,8 @@ export async function resolveLegacySlugToProperty(slug: string): Promise<Propert
   }
 
   await apiDelay();
-  return propertyBySlug.get(slug) ?? null;
+  const property = propertyBySlug.get(slug);
+  return property?.transactionType === "vente" ? property : null;
 }
 
 export async function getMarketCountersSnapshot(): Promise<MarketCountersSnapshot> {
@@ -521,7 +533,7 @@ export async function getMarketCountersSnapshot(): Promise<MarketCountersSnapsho
 
   await apiDelay();
 
-  const soldInData = properties.filter((property) => property.status === "sold" || property.status === "rented").length;
+  const soldInData = properties.filter((property) => property.status === "sold" && property.transactionType === "vente").length;
   const underOfferInData = properties.filter((property) => property.status === "under_offer").length;
   const activeCount = properties.filter((property) => property.status === "active").length;
 

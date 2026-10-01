@@ -107,7 +107,7 @@ export default function LeHavreHistoryPage() {
           Depuis 1972, Foch Immobilier observe l'évolution du marché havrais au plus près du terrain. Cette page
           propose une lecture claire des grands repères historiques, des dynamiques de quartiers et des enjeux
           patrimoniaux pour vous aider à décider avec méthode, que votre projet concerne l'achat, la vente ou
-          l'investissement locatif.
+          la valorisation d'un bien.
         </p>
       </header>
 

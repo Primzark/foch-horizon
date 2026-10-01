@@ -23,6 +23,7 @@ import { formatPrice, formatPropertyTypeLabel, toCanonicalPropertyPath } from "@
 import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
 
 const defaultParams: PropertySearchParams = {
+  transaction: "vente",
   page: 1,
   pageSize: 12,
   sort: "newest",
@@ -148,7 +149,7 @@ export default function ListingsIndexPage() {
 
   useSeo({
     title: "Biens immobiliers | Foch Immobilier",
-    description: "Découvrez nos biens à la vente et à la location au Havre et sur le littoral.",
+    description: "Découvrez nos biens à vendre au Havre et sur le littoral.",
     canonicalPath: "/biens",
     noIndex: searchParams.toString().length > 0,
     jsonLd: query.data

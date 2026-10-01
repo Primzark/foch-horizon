@@ -9,7 +9,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cities } from "@/features/cities/data/cities";
 import { propertyById } from "@/features/listings/data/properties";
-import { featureOptions, propertyTypeOptions, transactionOptions } from "@/features/listings/data/options";
+import { featureOptions, propertyTypeOptions } from "@/features/listings/data/options";
 import { parseReferenceFromQuery, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
 import { buildSearchParams, parseSearchParams } from "@/features/listings/utils/query";
 import type { PropertySearchParams } from "@/types/api";
@@ -17,6 +17,7 @@ import { useUiStore } from "@/lib/state/useUiStore";
 import { trackEvent } from "@/lib/analytics/events";
 
 const defaultFilters: PropertySearchParams = {
+  transaction: "vente",
   page: 1,
   pageSize: 12,
   sort: "newest",
@@ -26,6 +27,7 @@ function normalizeFilters(filters: PropertySearchParams): PropertySearchParams {
   return {
     ...defaultFilters,
     ...filters,
+    transaction: "vente",
     page: 1,
   };
 }
@@ -90,36 +92,11 @@ export function SearchDrawer() {
         <SheetHeader className="pb-4">
           <SheetTitle>Rechercher un bien</SheetTitle>
           <SheetDescription>
-            Filtrez par transaction, type, ville et critères avancés. L'URL est mise à jour pour des liens partageables.
+            Filtrez par type, ville et critères avancés. L'URL est mise à jour pour des liens partageables.
           </SheetDescription>
         </SheetHeader>
 
         <div className="grid gap-4 md:grid-cols-3">
-          <div>
-            <Label id="listing-search-transaction-label">Transaction</Label>
-            <Select
-              value={draft.transaction ?? "all"}
-              onValueChange={(value) =>
-                setDraft((current) => ({
-                  ...current,
-                  transaction: value === "all" ? undefined : (value as "vente" | "location"),
-                }))
-              }
-            >
-              <SelectTrigger aria-labelledby="listing-search-transaction-label">
-                <SelectValue placeholder="Toutes transactions" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Toutes transactions</SelectItem>
-                {transactionOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
           <div>
             <Label id="listing-search-type-label">Type</Label>
             <Select

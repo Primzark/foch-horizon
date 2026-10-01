@@ -278,11 +278,16 @@ export async function runSharedPropertySearchQuery(
   input: SharedPropertySearchQueryParams,
   options: SharedPropertySearchQueryOptions = {},
 ): Promise<SharedPropertySearchQueryResult> {
-  const exactSlug = normalizeTerm(input.slug ?? "");
   const page = parsePositiveInt(input.page ?? null, 1);
   const requestedPageSize = parsePositiveInt(input.pageSize ?? null, options.defaultPageSize ?? 24);
   const maxPageSize = Math.max(1, Math.trunc(options.maxPageSize ?? 100));
   const minWithoutSlug = Math.max(1, Math.trunc(options.minPageSizeWithoutSlug ?? 1));
+
+  if (input.transaction && input.transaction !== "vente") {
+    return { page, pageSize: Math.min(maxPageSize, requestedPageSize), total: 0, rows: [] };
+  }
+
+  const exactSlug = normalizeTerm(input.slug ?? "");
   const pageSize = exactSlug
     ? Math.min(maxPageSize, requestedPageSize)
     : Math.min(maxPageSize, Math.max(minWithoutSlug, requestedPageSize));
@@ -298,13 +303,13 @@ export async function runSharedPropertySearchQuery(
       { count: "exact" },
     )
     .neq("status", "off_market")
+    .eq("transaction_type", "vente")
     .range(from, to);
 
   if (exactSlug) {
     query = query.eq("slug", exactSlug);
   }
 
-  if (input.transaction) query = query.eq("transaction_type", input.transaction);
   if (input.type) query = query.eq("property_type", input.type);
 
   if (input.city) {

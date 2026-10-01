@@ -37,7 +37,7 @@ export function AppFooter() {
           <p className="font-display text-2xl">Foch Immobilier</p>
           <p className="mt-1 text-xs uppercase tracking-[0.24em] text-muted-foreground">Depuis 1972</p>
           <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-            Immobilier résidentiel haut de gamme, location et gestion locative au Havre et sur le littoral.
+            Immobilier résidentiel haut de gamme, achat et vente au Havre et sur le littoral.
           </p>
           <a
             href="https://extranet2.ics.fr/V5/connexion-wolh.html"

@@ -86,7 +86,6 @@ export function GeographyGuideDetails({ guide, className = "", headingLevel = 3 
         </p>
         <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-brand-strong">
           <li><Link className="underline underline-offset-4" to={`/biens?${searchParams}&transaction=vente`}>Biens à acheter {atLocation(guide.name)}</Link></li>
-          <li><Link className="underline underline-offset-4" to={`/biens?${searchParams}&transaction=location`}>Locations {atLocation(guide.name)}</Link></li>
           <li><Link className="underline underline-offset-4" to={`/biens?${searchParams}&type=appartement`}>Appartements {atLocation(guide.name)}</Link></li>
           <li><Link className="underline underline-offset-4" to={`/biens?${searchParams}&type=maison_villa`}>Maisons {atLocation(guide.name)}</Link></li>
           <li><Link className="underline underline-offset-4" to={`/estimation?ville=${encodeURIComponent(guide.listingSearch.city ?? guide.name)}`}>Estimer votre bien {atLocation(guide.name)}</Link></li>

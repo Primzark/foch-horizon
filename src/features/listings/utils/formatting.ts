@@ -1,8 +1,8 @@
 import type { Property, PropertyStatus, PropertyType, TransactionType } from "@/types/domain";
 
-export function formatPrice(amount: number, transactionType: TransactionType): string {
+export function formatPrice(amount: number, _transactionType?: TransactionType): string {
   const formatted = new Intl.NumberFormat("fr-FR").format(amount);
-  return transactionType === "location" ? `${formatted} € / mois` : `${formatted} €`;
+  return `${formatted} €`;
 }
 
 export function formatCompactNumber(value: number): string {
@@ -29,7 +29,7 @@ export function getPropertyStatusLabel(status: PropertyStatus): string | null {
     case "sold":
       return "Vendu";
     case "rented":
-      return "Loué";
+      return null;
     case "off_market":
       return "Retiré";
     default:
@@ -39,7 +39,7 @@ export function getPropertyStatusLabel(status: PropertyStatus): string | null {
 
 export function getPropertyCardLabels(property: Pick<Property, "status" | "title">): string[] {
   const statusLabel = getPropertyStatusLabel(property.status);
-  if (property.status === "sold" || property.status === "rented" || property.status === "off_market") {
+  if (property.status === "sold" || property.status === "off_market") {
     return statusLabel ? [statusLabel] : [];
   }
 

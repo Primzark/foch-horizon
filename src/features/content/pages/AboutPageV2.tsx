@@ -53,7 +53,7 @@ export default function AboutPageV2() {
                 commercialisation cohérente et un accompagnement réellement sur mesure.
               </p>
               <p>
-                Pour un achat, une vente ou une location, vous bénéficiez d'un interlocuteur dédié, disponible à chaque étape.
+                Pour votre achat ou votre vente, vous bénéficiez d'un interlocuteur dédié, disponible à chaque étape.
               </p>
               <p>
                 Notre objectif reste constant: défendre vos intérêts, sécuriser les décisions et offrir une expérience premium,

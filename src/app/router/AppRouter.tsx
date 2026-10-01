@@ -73,7 +73,7 @@ export function AppRouter() {
             <Route path="/annonce/:id" element={<LegacyAnnonceRedirect />} />
             <Route path="/biens-immobiliers" element={<Navigate to="/biens" replace />} />
             <Route path="/buy" element={<QueryRedirect to="/biens?transaction=vente" />} />
-            <Route path="/rent" element={<QueryRedirect to="/biens?transaction=location" />} />
+            <Route path="/rent" element={<QueryRedirect to="/biens?transaction=vente" />} />
             <Route path="/property/:slug" element={<LegacyPropertySlugRedirect />} />
 
             <Route path="/apropos" element={<AboutPageV2 />} />

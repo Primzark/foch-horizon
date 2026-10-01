@@ -68,20 +68,13 @@ export const agencyReviewsFallbackSnapshot: AgencyReviewsResponse = {
     },
     {
       id: "fallback-2",
-      authorName: "Proprietaire bailleur",
-      rating: 5,
-      text: "Bonne gestion locative au Havre, mise en location rapide et suivi rigoureux des candidats.",
-      relativePublishTimeDescription: "recent",
-    },
-    {
-      id: "fallback-3",
       authorName: "Vendeur",
       rating: 4,
       text: "Estimation immobiliere Le Havre coherente avec le marche et vente menee dans un delai raisonnable.",
       relativePublishTimeDescription: "recent",
     },
     {
-      id: "fallback-4",
+      id: "fallback-3",
       authorName: "Acquereur",
       rating: 5,
       text: "Equipe reactive sur la recherche de maison au Havre, avec un vrai conseil quartier par quartier.",

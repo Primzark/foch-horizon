@@ -2,7 +2,7 @@ import { useMemo, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, Building2, Compass, Handshake } from "lucide-react";
+import { ArrowRight, Compass, Handshake } from "lucide-react";
 import { GoogleGIcon } from "@/components/branding/GoogleGIcon";
 import { BudgetFinder } from "@/features/content/components/BudgetFinder";
 import { MainSearchBar } from "@/features/content/components/MainSearchBar";
@@ -33,12 +33,6 @@ const serviceCards = [
     description: "Valorisation premium, ciblage qualifié des acquéreurs et pilotage jusqu'à la signature.",
     href: "/vendre",
     icon: Handshake,
-  },
-  {
-    title: "Location",
-    description: "Sélection rigoureuse des candidats et accompagnement complet de la mise en location.",
-    href: "/services",
-    icon: Building2,
   },
 ];
 
@@ -80,7 +74,7 @@ export default function HomePage() {
   useSeo({
     title: "Foch Immobilier | Immobilier d'exception au Havre",
     description:
-      "Depuis 1972, Foch Immobilier accompagne vos projets de vente, location et gestion locative au Havre et sur le littoral.",
+      "Depuis 1972, Foch Immobilier accompagne vendeurs et acquéreurs au Havre et sur le littoral.",
     canonicalPath: "/",
     image: "/images/agence-foch.jpg",
 
@@ -194,7 +188,7 @@ export default function HomePage() {
       </section>
 
       <section className="border-y border-border bg-muted/30">
-        <div className="container mx-auto grid gap-5 px-4 py-10 md:grid-cols-3">
+        <div className="container mx-auto grid gap-5 px-4 py-10 md:grid-cols-2">
           {serviceCards.map((card, index) => (
             <ScrollReveal key={card.title} mood={heroMood} delay={Math.min(index * heroMotionDirector.revealStagger, 0.24)}>
               <Link

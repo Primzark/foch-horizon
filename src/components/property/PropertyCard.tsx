@@ -17,7 +17,6 @@ const PropertyCard = ({ property, variant = "grid" }: PropertyCardProps) => {
   const statusLabels: Record<string, string> = {
     under_offer: "Sous offre",
     sold: "Vendu",
-    rented: "Loué",
   };
 
   const statusLabel = statusLabels[property.status];
@@ -53,7 +52,7 @@ const PropertyCard = ({ property, variant = "grid" }: PropertyCardProps) => {
                 </h3>
               </div>
               <span className="font-display text-2xl font-semibold tracking-tight text-brand-strong">
-                {formatPrice(property.price, property.transaction_type)}
+                {formatPrice(property.price)}
               </span>
             </div>
             <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
@@ -89,7 +88,7 @@ const PropertyCard = ({ property, variant = "grid" }: PropertyCardProps) => {
             </span>
           )}
           <span className="absolute bottom-3 left-3 rounded-md bg-card/90 px-2 py-1 text-xs font-medium text-foreground backdrop-blur-sm">
-            {property.transaction_type === "buy" ? "À vendre" : "À louer"}
+            À vendre
           </span>
         </div>
       </Link>
@@ -119,7 +118,7 @@ const PropertyCard = ({ property, variant = "grid" }: PropertyCardProps) => {
         </div>
         <div className="mt-3 flex items-center justify-between">
           <span className="font-display text-2xl font-semibold tracking-tight text-brand-strong">
-            {formatPrice(property.price, property.transaction_type)}
+            {formatPrice(property.price)}
           </span>
           {agent && <span className="text-xs text-muted-foreground">{agent.name}</span>}
         </div>

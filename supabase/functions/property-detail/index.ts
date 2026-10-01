@@ -21,6 +21,7 @@ Deno.serve(async (request) => {
         "*, city:cities(*), agent:agents(*), images:property_images(*), features:property_features(*)",
       )
       .eq("id", id)
+      .eq("transaction_type", "vente")
       .maybeSingle();
 
     if (error) throw error;

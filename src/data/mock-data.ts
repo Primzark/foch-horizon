@@ -24,8 +24,8 @@ export interface Property {
   id: string;
   ref_id: string;
   slug: string;
-  transaction_type: 'buy' | 'rent';
-  status: 'available' | 'under_offer' | 'sold' | 'rented' | 'archived';
+  transaction_type: 'buy';
+  status: 'available' | 'under_offer' | 'sold' | 'archived';
   title: string;
   city: string;
   area: string;
@@ -96,7 +96,7 @@ export const agents: Agent[] = [
     languages: ["Français", "Anglais", "Allemand"],
     slug: "sophie-martin",
     photo: "",
-    specialty: "Location & investissement",
+    specialty: "Accompagnement acquéreurs",
   },
 ];
 
@@ -166,36 +166,6 @@ export const properties: Property[] = [
     ],
   },
   {
-    id: "3",
-    ref_id: "FI-2024-003",
-    slug: "studio-meuble-centre-ville-le-havre",
-    transaction_type: "rent",
-    status: "available",
-    title: "Studio meublé centre-ville",
-    city: "Le Havre",
-    area: "Centre-ville",
-    postcode: "76600",
-    price: 520,
-    surface_m2: 28,
-    rooms: 1,
-    bedrooms: 0,
-    bathrooms: 1,
-    parking: 0,
-    garage: false,
-    features: ["Meublé", "Internet inclus", "Proche tramway"],
-    description: "Studio entièrement meublé et équipé au cœur du Havre. Idéal pour étudiant ou jeune actif. Comprend un coin nuit, un coin salon, une kitchenette équipée et une salle d'eau avec WC. Proche de toutes commodités et du tramway.",
-    dpe_class: "B",
-    ges_class: "C",
-    lat: 49.4938,
-    lng: 0.1077,
-    agent_id: "2",
-    created_at: "2024-12-01",
-    updated_at: "2024-12-10",
-    images: [
-      { id: "3-1", url: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&h=600&fit=crop", alt: "Studio meublé", sort_order: 0 },
-    ],
-  },
-  {
     id: "4",
     ref_id: "FI-2024-004",
     slug: "appartement-4-pieces-standing-le-havre",
@@ -224,36 +194,6 @@ export const properties: Property[] = [
     images: [
       { id: "4-1", url: "https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?w=800&h=600&fit=crop", alt: "Séjour lumineux", sort_order: 0 },
       { id: "4-2", url: "https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&h=600&fit=crop", alt: "Cuisine aménagée", sort_order: 1 },
-    ],
-  },
-  {
-    id: "5",
-    ref_id: "FI-2024-005",
-    slug: "t3-lumineux-terrasse-harfleur",
-    transaction_type: "rent",
-    status: "available",
-    title: "T3 lumineux avec terrasse",
-    city: "Harfleur",
-    area: "Centre",
-    postcode: "76700",
-    price: 750,
-    surface_m2: 62,
-    rooms: 3,
-    bedrooms: 2,
-    bathrooms: 1,
-    parking: 1,
-    garage: false,
-    features: ["Terrasse", "Place de parking", "Récent"],
-    description: "Appartement T3 récent et lumineux à Harfleur. Séjour avec accès terrasse, cuisine ouverte aménagée, deux chambres, salle de bains. Place de parking privée. Proche commerces et transports.",
-    dpe_class: "B",
-    ges_class: "B",
-    lat: 49.5072,
-    lng: 0.1942,
-    agent_id: "3",
-    created_at: "2024-11-25",
-    updated_at: "2024-12-05",
-    images: [
-      { id: "5-1", url: "https://images.unsplash.com/photo-1600607687644-c7171b42498f?w=800&h=600&fit=crop", alt: "Séjour avec terrasse", sort_order: 0 },
     ],
   },
   {
@@ -305,7 +245,7 @@ export const blogPosts: BlogPost[] = [
     id: "2",
     title: "Nouveau DPE : ce qui change en 2025",
     slug: "nouveau-dpe-ce-qui-change-2025",
-    excerpt: "Le diagnostic de performance énergétique évolue. Découvrez les nouvelles règles et leur impact sur la vente et la location.",
+    excerpt: "Le diagnostic de performance énergétique évolue. Découvrez les nouvelles règles et leur impact sur une vente immobilière.",
     content: "Le DPE fait peau neuve en 2025 avec de nouvelles méthodes de calcul...",
     cover_image: "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=800&h=400&fit=crop",
     published_at: "2024-11-28",
@@ -330,9 +270,9 @@ export const getAgentById = (id: string) => agents.find(a => a.id === id);
 export const getAgentBySlug = (slug: string) => agents.find(a => a.slug === slug);
 export const getBlogPostBySlug = (slug: string) => blogPosts.find(b => b.slug === slug);
 
-export const formatPrice = (price: number, type: 'buy' | 'rent') => {
+export const formatPrice = (price: number) => {
   const formatted = new Intl.NumberFormat('fr-FR').format(price);
-  return type === 'rent' ? `${formatted} €/mois` : `${formatted} €`;
+  return `${formatted} €`;
 };
 
 export const cities = [...new Set(properties.map(p => p.city))];

@@ -22,7 +22,7 @@ const AboutPage = () => {
             Fondée en 1972 par la famille Foch, notre agence est l'une des plus anciennes du Havre. Située au cœur de la ville, avenue Foch, nous sommes fiers de perpétuer une tradition d'excellence et de proximité avec nos clients. Trois générations se sont succédé pour construire une expertise unique du marché immobilier havrais.
           </p>
           <p className="mt-4 leading-relaxed text-muted-foreground">
-            Membre du syndicat professionnel UNIS, nous garantissons à nos clients un service conforme aux plus hauts standards de la profession. Notre connaissance intime du tissu local nous permet de proposer un accompagnement sur mesure, qu'il s'agisse d'achat, de vente ou de location.
+            Membre du syndicat professionnel UNIS, nous garantissons à nos clients un service conforme aux plus hauts standards de la profession. Notre connaissance intime du tissu local nous permet de proposer un accompagnement sur mesure pour l'achat, la vente et l'estimation de biens.
           </p>
         </div>
 

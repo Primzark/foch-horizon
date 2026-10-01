@@ -13,7 +13,6 @@ interface SearchBarProps {
 
 const SearchBar = ({ variant = "hero", className }: SearchBarProps) => {
   const navigate = useNavigate();
-  const [transactionType, setTransactionType] = useState<"buy" | "rent">("buy");
   const [city, setCity] = useState("");
   const [propertyType, setPropertyType] = useState("");
   const [priceMax, setPriceMax] = useState("");
@@ -23,43 +22,13 @@ const SearchBar = ({ variant = "hero", className }: SearchBarProps) => {
     if (city) params.set("city", city);
     if (propertyType) params.set("type", propertyType);
     if (priceMax) params.set("price_max", priceMax);
-    navigate(`/${transactionType}?${params.toString()}`);
+    navigate(`/buy?${params.toString()}`);
   };
 
   const isHero = variant === "hero";
 
   return (
     <div className={cn("w-full", className)}>
-      {/* Toggle */}
-      <div className={cn("mb-4 flex gap-1", isHero ? "justify-center" : "justify-start")}>
-        <button
-          onClick={() => setTransactionType("buy")}
-          className={cn(
-            "rounded-full px-6 py-2 text-sm font-semibold transition-all",
-            transactionType === "buy"
-              ? "bg-accent text-accent-foreground shadow-gold"
-              : isHero
-              ? "bg-card/20 text-primary-foreground/80 hover:bg-card/30"
-              : "bg-muted text-muted-foreground hover:bg-muted/80"
-          )}
-        >
-          Acheter
-        </button>
-        <button
-          onClick={() => setTransactionType("rent")}
-          className={cn(
-            "rounded-full px-6 py-2 text-sm font-semibold transition-all",
-            transactionType === "rent"
-              ? "bg-accent text-accent-foreground shadow-gold"
-              : isHero
-              ? "bg-card/20 text-primary-foreground/80 hover:bg-card/30"
-              : "bg-muted text-muted-foreground hover:bg-muted/80"
-          )}
-        >
-          Louer
-        </button>
-      </div>
-
       {/* Fields */}
       <div
         className={cn(
@@ -102,22 +71,11 @@ const SearchBar = ({ variant = "hero", className }: SearchBarProps) => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="any">Sans limite</SelectItem>
-              {transactionType === "buy" ? (
-                <>
-                  <SelectItem value="150000">150 000 €</SelectItem>
-                  <SelectItem value="250000">250 000 €</SelectItem>
-                  <SelectItem value="400000">400 000 €</SelectItem>
-                  <SelectItem value="600000">600 000 €</SelectItem>
-                  <SelectItem value="1000000">1 000 000 €</SelectItem>
-                </>
-              ) : (
-                <>
-                  <SelectItem value="500">500 €/mois</SelectItem>
-                  <SelectItem value="700">700 €/mois</SelectItem>
-                  <SelectItem value="1000">1 000 €/mois</SelectItem>
-                  <SelectItem value="1500">1 500 €/mois</SelectItem>
-                </>
-              )}
+              <SelectItem value="150000">150 000 €</SelectItem>
+              <SelectItem value="250000">250 000 €</SelectItem>
+              <SelectItem value="400000">400 000 €</SelectItem>
+              <SelectItem value="600000">600 000 €</SelectItem>
+              <SelectItem value="1000000">1 000 000 €</SelectItem>
             </SelectContent>
           </Select>
         </div>

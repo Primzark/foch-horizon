@@ -22,7 +22,7 @@ export interface ChatbotCitation {
 }
 
 export interface ToolSearchParams {
-  transaction?: "vente" | "location";
+  transaction?: "vente";
   type?: "appartement" | "maison_villa" | "autre";
   city?: string;
   q?: string;
@@ -56,7 +56,7 @@ export interface ChatbotConversationState {
     criteriaSummary?: string;
   };
   preferences?: {
-    transaction?: "vente" | "location";
+    transaction?: "vente";
     type?: "appartement" | "maison_villa" | "autre";
     city?: string;
     bedroomsMin?: number;
@@ -414,7 +414,7 @@ export interface ConversationContext {
   budgetMax: number | null;
   bedroomsMin: number | null;
   propertyType: "appartement" | "maison_villa" | null;
-  transactionPreference: "vente" | "location" | null;
+  transactionPreference: "vente" | null;
   district: DistrictDescriptor | null;
   cityRoute: CityRouteDescriptor | null;
   requestedPath: string | null;
@@ -441,15 +441,15 @@ interface SiteTopicDescriptor {
 
 export const chatbotExamplePrompts = [
   "Je cherche un appartement a vendre dans le quartier Perret avec 2 chambres.",
-  "Quel quartier du Havre est le plus adapte pour un investissement locatif ?",
+  "Quel quartier du Havre choisir pour acheter ?",
   "Comment se passe un compromis de vente avec votre agence ?",
-  "Quels services proposez-vous pour la gestion locative au Havre ?",
+  "Quels services proposez-vous pour vendre un bien au Havre ?",
   "Je ne trouve pas de bien adapte, pouvez-vous me rappeler ?",
 ];
 
 const processIntentPattern = /compromis|notaire|process|etape|signature|acte|financement|offre acceptee/;
-const propertyIntentPattern = /appartement|maison|bien|acheter|achat|louer|vente|investissement|studio|t2|t3|t4|chambre|budget|m2|surface|quartier|annonce/;
-const serviceIntentPattern = /service|gestion|location|vendre|estimation|syndic|accompagnement|mandat|mise en vente/;
+const propertyIntentPattern = /appartement|maison|bien|acheter|achat|vente|investissement|studio|t2|t3|t4|chambre|budget|m2|surface|quartier|annonce/;
+const serviceIntentPattern = /service|gestion|administration|syndic|vendre|estimation|accompagnement|mandat|mise en vente/;
 const contactIntentPattern = /contact|telephone|tel|appeler|email|mail|adresse|horaire|ouvert|ouverture|rdv|rendez vous|rappel/;
 const reviewsIntentPattern = /avis|review|google|note|reputation|temoignage/;
 const feesIntentPattern = /honoraire|bareme|frais|commission|pdf/;
@@ -458,7 +458,7 @@ const aboutIntentPattern = /agence|equipe|apropos|a propos|depuis 1972|unis/;
 const siteNavigationIntentPattern = /site|page|rubrique|navigation|plan du site|sitemap|ou trouver|ou puis je|ou puis-je|lien/;
 const directLeadCapturePattern = /ne trouve pas|introuvable|aucun bien|pas de bien|pas adapte|rappeler|etre contacte|etre rappele|laisser mon email|alerte email/;
 const shortFollowUpPattern = /^(et|sinon|plutot|du coup|ok|daccord|avec|sans|plus|moins|meme budget|dans ce cas)/;
-const districtComparisonPattern = /(quel quartier|quels quartiers|meilleur quartier|meilleurs quartiers).*(investissement|locatif|rendement)|investissement locatif/;
+const districtComparisonPattern = /(quel quartier|quels quartiers|meilleur quartier|meilleurs quartiers).*(investissement|achat|acheter)|investissement immobilier/;
 const pageSummaryPattern = /resum|resume|que contient|a quoi sert|explique|detaille|aide moi sur|sur la page/;
 const greetingPattern = /^(bonjour|salut|hello|bonsoir|coucou)\b/;
 const thanksPattern = /\bmerci\b|^\s*top\b|^\s*parfait\b/;
@@ -468,7 +468,7 @@ const sellPagePattern = /vendre|mise en vente|mettre en vente|mandat|vente de mo
 const estimationPagePattern = /estimer|estimation|avis de valeur|combien vaut|valeur de mon bien/;
 const legalIntentPattern = /mentions legales|confidentialite|rgpd|donnees personnelles|cookies|accessibilite|privacy|legal/;
 const selectionIntentPattern = /ma selection|my selection|favoris|wishlist|selection sauvegardee|biens sauvegardes/;
-const cityPageIntentPattern = /immobilier|prix|marche|quartier|investissement|annonce|bien|achat|vente|location|estimation/;
+const cityPageIntentPattern = /immobilier|prix|marche|quartier|investissement|annonce|bien|achat|vente|estimation/;
 const followPathRequestPattern = /ouvre|ouvrir|aller|go|cette page|ce lien|redirige/;
 const internalPathPattern = /(\/[a-z0-9-]+(?:\/[a-z0-9-]+)*(?:\?[a-z0-9=&_-]+)?)/i;
 const internalPathGlobalPattern = /\/[a-z0-9-]+(?:\/[a-z0-9-]+)*(?:\?[a-z0-9=&_-]+)?/gi;
@@ -590,8 +590,8 @@ const siteTopics: SiteTopicDescriptor[] = [
     path: "/biens",
     title: "Catalogue des biens",
     summary:
-      "Catalogue complet avec filtres avances (budget, ville, chambres, type, transaction) et tri pour trouver rapidement un bien.",
-    keywords: ["annonces", "biens", "catalogue", "filtrer", "tri", "vente", "location", "budget", "surface"],
+      "Catalogue des biens à vendre avec filtres (budget, ville, chambres, type) et tri pour trouver rapidement un bien.",
+    keywords: ["annonces", "biens", "catalogue", "filtrer", "tri", "vente", "budget", "surface"],
     suggestedPrompts: ["Ouvrir /biens", "Je veux filtrer par budget", "Je cherche un appartement au Havre"],
   },
   {
@@ -617,9 +617,9 @@ const siteTopics: SiteTopicDescriptor[] = [
     path: "/services",
     title: "Services",
     summary:
-      "Services de transaction, location et administration de biens avec accompagnement commercial, administratif et operationnel.",
-    keywords: ["services", "transaction", "location", "gestion locative", "administration", "accompagnement"],
-    suggestedPrompts: ["Ouvrir /services", "Je veux vendre mon bien", "Je cherche une gestion locative"],
+      "Accompagnement pour l’achat, la vente et l’estimation de biens au Havre.",
+    keywords: ["services", "achat", "vente", "estimation", "accompagnement"],
+    suggestedPrompts: ["Ouvrir /services", "Je veux vendre mon bien", "Je veux faire estimer mon bien"],
   },
   {
     id: "reviews",
@@ -662,7 +662,7 @@ const siteTopics: SiteTopicDescriptor[] = [
     path: "/contact",
     title: "Contact",
     summary:
-      "Coordonnees agence, horaires, carte et formulaire de contact pour transaction, location et gestion.",
+      "Coordonnées, horaires, carte et formulaire de contact pour vos projets d’achat, de vente et d’estimation.",
     keywords: ["contact", "telephone", "email", "adresse", "horaires", "rendez vous", "carte"],
     suggestedPrompts: ["Ouvrir /contact", "Quels sont vos horaires ?", "Je veux etre rappele"],
   },
@@ -857,7 +857,7 @@ function buildPropertyPathTopic(path: string): SiteTopicDescriptor | null {
 
   const city = cityById.get(property.cityId)?.name ?? "Le Havre";
   const canonicalPath = toCanonicalPropertyPath({ id: property.id, slug: property.slug });
-  const transactionLabel = property.transactionType === "location" ? "location" : "vente";
+  const transactionLabel = "vente";
   const propertyTypeLabel = property.propertyType === "maison_villa" ? "Maison / Villa" : "Appartement";
 
   return {
@@ -865,7 +865,7 @@ function buildPropertyPathTopic(path: string): SiteTopicDescriptor | null {
     path: canonicalPath,
     title: property.title,
     summary:
-      `Annonce detaillee du bien ${property.title} a ${city}: ${propertyTypeLabel}, ${transactionLabel}, prix ${formatPrice(property.priceAmount, property.transactionType)}. La fiche contient descriptif, caracteristiques et media.`,
+      `Annonce detaillee du bien ${property.title} a ${city}: ${propertyTypeLabel}, ${transactionLabel}, prix ${formatPrice(property.priceAmount, "vente")}. La fiche contient descriptif, caracteristiques et media.`,
     keywords: [property.title, city, transactionLabel, propertyTypeLabel, "annonce", "details", "prix", "surface"],
     suggestedPrompts: [ `Ouvrir ${canonicalPath}`, "Ouvrir /biens", `Ouvrir /immobilier/${cityById.get(property.cityId)?.slug ?? "le-havre"}`],
   };
@@ -961,10 +961,25 @@ function detectPropertyType(text: string): "appartement" | "maison_villa" | null
   return null;
 }
 
-function detectTransactionPreference(text: string): "vente" | "location" | null {
-  if (/louer|location|locatif|loyer/.test(text)) return "location";
+function detectTransactionPreference(text: string): "vente" | null {
   if (/acheter|achat|vente|vendre|acquerir/.test(text)) return "vente";
   return null;
+}
+
+function isRentalQuestion(text: string): boolean {
+  return /\b(louer|location|locatif|locative|loyer|bailleur|locataire)\b/.test(normalizeKeyword(text));
+}
+
+function buildRentalUnavailableAnswer(): ChatbotReply {
+  return {
+    source: "local",
+    answer: "L’agence Foch Immobilier accompagne les projets d’achat, de vente et d’estimation immobilière.",
+    suggestedPrompts: normalizePromptList([
+      "Voir les biens à vendre",
+      "Je veux vendre mon bien",
+      "Je veux faire estimer mon bien",
+    ]),
+  };
 }
 
 function detectIntent(text: string): ChatbotIntent {
@@ -1048,7 +1063,6 @@ function formatCriteriaSummary(context: ConversationContext): string {
   if (context.propertyType === "appartement") parts.push("appartement");
   if (context.propertyType === "maison_villa") parts.push("maison");
   if (context.transactionPreference === "vente") parts.push("en vente");
-  if (context.transactionPreference === "location") parts.push("en location");
   if (context.bedroomsMin != null) parts.push(`${context.bedroomsMin}+ chambres`);
   if (context.budgetMax != null) parts.push(`budget max ${new Intl.NumberFormat("fr-FR").format(context.budgetMax)} EUR`);
   if (context.district) parts.push(`secteur ${context.district.label}`);
@@ -1059,7 +1073,6 @@ function formatCriteriaSummary(context: ConversationContext): string {
 
 function buildPropertySuggestions(question: string, context: ConversationContext): ChatbotPropertySuggestion[] {
   const normalized = normalizeKeyword(question);
-  const wantsRental = /location|louer|locatif|loyer/.test(normalized) || context.transactionPreference === "location";
   const wantsSale = /vente|acheter|achat|acquerir/.test(normalized) || context.transactionPreference === "vente";
   const bedroomsMin = extractBedrooms(normalized) ?? context.bedroomsMin;
   const budgetMax = extractBudget(normalized) ?? context.budgetMax;
@@ -1073,12 +1086,11 @@ function buildPropertySuggestions(question: string, context: ConversationContext
     Number(Boolean(budgetMax)) +
     Number(Boolean(propertyType)) +
     Number(Boolean(requestedCity)) +
-    Number(Boolean(wantsRental || wantsSale));
+    Number(Boolean(wantsSale));
 
   return properties
-    .filter((property) => property.status === "active")
+    .filter((property) => property.status === "active" && property.transactionType === "vente")
     .filter((property) => {
-      if (wantsRental && property.transactionType !== "location") return false;
       if (wantsSale && property.transactionType !== "vente") return false;
       if (bedroomsMin != null && (property.bedrooms ?? 0) < bedroomsMin) return false;
       if (budgetMax != null && property.priceAmount > budgetMax) return false;
@@ -1259,7 +1271,7 @@ function buildHistoryAnswer(context: ConversationContext): ChatbotReply {
       "La page /geographie présente nos secteurs : Sainte-Adresse, La plage, Les gobelins, Saint Michel, Octeville sur mer, la campagne dans un rayon de 30 km du Havre, de Saint-Romain à Etretat et Deauville–Trouville.",
     suggestedPrompts: normalizePromptList([
       "Quels sont les atouts du quartier Perret ?",
-      "Quel secteur viser pour un investissement locatif ?",
+      "Quel quartier choisir pour acheter ?",
       "Ouvrir /geographie",
     ]),
   };
@@ -1269,7 +1281,7 @@ function buildAboutAnswer(): ChatbotReply {
   return {
     source: "local",
     answer:
-      "Foch Immobilier est une agence du Havre active depuis 1972. L'equipe accompagne la transaction, la location et l'administration de biens. Presentation complete sur /apropos.",
+      "Foch Immobilier est une agence du Havre active depuis 1972. L'equipe accompagne les projets d'achat, de vente et d'estimation. Presentation complete sur /apropos.",
     suggestedPrompts: normalizePromptList([
       "Quels services propose l'agence ?",
       "Comment contacter un conseiller ?",
@@ -1293,7 +1305,7 @@ function buildDistrictComparisonAnswer(): ChatbotReply | null {
   return {
     source: "local",
     answer:
-      `Pour un investissement locatif au Havre, trois secteurs ressortent souvent: ${rankedDistricts[0].name} (demande locative active), ${rankedDistricts[1].name} (renouvellement urbain et petites surfaces) et ${rankedDistricts[2].name} (liquidite patrimoniale forte). Vous pouvez approfondir sur /geographie puis filtrer les annonces sur /biens.`,
+      `Pour un achat au Havre, ${rankedDistricts[0].name}, ${rankedDistricts[1].name} et ${rankedDistricts[2].name} offrent des cadres variés, entre patrimoine, renouvellement urbain et accès aux commerces. Vous pouvez approfondir sur /geographie puis consulter les biens à vendre sur /biens.`,
     suggestedPrompts: normalizePromptList([
       "Quels biens avez-vous dans ces quartiers ?",
       "Je veux un comparatif rendement / budget",
@@ -1419,7 +1431,6 @@ function buildListingsQueryHint(path: string): string {
 
   const transaction = query.get("transaction");
   if (transaction === "vente") hints.push("mode vente");
-  if (transaction === "location") hints.push("mode location");
 
   const citySlug = query.get("city");
   if (citySlug && cityBySlug.has(citySlug)) {
@@ -1541,11 +1552,11 @@ function buildServiceAnswer(): ChatbotReply {
   return {
     source: "local",
     answer:
-      "Nos services couvrent la transaction (achat/vente), la location, la gestion locative et l'estimation. Selon votre besoin: /vendre, /services, /estimation et /contact.",
+      "Nos services couvrent l'achat, la vente et l'estimation immobilière. Selon votre besoin: /vendre, /services, /estimation et /contact.",
     suggestedPrompts: normalizePromptList([
       "Ouvrir /services",
       "Je veux vendre mon bien au Havre",
-      "Pouvez-vous gerer mon bien en location ?",
+      "Je veux faire estimer mon bien",
       "Ouvrir /estimation",
     ]),
   };
@@ -1651,6 +1662,8 @@ function buildFallbackReply(): ChatbotReply {
 }
 
 async function buildLocalReply(question: string, context: ConversationContext): Promise<ChatbotReply> {
+  if (isRentalQuestion(question)) return buildRentalUnavailableAnswer();
+
   if (pageSummaryPattern.test(context.normalizedQuestion)) {
     const pageSummaryReply = buildPageSummaryAnswer(context);
     if (pageSummaryReply) return pageSummaryReply;
@@ -1754,6 +1767,10 @@ function isDeterministicLocalQuestion(context: ConversationContext): boolean {
     context.inferredIntent === "lead_capture" ||
     context.inferredIntent === "property" ||
     context.inferredIntent === "process" ||
+    context.inferredIntent === "service" ||
+    context.inferredIntent === "about" ||
+    context.inferredIntent === "contact" ||
+    context.inferredIntent === "history" ||
     greetingPattern.test(context.normalizedQuestion) ||
     thanksPattern.test(context.normalizedQuestion) ||
     capabilityPattern.test(context.normalizedQuestion) ||
@@ -1862,7 +1879,7 @@ function sanitizeToolSearchParams(raw: unknown): ToolSearchParams | undefined {
   if (!raw || typeof raw !== "object") return undefined;
   const candidate = raw as Record<string, unknown>;
   const params: ToolSearchParams = {};
-  if (candidate.transaction === "vente" || candidate.transaction === "location") params.transaction = candidate.transaction;
+  if (candidate.transaction === "vente") params.transaction = candidate.transaction;
   if (candidate.type === "appartement" || candidate.type === "maison_villa" || candidate.type === "autre") {
     params.type = candidate.type;
   }
@@ -2797,6 +2814,10 @@ export const chatbotServiceTestInternals = {
 };
 
 export async function askAgencyChatbot(request: ChatbotRequest): Promise<ChatbotReply> {
+  if (isRentalQuestion(request.question)) {
+    return normalizeReplyOutput(buildRentalUnavailableAnswer());
+  }
+
   const context = buildConversationContext(request.question, request.chatHistory);
   const edgeRagForWebsiteQuestionsEnabled =
     (import.meta.env.VITE_CHATBOT_ENABLE_EDGE_RAG as string | undefined)?.toLowerCase() === "true";
@@ -3007,6 +3028,10 @@ export async function askAgencyChatbotStream(
   request: ChatbotRequest,
   handlers?: ChatbotStreamHandlers,
 ): Promise<ChatbotReply> {
+  if (isRentalQuestion(request.question)) {
+    return normalizeReplyOutput(buildRentalUnavailableAnswer());
+  }
+
   const context = buildConversationContext(request.question, request.chatHistory);
   const edgeRagForWebsiteQuestionsEnabled =
     (import.meta.env.VITE_CHATBOT_ENABLE_EDGE_RAG as string | undefined)?.toLowerCase() === "true";
