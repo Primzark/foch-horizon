@@ -8,7 +8,7 @@ const siteUrl = (process.env.VITE_PUBLIC_SITE_URL || 'https://foch-horizon.verce
 if (!/^https:\/\//.test(siteUrl) || /localhost|127\.0\.0\.1/.test(siteUrl)) throw new Error('Production VITE_PUBLIC_SITE_URL must be a public HTTPS origin.');
 process.env.VITE_PUBLIC_SITE_URL = siteUrl;
 process.env.NODE_ENV = "production";
-const loader = await createServer({ server: { middlewareMode: true }, appType: 'custom' });
+const loader = await createServer({ optimizeDeps: { noDiscovery: true }, server: { middlewareMode: true }, appType: 'custom' });
 let guides;
 try { ({ geographyGuides: guides } = await loader.ssrLoadModule('/src/features/content/data/geographyGuides.ts')); }
 finally { await loader.close(); }
