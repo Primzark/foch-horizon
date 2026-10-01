@@ -3390,6 +3390,12 @@ export function SiteChatbot() {
                           id="assistant-lead-consent-label"
                           htmlFor="assistant-lead-consent"
                           className="cursor-pointer text-xs font-normal leading-relaxed text-muted-foreground"
+                          onClick={(event) => {
+                            event.preventDefault();
+                            document.getElementById("assistant-lead-consent")?.focus();
+                            setLeadServerError(null);
+                            setLeadConsent((current) => !current);
+                          }}
                         >
                           J’accepte l’utilisation de mes données pour traiter ma demande.
                         </Label>{" "}

@@ -308,7 +308,7 @@ describe("SiteChatbot tool action cards", () => {
     fireEvent.change(screen.getByLabelText("Prénom"), { target: { value: "Camille" } });
     fireEvent.change(screen.getByLabelText("Nom"), { target: { value: "Martin" } });
     fireEvent.change(screen.getByLabelText("Adresse email"), { target: { value: "camille@example.fr" } });
-    fireEvent.click(screen.getByRole("checkbox"));
+    fireEvent.click(screen.getByText(/J’accepte l’utilisation de mes données pour traiter ma demande/i));
     fireEvent.submit(leadForm);
 
     await waitFor(() => expect(submitLeadMock).toHaveBeenCalledTimes(1));

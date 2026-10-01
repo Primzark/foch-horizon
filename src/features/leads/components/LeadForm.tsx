@@ -372,6 +372,12 @@ export function LeadForm({
                     id="lead-consent-label"
                     htmlFor="lead-consent"
                     className="cursor-pointer text-xs font-normal leading-relaxed text-muted-foreground"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      document.getElementById("lead-consent")?.focus();
+                      setServerError(null);
+                      setFormState((current) => ({ ...current, consent: !current.consent }));
+                    }}
                   >
                     J'accepte que mes données soient utilisées pour traiter ma demande.
                   </Label>{" "}

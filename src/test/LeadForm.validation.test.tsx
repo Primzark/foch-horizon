@@ -31,7 +31,7 @@ function enterValidLead() {
   fireEvent.change(screen.getByLabelText(/Email/), { target: { value: "camille@example.fr" } });
   fireEvent.change(screen.getByLabelText(/Téléphone/), { target: { value: "   " } });
   fireEvent.change(document.getElementById("lead-message")!, { target: { value: "Je souhaite vendre mon appartement." } });
-  fireEvent.click(screen.getByRole("checkbox"));
+  fireEvent.click(screen.getByText(/J'accepte que mes données soient utilisées pour traiter ma demande/i));
 }
 
 describe("LeadForm validation", () => {
