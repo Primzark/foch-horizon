@@ -111,6 +111,9 @@ export interface LeadInput {
   phone?: string;
   message: string;
   consent: boolean;
+  /** Honeypot and elapsed-time metadata; removed before local lead persistence. */
+  website?: string;
+  formStartedAt?: number;
   preferredDates?: string[];
   callbackWindow?: string;
   financingStatus?: "not_defined" | "cash" | "mortgage_in_progress" | "needs_financing";

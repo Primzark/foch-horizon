@@ -1,19 +1,22 @@
 import { z } from "https://esm.sh/zod@3.25.76";
 import { createServiceClient } from "../_shared/client.ts";
-import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
+import { consumeRequestLimit, getRequestIpHash, isAllowedSiteOrigin, secureJsonResponse, secureOptionsResponse } from "../_shared/request-security.ts";
 
 const payloadSchema = z.object({
   source: z.enum(["contact_page", "property_page", "estimation", "favorites_share"]),
   propertyId: z.number().int().positive().optional(),
   cityId: z.string().trim().min(1).max(120).optional(),
-  firstName: z.string().min(1),
-  lastName: z.string().min(1),
-  email: z.string().email(),
-  phone: z.string().optional(),
-  message: z.string().min(8).max(2000),
+  firstName: z.string().trim().min(1).max(80),
+  lastName: z.string().trim().min(1).max(80),
+  email: z.string().trim().email().max(254),
+  phone: z.string().trim().max(40).optional(),
+  message: z.string().trim().min(8).max(2000),
   consent: z.literal(true),
-  callbackWindow: z.string().optional(),
-  financingStatus: z.enum(["cash", "mortgage_in_progress", "needs_financing"]).optional(),
+  website: z.string().trim().max(500).optional(),
+  formStartedAt: z.number().int().positive(),
+  preferredDates: z.array(z.string().trim().min(1).max(80)).max(3).optional(),
+  callbackWindow: z.string().trim().max(120).optional(),
+  financingStatus: z.enum(["not_defined", "cash", "mortgage_in_progress", "needs_financing"]).optional(),
   chatbotContext: z
     .object({
       sessionId: z.string().min(1).max(120).optional(),
@@ -46,19 +49,10 @@ const payloadSchema = z.object({
     })
     .strict()
     .optional(),
-});
+}).strict();
 
 const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-function getClientIp(request: Request): string | null {
-  const forwardedFor = request.headers.get("x-forwarded-for");
-  if (forwardedFor) {
-    return forwardedFor.split(",")[0]?.trim() ?? null;
-  }
-
-  return request.headers.get("x-real-ip");
-}
 
 function escapeHtml(value: string): string {
   return value
@@ -82,7 +76,7 @@ async function sendWebhookNotification(payload: z.infer<typeof payloadSchema>, a
       event: "lead_created",
       assignedAgentId,
       createdAt: new Date().toISOString(),
-      lead: payload,
+      lead: Object.fromEntries(Object.entries(payload).filter(([key]) => key !== "website" && key !== "formStartedAt")),
       chatbotContext: payload.chatbotContext ?? null,
     }),
   });
@@ -152,17 +146,74 @@ async function notifyLead(payload: z.infer<typeof payloadSchema>, assignedAgentI
 
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return secureOptionsResponse(request);
   }
 
   if (request.method !== "POST") {
-    return jsonResponse({ ok: false, error: "Method not allowed" }, 405);
+    return secureJsonResponse(request, { ok: false, error: "Method not allowed" }, 405);
+  }
+
+  const expectedProxyToken = (Deno.env.get("LEADS_PROXY_TOKEN") ?? "").trim();
+  const suppliedProxyToken = request.headers.get("x-leads-proxy-token") ?? "";
+  if (!expectedProxyToken || suppliedProxyToken !== expectedProxyToken) {
+    return secureJsonResponse(request, { ok: false, error: "Submission unavailable." }, 403);
+  }
+
+  if (!isAllowedSiteOrigin(request.headers.get("origin"))) {
+    return secureJsonResponse(request, { ok: false, error: "Submission unavailable." }, 403);
+  }
+
+  const contentType = request.headers.get("content-type")?.toLowerCase() ?? "";
+  if (!contentType.includes("application/json")) {
+    return secureJsonResponse(request, { ok: false, error: "Invalid submission." }, 415);
+  }
+
+  const declaredLength = Number(request.headers.get("content-length") ?? 0);
+  if (Number.isFinite(declaredLength) && declaredLength > 16_384) {
+    return secureJsonResponse(request, { ok: false, error: "Invalid submission." }, 413);
+  }
+
+  let rawText: string;
+  try {
+    rawText = await request.text();
+  } catch {
+    return secureJsonResponse(request, { ok: false, error: "Invalid submission." }, 400);
+  }
+  if (new TextEncoder().encode(rawText).byteLength > 16_384) {
+    return secureJsonResponse(request, { ok: false, error: "Invalid submission." }, 413);
+  }
+
+  let rawPayload: unknown;
+  try {
+    rawPayload = JSON.parse(rawText);
+  } catch {
+    return secureJsonResponse(request, { ok: false, error: "Invalid submission." }, 400);
+  }
+
+  const parsedPayload = payloadSchema.safeParse(rawPayload);
+  if (!parsedPayload.success) {
+    return secureJsonResponse(request, { ok: false, error: "Please check the form fields and try again." }, 400);
+  }
+  const payload = parsedPayload.data;
+
+  // Reply normally to common form-filling bots without storing a lead.
+  if (payload.website?.trim()) {
+    return secureJsonResponse(request, { ok: true, leadId: crypto.randomUUID(), assignedAgentId: null });
+  }
+
+  const elapsedMs = Date.now() - payload.formStartedAt;
+  if (elapsedMs < 1_500 || elapsedMs < -60_000) {
+    return secureJsonResponse(request, { ok: false, error: "Please wait a moment and try again." }, 400);
   }
 
   try {
     const supabase = createServiceClient();
-    const rawPayload = await request.json();
-    const payload = payloadSchema.parse(rawPayload);
+    const withinShortLimit = await consumeRequestLimit(supabase, request, "lead-submission-short", 5, 900);
+    const withinDailyLimit = withinShortLimit && await consumeRequestLimit(supabase, request, "lead-submission-daily", 15, 86_400);
+    if (!withinShortLimit || !withinDailyLimit) {
+      return secureJsonResponse(request, { ok: false, error: "Too many requests. Please try again later." }, 429);
+    }
+
     let normalizedCityId: string | null = null;
 
     if (payload.cityId) {
@@ -180,7 +231,7 @@ Deno.serve(async (request) => {
 
         if (cityLookupError) throw cityLookupError;
         if (!cityBySlug) {
-          return jsonResponse({ ok: false, error: `Unknown city slug: ${citySlug}` }, 400);
+          return secureJsonResponse(request, { ok: false, error: "Please check the selected city and try again." }, 400);
         }
 
         normalizedCityId = cityBySlug.id;
@@ -204,8 +255,8 @@ Deno.serve(async (request) => {
       assignedAgentId = fallbackAgent?.[0]?.id ?? null;
     }
 
-    const ipAddress = getClientIp(request);
-    const userAgent = request.headers.get("user-agent");
+    const ipHash = await getRequestIpHash(request);
+    const userAgent = request.headers.get("user-agent")?.slice(0, 500) ?? null;
 
     const { data, error } = await supabase
       .from("leads")
@@ -219,7 +270,7 @@ Deno.serve(async (request) => {
         phone: payload.phone ?? null,
         message: payload.message,
         consent: payload.consent,
-        ip_hash: ipAddress,
+        ip_hash: ipHash,
         user_agent: userAgent,
         assigned_agent_id: assignedAgentId,
         status: assignedAgentId ? "assigned" : "new",
@@ -231,9 +282,9 @@ Deno.serve(async (request) => {
 
     await notifyLead(payload, assignedAgentId);
 
-    return jsonResponse({ ok: true, leadId: data.id, assignedAgentId });
+    return secureJsonResponse(request, { ok: true, leadId: data.id, assignedAgentId });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Internal error";
-    return jsonResponse({ ok: false, error: message }, 400);
+    console.error("Lead submission failed.", error instanceof Error ? error.message : "Unknown error");
+    return secureJsonResponse(request, { ok: false, error: "We could not send your request. Please try again." }, 500);
   }
 });

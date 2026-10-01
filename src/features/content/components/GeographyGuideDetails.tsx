@@ -20,6 +20,10 @@ const guidePrices = [
   { key: "older", title: "Ancien" },
 ] as const;
 
+function formatReviewedAt(date: string): string {
+  return new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(`${date}T00:00:00Z`));
+}
+
 type GeographyGuideDetailsProps = {
   guide: GeographyGuide;
   className?: string;
@@ -34,7 +38,7 @@ export function GeographyGuideDetails({ guide, className = "", headingLevel = 3 
 
   return (
     <div className={className}>
-      {guide.reviewedAt && <p className="mb-4 text-xs text-muted-foreground">Repères locaux vérifiés le <time dateTime={guide.reviewedAt}>30 septembre 2026</time> · Sources officielles citées ci-dessous.</p>}
+      {guide.reviewedAt && <p className="mb-4 text-xs text-muted-foreground">Repères locaux vérifiés le <time dateTime={guide.reviewedAt}>{formatReviewedAt(guide.reviewedAt)}</time> · Sources officielles citées ci-dessous.</p>}
       <div className="grid gap-x-6 gap-y-5 md:grid-cols-2">
         {guideFacts.map((fact) => (
           <section key={fact.key}>

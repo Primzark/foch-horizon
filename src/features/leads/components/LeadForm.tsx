@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
@@ -34,6 +34,8 @@ export function LeadForm({
 }: LeadFormProps) {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const formStartedAtRef = useRef(Date.now());
+  const websiteRef = useRef<HTMLInputElement | null>(null);
   const { reducedMotion } = useMotionPreference();
   const [formState, setFormState] = useState({
     firstName: "",
@@ -67,6 +69,8 @@ export function LeadForm({
         phone: formState.phone || undefined,
         message: formState.message,
         consent: formState.consent,
+        website: websiteRef.current?.value || undefined,
+        formStartedAt: formStartedAtRef.current,
         callbackWindow: formState.callbackWindow || undefined,
         financingStatus:
           formState.financingStatus === "not_defined"
@@ -119,7 +123,16 @@ export function LeadForm({
                 </p>
               </div>
             </div>
-            <Button type="button" variant="brand" className="mt-4" onClick={() => setSubmitted(false)}>
+            <Button
+              type="button"
+              variant="brand"
+              className="mt-4"
+              onClick={() => {
+                formStartedAtRef.current = Date.now();
+                if (websiteRef.current) websiteRef.current.value = "";
+                setSubmitted(false);
+              }}
+            >
               Envoyer une autre demande
             </Button>
           </motion.div>
@@ -133,6 +146,10 @@ export function LeadForm({
             exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -8 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
           >
+            <div aria-hidden="true" className="absolute left-[-10000px] top-auto h-px w-px overflow-hidden">
+              <label htmlFor="lead-website">Votre site web</label>
+              <Input id="lead-website" ref={websiteRef} name="website" tabIndex={-1} autoComplete="off" />
+            </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="lead-first-name">Prénom</Label>

@@ -1,6 +1,6 @@
 import { z } from "https://esm.sh/zod@3.25.76";
 import { createServiceClient } from "../_shared/client.ts";
-import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
+import { consumeRequestLimit, isAllowedSiteOrigin, secureJsonResponse, secureOptionsResponse } from "../_shared/request-security.ts";
 import { parseBedroomsMin, parsePriceHints } from "../_shared/chatbot-search-criteria.ts";
 import {
   computeSharedPropertyAggregateMetrics,
@@ -92,6 +92,7 @@ const payloadSchema = z.object({
         content: z.string().min(1).max(2000),
       }),
     )
+    .max(24)
     .optional(),
   conversationState: conversationStateSchema.optional(),
   actionRequest: actionRequestSchema.optional(),
@@ -5400,16 +5401,56 @@ async function orchestrateToolRequest(input: {
 
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return secureOptionsResponse(request);
   }
 
   if (request.method !== "POST") {
-    return jsonResponse({ ok: false, error: "Method not allowed" }, 405);
+    return secureJsonResponse(request, { ok: false, error: "Method not allowed" }, 405);
   }
 
+  const serviceRoleKey = (Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "").trim();
+  const isTrustedProxyRequest = Boolean(serviceRoleKey) && request.headers.get("authorization") === `Bearer ${serviceRoleKey}`;
+  if (!isTrustedProxyRequest && !isAllowedSiteOrigin(request.headers.get("origin"))) {
+    return secureJsonResponse(request, { ok: false, error: "Request unavailable." }, 403);
+  }
+
+  const contentType = request.headers.get("content-type")?.toLowerCase() ?? "";
+  const declaredLength = Number(request.headers.get("content-length") ?? 0);
+  if (!contentType.includes("application/json") || (Number.isFinite(declaredLength) && declaredLength > 98_304)) {
+    return secureJsonResponse(request, { ok: false, error: "Invalid request." }, 400);
+  }
+
+  let rawText: string;
   try {
-    const rawPayload = await request.json();
-    const payload = payloadSchema.parse(rawPayload);
+    rawText = await request.text();
+  } catch {
+    return secureJsonResponse(request, { ok: false, error: "Invalid request." }, 400);
+  }
+  if (new TextEncoder().encode(rawText).byteLength > 98_304) {
+    return secureJsonResponse(request, { ok: false, error: "Invalid request." }, 413);
+  }
+
+  let rawPayload: unknown;
+  try {
+    rawPayload = JSON.parse(rawText);
+  } catch {
+    return secureJsonResponse(request, { ok: false, error: "Invalid request." }, 400);
+  }
+  const parsedPayload = payloadSchema.safeParse(rawPayload);
+  if (!parsedPayload.success) {
+    return secureJsonResponse(request, { ok: false, error: "Invalid request." }, 400);
+  }
+  const payload = parsedPayload.data;
+
+  try {
+    if (!isTrustedProxyRequest) {
+      const supabase = createServiceClient();
+      const withinLimit = await consumeRequestLimit(supabase, request, "chatbot-requests", 30, 600);
+      if (!withinLimit) {
+        return secureJsonResponse(request, { ok: false, error: "Too many requests. Please try again later." }, 429);
+      }
+    }
+
     const requestId = createRequestId();
 
     let toolResult: ToolOrchestrationResult | null = null;
@@ -5435,7 +5476,7 @@ Deno.serve(async (request) => {
           question: payload.question,
           chatHistory: payload.chatHistory,
         });
-      return jsonResponse({
+      return secureJsonResponse(request, {
         source: "fallback",
         edgeProvider: "fallback",
         retrievalMode: "none",
@@ -5464,7 +5505,7 @@ Deno.serve(async (request) => {
 
     if (!resolveGenerationProvider()) {
       const ragFallback = buildRagFallbackWithoutGeneration(ragContext);
-      return jsonResponse({
+      return secureJsonResponse(request, {
         source: "fallback",
         edgeProvider: "fallback",
         retrievalMode: ragContext.retrievalMode,
@@ -5485,7 +5526,7 @@ Deno.serve(async (request) => {
 
     if (!generationResult) {
       const ragFallback = buildRagFallbackWithoutGeneration(ragContext);
-      return jsonResponse({
+      return secureJsonResponse(request, {
         source: "fallback",
         edgeProvider: "fallback",
         retrievalMode: ragContext.retrievalMode,
@@ -5512,7 +5553,7 @@ Deno.serve(async (request) => {
       chatHistory: payload.chatHistory,
     });
 
-    return jsonResponse({
+    return secureJsonResponse(request, {
       source: generationResult.provider,
       edgeProvider: generationResult.provider,
       answer: generationResult.answer,
@@ -5544,7 +5585,7 @@ Deno.serve(async (request) => {
       streamSupported: parseBooleanEnv("CHATBOT_STREAM_ENABLED", false),
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Internal error";
-    return jsonResponse({ ok: false, error: message }, 400);
+    console.error("Chatbot request failed.", error instanceof Error ? error.message : "Unknown error");
+    return secureJsonResponse(request, { ok: false, error: "The assistant could not complete the request." }, 500);
   }
 });

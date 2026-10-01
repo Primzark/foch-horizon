@@ -47,6 +47,8 @@ export const leadInputSchema = z.object({
   phone: z.string().trim().min(7).optional(),
   message: z.string().trim().min(8).max(2000),
   consent: z.literal(true),
+  website: z.string().max(500).optional(),
+  formStartedAt: z.number().int().positive().optional(),
   preferredDates: z.array(z.string()).max(3).optional(),
   callbackWindow: z.string().max(120).optional(),
   financingStatus: financingStatusSchema.optional(),

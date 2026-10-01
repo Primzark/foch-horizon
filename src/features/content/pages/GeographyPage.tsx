@@ -10,7 +10,7 @@ import { GeographyGuideDetails } from "@/features/content/components/GeographyGu
 import { GeographyMap } from "@/features/content/components/GeographyMap";
 
 const guideSections = [
-  { number: "01", title: "Le Havre et ses quartiers", description: "Du centre reconstruit aux quartiers historiques et au front de mer.", guideIds: ["le-havre", "centre-ville", "halles-centrales", "hotel-de-ville", "notre-dame", "saint-francois", "perrey", "la-plage", "gobelins", "saint-michel"] },
+  { number: "01", title: "Le Havre et ses quartiers", description: "Du centre reconstruit aux quartiers historiques, résidentiels et au front de mer.", guideIds: ["le-havre", "centre-ville", "halles-centrales", "hotel-de-ville", "notre-dame", "saint-francois", "perrey", "danton", "bleville", "la-plage", "gobelins", "saint-michel"] },
   { number: "02", title: "Le littoral et les coteaux", description: "Des communes résidentielles à la côte d’Albâtre.", guideIds: ["sainte-adresse", "octeville-sur-mer", "etretat"] },
   { number: "03", title: "L’agglomération havraise", description: "Villes et communes proches, reliées au Havre par les transports et les services du quotidien.", guideIds: ["montivilliers", "harfleur", "gainneville", "gonfreville-l-orcher", "rogerville", "saint-laurent-de-brevedent", "maneglise"] },
   { number: "04", title: "Entre Le Havre et Saint-Romain", description: "Des bourgs et villages du pays de Caux, à découvrir selon les trajets et les services recherchés.", guideIds: ["saint-romain", "etainhus", "epretot", "saint-aubin-routot", "la-remuee", "gommerville", "la-cerlangue", "les-trois-pierres"] },
@@ -18,8 +18,8 @@ const guideSections = [
 ];
 
 const mapPoints: Record<string, [number, number]> = {
-  "halles-centrales": [49.4897, 0.1089], "hotel-de-ville": [49.4946, 0.1079], "le-havre": [49.4944, 0.1072], "centre-ville": [49.4984, 0.116], "notre-dame": [49.487, 0.115],
-  "saint-francois": [49.4895, 0.120], perrey: [49.498, 0.103], "la-plage": [49.495, 0.080],
+  "halles-centrales": [49.4897, 0.1089], "hotel-de-ville": [49.493132, 0.10811], "le-havre": [49.4944, 0.1072], "centre-ville": [49.4984, 0.116], "notre-dame": [49.487, 0.108333],
+  "saint-francois": [49.4895, 0.120], perrey: [49.488611, 0.099467], danton: [49.494242, 0.121804], bleville: [49.520324, 0.099586], "la-plage": [49.495, 0.080],
   gobelins: [49.4905, 0.094], "saint-michel": [49.500, 0.098], "sainte-adresse": [49.5055, 0.084],
   "octeville-sur-mer": [49.554, 0.145], montivilliers: [49.545, 0.188], maneglise: [49.552, 0.299],
   gainneville: [49.505, 0.25], harfleur: [49.507, 0.20], "gonfreville-l-orcher": [49.506, 0.232],
@@ -51,7 +51,7 @@ const havrePhotos = [
     alt: "Le quartier Saint-François et le bassin du Roy au Havre",
     caption: "Saint-François et le bassin du Roy",
     credit: geographyPhotoCredits.saintFrancois,
-    guideId: "le-havre",
+    guideId: "saint-francois",
     width: 1000,
     height: 664,
   },
@@ -63,6 +63,51 @@ const havrePhotos = [
     guideId: "la-plage",
     width: 1000,
     height: 664,
+  },
+  {
+    src: "/images/geography/hotel-de-ville.webp",
+    alt: "Jardins et place de l’Hôtel de Ville du Havre",
+    caption: "La place de l’Hôtel de Ville",
+    credit: geographyPhotoCredits.hotelDeVille,
+    guideId: "hotel-de-ville",
+    width: 1000,
+    height: 643,
+  },
+  {
+    src: "/images/geography/notre-dame-cathedral.webp",
+    alt: "Façade occidentale de la cathédrale Notre-Dame du Havre",
+    caption: "La cathédrale Notre-Dame",
+    credit: geographyPhotoCredits.notreDame,
+    guideId: "notre-dame",
+    width: 900,
+    height: 1182,
+  },
+  {
+    src: "/images/geography/perrey-residence-de-france.webp",
+    alt: "La Résidence de France dans le quartier Perrey au Havre",
+    caption: "La Résidence de France, au Perrey",
+    credit: geographyPhotoCredits.perrey,
+    guideId: "perrey",
+    width: 1000,
+    height: 666,
+  },
+  {
+    src: "/images/geography/danton-simone-veil-construction.webp",
+    alt: "Chantier du pôle Simone-Veil, rue Lesueur, dans le quartier Danton en 2019",
+    caption: "Le pôle Simone-Veil en construction (2019), à Danton",
+    credit: geographyPhotoCredits.danton,
+    guideId: "danton",
+    width: 1000,
+    height: 666,
+  },
+  {
+    src: "/images/geography/bleville-home.webp",
+    alt: "Maison individuelle rue du Maréchal-Lyautey, dans le quartier du Bois de Bléville au Havre",
+    caption: "Une maison du Bois de Bléville",
+    credit: geographyPhotoCredits.bleVille,
+    guideId: "bleville",
+    width: 1000,
+    height: 563,
   },
 ];
 

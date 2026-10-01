@@ -1,5 +1,5 @@
-import { Suspense, lazy } from "react";
-import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router-dom";
+import { Suspense, lazy, useLayoutEffect, useRef } from "react";
+import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation, useNavigationType } from "react-router-dom";
 import { AppLayout } from "@/layout/AppLayout";
 import { CookieConsentManager } from "@/layout/CookieConsentManager";
 import { LegacyAnnonceRedirect, LegacyPropertySlugRedirect, QueryRedirect } from "@/app/router/LegacyRedirects";
@@ -33,9 +33,35 @@ function LayoutShell() {
   );
 }
 
+function RouteScrollManager() {
+  const location = useLocation();
+  const navigationType = useNavigationType();
+  const previousLocation = useRef(location);
+  const scrollPositions = useRef(new Map<string, number>());
+
+  useLayoutEffect(() => {
+    if (typeof window === "undefined") return;
+    window.history.scrollRestoration = "manual";
+
+    const previous = previousLocation.current;
+    if (previous.key === location.key) return;
+
+    scrollPositions.current.set(previous.key, window.scrollY);
+    if (navigationType === "POP") {
+      window.scrollTo(0, scrollPositions.current.get(location.key) ?? 0);
+    } else if (previous.pathname !== location.pathname) {
+      window.scrollTo(0, 0);
+    }
+    previousLocation.current = location;
+  }, [location, navigationType]);
+
+  return null;
+}
+
 export function AppRouter() {
   return (
     <BrowserRouter>
+      <RouteScrollManager />
       <CookieConsentManager />
       <Suspense fallback={<RouteLoadingScreen fullscreen />}>
         <Routes>

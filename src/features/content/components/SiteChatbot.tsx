@@ -1038,7 +1038,6 @@ export function SiteChatbot() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [input, setInput] = useState("");
-  const [showTestPanel, setShowTestPanel] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>(() => readStoredMessages());
   const [conversationState, setConversationState] = useState<ChatbotConversationState>(() => readStoredConversationState());
   const [showLeadCapture, setShowLeadCapture] = useState(false);
@@ -1049,6 +1048,8 @@ export function SiteChatbot() {
     email: "",
     criteria: "",
   });
+  const leadFormStartedAtRef = useRef(Date.now());
+  const leadWebsiteRef = useRef<HTMLInputElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const requestSequenceRef = useRef(0);
@@ -1060,6 +1061,13 @@ export function SiteChatbot() {
   const sessionIdRef = useRef<string>(readOrCreateChatbotSessionId());
   const conversationIdRef = useRef<string>(createMessageId());
   const [pendingFeedbackMessageId, setPendingFeedbackMessageId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (showLeadCapture) {
+      leadFormStartedAtRef.current = Date.now();
+      if (leadWebsiteRef.current) leadWebsiteRef.current.value = "";
+    }
+  }, [showLeadCapture]);
 
   const appendMessage = useCallback((message: ChatMessage) => {
     setMessages((current) => trimMessages([...current, message]));
@@ -1880,6 +1888,8 @@ export function SiteChatbot() {
         email: leadForm.email,
         message: `Demande chatbot - aucun bien trouvé\n\nCritères: ${leadForm.criteria}`,
         consent: true,
+        website: leadWebsiteRef.current?.value || undefined,
+        formStartedAt: leadFormStartedAtRef.current,
         chatbotContext: buildLeadChatbotContext(),
       });
 
@@ -2920,42 +2930,6 @@ export function SiteChatbot() {
               </div>
             </header>
 
-            <div className="border-b border-border/70 px-4 py-2">
-              <button
-                type="button"
-                aria-expanded={showTestPanel}
-                aria-controls="assistant-test-panel"
-                onClick={() => setShowTestPanel((visible) => !visible)}
-                className="text-xs font-medium text-brand-strong underline-offset-2 hover:underline"
-              >
-                Ajouter volet (test)
-              </button>
-              {showTestPanel && (
-                <div id="assistant-test-panel" className="mt-2 rounded-xl border border-border bg-muted/40 p-3">
-                  <p className="text-xs text-muted-foreground">Choisissez une question pour préparer un essai avec l’assistant.</p>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {[
-                      "Quels biens sont disponibles au Havre ?",
-                      "Comment obtenir un avis de valeur ?",
-                      "Quels quartiers connaissez-vous autour du Havre ?",
-                    ].map((question) => (
-                      <button
-                        key={question}
-                        type="button"
-                        onClick={() => {
-                          setInput(question);
-                          setShowTestPanel(false);
-                        }}
-                        className="rounded-lg border border-border bg-background px-2.5 py-1.5 text-left text-xs hover:border-brand-strong"
-                      >
-                        {question}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
             {CHATBOT_PERSISTENT_MEMORY_ENABLED &&
               (conversationState.preferences?.city ||
               conversationState.preferences?.transaction ||
@@ -3239,6 +3213,10 @@ export function SiteChatbot() {
                 </p>
 
                 <form onSubmit={handleLeadSubmit} className="mt-3 space-y-2.5">
+                  <div aria-hidden="true" className="absolute left-[-10000px] top-auto h-px w-px overflow-hidden">
+                    <label htmlFor="assistant-website">Votre site web</label>
+                    <Input id="assistant-website" ref={leadWebsiteRef} name="website" tabIndex={-1} autoComplete="off" />
+                  </div>
                   <div className="grid grid-cols-2 gap-2">
                     <Input
                       placeholder="Prénom"

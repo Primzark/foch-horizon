@@ -94,17 +94,13 @@ describe("SiteChatbot tool action cards", () => {
     vi.restoreAllMocks();
   });
 
-  it("opens the test panel and prepares a question without sending it", async () => {
+  it("does not expose the internal test prompt panel", async () => {
     await renderChatbot();
     fireEvent.click(screen.getByRole("button", { name: /Assistant immobilier IA/i }));
-    fireEvent.click(await screen.findByRole("button", { name: "Ajouter volet (test)" }));
 
-    const question = screen.getByRole("button", { name: "Comment obtenir un avis de valeur ?" });
-    fireEvent.click(question);
-
-    expect(screen.getByPlaceholderText(/Posez une question/)).toHaveValue("Comment obtenir un avis de valeur ?");
-    expect(screen.getByRole("button", { name: "Ajouter volet (test)" })).toHaveAttribute("aria-expanded", "false");
-    expect(askAgencyChatbotMock).not.toHaveBeenCalled();
+    expect(screen.getByPlaceholderText(/Posez une question/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Ajouter volet (test)" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Comment obtenir un avis de valeur ?" })).not.toBeInTheDocument();
   });
 
   it("sends aggregate_properties when clicking 'Voir les stats' from search results", async () => {

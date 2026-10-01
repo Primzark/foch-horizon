@@ -34,10 +34,6 @@
       "destination": "https://rcrulfdobtmfxzpuyryn.supabase.co/functions/v1/properties-search"
     },
     {
-      "source": "/api/leads",
-      "destination": "https://rcrulfdobtmfxzpuyryn.supabase.co/functions/v1/leads-create"
-    },
-    {
       "source": "/api/google-reviews",
       "destination": "https://rcrulfdobtmfxzpuyryn.supabase.co/functions/v1/google-reviews"
     },
@@ -62,7 +58,7 @@
       "destination": "/:page/index.html"
     },
     {
-      "source": "/immobilier/:ville(le-havre|sainte-adresse|la-plage|gobelins|saint-michel|octeville-sur-mer|montivilliers|maneglise|gainneville|saint-romain|etretat|deauville|trouville|halles-centrales|hotel-de-ville|notre-dame|saint-francois|perrey|centre-ville|harfleur|gonfreville-l-orcher|rogerville|saint-laurent-de-brevedent|etainhus|epretot|saint-aubin-routot|la-remuee|gommerville|la-cerlangue|les-trois-pierres)",
+      "source": "/immobilier/:ville(le-havre|sainte-adresse|la-plage|gobelins|saint-michel|octeville-sur-mer|montivilliers|maneglise|gainneville|saint-romain|etretat|deauville|trouville|halles-centrales|hotel-de-ville|notre-dame|saint-francois|perrey|danton|bleville|centre-ville|harfleur|gonfreville-l-orcher|rogerville|saint-laurent-de-brevedent|etainhus|epretot|saint-aubin-routot|la-remuee|gommerville|la-cerlangue|les-trois-pierres)",
       "destination": "/immobilier/:ville/index.html"
     },
     {
@@ -72,6 +68,15 @@
   ],
   "buildCommand": "npm run build",
   "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
+        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" }
+      ]
+    },
     {
       "source": "/admin/:path*",
       "headers": [

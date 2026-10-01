@@ -44,8 +44,12 @@ function assignAgent(input: LeadInput): string | null {
 }
 
 export async function submitLead(input: LeadInput): Promise<{ ok: true; leadId: string; assignedAgentId: string | null }> {
-  leadInputSchema.parse(input);
-  const payload: LeadInput = input;
+  const validatedInput = leadInputSchema.parse(input);
+  const payload: LeadInput = { ...validatedInput, formStartedAt: validatedInput.formStartedAt ?? Date.now() };
+
+  if (payload.website?.trim()) {
+    return { ok: true, leadId: crypto.randomUUID(), assignedAgentId: null };
+  }
 
   if (isEdgeApiEnabled()) {
     return apiJson<{ ok: true; leadId: string; assignedAgentId: string | null }>("/api/leads", {
@@ -57,9 +61,12 @@ export async function submitLead(input: LeadInput): Promise<{ ok: true; leadId: 
   await apiDelay();
 
   const assignedAgentId = assignAgent(payload);
+  const localPayload = { ...payload };
+  delete localPayload.website;
+  delete localPayload.formStartedAt;
 
   const record: LeadRecord = {
-    ...payload,
+    ...localPayload,
     id: crypto.randomUUID(),
     createdAt: new Date().toISOString(),
     assignedAgentId,

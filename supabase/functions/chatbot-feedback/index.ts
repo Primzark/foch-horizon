@@ -1,6 +1,6 @@
 import { z } from "https://esm.sh/zod@3.25.76";
 import { createServiceClient } from "../_shared/client.ts";
-import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
+import { consumeRequestLimit, isAllowedSiteOrigin, secureJsonResponse, secureOptionsResponse } from "../_shared/request-security.ts";
 
 const eventTypeSchema = z.enum([
   "reply_received",
@@ -56,11 +56,11 @@ const eventSchema = z.object({
   feedbackValue: z.union([z.literal(1), z.literal(-1)]).optional(),
   feedbackReason: z.string().min(1).max(160).optional(),
   metadata: z.record(z.string(), z.unknown()).optional(),
-});
+}).strict();
 
 const payloadSchema = z.object({
   events: z.array(eventSchema).min(1).max(20),
-});
+}).strict();
 
 function normalizeRow(input: z.infer<typeof eventSchema>) {
   return {
@@ -90,25 +90,59 @@ function normalizeRow(input: z.infer<typeof eventSchema>) {
 
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return secureOptionsResponse(request);
   }
 
   if (request.method !== "POST") {
-    return jsonResponse({ ok: false, error: "Method not allowed" }, 405);
+    return secureJsonResponse(request, { ok: false, error: "Method not allowed" }, 405);
+  }
+
+  if (!isAllowedSiteOrigin(request.headers.get("origin"))) {
+    return secureJsonResponse(request, { ok: false, error: "Request unavailable." }, 403);
+  }
+
+  const declaredLength = Number(request.headers.get("content-length") ?? 0);
+  if (Number.isFinite(declaredLength) && declaredLength > 65_536) {
+    return secureJsonResponse(request, { ok: false, error: "Invalid request." }, 413);
+  }
+
+  let rawText: string;
+  try {
+    rawText = await request.text();
+  } catch {
+    return secureJsonResponse(request, { ok: false, error: "Invalid request." }, 400);
+  }
+  if (new TextEncoder().encode(rawText).byteLength > 65_536) {
+    return secureJsonResponse(request, { ok: false, error: "Invalid request." }, 413);
+  }
+
+  let rawPayload: unknown;
+  try {
+    rawPayload = JSON.parse(rawText);
+  } catch {
+    return secureJsonResponse(request, { ok: false, error: "Invalid request." }, 400);
+  }
+
+  const parsedPayload = payloadSchema.safeParse(rawPayload);
+  if (!parsedPayload.success) {
+    return secureJsonResponse(request, { ok: false, error: "Invalid request." }, 400);
   }
 
   try {
-    const rawPayload = await request.json();
-    const payload = payloadSchema.parse(rawPayload);
     const supabase = createServiceClient();
+    const withinLimit = await consumeRequestLimit(supabase, request, "chatbot-feedback", 60, 600);
+    if (!withinLimit) {
+      return secureJsonResponse(request, { ok: false, error: "Too many requests. Please try again later." }, 429);
+    }
 
+    const payload = parsedPayload.data;
     const rows = payload.events.map(normalizeRow);
     const { error } = await supabase.from("chatbot_quality_events").insert(rows);
     if (error) throw error;
 
-    return jsonResponse({ ok: true, inserted: rows.length });
+    return secureJsonResponse(request, { ok: true, inserted: rows.length });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Internal error";
-    return jsonResponse({ ok: false, error: message }, 400);
+    console.error("Chatbot feedback submission failed.", error instanceof Error ? error.message : "Unknown error");
+    return secureJsonResponse(request, { ok: false, error: "Feedback could not be saved." }, 500);
   }
 });

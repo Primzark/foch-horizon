@@ -1,5 +1,6 @@
 import { z } from "https://esm.sh/zod@3.25.76";
-import { corsHeaders } from "../_shared/cors.ts";
+import { createServiceClient } from "../_shared/client.ts";
+import { consumeRequestLimit, getSiteCorsHeaders, isAllowedSiteOrigin, secureJsonResponse, secureOptionsResponse } from "../_shared/request-security.ts";
 
 const streamPayloadSchema = z.object({
   question: z.string().min(2).max(1200),
@@ -10,6 +11,7 @@ const streamPayloadSchema = z.object({
         content: z.string().min(1).max(2000),
       }),
     )
+    .max(24)
     .optional(),
   conversationState: z.record(z.string(), z.unknown()).optional(),
   actionRequest: z.record(z.string(), z.unknown()).optional(),
@@ -53,37 +55,56 @@ function splitTextIntoChunks(text: string): string[] {
 
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") {
-    return new Response(null, {
-      headers: {
-        ...corsHeaders,
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-      },
-    });
+    return secureOptionsResponse(request);
   }
 
   if (request.method !== "POST") {
-    return new Response(JSON.stringify({ ok: false, error: "Method not allowed" }), {
-      status: 405,
-      headers: {
-        ...corsHeaders,
-        "Content-Type": "application/json",
-      },
-    });
+    return secureJsonResponse(request, { ok: false, error: "Method not allowed" }, 405);
   }
 
-  let payload: z.infer<typeof streamPayloadSchema>;
-  try {
-    payload = streamPayloadSchema.parse(await request.json());
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Invalid payload";
-    return new Response(JSON.stringify({ ok: false, error: message }), {
-      status: 400,
-      headers: {
-        ...corsHeaders,
-        "Content-Type": "application/json",
-      },
-    });
+  if (!isAllowedSiteOrigin(request.headers.get("origin"))) {
+    return secureJsonResponse(request, { ok: false, error: "Request unavailable." }, 403);
   }
+
+  const contentType = request.headers.get("content-type")?.toLowerCase() ?? "";
+  const declaredLength = Number(request.headers.get("content-length") ?? 0);
+  if (!contentType.includes("application/json") || (Number.isFinite(declaredLength) && declaredLength > 98_304)) {
+    return secureJsonResponse(request, { ok: false, error: "Invalid request." }, 400);
+  }
+
+  try {
+    const supabase = createServiceClient();
+    const withinLimit = await consumeRequestLimit(supabase, request, "chatbot-requests", 30, 600);
+    if (!withinLimit) {
+      return secureJsonResponse(request, { ok: false, error: "Too many requests. Please try again later." }, 429);
+    }
+  } catch (error) {
+    console.error("Chatbot rate-limit check failed.", error instanceof Error ? error.message : "Unknown error");
+    return secureJsonResponse(request, { ok: false, error: "The assistant is temporarily unavailable." }, 503);
+  }
+
+  let rawText: string;
+  try {
+    rawText = await request.text();
+  } catch {
+    return secureJsonResponse(request, { ok: false, error: "Invalid request." }, 400);
+  }
+  if (new TextEncoder().encode(rawText).byteLength > 98_304) {
+    return secureJsonResponse(request, { ok: false, error: "Invalid request." }, 413);
+  }
+
+  let rawPayload: unknown;
+  try {
+    rawPayload = JSON.parse(rawText);
+  } catch {
+    return secureJsonResponse(request, { ok: false, error: "Invalid request." }, 400);
+  }
+
+  const parsedPayload = streamPayloadSchema.safeParse(rawPayload);
+  if (!parsedPayload.success) {
+    return secureJsonResponse(request, { ok: false, error: "Invalid request." }, 400);
+  }
+  const payload: z.infer<typeof streamPayloadSchema> = parsedPayload.data;
 
   const supabaseUrl = (Deno.env.get("SUPABASE_URL") ?? "").trim();
   const serviceRoleKey = (Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "").trim();
@@ -107,10 +128,8 @@ Deno.serve(async (request) => {
           return;
         }
 
-        const forwardedApiKey = request.headers.get("apikey")?.trim() || "";
-        const forwardedAuth = request.headers.get("authorization")?.trim() || "";
-        const proxyApiKey = forwardedApiKey || serviceRoleKey;
-        const proxyAuth = forwardedAuth || (serviceRoleKey ? `Bearer ${serviceRoleKey}` : "");
+        const proxyApiKey = serviceRoleKey;
+        const proxyAuth = `Bearer ${serviceRoleKey}`;
         const proxyController = new AbortController();
         const proxyTimeoutId = setTimeout(() => proxyController.abort(), Number.isFinite(proxyTimeoutMs) ? proxyTimeoutMs : 20000);
         send("status", { phase: "searching" });
@@ -206,10 +225,10 @@ Deno.serve(async (request) => {
           ok: true,
           reply: data,
         });
-      } catch (error) {
+      } catch {
         send("error", {
           code: "stream_exception",
-          message: error instanceof Error ? error.message : "Streaming error",
+          message: "The assistant is temporarily unavailable.",
         });
         send("done", { ok: false });
       } finally {
@@ -223,7 +242,7 @@ Deno.serve(async (request) => {
 
   return new Response(stream, {
     headers: {
-      ...corsHeaders,
+      ...getSiteCorsHeaders(request),
       "Content-Type": "text/event-stream; charset=utf-8",
       "Cache-Control": "no-cache, no-transform",
       Connection: "keep-alive",

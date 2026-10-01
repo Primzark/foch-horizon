@@ -18,7 +18,6 @@ const legalLinks = [
 const quickLinks = [
   ...primaryLinks.map(({ to, label }) => ({ href: to, label })),
   { href: "/avis", label: "Avis clients" },
-  { href: "/biens-sauvegardes", label: "Biens sauvegardés" },
   { href: "/services", label: "Services" },
   { href: "/immobilier/le-havre", label: "Immobilier au Havre" },
   { href: "/apropos", label: "À propos" },
