@@ -136,7 +136,7 @@ export default function GeographyPage() {
             <div className="mt-6 overflow-hidden rounded-xl border border-border bg-background">
               <GeographyMap locations={geographyMapLocations} />
             </div>
-            <p className="mt-2 text-xs text-muted-foreground">{geographyMapLocations.length} villes et quartiers · Repères communaux situés en mairie ; quartiers indicatifs. Sélectionnez un repère pour ouvrir son guide.</p>
+            <p className="mt-2 text-xs text-muted-foreground">{geographyMapLocations.length} villes et quartiers · Pour une commune, le repère indique la mairie ; dans un quartier, il est indicatif. Sélectionnez un point pour ouvrir son guide.</p>
           </div>
 
           <div className="divide-y divide-border border-y border-border">
@@ -208,10 +208,7 @@ export default function GeographyPage() {
                         <div className="min-w-0">
                           <h4 className="font-display text-xl md:text-2xl">{guide.name}</h4>
                           <span className="mt-1 block text-sm text-muted-foreground">{guide.subtitle}</span>
-                          <span className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                            <span className="font-medium text-brand-strong">{guide.averagePrice}</span>
-                            <span>{guide.area}</span>
-                          </span>
+                          <span className="mt-3 block text-xs text-muted-foreground">{guide.area}</span>
                         </div>
                         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border text-brand-strong transition-transform group-open:rotate-180" aria-hidden="true">
                           <ArrowRight className="h-4 w-4 rotate-90" />

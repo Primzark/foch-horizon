@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
-import { atLocation, ofLocation } from "@/lib/utils/frenchLocation";
-import { communeByGuideId, isHavreNeighborhood } from "@/lib/seo/entities";
+import { atLocation } from "@/lib/utils/frenchLocation";
+import { isHavreNeighborhood } from "@/lib/seo/entities";
 import { MoveUpRight } from "lucide-react";
 import { geographyGuides, type GeographyGuide } from "@/features/content/data/geographyGuides";
 
@@ -27,10 +27,10 @@ type GeographyGuideDetailsProps = {
 };
 
 export function GeographyGuideDetails({ guide, className = "", headingLevel = 3 }: GeographyGuideDetailsProps) {
-  const commune = communeByGuideId.get(guide.id);
   const Heading = `h${headingLevel}` as "h3" | "h4" | "h5";
   const searchParams = new URLSearchParams({ ...(guide.listingSearch.city ? { city: guide.listingSearch.city } : {}), ...(guide.listingSearch.query ? { q: guide.listingSearch.query } : {}) });
-  const priceItems = guide.priceBreakdown ?? guidePrices.map((price) => ({ label: price.title, value: guide[price.key] }));
+  const priceItems = (guide.priceBreakdown ?? guidePrices.map((price) => ({ label: price.title, value: guide[price.key] })))
+    .filter((price) => price.value.trim() !== guide.averagePrice.trim());
 
   return (
     <div className={className}>
@@ -52,19 +52,21 @@ export function GeographyGuideDetails({ guide, className = "", headingLevel = 3 
       <section className="mt-6 border-t border-border pt-5" aria-labelledby={`guide-prices-${guide.id}`}>
         <div className="flex flex-wrap items-end justify-between gap-3 border-l-2 border-brand bg-brand-soft/30 px-4 py-3">
           <div>
-            <Heading id={`guide-prices-${guide.id}`} className="font-display text-xl">Repères de prix par type de bien</Heading>
+            <Heading id={`guide-prices-${guide.id}`} className="font-display text-xl">Prix indicatif et repères par type de bien</Heading>
             <p className="mt-1 max-w-3xl text-xs leading-relaxed text-muted-foreground"><ContextualText text={guide.marketBasis} /></p>
           </div>
           <span className="font-display text-xl font-semibold tracking-tight text-brand-strong">{guide.averagePrice}</span>
         </div>
-        <dl className="mt-3 grid divide-y divide-border border-y border-border sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-3">
-          {priceItems.map((price) => (
-            <div key={price.label} className="py-3 sm:px-3">
-              <dt className="text-xs font-semibold text-foreground">{price.label}</dt>
-              <dd className="mt-1 text-sm leading-relaxed text-muted-foreground"><ContextualText text={price.value} /></dd>
-            </div>
-          ))}
-        </dl>
+        {priceItems.length > 0 && (
+          <dl className="mt-3 grid divide-y divide-border border-y border-border sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-3">
+            {priceItems.map((price) => (
+              <div key={price.label} className="py-3 sm:px-3">
+                <dt className="text-xs font-semibold text-foreground">{price.label}</dt>
+                <dd className="mt-1 text-sm leading-relaxed text-muted-foreground"><ContextualText text={price.value} /></dd>
+              </div>
+            ))}
+          </dl>
+        )}
       </section>
 
       <section className="mt-6 border-t border-border pt-5" aria-label={`Projet immobilier : ${guide.name}`}>
@@ -89,7 +91,6 @@ export function GeographyGuideDetails({ guide, className = "", headingLevel = 3 
         })}</p>}
       </section>
 
-      {commune && <p className="mt-4 text-xs text-muted-foreground">Repère communal : <a className="underline underline-offset-4" href={`https://www.openstreetmap.org/?mlat=${commune.latitude}&mlon=${commune.longitude}#map=14/${commune.latitude}/${commune.longitude}`} target="_blank" rel="noopener noreferrer">situer la mairie {ofLocation(commune.name)}</a> · Code INSEE {commune.code} · <a className="underline underline-offset-4" href={commune.source} target="_blank" rel="noopener noreferrer">source géographique officielle</a>.</p>}
       <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 border-t border-border pt-4 text-sm">
         <a className="inline-flex items-center gap-1 text-brand-strong underline underline-offset-4" href={guide.link.href} target="_blank" rel="noreferrer">
           {guide.link.label}<MoveUpRight aria-hidden="true" className="h-3.5 w-3.5" />

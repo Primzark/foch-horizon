@@ -11,8 +11,8 @@ export function RouteLoadingScreen({ fullscreen = false, className }: RouteLoadi
   return (
     <div
       className={cn(
-        "pointer-events-none flex items-center justify-center bg-background/95 backdrop-blur-sm",
-        fullscreen ? "fixed inset-0 z-[120]" : "min-h-[52vh]",
+        "flex items-center justify-center bg-background/95 backdrop-blur-sm",
+        fullscreen ? "fixed inset-0 z-[200]" : "min-h-[52vh]",
         className,
       )}
       role="status"
