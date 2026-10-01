@@ -14,6 +14,7 @@ import {
   leHavreHistoryPhotos,
   leHavreHistoryTimeline,
 } from "@/features/content/data/leHavreHistoryContent";
+import { PhotoAttribution } from "@/features/content/components/PhotoAttribution";
 
 const photosById = new Map(leHavreHistoryPhotos.map((photo) => [photo.id, photo]));
 
@@ -237,9 +238,14 @@ export default function LeHavreHistoryPage() {
                     </div>
                     <figcaption className="space-y-2 p-3 text-xs text-muted-foreground">
                       <p>{photo?.caption}</p>
-                      <p>
-                        Source photo: <a href={photo?.sourceUrl} target="_blank" rel="noreferrer" className="underline">{photo?.author}</a> ({photo?.license})
-                      </p>
+                      {photo && <PhotoAttribution credit={{
+                        title: photo.title,
+                        creator: photo.author,
+                        sourceUrl: photo.sourceUrl,
+                        license: photo.license,
+                        licenseUrl: photo.licenseUrl,
+                        modification: photo.modification,
+                      }} />}
                     </figcaption>
                   </figure>
                 ))}

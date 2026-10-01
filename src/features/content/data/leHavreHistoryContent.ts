@@ -3,10 +3,16 @@ export interface HistoryPhotoAsset {
   src: string;
   alt: string;
   caption: string;
+  title: string;
   author: string;
   license: string;
   sourceUrl: string;
+  licenseUrl?: string;
+  modification: string;
 }
+
+const bySaLicense = (version: "2.0" | "3.0" | "4.0") => `https://creativecommons.org/licenses/by-sa/${version}/deed.fr`;
+const resizedPhotoModification = "Fichier redimensionné pour le site; cadrage ajusté selon l’affichage";
 
 export interface DistrictHistorySection {
   id: string;
@@ -26,72 +32,94 @@ export const leHavreHistoryPhotos: HistoryPhotoAsset[] = [
     src: "/images/le-havre-history/architecture-perret.jpg",
     alt: "Architecture Perret au Havre, façades reconstruites et trame urbaine moderne",
     caption: "Trame architecturale du quartier Perret, cœur du marché immobilier du centre reconstruit.",
+    title: "Architecture Perret Au Havre (180697579).jpeg",
     author: "Philippe Roudaut",
-    license: "CC0",
+    license: "CC0 1.0",
     sourceUrl: "https://commons.wikimedia.org/wiki/File:Architecture_Perret_Au_Havre_(180697579).jpeg",
+    licenseUrl: "https://creativecommons.org/publicdomain/zero/1.0/deed.fr",
+    modification: resizedPhotoModification,
   },
   {
     id: "saint-francois-bassin",
     src: "/images/le-havre-history/saint-francois-bassin-du-roy.jpg",
     alt: "Quartier Saint-Francois et Bassin du Roy au Havre",
     caption: "Saint-François conjugue patrimoine maritime, immeubles anciens et forte demande locative.",
-    author: "Philippe Ales",
+    title: "Le Havre (France), quarter Saint-François and Bassin du Roy.JPG",
+    author: "Philippe Alès",
     license: "CC BY-SA 3.0",
     sourceUrl: "https://commons.wikimedia.org/wiki/File:Le_Havre_(France),_quarter_Saint-Fran%C3%A7ois_and_Bassin_du_Roy.JPG",
+    licenseUrl: bySaLicense("3.0"),
+    modification: resizedPhotoModification,
   },
   {
     id: "saint-vincent-place",
     src: "/images/le-havre-history/place-saint-vincent.jpg",
     alt: "Place Saint-Vincent au Havre, architecture résidentielle près de la plage",
     caption: "Saint-Vincent attire les acquéreurs en quête d'un appartement proche de la mer.",
-    author: "Philippe Ales",
+    title: "Place Saint-Vincent (France).jpg",
+    author: "Philippe Alès",
     license: "CC BY-SA 4.0",
     sourceUrl: "https://commons.wikimedia.org/wiki/File:Place_Saint-Vincent_(France).jpg",
+    licenseUrl: bySaLicense("4.0"),
+    modification: resizedPhotoModification,
   },
   {
     id: "hotel-ville",
     src: "/images/le-havre-history/hotel-de-ville.jpg",
     alt: "Hôtel de ville du Havre dans le secteur Perret",
     caption: "Le secteur Hôtel de Ville reste une référence pour l'achat d'appartements au Havre centre.",
+    title: "Le Havre - l'hôtel de ville.jpg",
     author: "Ronan L.",
     license: "CC BY-SA 2.0",
     sourceUrl: "https://commons.wikimedia.org/wiki/File:Le_Havre_-_l%27h%C3%B4tel_de_ville.jpg",
+    licenseUrl: bySaLicense("2.0"),
+    modification: resizedPhotoModification,
   },
   {
     id: "docks-vauban",
     src: "/images/le-havre-history/docks-vauban.jpg",
     alt: "Docks Vauban au Havre, reconversion urbaine et commerces",
     caption: "Le quartier de l'Eure et les Docks Vauban structurent un nouveau pôle immobilier au Havre.",
-    author: "Philippe Ales",
+    title: "Docks Vauban au Havre.jpg",
+    author: "Philippe Alès",
     license: "CC BY-SA 4.0",
     sourceUrl: "https://commons.wikimedia.org/wiki/File:Docks_Vauban_au_Havre.jpg",
+    licenseUrl: bySaLicense("4.0"),
+    modification: resizedPhotoModification,
   },
   {
     id: "bassin-commerce",
     src: "/images/le-havre-history/bassin-du-commerce.jpg",
     alt: "Bassin du Commerce au Havre avec front urbain reconstruit",
     caption: "Autour du Bassin du Commerce, la demande reste soutenue pour l'investissement locatif havrais.",
+    title: "Le Havre Bassin du Commerce.jpg",
     author: "Gfmorin",
-    license: "Public domain",
+    license: "Domaine public",
     sourceUrl: "https://commons.wikimedia.org/wiki/File:Le_Havre_Bassin_du_Commerce.jpg",
+    modification: resizedPhotoModification,
   },
   {
     id: "saint-joseph",
     src: "/images/le-havre-history/eglise-saint-joseph.jpg",
     alt: "Église Saint-Joseph du Havre, symbole du patrimoine Perret",
     caption: "Le patrimoine Perret autour de Saint-Joseph soutient la valeur immobilière du centre-ville.",
-    author: "Aerith (transfer to Commons)",
-    license: "Public domain",
+    title: "Eglise saint joseph du Havre.jpg",
+    author: "Aerith (compte source indiqué sur Commons)",
+    license: "Domaine public",
     sourceUrl: "https://commons.wikimedia.org/wiki/File:Eglise_saint_joseph_du_Havre.jpg",
+    modification: resizedPhotoModification,
   },
   {
     id: "panorama-havre",
     src: "/images/le-havre-history/panorama-le-havre.jpg",
     alt: "Panorama urbain du Havre, front de mer, bassins et quartiers résidentiels",
     caption: "Vue d'ensemble du marché immobilier havrais, entre centre reconstruit, mer et côte.",
+    title: "Panorama of Le Havre, September 2019.jpg",
     author: "Martin Falbisoner",
     license: "CC BY-SA 4.0",
     sourceUrl: "https://commons.wikimedia.org/wiki/File:Panorama_of_Le_Havre,_September_2019.jpg",
+    licenseUrl: bySaLicense("4.0"),
+    modification: resizedPhotoModification,
   },
 ];
 

@@ -4,7 +4,8 @@ import { ArrowRight, MoveUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSeo, getSiteUrl } from "@/lib/seo/useSeo";
 import { StorefrontPageHero } from "@/features/content/components/StorefrontPageHero";
-import { geographyGuides, geographyPriceMethod } from "@/features/content/data/geographyGuides";
+import { geographyGuides, geographyPhotoCredits, geographyPriceMethod } from "@/features/content/data/geographyGuides";
+import { PhotoAttribution } from "@/features/content/components/PhotoAttribution";
 import { GeographyGuideDetails } from "@/features/content/components/GeographyGuideDetails";
 import { GeographyMap } from "@/features/content/components/GeographyMap";
 
@@ -40,8 +41,7 @@ const havrePhotos = [
     src: "/images/geography/architecture-perret.webp",
     alt: "Façades de l’architecture Perret au Havre",
     caption: "Le centre reconstruit",
-    author: "Philippe Roudaut · CC0",
-    href: "https://commons.wikimedia.org/wiki/File:Architecture_Perret_Au_Havre_(180697579).jpeg",
+    credit: geographyPhotoCredits.perret,
     guideId: "le-havre",
     width: 1000,
     height: 750,
@@ -50,8 +50,7 @@ const havrePhotos = [
     src: "/images/geography/saint-francois.webp",
     alt: "Le quartier Saint-François et le bassin du Roy au Havre",
     caption: "Saint-François et le bassin du Roy",
-    author: "Philippe Ales · CC BY-SA 3.0",
-    href: "https://commons.wikimedia.org/wiki/File:Le_Havre_(France),_quarter_Saint-Fran%C3%A7ois_and_Bassin_du_Roy.JPG",
+    credit: geographyPhotoCredits.saintFrancois,
     guideId: "le-havre",
     width: 1000,
     height: 664,
@@ -60,8 +59,7 @@ const havrePhotos = [
     src: "/images/geography/saint-vincent.webp",
     alt: "Place Saint-Vincent au Havre, près de la plage",
     caption: "Saint-Vincent, près de la plage",
-    author: "Philippe Ales · CC BY-SA 4.0",
-    href: "https://commons.wikimedia.org/wiki/File:Place_Saint-Vincent_(France).jpg",
+    credit: geographyPhotoCredits.saintVincent,
     guideId: "la-plage",
     width: 1000,
     height: 664,
@@ -242,7 +240,7 @@ export default function GeographyPage() {
               <figcaption className="flex items-start justify-between gap-3 p-4">
                 <div>
                   <h3 className="font-medium">{photo.caption}</h3>
-                  <a className="mt-1 inline-block text-xs text-muted-foreground underline underline-offset-2" href={photo.href} target="_blank" rel="noreferrer">Photo : {photo.author} · source</a>
+                  <PhotoAttribution credit={photo.credit} className="mt-1 text-muted-foreground" />
                 </div>
                 <Link to={`/immobilier/${photo.guideId}`} aria-label={`Voir les informations sur ${photo.caption}`} className="rounded-full p-2 text-brand-strong hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                   <ArrowRight aria-hidden="true" className="h-4 w-4" />

@@ -23,7 +23,6 @@ export interface Agent {
   mobile: string;
   email: string;
   facebookUrl?: string;
-  portraitUrl: string;
   bio: string;
   isActive: boolean;
   cityIds: string[];

@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Download, ExternalLink, Facebook } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { agents } from "@/features/listings/data/agents";
+import { AgentInitialsAvatar } from "@/features/listings/components/AgentInitialsAvatar";
 import { useSeo } from "@/lib/seo/useSeo";
 import { AgencyPageHeader } from "@/features/content/components/AgencyPageHeader";
 
@@ -99,7 +100,7 @@ export default function AboutPageV2() {
                 className="group relative overflow-hidden rounded-2xl border border-border bg-card p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_58px_-42px_rgba(20,33,46,0.7)]"
               >
                 <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-r from-accent/10 via-transparent to-accent/10 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                <img src={agent.portraitUrl} alt={agent.fullName} className="relative h-16 w-16 rounded-full object-cover" loading="lazy" />
+                <AgentInitialsAvatar name={agent.fullName} className="relative h-16 w-16 text-sm" />
                 <h3 className="mt-3 font-display text-2xl">{agent.fullName}</h3>
                 <p className="text-sm text-muted-foreground">{agent.role}</p>
                 <p className="mt-3 text-sm text-muted-foreground">{agent.bio}</p>

@@ -5,7 +5,17 @@ import Layout from "@/components/layout/Layout";
 import SearchBar from "@/components/property/SearchBar";
 import PropertyCard from "@/components/property/PropertyCard";
 import { properties, blogPosts } from "@/data/mock-data";
-import heroImage from "@/assets/hero-le-havre.jpg";
+import { PhotoAttribution } from "@/features/content/components/PhotoAttribution";
+
+const heroImage = "/images/dufy-final-pick.jpg";
+const heroImageCredit = {
+  title: "L’Estacade et la Plage du Havre — œuvre de Raoul Dufy photographiée par Martpan",
+  creator: "Raoul Dufy (œuvre), Martpan (photographie)",
+  sourceUrl: "https://commons.wikimedia.org/wiki/File:Le_Havre_Mus%C3%A9e_d%27art_moderne_Dufy.jpg",
+  license: "CC BY-SA 4.0",
+  licenseUrl: "https://creativecommons.org/licenses/by-sa/4.0/deed.fr",
+  modification: "Fichier redimensionné et recadré pour la bannière",
+};
 
 const Index = () => {
   const latestListings = properties.filter(p => p.status === "available").slice(0, 3);
@@ -20,6 +30,9 @@ const Index = () => {
           className="absolute inset-0 h-full w-full object-cover"
         />
         <div className="absolute inset-0" style={{ background: "var(--gradient-hero)" }} />
+        <div className="absolute right-4 top-4 z-20 max-w-[min(25rem,calc(100%-2rem))] rounded-lg bg-black/60 px-3 py-2 text-white/90 backdrop-blur-sm">
+          <PhotoAttribution credit={heroImageCredit} />
+        </div>
         <div className="relative z-10 w-full max-w-4xl px-4 py-20 text-center">
           <motion.h1
             initial={{ opacity: 0, y: 20 }}

@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">Illustration originale d’un paysage du pays de Caux</title>
+  <desc id="desc">Illustration de collines douces, d’un bourg normand et d’un clocher sous un ciel lumineux.</desc>
+  <defs>
+    <linearGradient id="sky" x2="0" y2="1">
+      <stop stop-color="#7597a0"/>
+      <stop offset="1" stop-color="#e3d5b4"/>
+    </linearGradient>
+    <linearGradient id="field" x2="0" y2="1">
+      <stop stop-color="#829875"/>
+      <stop offset="1" stop-color="#344f46"/>
+    </linearGradient>
+    <linearGradient id="light" x2="1" y2="1">
+      <stop stop-color="#f2dfb6" stop-opacity=".6"/>
+      <stop offset="1" stop-color="#f2dfb6" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#sky)"/>
+  <circle cx="1235" cy="185" r="92" fill="#efdcb5" opacity=".8"/>
+  <path d="M0 450c215-115 389-71 582-16 176 50 338 62 516-6 193-74 333-48 502 16v456H0Z" fill="#a8ad91"/>
+  <path d="M0 540c202-101 377-61 583 4 231 73 378 37 555-44 189-86 319-37 462 24v376H0Z" fill="url(#field)"/>
+  <path d="M0 660c276-104 481-53 723 16 229 65 414 54 877-88v312H0Z" fill="#566d59"/>
+  <path d="M0 716c259-73 464-31 702 34 263 72 470 47 898-62v212H0Z" fill="#293f3d"/>
+  <path d="M800 555c192-53 345-47 534 12" fill="none" stroke="#d5c39b" stroke-width="9" opacity=".7"/>
+  <g stroke="#eee1c8" stroke-width="5" stroke-linejoin="round">
+    <path d="M305 565v-85l77-54 78 54v85Z" fill="#a75d48"/>
+    <path d="M382 426v-46l21-26 22 26v46Z" fill="#695a4b"/>
+    <path d="M472 583v-102l86-60 85 60v102Z" fill="#bd7257"/>
+    <path d="M558 422v-62l26-33 27 33v62Z" fill="#70624f"/>
+    <path d="M610 588v-72l68-49 69 49v72Z" fill="#915b4e"/>
+    <path d="M678 467v-36l21-26 22 26v36Z" fill="#70624f"/>
+    <path d="M742 572v-92l75-52 75 52v92Z" fill="#b86d53"/>
+    <path d="M819 428v-83l28-38 29 38v83Z" fill="#776650"/>
+    <path d="M847 300v-74" fill="none" stroke-width="7"/>
+    <path d="M837 236h20l-10-17Z" fill="#eee1c8" stroke-width="3"/>
+    <path d="M918 592v-83l72-49 71 49v83Z" fill="#a95f4b"/>
+  </g>
+  <g fill="#263c3b" opacity=".75">
+    <rect x="352" y="506" width="22" height="32" rx="2"/>
+    <rect x="406" y="506" width="22" height="32" rx="2"/>
+    <rect x="529" y="514" width="23" height="35" rx="2"/>
+    <rect x="586" y="514" width="23" height="35" rx="2"/>
+    <rect x="800" y="505" width="20" height="31" rx="2"/>
+    <rect x="866" y="505" width="20" height="31" rx="2"/>
+    <rect x="975" y="526" width="21" height="33" rx="2"/>
+  </g>
+  <path d="M0 0h1600v900H0Z" fill="url(#light)"/>
+</svg>

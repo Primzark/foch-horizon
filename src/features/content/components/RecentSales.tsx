@@ -4,6 +4,8 @@ import { ArrowRight, BedDouble, MapPin, Maximize } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { ScrollReveal } from "@/components/visuals/ScrollReveal";
+import { geographyPhotoCredits } from "@/features/content/data/geographyGuides";
+import { PhotoAttribution } from "@/features/content/components/PhotoAttribution";
 import { getRecentSales } from "@/features/content/api/recentSales.service";
 import { searchProperties } from "@/features/listings/api/properties.service";
 import { formatPrice, formatPropertyTypeLabel, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
@@ -114,15 +116,9 @@ export function RecentSales({ compact = false }: { compact?: boolean }) {
                   />
                   <p className="bg-white px-2 py-1.5 text-[10px] font-medium text-slate-800">Le centre reconstruit</p>
                 </div>
-                <figcaption className="absolute bottom-5 left-5 max-w-[55%] text-[10px] leading-relaxed text-white/90 drop-shadow">
-                  <a
-                    href="https://commons.wikimedia.org/wiki/File:Panorama_of_Le_Havre,_September_2019.jpg"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="underline decoration-white/50 underline-offset-2 hover:decoration-white"
-                  >
-                    Panorama du Havre · Martin Falbisoner · CC BY-SA 4.0
-                  </a>
+                <figcaption className="absolute bottom-5 left-5 max-w-[64%] space-y-1 text-white/90 drop-shadow">
+                  <PhotoAttribution credit={geographyPhotoCredits.panorama} />
+                  <PhotoAttribution credit={geographyPhotoCredits.perret} />
                 </figcaption>
               </figure>
               <div className="flex flex-col justify-center p-6 md:p-8 lg:p-10">

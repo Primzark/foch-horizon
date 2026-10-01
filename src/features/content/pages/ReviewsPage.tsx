@@ -5,6 +5,8 @@ import { Clock3, ExternalLink, MapPin, MessageSquareQuote, Navigation, ShieldChe
 import { GoogleGIcon } from "@/components/branding/GoogleGIcon";
 import { getAgencyReviews } from "@/features/content/api/googleReviews.service";
 import { heroScenicImages } from "@/features/content/data/heroScenicImages";
+import { leHavreHistoryPhotos } from "@/features/content/data/leHavreHistoryContent";
+import { PhotoAttribution, type PhotoAttributionCredit } from "@/features/content/components/PhotoAttribution";
 import { getSiteUrl, useSeo } from "@/lib/seo/useSeo";
 import { cn } from "@/lib/utils";
 import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
@@ -18,6 +20,7 @@ const REVIEW_COLLAPSE_CHAR_THRESHOLD = 250;
 type ReviewCardVisualPreset = {
   accentImageUrl: string;
   accentLabel: string;
+  credit: PhotoAttributionCredit;
   accentHeightClass: string;
   accentPositionClass: string;
   wrapperOffsetClass: string;
@@ -123,6 +126,8 @@ function buildTextureStyle(seed: number): CSSProperties {
 function getReviewCardVisualPreset(reviewId: string, index: number): ReviewCardVisualPreset {
   const seed = hashString(`${reviewId}:${index}`);
   const scenic = heroScenicImages[seed % heroScenicImages.length];
+  const photo = leHavreHistoryPhotos.find((item) => item.src === scenic.imageUrl);
+  if (!photo) throw new Error(`Crédit photo manquant pour l’image d’avis « ${scenic.id} »`);
   const accentHeightClass = ["h-20", "h-24", "h-28"][seed % 3] ?? "h-24";
   const accentPositionClass = ["bg-center", "bg-[center_32%]", "bg-[center_58%]"][seed % 3] ?? "bg-center";
   const wrapperOffsetClass =
@@ -139,6 +144,14 @@ function getReviewCardVisualPreset(reviewId: string, index: number): ReviewCardV
   return {
     accentImageUrl: scenic.imageUrl,
     accentLabel,
+    credit: {
+      title: photo.title,
+      creator: photo.author,
+      sourceUrl: photo.sourceUrl,
+      license: photo.license,
+      licenseUrl: photo.licenseUrl,
+      modification: photo.modification,
+    },
     accentHeightClass,
     accentPositionClass,
     wrapperOffsetClass,
@@ -482,6 +495,7 @@ export default function ReviewsPage() {
                               {visual.accentLabel}
                             </div>
                           </div>
+                          <PhotoAttribution credit={visual.credit} className="px-3 py-2 text-muted-foreground" />
                         </div>
 
                         <div className="pr-10">

@@ -7,7 +7,7 @@ export const cities: City[] = [
     slug: "le-havre",
     postalCodes: ["76600", "76610", "76620"],
     isActive: true,
-    heroImageUrl: "https://foch.staticlbi.com/original/images/header/1.jpg",
+    heroImageUrl: "/images/geography/pays-de-caux-original.svg",
   },
   {
     id: "city-sainte-adresse",
@@ -15,7 +15,7 @@ export const cities: City[] = [
     slug: "sainte-adresse",
     postalCodes: ["76310"],
     isActive: true,
-    heroImageUrl: "https://foch.staticlbi.com/original/images/header/1.jpg",
+    heroImageUrl: "/images/geography/pays-de-caux-original.svg",
   },
   {
     id: "city-montivilliers",
@@ -23,7 +23,7 @@ export const cities: City[] = [
     slug: "montivilliers",
     postalCodes: ["76290"],
     isActive: true,
-    heroImageUrl: "https://foch.staticlbi.com/original/images/header/1.jpg",
+    heroImageUrl: "/images/geography/pays-de-caux-original.svg",
   },
   {
     id: "city-maneglise",
@@ -31,7 +31,7 @@ export const cities: City[] = [
     slug: "maneglise",
     postalCodes: ["76133"],
     isActive: true,
-    heroImageUrl: "https://foch.staticlbi.com/original/images/header/1.jpg",
+    heroImageUrl: "/images/geography/pays-de-caux-original.svg",
   },
   {
     id: "city-gainneville",
@@ -39,7 +39,7 @@ export const cities: City[] = [
     slug: "gainneville",
     postalCodes: ["76700"],
     isActive: true,
-    heroImageUrl: "https://foch.staticlbi.com/original/images/header/1.jpg",
+    heroImageUrl: "/images/geography/pays-de-caux-original.svg",
   },
 ];
 

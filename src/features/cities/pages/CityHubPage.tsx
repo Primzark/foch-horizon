@@ -19,6 +19,7 @@ import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
 import { getMotionDirectorProfile } from "@/lib/visuals/motionDirector";
 import { geographyGuides, type GeographyPhotoCredit } from "@/features/content/data/geographyGuides";
 import { GeographyGuideDetails } from "@/features/content/components/GeographyGuideDetails";
+import { PhotoAttribution } from "@/features/content/components/PhotoAttribution";
 
 type LocationHeroProps = {
   pageTitle: string;
@@ -105,16 +106,9 @@ function LocationHero({ pageTitle, locationName, locationSlug, locationLabel, im
         }}
       />
       {credit && (
-        <div className="absolute right-3 top-3 z-[4] rounded-full bg-black/50 px-2.5 py-1 text-[10px] text-white/90 backdrop-blur-sm">
+        <div className="absolute right-3 top-3 z-[4] max-w-[min(24rem,calc(100%-1.5rem))] rounded-lg bg-black/60 px-3 py-2 text-white/90 backdrop-blur-sm">
           <span className="sr-only">Crédit photo : </span>
-          <a href={credit.sourceUrl} target="_blank" rel="noreferrer" className="underline decoration-white/50 underline-offset-2">
-            {credit.creator}
-          </a>
-          <span aria-hidden="true"> · </span>
-          <a href={credit.licenseUrl} target="_blank" rel="noreferrer" className="underline decoration-white/50 underline-offset-2">
-            {credit.license}
-          </a>
-          <span className="ml-1 text-white/75" title={credit.modification}>· adaptée</span>
+          <PhotoAttribution credit={credit} />
         </div>
       )}
       <div className="absolute inset-0 z-[3] flex flex-col justify-end p-6 text-white md:p-8">
@@ -174,7 +168,7 @@ export default function CityHubPage() {
     title: cityGuide || city ? `${pageTitle} | Foch Immobilier` : "Ville introuvable | Foch Immobilier",
     description: cityGuide ? `${cityGuide.subtitle}. Habitat, écoles, commerces, déplacements et repères immobiliers.` : `Découvrez nos biens et notre accompagnement immobilier ${atLocation(city?.name ?? "Le Havre")}.`,
     canonicalPath: `/immobilier/${cityGuide?.id ?? citySlug}`,
-    image: cityGuide?.heroImage.src ?? city?.heroImageUrl,
+    image: "/images/agence-foch.jpg",
     noIndex: !cityGuide && !city,
     jsonLd: cityGuide ? {
       "@context": "https://schema.org",
@@ -277,7 +271,7 @@ export default function CityHubPage() {
         locationSlug={cityGuide?.id ?? city.slug}
         locationLabel={getLocationLabel(cityGuide)}
         imageUrl={cityGuide?.heroImage.src ?? city.heroImageUrl}
-        imageAlt={cityGuide?.heroImage.alt ?? `Vue sur ${city.name}`}
+        imageAlt={cityGuide?.heroImage.alt ?? `Illustration originale du cadre de vie à ${city.name}`}
         credit={cityGuide?.heroImage.credit}
         reducedMotion={reducedMotion}
       />

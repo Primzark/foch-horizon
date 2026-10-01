@@ -11,8 +11,7 @@ interface SeoOptions {
   type?: "website" | "article";
 }
 
-const defaultOgImage =
-  "https://storage.googleapis.com/gpt-engineer-file-uploads/1c5Ul6EafQQxFKZpYyK1fNvJX4a2/social-images/social-1771265379992-fochimmobilier-agence-immobiliere-le-havre-76_2.webp";
+const defaultOgImage = "/images/agence-foch.jpg";
 
 function normalizeSiteUrl(value: string): string {
   return value.replace(/\/+$/, "");

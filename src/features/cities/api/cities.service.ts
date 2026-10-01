@@ -3,7 +3,7 @@ import { apiJson, isEdgeApiEnabled } from "@/lib/api/client";
 import type { City } from "@/types/domain";
 
 const apiDelay = (ms = 120) => new Promise((resolve) => setTimeout(resolve, ms));
-const defaultHeroImageUrl = cities[0]?.heroImageUrl ?? "";
+const defaultHeroImageUrl = "/images/geography/pays-de-caux-original.svg";
 
 type EdgeCityRow = {
   id?: string | null;
@@ -30,10 +30,7 @@ function mapEdgeCityRowToDomain(row: EdgeCityRow): City {
         ? row.postal_codes.map((value) => value.trim()).filter((value) => value.length > 0)
         : (localFallback?.postalCodes ?? []),
     isActive: typeof row.is_active === "boolean" ? row.is_active : (localFallback?.isActive ?? true),
-    heroImageUrl:
-      typeof row.hero_image_url === "string" && row.hero_image_url.trim().length > 0
-        ? row.hero_image_url.trim()
-        : (localFallback?.heroImageUrl ?? defaultHeroImageUrl),
+    heroImageUrl: localFallback?.heroImageUrl ?? defaultHeroImageUrl,
   };
 }
 

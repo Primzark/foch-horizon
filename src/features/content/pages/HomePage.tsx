@@ -8,6 +8,7 @@ import { BudgetFinder } from "@/features/content/components/BudgetFinder";
 import { MainSearchBar } from "@/features/content/components/MainSearchBar";
 import { getFeaturedProperties } from "@/features/listings/api/properties.service";
 import { ListingCard } from "@/features/listings/components/ListingCard";
+import { AgentInitialsAvatar } from "@/features/listings/components/AgentInitialsAvatar";
 import { properties } from "@/features/listings/data/properties";
 import { agents } from "@/features/listings/data/agents";
 import { toSearchItem } from "@/features/listings/utils/mappers";
@@ -18,6 +19,7 @@ import { inferPlaceImageMood } from "@/lib/visuals/placeImageMotion";
 import { ScrollReveal } from "@/components/visuals/ScrollReveal";
 import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
 import { getMotionDirectorProfile } from "@/lib/visuals/motionDirector";
+import { PhotoAttribution, type PhotoAttributionCredit } from "@/features/content/components/PhotoAttribution";
 
 const serviceCards = [
   {
@@ -41,6 +43,14 @@ const serviceCards = [
 ];
 
 const HERO_IMAGE_URL = "/images/dufy-final-pick.jpg";
+const HERO_IMAGE_CREDIT: PhotoAttributionCredit = {
+  title: "L’Estacade et la Plage du Havre — œuvre de Raoul Dufy photographiée par Martpan",
+  creator: "Raoul Dufy (œuvre), Martpan (photographie)",
+  sourceUrl: "https://commons.wikimedia.org/wiki/File:Le_Havre_Mus%C3%A9e_d%27art_moderne_Dufy.jpg",
+  license: "CC BY-SA 4.0",
+  licenseUrl: "https://creativecommons.org/licenses/by-sa/4.0/deed.fr",
+  modification: "Fichier redimensionné et recadré pour la bannière",
+};
 
 export default function HomePage() {
   const featuredQuery = useQuery({
@@ -72,7 +82,7 @@ export default function HomePage() {
     description:
       "Depuis 1972, Foch Immobilier accompagne vos projets de vente, location et gestion locative au Havre et sur le littoral.",
     canonicalPath: "/",
-    image: HERO_IMAGE_URL,
+    image: "/images/agence-foch.jpg",
 
   });
 
@@ -88,6 +98,10 @@ export default function HomePage() {
           fetchPriority="high"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-black/38 via-black/16 to-black/0" />
+        <div className="absolute right-3 top-3 z-[6] max-w-[min(25rem,calc(100%-1.5rem))] rounded-lg bg-black/60 px-3 py-2 text-white/90 backdrop-blur-sm md:right-5 md:top-5">
+          <span className="sr-only">Crédit photo : </span>
+          <PhotoAttribution credit={HERO_IMAGE_CREDIT} />
+        </div>
         <div className="page-banner container relative z-[5] mx-auto flex flex-col justify-center px-4 py-5 md:py-8">
           <motion.h1
             initial={{ opacity: 0, y: 12 }}
@@ -252,11 +266,7 @@ export default function HomePage() {
           {agents.map((agent, index) => (
             <ScrollReveal key={agent.id} mood={heroMood} delay={Math.min(index * heroMotionDirector.revealStagger, 0.25)}>
               <article className="group rounded-2xl border border-border p-5 transition-all duration-300 hover:-translate-y-1 hover:border-brand-border hover:shadow-[0_18px_40px_-34px_hsl(var(--brand)/0.3)]">
-                <img
-                  src={agent.portraitUrl}
-                  alt={agent.fullName}
-                  className="h-16 w-16 rounded-full object-cover transition-transform duration-300 group-hover:scale-105"
-                />
+                <AgentInitialsAvatar name={agent.fullName} className="h-16 w-16 text-sm transition-transform duration-300 group-hover:scale-105" />
                 <h3 className="mt-3 font-display text-xl">{agent.fullName}</h3>
                 <p className="text-sm text-muted-foreground">{agent.role}</p>
                 <a className="mt-2 block text-sm hover:underline" href={`tel:${agent.phone.replace(/\s+/g, "")}`}>

@@ -28,6 +28,7 @@ export type GeographyGuide = {
 };
 
 export type GeographyPhotoCredit = {
+  title: string;
   creator: string;
   sourceUrl: string;
   license: string;
@@ -36,19 +37,34 @@ export type GeographyPhotoCredit = {
 };
 
 const commonsCredit = (creator: string, fileTitle: string, licenseVersion: "2.0" | "3.0" | "4.0"): GeographyPhotoCredit => ({
+  title: fileTitle,
   creator,
   sourceUrl: `https://commons.wikimedia.org/wiki/File:${encodeURIComponent(fileTitle.replace(/ /g, "_"))}`,
   license: `CC BY-SA ${licenseVersion}`,
-  licenseUrl: `https://creativecommons.org/licenses/by-sa/${licenseVersion}/`,
-  modification: "Redimensionnée et convertie en WebP",
+  licenseUrl: `https://creativecommons.org/licenses/by-sa/${licenseVersion}/deed.fr`,
+  modification: "Fichier redimensionné et converti en WebP; cadrage adapté à l’affichage",
 });
 
 const commonsZeroCredit: GeographyPhotoCredit = {
+  title: "Architecture Perret Au Havre (180697579).jpeg",
   creator: "Philippe Roudaut",
   sourceUrl: "https://commons.wikimedia.org/wiki/File:Architecture_Perret_Au_Havre_(180697579).jpeg",
   license: "CC0 1.0",
-  licenseUrl: "https://creativecommons.org/publicdomain/zero/1.0/",
-  modification: "Redimensionnée et convertie en WebP",
+  licenseUrl: "https://creativecommons.org/publicdomain/zero/1.0/deed.fr",
+  modification: "Fichier redimensionné et converti en WebP; cadrage adapté à l’affichage",
+};
+
+export const geographyPhotoCredits = {
+  panorama: commonsCredit("Martin Falbisoner", "Panorama of Le Havre, September 2019.jpg", "4.0"),
+  perret: commonsZeroCredit,
+  saintFrancois: commonsCredit("Philippe Alès", "Le Havre (France), quarter Saint-François and Bassin du Roy.JPG", "3.0"),
+  saintVincent: commonsCredit("Philippe Alès", "Place Saint-Vincent (France).jpg", "4.0"),
+};
+
+const havrePanoramaCredit = geographyPhotoCredits.panorama;
+const regionalIllustration = {
+  src: "/images/geography/pays-de-caux-original.svg",
+  alt: "Illustration originale évoquant un bourg et les paysages du pays de Caux",
 };
 
 const dvfSummary = "https://www.data.gouv.fr/datasets/prix-immobilier-par-commune-ventes-2014-a-2025-dvf-millesime-2026";
@@ -58,7 +74,7 @@ export const geographyGuides: GeographyGuide[] = [
     id: "le-havre",
     name: "Le Havre",
     pageTitle: "Immobilier au Havre",
-    heroImage: { src: "/images/geography/panorama-le-havre.webp", alt: "Vue panoramique sur Le Havre et le front de mer" },
+    heroImage: { src: "/images/geography/panorama-le-havre.webp", alt: "Vue panoramique sur Le Havre et le front de mer", credit: havrePanoramaCredit },
     listingSearch: { city: "le-havre" },
     subtitle: "Ville portuaire, centre reconstruit et quartiers aux identités contrastées",
     averagePrice: "2 067 €/m²",
@@ -142,9 +158,9 @@ export const geographyGuides: GeographyGuide[] = [
     name: "Les Gobelins",
     pageTitle: "Immobilier aux Gobelins",
     heroImage: {
-      src: "/images/geography/gobelins-hero.webp",
-      alt: "Vue sur le quartier Saint-Vincent-Gobelins au Havre",
-      credit: commonsCredit("Ville du Havre", "Le quartier Saint-Vincent.jpg", "4.0"),
+      src: "/images/geography/panorama-le-havre.webp",
+      alt: "Panorama urbain du Havre, contexte général du secteur Saint-Vincent-Gobelins",
+      credit: havrePanoramaCredit,
     },
     listingSearch: { city: "le-havre", query: "Gobelins" },
     subtitle: "Un quartier résidentiel entre le centre et le littoral",
@@ -312,9 +328,8 @@ export const geographyGuides: GeographyGuide[] = [
     name: "Saint-Romain-de-Colbosc",
     pageTitle: "Immobilier à Saint-Romain-de-Colbosc",
     heroImage: {
-      src: "/images/geography/saint-romain-hero.webp",
-      alt: "Hôtel de ville sur la place Théodule Benoist à Saint-Romain-de-Colbosc",
-      credit: commonsCredit("ArséniureDeGallium", "Place Benoist Saint-Romain-de-Colsboc 1610.JPG", "3.0"),
+      src: "/images/geography/pays-de-caux-original.svg",
+      alt: "Illustration originale évoquant un bourg du pays de Caux",
     },
     listingSearch: { query: "Saint-Romain-de-Colbosc" },
     subtitle: "Bourg-centre commerçant au cœur du pays de Caux",
@@ -449,7 +464,7 @@ const lehavrePriceLink = "https://www.meilleursagents.com/prix-immobilier/le-hav
 const lhsmCommunesLink = "https://www.lehavreseinemetropole.fr/54-communes";
 const lhsmTown = (slug: string) => `https://www.lehavreseinemetropole.fr/annuaire-des-communes/${slug}`;
 const marketEstimateLink = (slug: string, postcode: string) => `https://www.meilleursagents.com/prix-immobilier/${slug}-${postcode}/`;
-const cityscape = { src: "/images/geography/panorama-le-havre.webp", alt: "Panorama de l’agglomération havraise et de son littoral" };
+const cityscape = regionalIllustration;
 
 function additionalGuide(input: AdditionalGuideInput): GeographyGuide {
   return {
@@ -516,7 +531,7 @@ const additionalGeographyGuides: GeographyGuide[] = [
 
   additionalGuide({
     id: "notre-dame", name: "Notre-Dame", pageTitle: "Immobilier dans le quartier Notre-Dame au Havre",
-    heroImage: { src: "/images/geography/saint-francois.webp", alt: "Les bassins historiques du centre du Havre, près de Notre-Dame", credit: commonsCredit("Philippe Alès", "Le Havre (France), quarter Saint-François and Bassin du Roy.JPG", "3.0") },
+    heroImage: { src: "/images/geography/saint-francois.webp", alt: "Les bassins historiques du centre du Havre, près de Notre-Dame", credit: geographyPhotoCredits.saintFrancois },
     listingSearch: { city: "le-havre", query: "Notre-Dame" },
     subtitle: "Le premier quartier du Havre, entre la cathédrale, les bassins et les quais",
     averagePrice: "", area: "Le Havre · quartier central",
@@ -532,7 +547,7 @@ const additionalGeographyGuides: GeographyGuide[] = [
   }),
   additionalGuide({
     id: "saint-francois", name: "Saint-François", pageTitle: "Immobilier dans le quartier Saint-François au Havre",
-    heroImage: { src: "/images/geography/saint-francois.webp", alt: "Le bassin du Roy et le quartier Saint-François au Havre", credit: commonsCredit("Philippe Alès", "Le Havre (France), quarter Saint-François and Bassin du Roy.JPG", "3.0") },
+    heroImage: { src: "/images/geography/saint-francois.webp", alt: "Le bassin du Roy et le quartier Saint-François au Havre", credit: geographyPhotoCredits.saintFrancois },
     listingSearch: { city: "le-havre", query: "Saint-François" },
     subtitle: "Un quartier historique autour du bassin du Roy et des bassins du port",
     averagePrice: "", area: "Le Havre · presqu’île historique",
@@ -548,7 +563,7 @@ const additionalGeographyGuides: GeographyGuide[] = [
   }),
   additionalGuide({
     id: "perrey", name: "Le Perrey", pageTitle: "Immobilier dans le quartier du Perrey au Havre",
-    heroImage: { src: "/images/geography/saint-vincent.webp", alt: "Promenade et espaces publics du front de mer havrais", credit: commonsCredit("Philippe Alès", "Place Saint-Vincent (France).jpg", "4.0") },
+    heroImage: { src: "/images/geography/saint-vincent.webp", alt: "Promenade et espaces publics du front de mer havrais", credit: geographyPhotoCredits.saintVincent },
     listingSearch: { city: "le-havre", query: "Perrey" },
     subtitle: "Un secteur central entre la plage, l’hôtel de ville et le front de mer",
     averagePrice: "", area: "Le Havre · Perrey-Perret",
