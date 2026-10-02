@@ -1,5 +1,7 @@
 import communeLocations from "@/features/content/data/communeLocations.json";
-import { geographyGuides } from "@/features/content/data/geographyGuides";
+import { geographyGuideIndex, isHavreNeighborhood } from "@/features/content/data/geographyGuideIndex";
+export { isHavreNeighborhood };
+export { pageBreadcrumbs } from "@/lib/seo/breadcrumbs";
 
 export const communeByGuideId = new Map(Object.entries(communeLocations));
 
@@ -12,11 +14,7 @@ export const agency = {
   email: "vendre@fochimmobilier.com",
 };
 
-export function isHavreNeighborhood(guide: (typeof geographyGuides)[number]): boolean {
-  return guide.placeType === "quartier" || ["la-plage", "gobelins", "saint-michel"].includes(guide.id);
-}
-
-export function placeEntity(guide: (typeof geographyGuides)[number], siteUrl: string) {
+export function placeEntity(guide: { id: string; name: string; placeType?: "quartier" | "commune"; subtitle: string; area: string }, siteUrl: string) {
   const neighborhood = isHavreNeighborhood(guide);
   const commune = communeByGuideId.get(guide.id);
   return {
@@ -50,25 +48,9 @@ export function siteEntities(siteUrl: string) {
       telephone: agency.telephone,
       email: agency.email,
       address: { "@type": "PostalAddress", streetAddress: agency.streetAddress, postalCode: agency.postalCode, addressLocality: agency.city, addressRegion: "Normandie", addressCountry: "FR" },
-      areaServed: geographyGuides.filter((guide) => !isHavreNeighborhood(guide)).map((guide) => ({ "@id": `${siteUrl}/immobilier/${guide.id}#place`, "@type": "City", name: guide.name })),
+      areaServed: geographyGuideIndex.filter((guide) => !isHavreNeighborhood(guide)).map((guide) => ({ "@id": `${siteUrl}/immobilier/${guide.id}#place`, "@type": "City", name: guide.name })),
       openingHoursSpecification: [{ "@type": "OpeningHoursSpecification", dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"], opens: "09:30", closes: "12:00" }, { "@type": "OpeningHoursSpecification", dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"], opens: "14:00", closes: "18:30" }],
     },
     { "@type": "WebSite", "@id": `${siteUrl}/#website`, name: agency.name, url: `${siteUrl}/`, inLanguage: "fr-FR", publisher: { "@id": `${siteUrl}/#agency` } },
   ];
-}
-
-const pageNames: Record<string, string> = {
-  "/biens": "Biens immobiliers", "/geographie": "Géographie", "/vendre": "Vendre", "/estimation": "Estimer un bien", "/services": "Services", "/apropos": "L’agence", "/contact": "Contact", "/avis": "Avis clients", "/honoraires": "Honoraires", "/nos-dernieres-ventes": "Dernières ventes", "/reglementation-immobiliere": "Réglementation immobilière", "/histoire-immobilier-le-havre": "Histoire de l’immobilier au Havre", "/plan-du-site": "Plan du site", "/mentions-legales": "Mentions légales", "/confidentialite": "Confidentialité", "/cookies": "Cookies", "/accessibilite": "Accessibilité",
-};
-
-export function pageBreadcrumbs(path: string, title?: string) {
-  if (path === "/") return [];
-  const guide = geographyGuides.find((item) => path === `/immobilier/${item.id}`);
-  const crumbs = [{ name: "Accueil", path: "/" }];
-  if (guide) {
-    crumbs.push({ name: "Géographie", path: "/geographie" });
-    if (isHavreNeighborhood(guide)) crumbs.push({ name: "Le Havre", path: "/immobilier/le-havre" });
-  } else if (path.startsWith("/biens/")) crumbs.push({ name: "Biens immobiliers", path: "/biens" });
-  crumbs.push({ name: guide?.name ?? pageNames[path] ?? title?.split(" | ")[0] ?? "Bien immobilier", path });
-  return crumbs;
 }

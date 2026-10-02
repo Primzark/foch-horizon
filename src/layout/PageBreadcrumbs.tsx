@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { pageBreadcrumbs } from "@/lib/seo/entities";
+import { pageBreadcrumbs } from "@/lib/seo/breadcrumbs";
 
 export function PageBreadcrumbs() {
   const { pathname } = useLocation();

@@ -18,7 +18,7 @@ export function PhotoAttribution({ credit }: PhotoAttributionProps) {
       target="_blank"
       rel="noopener noreferrer"
       aria-label={`Crédits photo : ${credit.title}`}
-      className="absolute bottom-2 right-2 z-20 inline-flex min-h-5 items-center rounded-sm bg-black/65 px-1.5 py-1 text-[9px] font-medium leading-none text-white underline decoration-white/75 underline-offset-2 shadow-sm transition-colors hover:bg-black/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+      className="absolute bottom-1 right-1 z-20 inline-flex min-h-5 items-center px-0.5 py-1 text-[7px] font-medium leading-none text-white/80 underline decoration-white/50 underline-offset-2 [text-shadow:0_1px_2px_rgba(0,0,0,0.9)] transition-opacity hover:text-white hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/80"
     >
       Crédits
     </a>

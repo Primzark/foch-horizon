@@ -8,7 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cities } from "@/features/cities/data/cities";
-import { propertyById } from "@/features/listings/data/properties";
 import { featureOptions, propertyTypeOptions } from "@/features/listings/data/options";
 import { parseReferenceFromQuery, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
 import { buildSearchParams, parseSearchParams } from "@/features/listings/utils/query";
@@ -46,11 +45,12 @@ export function SearchDrawer() {
     setDraft({ ...defaultFilters, ...parsed });
   }, [location.search]);
 
-  const pushFilters = useCallback((next: PropertySearchParams) => {
+  const pushFilters = useCallback(async (next: PropertySearchParams) => {
     const normalized = normalizeFilters(next);
 
     const reference = parseReferenceFromQuery(normalized.q ?? "");
     if (reference) {
+      const { propertyById } = await import("@/features/listings/data/properties");
       const property = propertyById.get(reference);
       if (property) {
         navigate(toCanonicalPropertyPath(property), { replace: false });

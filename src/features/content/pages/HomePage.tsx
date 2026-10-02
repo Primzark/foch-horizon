@@ -38,9 +38,9 @@ const serviceCards = [
 
 const HERO_IMAGE_URL = "/images/dufy-final-pick.jpg";
 const HERO_IMAGE_CREDIT: PhotoAttributionCredit = {
-  title: "L’Estacade et la Plage du Havre — œuvre de Raoul Dufy photographiée par Martpan",
+  title: "La Plage du Havre et la villa maritime — œuvre de Raoul Dufy photographiée par Martpan",
   creator: "Raoul Dufy (œuvre), Martpan (photographie)",
-  sourceUrl: "https://www.muma-lehavre.fr/fr/collections/oeuvres-commentees/raoul-dufy/dufy-lestacade-et-la-plage-du-havre",
+  sourceUrl: "https://www.revuedesdeuxmondes.fr/le-havre-de-lart-2/",
   license: "CC BY-SA 4.0",
   licenseUrl: "https://creativecommons.org/licenses/by-sa/4.0/deed.fr",
   modification: "Fichier redimensionné et recadré pour la bannière",

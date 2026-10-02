@@ -1,5 +1,9 @@
 import { useEffect } from "react";
-import { pageBreadcrumbs, siteEntities } from "@/lib/seo/entities";
+import { siteEntities } from "@/lib/seo/entities";
+import { pageBreadcrumbs } from "@/lib/seo/breadcrumbs";
+import { getConfiguredPublicSiteUrl, getSiteUrl, toAbsoluteUrl } from "@/lib/seo/siteUrl";
+
+export { getConfiguredPublicSiteUrl, getSiteUrl } from "@/lib/seo/siteUrl";
 
 interface SeoOptions {
   title: string;
@@ -12,40 +16,6 @@ interface SeoOptions {
 }
 
 const defaultOgImage = "/images/agence-foch.jpg";
-
-function normalizeSiteUrl(value: string): string {
-  return value.replace(/\/+$/, "");
-}
-
-function toAbsoluteUrl(value: string, siteUrl: string): string {
-  if (/^https?:\/\//i.test(value)) {
-    return value;
-  }
-
-  return `${siteUrl}${value.startsWith("/") ? value : `/${value}`}`;
-}
-
-export function getConfiguredPublicSiteUrl(): string | null {
-  const envSiteUrl = import.meta.env.VITE_PUBLIC_SITE_URL;
-  if (typeof envSiteUrl === "string" && envSiteUrl.trim().length > 0) {
-    return normalizeSiteUrl(envSiteUrl.trim());
-  }
-
-  return null;
-}
-
-export function getSiteUrl(): string {
-  const configuredSiteUrl = getConfiguredPublicSiteUrl();
-  if (configuredSiteUrl) {
-    return configuredSiteUrl;
-  }
-
-  if (typeof window !== "undefined" && window.location.origin) {
-    return normalizeSiteUrl(window.location.origin);
-  }
-
-  return "";
-}
 
 function upsertMeta(name: string, content: string): void {
   const existing = document.querySelector(`meta[name="${name}"]`);

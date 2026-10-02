@@ -1,4 +1,3 @@
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Suspense, useCallback, useLayoutEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useLocation, useNavigationType } from "react-router-dom";
@@ -8,9 +7,7 @@ import { AppHeader } from "@/layout/AppHeader";
 import { SearchDrawer } from "@/features/listings/components/SearchDrawer";
 import { RouteLoadingScreen } from "@/components/ui/RouteLoadingScreen";
 import { BackToTopButton } from "@/components/ui/BackToTopButton";
-import { SiteChatbot } from "@/features/content/components/SiteChatbot";
-
-const MINIMUM_TRANSITION_MS = 520;
+import { SiteChatbotLoader } from "@/features/content/components/SiteChatbotLoader";
 
 function RouteReadyMarker({
   locationKey,
@@ -32,15 +29,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const location = useLocation();
   const navigationType = useNavigationType();
   const [readyLocationKey, setReadyLocationKey] = useState<string | null>(null);
-  const [settlingPath, setSettlingPath] = useState<string | null>(null);
-  const reducedMotion = useReducedMotion();
-  const currentLocation = useRef(location);
-  currentLocation.current = location;
-  const previousPath = useRef(location.pathname);
   const previousLocation = useRef(location);
   const scrollPositions = useRef(new Map<string, number>());
   const pendingScroll = useRef<{ key: string; hash?: string; top?: number } | null>(null);
-  const isRouteLoading = readyLocationKey !== location.key || settlingPath === location.pathname;
+  const isRouteLoading = readyLocationKey !== location.key;
 
   const markRouteReady = useCallback((key: string) => {
     const pending = pendingScroll.current;
@@ -64,20 +56,6 @@ export function AppLayout({ children }: { children: ReactNode }) {
   }, []);
 
   useLayoutEffect(() => {
-    if (previousPath.current === location.pathname) return;
-
-    const destinationPath = location.pathname;
-    previousPath.current = destinationPath;
-    setSettlingPath(destinationPath);
-
-    const timer = window.setTimeout(() => {
-      if (currentLocation.current.pathname === destinationPath) setSettlingPath(null);
-    }, MINIMUM_TRANSITION_MS);
-
-    return () => window.clearTimeout(timer);
-  }, [location.pathname]);
-
-  useLayoutEffect(() => {
     const previous = previousLocation.current;
     const locationChanged = previous.key !== location.key;
     const pathChanged = previous.pathname !== location.pathname;
@@ -99,20 +77,11 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <AnimatePresence initial={false}>
-        {isRouteLoading && (
-          <motion.div
-            key="route-loading"
-            className="fixed inset-0 z-[200]"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: reducedMotion ? 0 : 0.16, ease: "easeOut" }}
-          >
-            <RouteLoadingScreen fullscreen />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {isRouteLoading && (
+        <div className="fixed inset-0 z-[200]">
+          <RouteLoadingScreen fullscreen />
+        </div>
+      )}
       <AppHeader />
       <main>
         <Suspense fallback={null}>
@@ -124,7 +93,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
       <AppFooter />
       <SearchDrawer />
       <BackToTopButton />
-      <SiteChatbot />
+      <SiteChatbotLoader />
     </div>
   );
 }

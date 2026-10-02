@@ -2,9 +2,14 @@ import { Suspense, lazy, useLayoutEffect, useRef } from "react";
 import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation, useNavigationType } from "react-router-dom";
 import { AppLayout } from "@/layout/AppLayout";
 import { CookieConsentManager } from "@/layout/CookieConsentManager";
-import { LegacyAnnonceRedirect, LegacyPropertySlugRedirect, QueryRedirect } from "@/app/router/LegacyRedirects";
 import { RouteLoadingScreen } from "@/components/ui/RouteLoadingScreen";
 
+const LegacyAnnonceRedirect = lazy(() =>
+  import("@/app/router/LegacyRedirects").then((module) => ({ default: module.LegacyAnnonceRedirect })),
+);
+const LegacyPropertySlugRedirect = lazy(() =>
+  import("@/app/router/LegacyRedirects").then((module) => ({ default: module.LegacyPropertySlugRedirect })),
+);
 const HomePage = lazy(() => import("@/features/content/pages/HomePage"));
 const ListingsIndexPage = lazy(() => import("@/features/listings/pages/ListingsIndexPage"));
 const ListingDetailPage = lazy(() => import("@/features/listings/pages/ListingDetailPage"));
@@ -72,8 +77,8 @@ export function AppRouter() {
             <Route path="/biens/:idSlug/*" element={<ListingDetailPage />} />
             <Route path="/annonce/:id" element={<LegacyAnnonceRedirect />} />
             <Route path="/biens-immobiliers" element={<Navigate to="/biens" replace />} />
-            <Route path="/buy" element={<QueryRedirect to="/biens?transaction=vente" />} />
-            <Route path="/rent" element={<QueryRedirect to="/biens?transaction=vente" />} />
+            <Route path="/buy" element={<Navigate to="/biens?transaction=vente" replace />} />
+            <Route path="/rent" element={<Navigate to="/biens?transaction=vente" replace />} />
             <Route path="/property/:slug" element={<LegacyPropertySlugRedirect />} />
 
             <Route path="/apropos" element={<AboutPageV2 />} />
