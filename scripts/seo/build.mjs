@@ -1,6 +1,6 @@
 import { build, createServer, preview } from 'vite';
 import { launchBrowser } from './browser.mjs';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 // Vite's .env.local is for development; never ship localhost canonicals.
@@ -19,6 +19,15 @@ try {
 }
 await build();
 const template = await readFile('dist/index.html', 'utf8');
+// Avoid a second request waterfall before the homepage's above-the-fold hero can render.
+const homePageChunk = (await readdir('dist/assets')).find(file => /^HomePage-.+\.js$/.test(file));
+if (!homePageChunk) throw new Error('Could not find the HomePage route chunk to preload.');
+const homePageModulePreload = `<link rel="modulepreload" crossorigin href="/assets/${homePageChunk}">`;
+const withHomePageModulePreload = html => {
+  const moduleScript = html.match(/<script type="module"[^>]*>/)?.[0];
+  if (!moduleScript) throw new Error('Could not find the application module script to place the HomePage preload.');
+  return html.replace(moduleScript, `${homePageModulePreload}\n    ${moduleScript}`);
+};
 // Dynamic and unknown routes use their own shell, never the prerendered homepage.
 const propertyImageSources = Object.fromEntries(
   properties
@@ -94,7 +103,8 @@ try {
     if (snapshot.h1 !== 1 || /(?:à|de)\s+Le Havre\b/i.test(snapshot.text)) throw new Error(`Invalid headings or French grammar on ${route}`);
     if (snapshot.canonical !== `${siteUrl}${route}`) throw new Error(`Unexpected canonical on ${route}: ${snapshot.canonical}`);
     const cleanTemplate = template.replace(/<title>[\s\S]*?<\/title>|<meta\s[^>]*(?:name="(?:description|robots|twitter:[^"]*)"|property="og:[^"]*")[^>]*>/g, '');
-    snapshots.push({ route, html: cleanTemplate.replace('</head>', `${snapshot.head}\n</head>`).replace('<div id="root"></div>', snapshot.root) });
+    const html = cleanTemplate.replace('</head>', `${snapshot.head}\n</head>`).replace('<div id="root"></div>', snapshot.root);
+    snapshots.push({ route, html: route === '/' ? withHomePageModulePreload(html) : html });
     await page.close();
   }
   // Write after capture so the preview always renders from the original SPA shell.
