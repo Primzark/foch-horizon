@@ -257,7 +257,7 @@ export default function CityHubPage() {
         </div>
         <div className="mt-8 flex flex-wrap gap-3">
           <Button variant="outline" asChild><Link to="/geographie">Tous les secteurs</Link></Button>
-          <Button variant="brand" asChild className="h-auto min-h-10 whitespace-normal text-center"><Link to="/contact">Parler à l’agence</Link></Button>
+          <Button variant="brand" asChild className="h-auto min-h-10 whitespace-normal text-center"><Link to="/contact">Contacter l’agence</Link></Button>
         </div>
       </section>
     );
@@ -335,7 +335,7 @@ export default function CityHubPage() {
             <Link to={`/estimation?ville=${city.slug}`}>Estimer mon bien {atLocation(city.name)}</Link>
           </Button>
           <Button variant="brand" asChild className="h-auto min-h-10 whitespace-normal text-center">
-            <Link to="/contact">Parler à l'agence</Link>
+            <Link to="/contact">Contacter l’agence</Link>
           </Button>
         </div>
       </section>

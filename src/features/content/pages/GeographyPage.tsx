@@ -163,7 +163,7 @@ export default function GeographyPage() {
             <Link to="/biens">Explorer les biens <ArrowRight aria-hidden="true" className="ml-2 h-4 w-4" /></Link>
           </Button>
           <Button asChild variant="outline">
-            <Link to="/contact">Parler à l’agence</Link>
+            <Link to="/contact">Contacter l’agence</Link>
           </Button>
         </div>
       </StorefrontPageHero>
@@ -304,7 +304,7 @@ export default function GeographyPage() {
           </div>
           <div className="flex flex-wrap gap-3">
             <Button asChild variant="outline"><Link to="/biens">Tous les biens</Link></Button>
-            <Button asChild variant="brand"><Link to="/contact">Parler à l’agence <ArrowRight aria-hidden="true" className="ml-2 h-4 w-4" /></Link></Button>
+            <Button asChild variant="brand"><Link to="/contact">Contacter l’agence <ArrowRight aria-hidden="true" className="ml-2 h-4 w-4" /></Link></Button>
           </div>
         </div>
       </section>

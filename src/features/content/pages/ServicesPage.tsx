@@ -15,7 +15,7 @@ const services = [
     description:
       "Une estimation précise et argumentée pour vous aider à décider du bon prix de vente.",
     icon: Compass,
-    links: [{ href: "/estimation", label: "Demander un avis de valeur" }, { href: "/contact", label: "Parler à l’agence" }],
+    links: [{ href: "/estimation", label: "Demander un avis de valeur" }, { href: "/contact", label: "Contacter l’agence" }],
   },
 ];
 

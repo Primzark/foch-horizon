@@ -1,7 +1,6 @@
-import { ExternalLink, MapPin, Phone, Mail, Clock } from "lucide-react";
+import { MapPin, Phone, Mail, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { primaryLinks } from "@/layout/navigation";
-import { trackEvent } from "@/lib/analytics/events";
 import { getConfiguredPublicSiteUrl } from "@/lib/seo/useSeo";
 import { useUiStore } from "@/lib/state/useUiStore";
 
@@ -39,17 +38,6 @@ export function AppFooter() {
           <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
             Immobilier résidentiel haut de gamme, achat et vente au Havre et sur le littoral.
           </p>
-          <a
-            href="https://extranet2.ics.fr/V5/connexion-wolh.html"
-            target="_blank"
-            rel="noreferrer noopener"
-            className="mt-4 inline-flex items-center gap-1 text-sm hover:underline"
-            title="Vous quittez le site"
-            onClick={() => trackEvent("extranet_clicked", { source: "footer" })}
-          >
-            Extranet
-            <ExternalLink className="h-3.5 w-3.5" />
-          </a>
         </div>
 
         <div>

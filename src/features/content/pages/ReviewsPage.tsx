@@ -341,7 +341,7 @@ export default function ReviewsPage() {
                         href="/contact"
                         className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-4 py-2 text-xs font-medium transition-colors hover:border-brand-border hover:bg-brand-soft/50"
                       >
-                        Contacter l'agence
+                        Contacter l’agence
                       </a>
                     </div>
                   </div>

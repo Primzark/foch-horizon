@@ -17,10 +17,16 @@ type PhotoAttributionProps = {
 export function PhotoAttribution({ credit, className }: PhotoAttributionProps) {
   return (
     <p className={cn("text-[10px] leading-relaxed", className)}>
-      <a href={credit.sourceUrl} target="_blank" rel="noreferrer" className="underline underline-offset-2">
-        « {credit.title} »
+      <a
+        href={credit.sourceUrl}
+        target="_blank"
+        rel="noreferrer"
+        aria-label={`Crédits photo : ${credit.title}`}
+        className="underline underline-offset-2"
+      >
+        Crédits
       </a>
-      <span> · {credit.creator} · </span>
+      <span> · « {credit.title} » · {credit.creator} · </span>
       {credit.licenseUrl ? (
         <a href={credit.licenseUrl} target="_blank" rel="noreferrer" className="underline underline-offset-2">
           {credit.license}
