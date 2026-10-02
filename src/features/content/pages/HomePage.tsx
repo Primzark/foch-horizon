@@ -40,7 +40,7 @@ const HERO_IMAGE_URL = "/images/dufy-final-pick.jpg";
 const HERO_IMAGE_CREDIT: PhotoAttributionCredit = {
   title: "L’Estacade et la Plage du Havre — œuvre de Raoul Dufy photographiée par Martpan",
   creator: "Raoul Dufy (œuvre), Martpan (photographie)",
-  sourceUrl: "https://commons.wikimedia.org/wiki/File:Le_Havre_Mus%C3%A9e_d%27art_moderne_Dufy.jpg",
+  sourceUrl: "https://www.muma-lehavre.fr/fr/collections/oeuvres-commentees/raoul-dufy/dufy-lestacade-et-la-plage-du-havre",
   license: "CC BY-SA 4.0",
   licenseUrl: "https://creativecommons.org/licenses/by-sa/4.0/deed.fr",
   modification: "Fichier redimensionné et recadré pour la bannière",
