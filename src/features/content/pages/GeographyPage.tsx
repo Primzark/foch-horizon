@@ -281,11 +281,13 @@ export default function GeographyPage() {
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {havrePhotos.map((photo) => (
             <figure key={photo.src} className="group overflow-hidden rounded-xl border border-border bg-card">
-              <img src={photo.src} alt={photo.alt} width={photo.width} height={photo.height} loading="lazy" decoding="async" className="aspect-[4/3] w-full object-cover transition-transform duration-500 group-hover:scale-[1.025]" />
+              <div className="relative">
+                <img src={photo.src} alt={photo.alt} width={photo.width} height={photo.height} loading="lazy" decoding="async" className="aspect-[4/3] w-full object-cover transition-transform duration-500 group-hover:scale-[1.025]" />
+                <PhotoAttribution credit={photo.credit} />
+              </div>
               <figcaption className="flex items-start justify-between gap-3 p-4">
                 <div>
                   <h3 className="font-medium">{photo.caption}</h3>
-                  <PhotoAttribution credit={photo.credit} className="mt-1 text-muted-foreground" />
                 </div>
                 <Link to={`/immobilier/${photo.guideId}`} aria-label={`Voir les informations sur ${photo.caption}`} className="rounded-full p-2 text-brand-strong hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                   <ArrowRight aria-hidden="true" className="h-4 w-4" />

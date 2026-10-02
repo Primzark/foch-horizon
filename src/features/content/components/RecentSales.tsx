@@ -107,19 +107,19 @@ export function RecentSales({ compact = false }: { compact?: boolean }) {
                 <div className="absolute left-5 top-5 inline-flex items-center gap-2 rounded-full border border-white/25 bg-slate-950/30 px-3 py-2 text-xs font-medium text-white backdrop-blur-sm">
                   <MapPin aria-hidden="true" className="h-3.5 w-3.5" /> Le Havre et le littoral
                 </div>
+                <PhotoAttribution credit={geographyPhotoCredits.panorama} />
                 <div className="absolute bottom-5 right-5 hidden w-36 overflow-hidden rounded-xl border-4 border-white shadow-xl sm:block md:w-40">
-                  <img
-                    src="/images/geography/architecture-perret.webp"
-                    alt="Architecture Perret au Havre"
-                    className="aspect-[4/3] w-full object-cover"
-                    loading="lazy"
-                  />
+                  <div className="relative">
+                    <img
+                      src="/images/geography/architecture-perret.webp"
+                      alt="Architecture Perret au Havre"
+                      className="aspect-[4/3] w-full object-cover"
+                      loading="lazy"
+                    />
+                    <PhotoAttribution credit={geographyPhotoCredits.perret} />
+                  </div>
                   <p className="bg-white px-2 py-1.5 text-[10px] font-medium text-slate-800">Le centre reconstruit</p>
                 </div>
-                <figcaption className="absolute bottom-5 left-5 max-w-[64%] space-y-1 text-white/90 drop-shadow">
-                  <PhotoAttribution credit={geographyPhotoCredits.panorama} />
-                  <PhotoAttribution credit={geographyPhotoCredits.perret} />
-                </figcaption>
               </figure>
               <div className="flex flex-col justify-center p-6 md:p-8 lg:p-10">
                 <p className="text-xs uppercase tracking-[0.18em] text-brand-strong">À vos côtés depuis 1972</p>

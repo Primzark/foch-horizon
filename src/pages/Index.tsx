@@ -30,9 +30,7 @@ const Index = () => {
           className="absolute inset-0 h-full w-full object-cover"
         />
         <div className="absolute inset-0" style={{ background: "var(--gradient-hero)" }} />
-        <div className="absolute right-4 top-4 z-20 max-w-[min(25rem,calc(100%-2rem))] rounded-lg bg-black/60 px-3 py-2 text-white/90 backdrop-blur-sm">
-          <PhotoAttribution credit={heroImageCredit} />
-        </div>
+        <PhotoAttribution credit={heroImageCredit} />
         <div className="relative z-10 w-full max-w-4xl px-4 py-20 text-center">
           <motion.h1
             initial={{ opacity: 0, y: 20 }}

@@ -494,8 +494,8 @@ export default function ReviewsPage() {
                               <MapPin className="h-3 w-3" />
                               {visual.accentLabel}
                             </div>
+                            <PhotoAttribution credit={visual.credit} />
                           </div>
-                          <PhotoAttribution credit={visual.credit} className="px-3 py-2 text-muted-foreground" />
                         </div>
 
                         <div className="pr-10">

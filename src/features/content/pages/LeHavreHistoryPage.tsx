@@ -235,9 +235,6 @@ export default function LeHavreHistoryPage() {
                           districtMotionPreset.overlayClassName,
                         )}
                       />
-                    </div>
-                    <figcaption className="space-y-2 p-3 text-xs text-muted-foreground">
-                      <p>{photo?.caption}</p>
                       {photo && <PhotoAttribution credit={{
                         title: photo.title,
                         creator: photo.author,
@@ -246,6 +243,9 @@ export default function LeHavreHistoryPage() {
                         licenseUrl: photo.licenseUrl,
                         modification: photo.modification,
                       }} />}
+                    </div>
+                    <figcaption className="space-y-2 p-3 text-xs text-muted-foreground">
+                      <p>{photo?.caption}</p>
                     </figcaption>
                   </figure>
                 ))}

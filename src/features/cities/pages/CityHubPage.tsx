@@ -105,12 +105,7 @@ function LocationHero({ pageTitle, locationName, locationSlug, locationLabel, im
           ease: "easeInOut",
         }}
       />
-      {credit && (
-        <div className="absolute right-3 top-3 z-[4] max-w-[min(24rem,calc(100%-1.5rem))] rounded-lg bg-black/60 px-3 py-2 text-white/90 backdrop-blur-sm">
-          <span className="sr-only">Crédit photo : </span>
-          <PhotoAttribution credit={credit} />
-        </div>
-      )}
+      {credit && <PhotoAttribution credit={credit} />}
       <div className="absolute inset-0 z-[3] flex flex-col justify-end p-6 text-white md:p-8">
         <p className="inline-flex items-center gap-1 text-xs uppercase tracking-[0.2em] text-white/85">
           <MapPin className="h-3.5 w-3.5" /> {locationLabel}

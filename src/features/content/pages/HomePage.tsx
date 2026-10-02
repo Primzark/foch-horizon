@@ -92,6 +92,7 @@ export default function HomePage() {
           fetchPriority="high"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-black/38 via-black/16 to-black/0" />
+        <PhotoAttribution credit={HERO_IMAGE_CREDIT} />
         <div className="page-banner homepage-hero-content container relative z-[5] mx-auto flex flex-col justify-center px-4 py-5 md:py-8">
           <motion.h1
             initial={{ opacity: 0, y: 12 }}
@@ -121,10 +122,6 @@ export default function HomePage() {
           </motion.div>
         </div>
       </section>
-      <div className="container mx-auto px-4 pt-2 text-muted-foreground">
-        <span className="sr-only">Crédit photo : </span>
-        <PhotoAttribution credit={HERO_IMAGE_CREDIT} className="max-w-5xl break-words text-[11px] leading-snug sm:text-xs" />
-      </div>
       <section data-live-content="/biens" className="container mx-auto px-4 pt-5 pb-12 md:pt-8 md:pb-12">
         <ScrollReveal mood={heroMood}>
           <div className="mb-6 flex items-end justify-between gap-4">
