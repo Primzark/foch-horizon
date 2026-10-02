@@ -22,12 +22,15 @@ const quickLinks = [
   { href: "/apropos", label: "À propos" },
 ];
 
-export function AppFooter() {
+export function AppFooter({ hidden = false }: { hidden?: boolean }) {
   const configuredSiteUrl = getConfiguredPublicSiteUrl();
   const setCookiePreferencesOpen = useUiStore((state) => state.setCookiePreferencesOpen);
 
   return (
-    <footer className="mt-12 border-t border-border bg-card">
+    <footer
+      aria-hidden={hidden || undefined}
+      className={`mt-12 border-t border-border bg-card ${hidden ? "invisible" : ""}`}
+    >
       <div className="h-px w-full accent-divider" />
       <div className="container mx-auto grid gap-8 px-4 py-10 md:grid-cols-2 lg:grid-cols-[1.1fr_0.9fr_1.2fr_0.9fr]">
         <div className="h-card" itemScope itemType="https://schema.org/RealEstateAgent">

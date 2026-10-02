@@ -9,14 +9,20 @@ type StorefrontPageHeroProps = {
 
 /** Full-bleed storefront hero shared by the primary navigation pages. */
 export function StorefrontPageHero({ eyebrow, title, description, children }: StorefrontPageHeroProps) {
-  const backgroundImage = "url('/images/geography/foch-storefront.png')";
+  const backgroundImage = "/images/geography/foch-storefront.webp";
 
   return (
     <section className="storefront-page-hero relative isolate overflow-hidden bg-slate-950">
-      <div
+      <img
+        src={backgroundImage}
+        alt=""
         aria-hidden="true"
-        className="storefront-page-hero__background absolute inset-0 -z-10 bg-cover bg-no-repeat"
-        style={{ backgroundImage }}
+        width={1448}
+        height={678}
+        loading="eager"
+        decoding="async"
+        fetchPriority="high"
+        className="storefront-page-hero__background absolute inset-0 -z-10 h-full w-full object-cover"
       />
       <div aria-hidden="true" className="storefront-page-hero__scrim pointer-events-none absolute inset-0 -z-[5]" />
       <div className="page-banner storefront-page-hero__content container mx-auto flex items-center px-4 py-6 md:py-8">

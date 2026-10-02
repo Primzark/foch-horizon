@@ -21,10 +21,11 @@ interface ListingCardProps {
   item: PropertySearchItem;
   viewMode?: "grid" | "list";
   revealIndex?: number;
+  eagerImage?: boolean;
   className?: string;
 }
 
-export function ListingCard({ item, viewMode = "grid", revealIndex = 0, className }: ListingCardProps) {
+export function ListingCard({ item, viewMode = "grid", revealIndex = 0, eagerImage = false, className }: ListingCardProps) {
   const toggleFavorite = useFavoritesStore((state) => state.toggle);
   const isFavorite = useFavoritesStore((state) => state.isFavorite(item.id));
   const { reducedMotion } = useMotionPreference();
@@ -66,7 +67,7 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, classNam
                   "aspect-[4/3] h-full w-full object-cover transition-transform",
                   imageMotionPreset.hoverClassName,
                 )}
-                loading="lazy"
+                loading={eagerImage ? "eager" : "lazy"}
                 itemProp="image"
               />
             </ContextAwareParallax>
@@ -179,7 +180,7 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, classNam
                   "aspect-[3/2] w-full object-cover transition-transform",
               imageMotionPreset.hoverClassName,
             )}
-            loading="lazy"
+            loading={eagerImage ? "eager" : "lazy"}
             itemProp="image"
           />
         </ContextAwareParallax>

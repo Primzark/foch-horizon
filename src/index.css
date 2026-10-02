@@ -274,10 +274,10 @@
 .homepage-hero-content { height: auto; min-height: 400px; }
 @media (min-width: 768px) { .homepage-hero-content { height: 420px; min-height: 0; } }
 
-.storefront-page-hero__background { background-position: center top; }
+.storefront-page-hero__background { object-position: center top; }
 
 @media (max-width: 767px) {
-  .storefront-page-hero__background { background-position: 55% center; }
+  .storefront-page-hero__background { object-position: 55% center; }
   .storefront-page-hero__scrim { background: none; }
   .storefront-page-hero__content {
     height: auto;

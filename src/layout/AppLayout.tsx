@@ -88,9 +88,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
           {children}
           <RouteReadyMarker locationKey={location.key} hash={location.hash} onReady={markRouteReady} />
         </Suspense>
-        <PageBreadcrumbs />
+        <PageBreadcrumbs hidden={isRouteLoading} />
       </main>
-      <AppFooter />
+      <AppFooter hidden={isRouteLoading} />
       <SearchDrawer />
       <BackToTopButton />
       <SiteChatbotLoader />
