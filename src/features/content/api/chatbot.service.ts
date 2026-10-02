@@ -970,10 +970,45 @@ function isRentalQuestion(text: string): boolean {
   return /\b(louer|location|locatif|locative|loyer|bailleur|locataire)\b/.test(normalizeKeyword(text));
 }
 
-function buildRentalUnavailableAnswer(): ChatbotReply {
+function buildRentalUnavailableAnswer(context?: ConversationContext): ChatbotReply {
+  if (
+    context &&
+    districtComparisonPattern.test(context.normalizedQuestion) &&
+    /investissement locatif|locatif|locative/.test(context.normalizedQuestion)
+  ) {
+    return {
+      source: "local",
+      answer:
+        "Pour un projet d’investissement locatif au Havre, Saint-François, Eure–Docks et Perret méritent d’être comparés selon votre budget, le type de bien et le rendement visé. Foch Immobilier ne propose pas d’annonces en location ; l’agence accompagne les projets d’achat, de vente et d’estimation. Consultez /geographie pour découvrir les secteurs et /biens pour les biens à vendre.",
+      suggestedPrompts: normalizePromptList([
+        "Quels biens à vendre avez-vous à Saint-François, Eure–Docks ou Perret ?",
+        "Quels sont les atouts de ces quartiers ?",
+        "Ouvrir /geographie",
+        "Ouvrir /biens",
+      ]),
+    };
+  }
+
+  if (context && context.normalizedHistory.length > 0 && hasPropertyContext(context)) {
+    const criteria = formatCriteriaSummary(context).replace(/, en vente/, "");
+    const criteriaText = criteria ? ` vos critères (${criteria})` : " le contexte de votre recherche";
+
+    return {
+      source: "local",
+      answer:
+        `Pour une recherche en location, je garde${criteriaText}. Foch Immobilier ne propose pas d’annonces en location ; le catalogue présente des biens à vendre sur /biens.`,
+      suggestedPrompts: normalizePromptList([
+        "Voir les biens à vendre correspondant à mes critères",
+        "Je veux acheter un bien au Havre",
+        "Je veux faire estimer mon bien",
+      ]),
+    };
+  }
+
   return {
     source: "local",
-    answer: "L’agence Foch Immobilier accompagne les projets d’achat, de vente et d’estimation immobilière.",
+    answer:
+      "Foch Immobilier ne propose pas d’annonces en location. L’agence accompagne les projets d’achat, de vente et d’estimation immobilière ; vous pouvez consulter les biens à vendre sur /biens.",
     suggestedPrompts: normalizePromptList([
       "Voir les biens à vendre",
       "Je veux vendre mon bien",
@@ -1662,7 +1697,7 @@ function buildFallbackReply(): ChatbotReply {
 }
 
 async function buildLocalReply(question: string, context: ConversationContext): Promise<ChatbotReply> {
-  if (isRentalQuestion(question)) return buildRentalUnavailableAnswer();
+  if (isRentalQuestion(question)) return buildRentalUnavailableAnswer(context);
 
   if (pageSummaryPattern.test(context.normalizedQuestion)) {
     const pageSummaryReply = buildPageSummaryAnswer(context);
@@ -2814,11 +2849,11 @@ export const chatbotServiceTestInternals = {
 };
 
 export async function askAgencyChatbot(request: ChatbotRequest): Promise<ChatbotReply> {
+  const context = buildConversationContext(request.question, request.chatHistory);
   if (isRentalQuestion(request.question)) {
-    return normalizeReplyOutput(buildRentalUnavailableAnswer());
+    return normalizeReplyOutput(buildRentalUnavailableAnswer(context));
   }
 
-  const context = buildConversationContext(request.question, request.chatHistory);
   const edgeRagForWebsiteQuestionsEnabled =
     (import.meta.env.VITE_CHATBOT_ENABLE_EDGE_RAG as string | undefined)?.toLowerCase() === "true";
   const edgeAgentToolsEnabled =
@@ -3028,11 +3063,11 @@ export async function askAgencyChatbotStream(
   request: ChatbotRequest,
   handlers?: ChatbotStreamHandlers,
 ): Promise<ChatbotReply> {
+  const context = buildConversationContext(request.question, request.chatHistory);
   if (isRentalQuestion(request.question)) {
-    return normalizeReplyOutput(buildRentalUnavailableAnswer());
+    return normalizeReplyOutput(buildRentalUnavailableAnswer(context));
   }
 
-  const context = buildConversationContext(request.question, request.chatHistory);
   const edgeRagForWebsiteQuestionsEnabled =
     (import.meta.env.VITE_CHATBOT_ENABLE_EDGE_RAG as string | undefined)?.toLowerCase() === "true";
   const edgeAgentToolsEnabled =

@@ -86,6 +86,16 @@ describe("chatbot service", () => {
 
     expect(followUpReply.answer.toLowerCase()).toContain("location");
     expect(followUpReply.suggestedPrompts.length).toBeGreaterThan(0);
+    expect(followUpReply.answer).toContain("Perret");
+    expect(followUpReply.answer.replace(/[\s\u202f\u00a0]/g, "")).toContain("260000");
+    expect(followUpReply.answer).toMatch(/ne propose pas d’annonces en location/i);
+  });
+
+  it("does not imply rental listings are available", async () => {
+    const reply = await askAgencyChatbot({ question: "Je cherche un appartement à louer au Havre" });
+
+    expect(reply.answer).toMatch(/ne propose pas d’annonces en location/i);
+    expect(reply.answer).toContain("/biens");
   });
 
   it("answers prompts suggested by property replies", async () => {
