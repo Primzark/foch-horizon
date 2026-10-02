@@ -2,7 +2,6 @@ import { Suspense, lazy, useLayoutEffect, useRef } from "react";
 import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation, useNavigationType } from "react-router-dom";
 import { AppLayout } from "@/layout/AppLayout";
 import { CookieConsentManager } from "@/layout/CookieConsentManager";
-import { RouteLoadingScreen } from "@/components/ui/RouteLoadingScreen";
 
 const LegacyAnnonceRedirect = lazy(() =>
   import("@/app/router/LegacyRedirects").then((module) => ({ default: module.LegacyAnnonceRedirect })),
@@ -68,7 +67,7 @@ export function AppRouter() {
     <BrowserRouter>
       <RouteScrollManager />
       <CookieConsentManager />
-      <Suspense fallback={<RouteLoadingScreen fullscreen />}>
+      <Suspense fallback={null}>
         <Routes>
           <Route path="/admin" element={<AdminMarketCountersPage />} />
           <Route element={<LayoutShell />}>

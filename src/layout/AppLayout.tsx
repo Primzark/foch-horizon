@@ -1,11 +1,10 @@
-import { Suspense, useCallback, useLayoutEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useLayoutEffect, useRef } from "react";
 import type { ReactNode } from "react";
 import { useLocation, useNavigationType } from "react-router-dom";
 import { PageBreadcrumbs } from "@/layout/PageBreadcrumbs";
 import { AppFooter } from "@/layout/AppFooter";
 import { AppHeader } from "@/layout/AppHeader";
 import { SearchDrawer } from "@/features/listings/components/SearchDrawer";
-import { RouteLoadingScreen } from "@/components/ui/RouteLoadingScreen";
 import { BackToTopButton } from "@/components/ui/BackToTopButton";
 import { SiteChatbotLoader } from "@/features/content/components/SiteChatbotLoader";
 
@@ -28,11 +27,9 @@ function RouteReadyMarker({
 export function AppLayout({ children }: { children: ReactNode }) {
   const location = useLocation();
   const navigationType = useNavigationType();
-  const [readyLocationKey, setReadyLocationKey] = useState<string | null>(null);
   const previousLocation = useRef(location);
   const scrollPositions = useRef(new Map<string, number>());
   const pendingScroll = useRef<{ key: string; hash?: string; top?: number } | null>(null);
-  const isRouteLoading = readyLocationKey !== location.key;
 
   const markRouteReady = useCallback((key: string) => {
     const pending = pendingScroll.current;
@@ -44,7 +41,6 @@ export function AppLayout({ children }: { children: ReactNode }) {
       }
       pendingScroll.current = null;
     }
-    setReadyLocationKey(key);
   }, []);
 
   useLayoutEffect(() => {
@@ -77,20 +73,15 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {isRouteLoading && (
-        <div className="fixed inset-0 z-[200]">
-          <RouteLoadingScreen fullscreen />
-        </div>
-      )}
       <AppHeader />
       <main>
         <Suspense fallback={null}>
           {children}
           <RouteReadyMarker locationKey={location.key} hash={location.hash} onReady={markRouteReady} />
         </Suspense>
-        <PageBreadcrumbs hidden={isRouteLoading} />
+        <PageBreadcrumbs />
       </main>
-      <AppFooter hidden={isRouteLoading} />
+      <AppFooter />
       <SearchDrawer />
       <BackToTopButton />
       <SiteChatbotLoader />
