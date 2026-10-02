@@ -10,12 +10,42 @@ process.env.VITE_PUBLIC_SITE_URL = siteUrl;
 process.env.NODE_ENV = "production";
 const loader = await createServer({ optimizeDeps: { noDiscovery: true }, server: { middlewareMode: true }, appType: 'custom' });
 let guides;
-try { ({ geographyGuides: guides } = await loader.ssrLoadModule('/src/features/content/data/geographyGuides.ts')); }
-finally { await loader.close(); }
+let properties;
+try {
+  ({ geographyGuides: guides } = await loader.ssrLoadModule('/src/features/content/data/geographyGuides.ts'));
+  ({ properties } = await loader.ssrLoadModule('/src/features/listings/data/properties.ts'));
+} finally {
+  await loader.close();
+}
 await build();
 const template = await readFile('dist/index.html', 'utf8');
 // Dynamic and unknown routes use their own shell, never the prerendered homepage.
-await writeFile('dist/spa.html', template);
+const propertyImageSources = Object.fromEntries(
+  properties
+    .filter(property => property.images[0]?.sourceUrl)
+    .map(property => [String(property.id), property.images[0].sourceUrl]),
+);
+const propertyImagePreload = [
+  '<script>',
+  '(() => {',
+  '  const propertyId = window.location.pathname.split("/")[2]?.split("-")[0];',
+  `  const sourceUrl = ${JSON.stringify(propertyImageSources)}[propertyId];`,
+  '  if (!sourceUrl) return;',
+  '  const source = new URL(sourceUrl);',
+  '  if (!source.hostname.toLowerCase().endsWith(".staticlbi.com") || !source.pathname.includes("/wa/images/biens/")) return;',
+  '  const imageUrl = width => { const url = new URL(source); url.pathname = url.pathname.replace("/wa/images/biens/", "/" + width + "xauto/images/biens/"); return url.href; };',
+  '  const preload = document.createElement("link");',
+  '  preload.rel = "preload";',
+  '  preload.as = "image";',
+  '  preload.href = imageUrl(400);',
+  '  preload.setAttribute("imagesrcset", [200, 400, 700, 900].map(width => imageUrl(width) + " " + width + "w").join(", "));',
+  '  preload.setAttribute("imagesizes", "(max-width: 1023px) calc(100vw - 2rem), 66vw");',
+  '  preload.setAttribute("fetchpriority", "high");',
+  '  document.head.append(preload);',
+  '})();',
+  '</script>',
+].join("\n");
+await writeFile('dist/spa.html', template.replace('</head>', `${propertyImagePreload}\n</head>`));
 // Capture the same React pages for every visitor. No bot detection or separate AI content.
 const routes = ['/', '/geographie', '/services', '/vendre', '/estimation', '/apropos', '/contact', '/honoraires', '/reglementation-immobiliere', '/plan-du-site', '/mentions-legales', '/confidentialite', '/cookies', '/accessibilite', ...guides.map(guide => `/immobilier/${guide.id}`)];
 const server = await preview({ preview: { host: '127.0.0.1', port: 4175, strictPort: true } });
