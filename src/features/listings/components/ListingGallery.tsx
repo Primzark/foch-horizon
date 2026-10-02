@@ -48,7 +48,7 @@ export function ListingGallery({ images, title }: { images: PropertyImage[]; tit
             alt={activeImage.altText}
             className="aspect-[16/10] w-full object-cover"
             loading="eager"
-            fetchPriority="high"
+            fetchpriority="high"
             initial={reducedMotion ? { opacity: 0.86 } : { opacity: 0, scale: imageMotionPreset.enterScale, y: imageMotionPreset.enterY }}
             animate={
               reducedMotion

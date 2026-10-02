@@ -89,7 +89,7 @@ export default function HomePage() {
           className="absolute inset-0 h-full w-full object-cover object-center"
           loading="eager"
           decoding="async"
-          fetchPriority="high"
+          fetchpriority="high"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-black/38 via-black/16 to-black/0" />
         <PhotoAttribution credit={HERO_IMAGE_CREDIT} />
