@@ -11,6 +11,7 @@ import { searchProperties } from "@/features/listings/api/properties.service";
 import { formatPrice, formatPropertyTypeLabel, normalizeKeyword, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
 import type { PropertySearchItem, PropertySearchParams, PropertySearchResponse } from "@/types/api";
 import type { TransactionType } from "@/types/domain";
+import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
 
 const searchPrompts = ["Le Havre", "Sainte-Adresse", "Montivilliers", "vue mer"];
 const searchShortcuts: Array<{ label: string; filters: Partial<PropertySearchParams> }> = [
@@ -289,7 +290,9 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
                     >
                       {suggestion.coverImageUrl ? (
                         <img
-                          src={suggestion.coverImageUrl}
+                          src={getPropertyImageUrl(suggestion.coverImageUrl, 200)}
+                          srcSet={getPropertyImageSrcSet(suggestion.coverImageUrl, [200, 400])}
+                          sizes="56px"
                           alt=""
                           className="h-11 w-14 rounded-lg object-cover"
                           loading="lazy"

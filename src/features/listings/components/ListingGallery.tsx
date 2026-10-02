@@ -17,6 +17,7 @@ import { PlaceAtmosphereLayer } from "@/components/visuals/PlaceAtmosphereLayer"
 import { ContextAwareParallax } from "@/components/visuals/ContextAwareParallax";
 import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
 import { getMotionDirectorProfile } from "@/lib/visuals/motionDirector";
+import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
 
 export function ListingGallery({ images, title }: { images: PropertyImage[]; title: string }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -41,7 +42,9 @@ export function ListingGallery({ images, title }: { images: PropertyImage[]; tit
         <ContextAwareParallax mood={imageMood} reducedMotion={reducedMotion} intensity="immersive" scrollReactive className="z-[0]">
           <motion.img
             key={activeImage.id}
-            src={activeImage.sourceUrl}
+            src={getPropertyImageUrl(activeImage.sourceUrl, 400)}
+            srcSet={getPropertyImageSrcSet(activeImage.sourceUrl)}
+            sizes="(max-width: 1023px) calc(100vw - 2rem), 66vw"
             alt={activeImage.altText}
             className="aspect-[16/10] w-full object-cover"
             loading="eager"
@@ -91,9 +94,13 @@ export function ListingGallery({ images, title }: { images: PropertyImage[]; tit
               {images.map((image, index) => (
                 <motion.img
                   key={image.id}
-                  src={image.sourceUrl}
+                  src={getPropertyImageUrl(image.sourceUrl, 400)}
+                  srcSet={getPropertyImageSrcSet(image.sourceUrl)}
+                  sizes="(max-width: 767px) 90vw, 44vw"
                   alt={image.altText}
                   className="w-full rounded-xl object-cover"
+                  loading="lazy"
+                  decoding="async"
                   initial={reducedMotion ? { opacity: 1 } : { opacity: 0, y: 16 }}
                   whileInView={reducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.24 }}
@@ -124,7 +131,9 @@ export function ListingGallery({ images, title }: { images: PropertyImage[]; tit
               )}
             >
               <img
-                src={image.sourceUrl}
+                src={getPropertyImageUrl(image.sourceUrl, 200)}
+                srcSet={getPropertyImageSrcSet(image.sourceUrl, [200, 400])}
+                sizes="100px"
                 alt={image.altText}
                 className="aspect-[4/3] w-full object-cover transition-transform duration-300 hover:scale-[1.04]"
                 loading="lazy"

@@ -16,6 +16,7 @@ import { PlaceAtmosphereLayer } from "@/components/visuals/PlaceAtmosphereLayer"
 import { ContextAwareParallax } from "@/components/visuals/ContextAwareParallax";
 import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
 import { getMotionDirectorProfile } from "@/lib/visuals/motionDirector";
+import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
 
 interface ListingCardProps {
   item: PropertySearchItem;
@@ -61,7 +62,9 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, eagerIma
           <div className="relative overflow-hidden rounded-xl">
             <ContextAwareParallax mood={imageMood} reducedMotion={reducedMotion} intensity="subtle">
               <img
-                src={item.coverImageUrl}
+                src={getPropertyImageUrl(item.coverImageUrl, 400)}
+                srcSet={getPropertyImageSrcSet(item.coverImageUrl)}
+                sizes={viewMode === "list" ? "(max-width: 767px) 100vw, 280px" : "(max-width: 767px) 92vw, (max-width: 1023px) 48vw, 33vw"}
                 alt={item.title}
                 className={cn(
                   "aspect-[4/3] h-full w-full object-cover transition-transform",
@@ -174,7 +177,9 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, eagerIma
       <Link to={path} className="relative block overflow-hidden" itemProp="url">
         <ContextAwareParallax mood={imageMood} reducedMotion={reducedMotion} intensity="subtle">
           <img
-            src={item.coverImageUrl}
+            src={getPropertyImageUrl(item.coverImageUrl, 400)}
+            srcSet={getPropertyImageSrcSet(item.coverImageUrl)}
+            sizes="(max-width: 767px) 92vw, (max-width: 1023px) 48vw, 33vw"
             alt={item.title}
             className={cn(
                   "aspect-[3/2] w-full object-cover transition-transform",

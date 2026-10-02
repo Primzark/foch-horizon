@@ -13,6 +13,17 @@
     <meta name="theme-color" content="#2c8f63" />
 
     <script>
+      if (["/biens", "/contact", "/nos-dernieres-ventes", "/geographie", "/vendre", "/estimation"].includes(window.location.pathname)) {
+        const heroImage = document.createElement("link");
+        heroImage.rel = "preload";
+        heroImage.as = "image";
+        heroImage.href = "/images/geography/foch-storefront.webp";
+        heroImage.setAttribute("fetchpriority", "high");
+        document.head.append(heroImage);
+      }
+    </script>
+
+    <script>
       window.dataLayer = window.dataLayer || [];
       function gtag() {
         window.dataLayer.push(arguments);
@@ -25,12 +36,8 @@
       });
     </script>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Sora:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+    <link rel="preload" href="/fonts/sora-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/cormorant-garamond-latin.woff2" as="font" type="font/woff2" crossorigin />
 
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Foch Immobilier" />

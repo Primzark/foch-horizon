@@ -1,5 +1,5 @@
 import { Link, Navigate, useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { motion, useScroll } from "framer-motion";
 import { useRef } from "react";
 import { Bath, BedDouble, Car, Copy, Heart, MapPin, Maximize, Phone } from "lucide-react";
@@ -55,16 +55,16 @@ export default function ListingDetailPage() {
     offset: ["start start", "end end"],
   });
 
-  const propertyQuery = useQuery({
+  const propertyQuery = useSuspenseQuery({
     queryKey: ["property", propertyId],
     enabled: propertyId != null,
     queryFn: () => getPropertyById(propertyId as number),
   });
 
-  const similarQuery = useQuery({
+  const similarQuery = useSuspenseQuery({
     queryKey: ["similar", propertyId],
-    enabled: Boolean(propertyQuery.data),
-    queryFn: () => getSimilarProperties(propertyQuery.data!, 3),
+    queryFn: () =>
+      propertyQuery.data ? getSimilarProperties(propertyQuery.data, 3) : Promise.resolve([]),
   });
 
   const property = propertyQuery.data;
@@ -131,14 +131,6 @@ export default function ListingDetailPage() {
 
   if (propertyId == null) {
     return <Navigate to="/biens" replace />;
-  }
-
-  if (propertyQuery.isLoading) {
-    return (
-      <section className="container mx-auto px-4 py-8">
-        <div className="h-[420px] animate-pulse rounded-2xl bg-muted/60" />
-      </section>
-    );
   }
 
   if (!property) {

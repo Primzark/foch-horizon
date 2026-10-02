@@ -11,6 +11,7 @@ import { buildSearchParams } from "@/features/listings/utils/query";
 import { formatPrice, formatPropertyTypeLabel, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
 import type { PropertySearchParams } from "@/types/api";
 import type { PropertyType } from "@/types/domain";
+import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
 
 export function BudgetFinder() {
   const [budgetText, setBudgetText] = useState("350000");
@@ -191,7 +192,15 @@ export function BudgetFinder() {
                     className="group flex min-h-[88px] items-center gap-4 py-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     {item.coverImageUrl ? (
-                      <img src={item.coverImageUrl} alt="" loading="lazy" decoding="async" className="h-16 w-20 shrink-0 rounded-lg object-cover" />
+                      <img
+                        src={getPropertyImageUrl(item.coverImageUrl, 200)}
+                        srcSet={getPropertyImageSrcSet(item.coverImageUrl, [200, 400])}
+                        sizes="80px"
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        className="h-16 w-20 shrink-0 rounded-lg object-cover"
+                      />
                     ) : (
                       <div className="flex h-16 w-20 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-brand-strong" aria-hidden="true">
                         <MapPin className="h-5 w-5" />

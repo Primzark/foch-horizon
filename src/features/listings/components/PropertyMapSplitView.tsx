@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import type { PropertySearchItem } from "@/types/api";
 import { formatPrice, formatPropertyTypeLabel, normalizeKeyword, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
 import { PaginationBar } from "@/features/listings/components/PaginationBar";
+import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
 import "leaflet/dist/leaflet.css";
 import "./property-map.css";
 
@@ -206,7 +207,9 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
                   className="grid w-full grid-cols-[92px_minmax(0,1fr)] gap-3 rounded-xl text-left outline-none ring-offset-background transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:grid-cols-[112px_minmax(0,1fr)]"
                 >
                   <img
-                    src={item.coverImageUrl}
+                    src={getPropertyImageUrl(item.coverImageUrl, 200)}
+                    srcSet={getPropertyImageSrcSet(item.coverImageUrl, [200, 400])}
+                    sizes="112px"
                     alt=""
                     loading="lazy"
                     className="h-[82px] w-[92px] rounded-lg object-cover sm:h-[94px] sm:w-[112px]"
@@ -262,7 +265,9 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
         {selectedItem && (
           <div className="absolute left-3 top-3 z-[1000] flex w-[min(19rem,calc(100%-5.5rem))] gap-3 rounded-2xl border border-border/70 bg-background/95 p-2.5 shadow-lg backdrop-blur">
             <img
-              src={selectedItem.coverImageUrl}
+              src={getPropertyImageUrl(selectedItem.coverImageUrl, 200)}
+              srcSet={getPropertyImageSrcSet(selectedItem.coverImageUrl, [200, 400])}
+              sizes="80px"
               alt=""
               className="h-16 w-20 shrink-0 rounded-lg object-cover"
               loading="lazy"

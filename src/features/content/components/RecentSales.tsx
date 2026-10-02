@@ -10,6 +10,7 @@ import { getRecentSales } from "@/features/content/api/recentSales.service";
 import { searchProperties } from "@/features/listings/api/properties.service";
 import { formatPrice, formatPropertyTypeLabel, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
 import type { PropertySearchItem } from "@/types/api";
+import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
 
 export function RecentSales({ compact = false }: { compact?: boolean }) {
   const query = useQuery({ queryKey: ["recent-sales"], queryFn: getRecentSales, staleTime: 300_000 });
@@ -134,7 +135,15 @@ export function RecentSales({ compact = false }: { compact?: boolean }) {
               {sales.map((sale) => (
                 <article key={sale.id}>
                   <div className="relative overflow-hidden rounded-xl bg-muted">
-                    <img src={sale.coverImageUrl} alt={sale.title} className="aspect-[4/3] w-full object-cover" loading="lazy" />
+                    <img
+                      src={getPropertyImageUrl(sale.coverImageUrl, 400)}
+                      srcSet={getPropertyImageSrcSet(sale.coverImageUrl)}
+                      sizes="(max-width: 767px) 100vw, (max-width: 1279px) 50vw, 33vw"
+                      alt={sale.title}
+                      className="aspect-[4/3] w-full object-cover"
+                      loading="lazy"
+                      decoding="async"
+                    />
                     <span className="absolute left-3 top-3 rounded-full bg-background px-3 py-1 text-xs font-medium">Vendu</span>
                   </div>
                   <p className="mt-4 text-xs uppercase tracking-wider text-muted-foreground">{sale.city.name} · {sale.surfaceM2} m²</p>
@@ -161,7 +170,9 @@ function PropertyCarouselCard({ property, isSold }: { property: PropertySearchIt
       >
         <div className="relative aspect-[4/3] overflow-hidden bg-muted">
           <img
-            src={property.coverImageUrl}
+            src={getPropertyImageUrl(property.coverImageUrl, 400)}
+            srcSet={getPropertyImageSrcSet(property.coverImageUrl)}
+            sizes="(max-width: 767px) 86vw, (max-width: 1279px) 45vw, 33vw"
             alt={property.title}
             className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
             loading="lazy"
