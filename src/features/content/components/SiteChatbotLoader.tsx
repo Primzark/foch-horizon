@@ -51,21 +51,21 @@ export function SiteChatbotLoader() {
   return (
     <div
       className={cn(
-        "pointer-events-auto fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] right-[max(0.75rem,env(safe-area-inset-right))] z-[160] max-w-[calc(100vw-env(safe-area-inset-left)-env(safe-area-inset-right)-1.5rem)]",
-        isHomePage && "flex w-[min(420px,calc(100vw-1.5rem))] flex-col items-end",
+        "pointer-events-auto fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] right-[max(0.75rem,env(safe-area-inset-right))] z-[160] flex max-w-[calc(100vw-env(safe-area-inset-left)-env(safe-area-inset-right)-1.5rem)] flex-col items-end",
+        isHomePage && "w-[min(420px,calc(100vw-1.5rem))]",
       )}
     >
       <Button
         type="button"
         variant="brand"
-        className="h-10 max-w-[13.5rem] rounded-full px-3 text-xs shadow-card sm:h-12 sm:max-w-none sm:px-4 sm:text-sm"
+        className="h-11 w-11 rounded-full p-0 text-xs shadow-card sm:h-12 sm:w-auto sm:max-w-none sm:px-4 sm:text-sm"
         onClick={() => loadChatbot(true)}
         aria-haspopup="dialog"
+        aria-label="Assistant immobilier IA"
       >
-        <BotMessageSquare className="mr-1 h-4 w-4" />
-        <span className="sm:hidden">Assistant IA</span>
-        <span className="hidden sm:inline">Assistant immobilier IA</span>
-        <Sparkles className="ml-1 h-3.5 w-3.5" />
+        <BotMessageSquare className="h-4 w-4 sm:mr-1" />
+        <span className="sr-only sm:not-sr-only">Assistant immobilier IA</span>
+        <Sparkles className="hidden h-3.5 w-3.5 sm:ml-1 sm:block" />
       </Button>
     </div>
   );

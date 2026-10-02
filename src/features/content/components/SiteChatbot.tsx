@@ -1039,8 +1039,8 @@ export function SiteChatbot() {
   const location = useLocation();
   const isHomePage = location.pathname === "/";
   const assistantContainerClassName = cn(
-    "pointer-events-auto fixed z-[160] bottom-[max(0.75rem,env(safe-area-inset-bottom))] right-[max(0.75rem,env(safe-area-inset-right))] max-w-[calc(100vw-env(safe-area-inset-left)-env(safe-area-inset-right)-1.5rem)]",
-    isHomePage && "flex w-[min(420px,calc(100vw-1.5rem))] flex-col items-end",
+    "pointer-events-auto fixed z-[160] bottom-[max(0.75rem,env(safe-area-inset-bottom))] right-[max(0.75rem,env(safe-area-inset-right))] flex max-w-[calc(100vw-env(safe-area-inset-left)-env(safe-area-inset-right)-1.5rem)] flex-col items-end",
+    isHomePage && "w-[min(420px,calc(100vw-1.5rem))]",
   );
   const assistantPanelClassName = cn(
     "pointer-events-auto mb-3 flex max-h-[calc(100dvh-5.5rem)] w-[min(94vw,420px)] flex-col rounded-2xl border border-border bg-card shadow-card max-sm:w-full",
@@ -3479,13 +3479,13 @@ export function SiteChatbot() {
       <Button
         type="button"
         variant="brand"
-        className="h-10 max-w-[13.5rem] rounded-full px-3 text-xs shadow-card sm:h-12 sm:max-w-none sm:px-4 sm:text-sm"
+        className="h-11 w-11 rounded-full p-0 text-xs shadow-card sm:h-12 sm:w-auto sm:max-w-none sm:px-4 sm:text-sm"
         onClick={openChatWithGreeting}
+        aria-label={open ? "Fermer l’assistant" : "Assistant immobilier IA"}
       >
-        {open ? <X className="mr-1 h-4 w-4" /> : <BotMessageSquare className="mr-1 h-4 w-4" />}
-        <span className="sm:hidden">{open ? "Fermer" : "Assistant IA"}</span>
-        <span className="hidden sm:inline">{open ? "Fermer" : "Assistant immobilier IA"}</span>
-        <Sparkles className="ml-1 h-3.5 w-3.5" />
+        {open ? <X className="h-4 w-4 sm:mr-1" /> : <BotMessageSquare className="h-4 w-4 sm:mr-1" />}
+        <span className="sr-only sm:not-sr-only">{open ? "Fermer" : "Assistant immobilier IA"}</span>
+        {!open && <Sparkles className="hidden h-3.5 w-3.5 sm:ml-1 sm:block" />}
       </Button>
       </div>
       )}

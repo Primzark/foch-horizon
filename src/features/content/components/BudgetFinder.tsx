@@ -59,8 +59,8 @@ export function BudgetFinder() {
 
   return (
     <section className="border-y border-border bg-muted/25" aria-labelledby="budget-finder-title">
-      <div className="container mx-auto grid gap-9 px-4 py-12 md:py-14 lg:grid-cols-[minmax(17rem,0.8fr)_minmax(0,1.2fr)] lg:gap-12">
-        <div>
+      <div className="container mx-auto grid grid-cols-1 gap-9 px-4 py-12 md:py-14 lg:grid-cols-[minmax(17rem,0.8fr)_minmax(0,1.2fr)] lg:gap-12">
+        <div className="min-w-0">
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-brand-strong">Explorer par budget</p>
           <h2 id="budget-finder-title" className="mt-2 max-w-md font-display text-3xl md:text-4xl">
             Que peut-on acheter avec votre budget ?
@@ -125,9 +125,9 @@ export function BudgetFinder() {
           </div>
         </div>
 
-        <div className="lg:border-l lg:border-border lg:pl-8">
+        <div className="min-w-0 lg:border-l lg:border-border lg:pl-8">
           <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-4">
-            <div>
+            <div className="min-w-0">
               <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Votre sélection</p>
               <h3 className="mt-1 font-display text-2xl">
                 {!hasValidBudget
