@@ -1,10 +1,10 @@
-import { Link, Navigate, useParams } from "react-router-dom";
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { Link, Navigate, useLocation, useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { motion, useScroll } from "framer-motion";
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import { Bath, BedDouble, Car, Copy, Heart, MapPin, Maximize, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cityById } from "@/features/cities/data/cities";
+import { cityById, cityBySlug } from "@/features/cities/data/cities";
 import { getPropertyById, getSimilarProperties } from "@/features/listings/api/properties.service";
 import { ListingGallery } from "@/features/listings/components/ListingGallery";
 import { ListingCard } from "@/features/listings/components/ListingCard";
@@ -23,7 +23,8 @@ import {
 import { useFavoritesStore } from "@/features/favorites/useFavoritesStore";
 import { getSiteUrl, useSeo } from "@/lib/seo/useSeo";
 import { trackEvent } from "@/lib/analytics/events";
-import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
+import type { PropertySearchItem } from "@/types/api";
+import type { Property } from "@/types/domain";
 
 function parseRouteIdAndSlug(rawIdSlug?: string): { id: number; slug: string | null } | null {
   if (!rawIdSlug) {
@@ -41,9 +42,79 @@ function parseRouteIdAndSlug(rawIdSlug?: string): { id: number; slug: string | n
   return { id, slug };
 }
 
+function getNavigationPreview(state: unknown, propertyId: number | null): PropertySearchItem | null {
+  if (!state || typeof state !== "object" || propertyId == null) return null;
+
+  const preview = (state as { propertyPreview?: unknown }).propertyPreview;
+  if (!preview || typeof preview !== "object") return null;
+
+  const item = preview as Partial<PropertySearchItem>;
+  if (
+    item.id !== propertyId ||
+    typeof item.title !== "string" ||
+    typeof item.slug !== "string" ||
+    (item.transaction !== "vente" && item.transaction !== "location") ||
+    (item.type !== "appartement" && item.type !== "maison_villa" && item.type !== "autre") ||
+    !item.status ||
+    (item.status !== "active" && item.status !== "under_offer" && item.status !== "sold" && item.status !== "rented" && item.status !== "off_market") ||
+    typeof item.priceAmount !== "number" ||
+    item.currency !== "EUR" ||
+    typeof item.surfaceM2 !== "number" ||
+    typeof item.coverImageUrl !== "string" ||
+    !item.city ||
+    typeof item.city.name !== "string" ||
+    typeof item.city.slug !== "string" ||
+    typeof item.city.postalCode !== "string"
+  ) {
+    return null;
+  }
+
+  return item as PropertySearchItem;
+}
+
+function toPropertyPreview(item: PropertySearchItem): Property {
+  const imageUrl = item.coverImageUrl.trim();
+
+  return {
+    id: item.id,
+    title: item.title,
+    slug: item.slug,
+    transactionType: item.transaction,
+    propertyType: item.type,
+    status: item.status,
+    sourceStatus: null,
+    priceAmount: item.priceAmount,
+    priceCurrency: item.currency,
+    surfaceM2: item.surfaceM2,
+    terrainM2: null,
+    rooms: null,
+    bedrooms: item.bedrooms ?? null,
+    bathrooms: item.bathrooms ?? null,
+    parkingCount: item.parking ?? null,
+    garageCount: item.garage ?? null,
+    dpeLabel: item.dpeLabel ?? null,
+    dpeValue: null,
+    gesLabel: null,
+    gesValue: null,
+    description: "",
+    cityId: cityBySlug.get(item.city.slug)?.id ?? "city-le-havre",
+    postalCode: item.city.postalCode,
+    lat: null,
+    lng: null,
+    agentId: "",
+    publishedAt: "",
+    updatedAt: "",
+    isFeatured: false,
+    images: imageUrl
+      ? [{ id: `${item.id}-preview`, propertyId: item.id, sourceUrl: imageUrl, sortOrder: 0, altText: item.title }]
+      : [],
+    features: [],
+  };
+}
+
 export default function ListingDetailPage() {
-  const { reducedMotion } = useMotionPreference();
   const contentRef = useRef<HTMLDivElement | null>(null);
+  const location = useLocation();
   const params = useParams();
   const favoriteIds = useFavoritesStore((state) => state.ids);
   const toggleFavorite = useFavoritesStore((state) => state.toggle);
@@ -55,16 +126,25 @@ export default function ListingDetailPage() {
     offset: ["start start", "end end"],
   });
 
-  const propertyQuery = useSuspenseQuery({
+  const navigationPreview = getNavigationPreview(location.state, propertyId);
+  const previewProperty = useMemo(
+    () => (navigationPreview ? toPropertyPreview(navigationPreview) : undefined),
+    [navigationPreview],
+  );
+  const propertyQuery = useQuery({
     queryKey: ["property", propertyId],
     enabled: propertyId != null,
     queryFn: () => getPropertyById(propertyId as number),
+    placeholderData: previewProperty,
   });
 
   const similarQuery = useQuery({
     queryKey: ["similar", propertyId],
     queryFn: () =>
-      propertyQuery.data ? getSimilarProperties(propertyQuery.data, 3) : Promise.resolve([]),
+      propertyQuery.data && !propertyQuery.isPlaceholderData
+        ? getSimilarProperties(propertyQuery.data, 3)
+        : Promise.resolve([]),
+    enabled: Boolean(propertyQuery.data && !propertyQuery.isPlaceholderData),
   });
 
   const property = propertyQuery.data;
@@ -73,7 +153,7 @@ export default function ListingDetailPage() {
   const canonicalPath = property ? toCanonicalPropertyPath({ id: property.id, slug: property.slug }) : null;
 
   useSeo(
-    property
+    property && !propertyQuery.isPlaceholderData
       ? {
           title: `${property.title} – ${cityById.get(property.cityId)?.name ?? "Le Havre"} – Prix ${formatPrice(
             property.priceAmount,
@@ -121,6 +201,19 @@ export default function ListingDetailPage() {
             },
           },
         }
+      : property && propertyQuery.isPlaceholderData
+        ? {
+            title: `${property.title} – ${cityById.get(property.cityId)?.name ?? "Le Havre"} – Foch Immobilier`,
+            description: `Découvrez l’annonce ${property.title} au Havre et consultez ses photos et caractéristiques.`,
+            canonicalPath,
+            image: property.images[0]?.sourceUrl,
+          }
+        : propertyQuery.isPending
+          ? {
+              title: "Annonce immobilière | Foch Immobilier",
+              description: "Consultez les annonces immobilières de Foch Immobilier au Havre.",
+              canonicalPath: propertyId == null ? "/biens" : `/biens/${propertyId}`,
+            }
       : {
           title: "Bien introuvable | Foch Immobilier",
           description: "Cette annonce n'est plus disponible.",
@@ -131,6 +224,23 @@ export default function ListingDetailPage() {
 
   if (propertyId == null) {
     return <Navigate to="/biens" replace />;
+  }
+
+  if (!property && propertyQuery.isPending) {
+    return (
+      <section className="container mx-auto min-h-[60vh] px-4 py-8" aria-busy="true" aria-label="Chargement de l’annonce">
+        <div className="mb-4 h-4 w-44 rounded bg-muted" aria-hidden="true" />
+        <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
+          <div>
+            <div className="aspect-[16/10] rounded-2xl bg-muted" aria-hidden="true" />
+            <div className="mt-6 h-8 w-2/3 rounded bg-muted" aria-hidden="true" />
+            <div className="mt-3 h-5 w-1/3 rounded bg-muted" aria-hidden="true" />
+          </div>
+          <div className="h-56 rounded-2xl bg-muted" aria-hidden="true" />
+        </div>
+        <span className="sr-only">Chargement de l’annonce…</span>
+      </section>
+    );
   }
 
   if (!property) {
@@ -158,16 +268,6 @@ export default function ListingDetailPage() {
   const agent = agentById.get(property.agentId);
   const propertyTypeLabel = formatPropertyTypeLabel(property.propertyType);
   const statusLabel = getPropertyStatusLabel(property.status) ?? "À vendre";
-  const sectionReveal = (delay = 0) =>
-    reducedMotion
-      ? { initial: { opacity: 1 }, whileInView: { opacity: 1 }, viewport: { once: true, amount: 0.2 } }
-      : {
-          initial: { opacity: 0, y: 18 },
-          whileInView: { opacity: 1, y: 0 },
-          viewport: { once: true, amount: 0.2 },
-          transition: { duration: 0.24, delay, ease: "easeOut" as const },
-        };
-
   const quickFacts = [
     { icon: Maximize, label: "Surface", value: `${property.surfaceM2} m²` },
     { icon: BedDouble, label: "Chambres", value: `${property.bedrooms ?? "-"}` },
@@ -200,11 +300,9 @@ export default function ListingDetailPage() {
 
       <div ref={contentRef} className="grid gap-8 lg:grid-cols-[1fr_340px]">
         <div>
-          <motion.div {...sectionReveal(0)}>
-            <ListingGallery images={property.images} title={property.title} />
-          </motion.div>
+          <ListingGallery images={property.images} title={property.title} />
 
-          <motion.div {...sectionReveal(0.04)} className="mt-6 flex flex-wrap items-start justify-between gap-4">
+          <div className="mt-6 flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Réf du bien {property.id}</p>
               <h1 className="mt-1 font-display text-4xl">{property.title}</h1>
@@ -256,12 +354,9 @@ export default function ListingDetailPage() {
                 </Button>
               </div>
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div
-            {...sectionReveal(0.08)}
-            className="mt-6 grid gap-3 rounded-2xl border border-border bg-card p-4 sm:grid-cols-4"
-          >
+          <div className="mt-6 grid gap-3 rounded-2xl border border-border bg-card p-4 sm:grid-cols-4">
             {quickFacts.map((fact) => (
               <div key={fact.label} className="rounded-xl border border-border p-3 text-center">
                 <fact.icon className="mx-auto h-4 w-4" />
@@ -269,14 +364,14 @@ export default function ListingDetailPage() {
                 <p className="text-xs text-muted-foreground">{fact.label}</p>
               </div>
             ))}
-          </motion.div>
+          </div>
 
-          <motion.article {...sectionReveal(0.12)} className="mt-8 rounded-2xl border border-border bg-card p-6">
+          <article className="mt-8 rounded-2xl border border-border bg-card p-6">
             <h2 className="font-display text-2xl">Description</h2>
             <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">{property.description}</p>
-          </motion.article>
+          </article>
 
-          <motion.article {...sectionReveal(0.16)} className="mt-6 rounded-2xl border border-border bg-card p-6">
+          <article className="mt-6 rounded-2xl border border-border bg-card p-6">
             <h2 className="font-display text-2xl">Caractéristiques</h2>
             <ul className="mt-3 flex flex-wrap gap-2">
               {property.features.map((feature) => (
@@ -285,9 +380,9 @@ export default function ListingDetailPage() {
                 </li>
               ))}
             </ul>
-          </motion.article>
+          </article>
 
-          <motion.article {...sectionReveal(0.2)} className="mt-6 rounded-2xl border border-border bg-card p-6">
+          <article className="mt-6 rounded-2xl border border-border bg-card p-6">
             <h2 className="font-display text-2xl">Performance énergétique</h2>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <div className="rounded-xl border border-border p-4">
@@ -305,7 +400,7 @@ export default function ListingDetailPage() {
                 </div>
               </div>
             </div>
-          </motion.article>
+          </article>
         </div>
 
         <aside className="space-y-4 lg:sticky lg:top-[calc(145px+env(safe-area-inset-top))] lg:h-fit">

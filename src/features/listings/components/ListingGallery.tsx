@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState, type TouchEvent } from "react";
 import { Expand, Images } from "lucide-react";
 import { motion } from "framer-motion";
 import {
@@ -12,7 +12,7 @@ import {
 import type { PropertyImage } from "@/types/domain";
 import { trackEvent } from "@/lib/analytics/events";
 import { cn } from "@/lib/utils";
-import { getPlaceImageMotionPreset, inferPlaceImageMood } from "@/lib/visuals/placeImageMotion";
+import { inferPlaceImageMood } from "@/lib/visuals/placeImageMotion";
 import { PlaceAtmosphereLayer } from "@/components/visuals/PlaceAtmosphereLayer";
 import { ContextAwareParallax } from "@/components/visuals/ContextAwareParallax";
 import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
@@ -21,6 +21,8 @@ import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings
 
 export function ListingGallery({ images, title }: { images: PropertyImage[]; title: string }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const warmedImageUrlsRef = useRef(new Map<string, HTMLImageElement>());
   const { reducedMotion } = useMotionPreference();
 
   if (images.length === 0) {
@@ -31,16 +33,60 @@ export function ListingGallery({ images, title }: { images: PropertyImage[]; tit
     );
   }
 
-  const activeImage = images[selectedIndex];
+  const activeIndex = Math.min(selectedIndex, images.length - 1);
+  const activeImage = images[activeIndex];
   const imageMood = inferPlaceImageMood(title, activeImage.altText);
-  const imageMotionPreset = getPlaceImageMotionPreset(imageMood);
   const motionDirector = getMotionDirectorProfile(imageMood);
+
+  const preloadAdjacentImages = () => {
+    if (images.length < 2) return;
+
+    [-1, 1].forEach((offset) => {
+      const imageIndex = (activeIndex + offset + images.length) % images.length;
+      const sourceUrl = images[imageIndex].sourceUrl;
+      if (!sourceUrl || warmedImageUrlsRef.current.has(sourceUrl)) return;
+
+      const image = new Image();
+      image.decoding = "async";
+      image.fetchPriority = "low";
+      image.sizes = "(max-width: 1023px) calc(100vw - 2rem), 66vw";
+      image.srcset = getPropertyImageSrcSet(sourceUrl) ?? "";
+      image.src = getPropertyImageUrl(sourceUrl, 400);
+      warmedImageUrlsRef.current.set(sourceUrl, image);
+    });
+  };
+
+  const handleTouchStart = (event: TouchEvent<HTMLDivElement>) => {
+    const touch = event.changedTouches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+    preloadAdjacentImages();
+  };
+
+  const handleTouchEnd = (event: TouchEvent<HTMLDivElement>) => {
+    const start = touchStartRef.current;
+    touchStartRef.current = null;
+    if (!start || images.length < 2) return;
+
+    const touch = event.changedTouches[0];
+    const deltaX = touch.clientX - start.x;
+    const deltaY = touch.clientY - start.y;
+    if (Math.abs(deltaX) < 48 || Math.abs(deltaX) < Math.abs(deltaY) * 1.2) return;
+
+    setSelectedIndex((current) => (current + (deltaX < 0 ? 1 : -1) + images.length) % images.length);
+  };
 
   return (
     <div>
-      <div className="relative overflow-hidden rounded-2xl border border-border">
+      <div
+        className="relative touch-pan-y overflow-hidden rounded-2xl border border-border"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={() => {
+          touchStartRef.current = null;
+        }}
+      >
         <ContextAwareParallax mood={imageMood} reducedMotion={reducedMotion} intensity="immersive" scrollReactive className="z-[0]">
-          <motion.img
+          <img
             key={activeImage.id}
             src={getPropertyImageUrl(activeImage.sourceUrl, 400)}
             srcSet={getPropertyImageSrcSet(activeImage.sourceUrl)}
@@ -48,30 +94,17 @@ export function ListingGallery({ images, title }: { images: PropertyImage[]; tit
             alt={activeImage.altText}
             className="aspect-[16/10] w-full object-cover"
             loading="eager"
-            fetchpriority="high"
-            initial={reducedMotion ? { opacity: 0.86 } : { opacity: 0, scale: imageMotionPreset.enterScale, y: imageMotionPreset.enterY }}
-            animate={
-              reducedMotion
-                ? { opacity: 1 }
-                : { opacity: 1, scale: [1, imageMotionPreset.hoverScale - 0.01, 1], y: [0, imageMotionPreset.hoverY, 0] }
-            }
-            transition={
-              reducedMotion
-                ? { duration: 0.28, ease: "easeOut" }
-                : {
-                    opacity: { duration: motionDirector.revealDuration + 0.06, ease: [0.22, 1, 0.36, 1] },
-                    scale: { duration: imageMotionPreset.floatDuration, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" },
-                    y: { duration: imageMotionPreset.floatDuration, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" },
-                  }
-            }
+            fetchPriority="high"
+            decoding="async"
+            onLoad={preloadAdjacentImages}
           />
         </ContextAwareParallax>
-        <PlaceAtmosphereLayer mood={imageMood} animated={!reducedMotion} variant="gallery" className="z-[1]" />
+        <PlaceAtmosphereLayer mood={imageMood} animated={false} variant="gallery" className="z-[1]" />
         <div className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-t from-black/22 via-black/8 to-transparent" />
 
         <div className="absolute left-3 top-3 z-[3] rounded-full bg-background/90 px-2 py-1 text-xs">
           <Images className="mr-1 inline h-3.5 w-3.5" />
-          {selectedIndex + 1}/{images.length}
+          {activeIndex + 1}/{images.length}
         </div>
 
         <Dialog>
@@ -125,7 +158,7 @@ export function ListingGallery({ images, title }: { images: PropertyImage[]; tit
               onClick={() => setSelectedIndex(index)}
               className={cn(
                 "overflow-hidden rounded-lg border transition-all duration-300",
-                index === selectedIndex
+                index === activeIndex
                   ? "border-foreground ring-1 ring-foreground/40"
                   : "border-border hover:-translate-y-0.5 hover:border-brand-border",
               )}

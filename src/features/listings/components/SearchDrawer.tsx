@@ -10,6 +10,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { cities } from "@/features/cities/data/cities";
 import { featureOptions, propertyTypeOptions } from "@/features/listings/data/options";
 import { parseReferenceFromQuery, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
+import { toSearchItem } from "@/features/listings/utils/mappers";
 import { buildSearchParams, parseSearchParams } from "@/features/listings/utils/query";
 import type { PropertySearchParams } from "@/types/api";
 import { useUiStore } from "@/lib/state/useUiStore";
@@ -53,7 +54,10 @@ export function SearchDrawer() {
       const { propertyById } = await import("@/features/listings/data/properties");
       const property = propertyById.get(reference);
       if (property) {
-        navigate(toCanonicalPropertyPath(property), { replace: false });
+        navigate(toCanonicalPropertyPath(property), {
+          replace: false,
+          state: { propertyPreview: toSearchItem(property) },
+        });
         setSearchDrawerOpen(false);
         trackEvent("filter_applied", { reference });
         return;

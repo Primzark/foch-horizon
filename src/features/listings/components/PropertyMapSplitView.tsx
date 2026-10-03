@@ -234,6 +234,7 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
                 <div className="mt-1 flex justify-end">
                   <Link
                     to={toCanonicalPropertyPath(item)}
+                    state={{ propertyPreview: item }}
                     className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold text-brand-strong underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     Voir l’annonce <ArrowUpRight aria-hidden="true" className="h-3.5 w-3.5" />
@@ -283,6 +284,7 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
                 </span>
                 <Link
                   to={toCanonicalPropertyPath(selectedItem)}
+                  state={{ propertyPreview: selectedItem }}
                   aria-label={`Voir l’annonce ${selectedItem.title}`}
                   className="rounded-full p-1 text-brand-strong hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >

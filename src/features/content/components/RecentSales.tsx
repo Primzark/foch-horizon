@@ -165,6 +165,7 @@ function PropertyCarouselCard({ property, isSold }: { property: PropertySearchIt
     <article className="h-full">
       <Link
         to={propertyPath}
+        state={{ propertyPreview: property }}
         aria-label={`Voir le bien : ${property.title}`}
         className="group block h-full overflow-hidden rounded-2xl border border-border bg-card transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-1 hover:border-brand-border hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       >

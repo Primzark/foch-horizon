@@ -138,7 +138,7 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
   const openSuggestion = (index: number) => {
     const suggestion = suggestions[index];
     if (!suggestion) return;
-    navigate(toCanonicalPropertyPath(suggestion));
+    navigate(toCanonicalPropertyPath(suggestion), { state: { propertyPreview: suggestion } });
     setFocused(false);
   };
 

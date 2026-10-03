@@ -58,7 +58,7 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, eagerIma
         itemScope
         itemType="https://schema.org/RealEstateListing"
       >
-        <Link to={path} className="group grid gap-4 p-3 md:grid-cols-[280px_1fr] md:p-4" itemProp="url">
+        <Link to={path} state={{ propertyPreview: item }} className="group grid gap-4 p-3 md:grid-cols-[280px_1fr] md:p-4" itemProp="url">
           <div className="relative overflow-hidden rounded-xl">
             <ContextAwareParallax mood={imageMood} reducedMotion={reducedMotion} intensity="subtle">
               <img
@@ -174,7 +174,7 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, eagerIma
       itemScope
       itemType="https://schema.org/RealEstateListing"
     >
-      <Link to={path} className="relative block overflow-hidden" itemProp="url">
+      <Link to={path} state={{ propertyPreview: item }} className="relative block overflow-hidden" itemProp="url">
         <ContextAwareParallax mood={imageMood} reducedMotion={reducedMotion} intensity="subtle">
           <img
             src={getPropertyImageUrl(item.coverImageUrl, 400)}

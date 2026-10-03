@@ -189,6 +189,7 @@ export function BudgetFinder() {
                   <Link
                     key={item.id}
                     to={toCanonicalPropertyPath({ id: item.id, slug: item.slug })}
+                    state={{ propertyPreview: item }}
                     className="group flex min-h-[88px] items-center gap-4 py-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     {item.coverImageUrl ? (
