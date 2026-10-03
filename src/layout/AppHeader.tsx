@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { useUiStore } from "@/lib/state/useUiStore";
 import { trackEvent } from "@/lib/analytics/events";
 import { primaryLinks, openSiteAssistant } from "@/layout/navigation";
+import { preloadSiteChatbot } from "@/features/content/components/siteChatbotPreload";
 
 export function AppHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -21,11 +22,19 @@ export function AppHeader() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
+  const prewarmAssistant = () => {
+    void preloadSiteChatbot().catch(() => undefined);
+  };
+
   const assistantButton = (mobile = false) => (
     <button
       type="button"
       className={cn("inline-flex items-center gap-2 rounded-full border border-brand-border bg-brand-soft px-4 py-2.5 text-sm font-medium text-brand-strong transition-colors hover:bg-brand-soft/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand", mobile && "mt-2 justify-center py-3")}
       onClick={() => { setMobileOpen(false); openSiteAssistant(); }}
+      onPointerEnter={prewarmAssistant}
+      onPointerDown={prewarmAssistant}
+      onFocus={prewarmAssistant}
+      aria-haspopup="dialog"
     >
       <BotMessageSquare className="h-4 w-4" aria-hidden="true" /> Mon assistant IA
     </button>

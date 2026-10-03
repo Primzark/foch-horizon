@@ -1035,8 +1035,12 @@ function readStoredMessages(): ChatMessage[] {
   }
 }
 
-export function SiteChatbot() {
+export function SiteChatbot({ initiallyOpen = false }: { initiallyOpen?: boolean } = {}) {
   const location = useLocation();
+  const routeIdentity = `${location.pathname}${location.search}`;
+  const previousRouteIdentity = useRef(routeIdentity);
+  const initialOpenHandled = useRef(false);
+  const prefersReducedMotion = useReducedMotion();
   const isHomePage = location.pathname === "/";
   const assistantContainerClassName = cn(
     "pointer-events-auto fixed z-[160] bottom-[max(0.75rem,env(safe-area-inset-bottom))] right-[max(0.75rem,env(safe-area-inset-right))] flex max-w-[calc(100vw-env(safe-area-inset-left)-env(safe-area-inset-right)-1.5rem)] flex-col items-end",
@@ -1048,7 +1052,7 @@ export function SiteChatbot() {
   );
   const navigate = useNavigate();
   const searchDrawerOpen = useUiStore((state) => state.searchDrawerOpen);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(initiallyOpen);
   const [loading, setLoading] = useState(false);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>(() => readStoredMessages());
@@ -1239,11 +1243,13 @@ export function SiteChatbot() {
   }, [messages, open, showLeadCapture]);
 
   useEffect(() => {
+    if (previousRouteIdentity.current === routeIdentity) return;
+    previousRouteIdentity.current = routeIdentity;
     unlockRequestState();
     setLeadLoading(false);
     setShowLeadCapture(false);
     setOpen(false);
-  }, [location.pathname, location.search, unlockRequestState]);
+  }, [routeIdentity, unlockRequestState]);
 
   useEffect(() => {
     return () => {
@@ -2903,15 +2909,9 @@ export function SiteChatbot() {
     [handleAnalysisEvidenceClick],
   );
 
-  const openChatWithGreeting = useCallback(() => {
-    if (open) {
-      closeChat();
-      return;
-    }
-
+  const recordChatbotOpen = useCallback(() => {
     trackEvent("chatbot_opened", { source: "site_chatbot" });
     emitChatbotTelemetry("chatbot_opened", { source: "local" });
-    setOpen(true);
     setMessages((current) => {
       if (current.length === 0) {
         return [nextOpeningGreetingMessage()];
@@ -2929,7 +2929,23 @@ export function SiteChatbot() {
 
       return trimMessages([...current, nextOpeningGreetingMessage()]);
     });
-  }, [open, closeChat, emitChatbotTelemetry, nextOpeningGreetingMessage]);
+  }, [emitChatbotTelemetry, nextOpeningGreetingMessage]);
+
+  useEffect(() => {
+    if (!initiallyOpen || initialOpenHandled.current) return;
+    initialOpenHandled.current = true;
+    recordChatbotOpen();
+  }, [initiallyOpen, recordChatbotOpen]);
+
+  const openChatWithGreeting = useCallback(() => {
+    if (open) {
+      closeChat();
+      return;
+    }
+
+    setOpen(true);
+    recordChatbotOpen();
+  }, [open, closeChat, recordChatbotOpen]);
 
   useEffect(() => {
     const handleOpen = () => { if (!open) openChatWithGreeting(); };
@@ -2952,9 +2968,9 @@ export function SiteChatbot() {
       <div className={assistantContainerClassName}>
       {open && (
         <motion.section
-          initial={{ opacity: 0, y: 18, scale: 0.96 }}
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 10, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.2, ease: "easeOut" }}
+          transition={{ duration: prefersReducedMotion ? 0 : 0.12, ease: "easeOut" }}
           className={assistantPanelClassName}
         >
             <header className="flex items-center justify-between border-b border-border px-4 py-3">
