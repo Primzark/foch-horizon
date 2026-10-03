@@ -61,7 +61,7 @@ export default function ListingDetailPage() {
     queryFn: () => getPropertyById(propertyId as number),
   });
 
-  const similarQuery = useSuspenseQuery({
+  const similarQuery = useQuery({
     queryKey: ["similar", propertyId],
     queryFn: () =>
       propertyQuery.data ? getSimilarProperties(propertyQuery.data, 3) : Promise.resolve([]),

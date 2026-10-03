@@ -2,32 +2,30 @@ import { Suspense, lazy, useLayoutEffect, useRef } from "react";
 import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation, useNavigationType } from "react-router-dom";
 import { AppLayout } from "@/layout/AppLayout";
 import { CookieConsentManager } from "@/layout/CookieConsentManager";
+import { routePageLoaders } from "@/app/router/routePageLoaders";
+import { RouteIntentPrefetcher } from "@/app/router/RouteIntentPrefetcher";
 
-const LegacyAnnonceRedirect = lazy(() =>
-  import("@/app/router/LegacyRedirects").then((module) => ({ default: module.LegacyAnnonceRedirect })),
-);
-const LegacyPropertySlugRedirect = lazy(() =>
-  import("@/app/router/LegacyRedirects").then((module) => ({ default: module.LegacyPropertySlugRedirect })),
-);
-const HomePage = lazy(() => import("@/features/content/pages/HomePage"));
-const ListingsIndexPage = lazy(() => import("@/features/listings/pages/ListingsIndexPage"));
-const ListingDetailPage = lazy(() => import("@/features/listings/pages/ListingDetailPage"));
-const AboutPageV2 = lazy(() => import("@/features/content/pages/AboutPageV2"));
-const CityHubPage = lazy(() => import("@/features/cities/pages/CityHubPage"));
-const ContactPageV2 = lazy(() => import("@/features/content/pages/ContactPageV2"));
-const FeesPage = lazy(() => import("@/features/content/pages/FeesPage"));
-const RealEstateRegulationsPage = lazy(() => import("@/features/content/pages/RealEstateRegulationsPage"));
-const SellPage = lazy(() => import("@/features/content/pages/SellPage"));
-const EstimationPageV2 = lazy(() => import("@/features/content/pages/EstimationPageV2"));
-const ServicesPage = lazy(() => import("@/features/content/pages/ServicesPage"));
-const ReviewsPage = lazy(() => import("@/features/content/pages/ReviewsPage"));
-const GeographyPage = lazy(() => import("@/features/content/pages/GeographyPage"));
-const RecentSalesPage = lazy(() => import("@/features/content/pages/RecentSalesPage"));
-const LegalTextPage = lazy(() => import("@/features/content/pages/LegalTextPage"));
-const SiteMapPage = lazy(() => import("@/features/content/pages/SiteMapPage"));
-const SelectionPage = lazy(() => import("@/features/favorites/pages/SelectionPage"));
-const AdminMarketCountersPage = lazy(() => import("@/features/admin/pages/AdminMarketCountersPage"));
-const NotFoundPage = lazy(() => import("@/features/content/pages/NotFoundPage"));
+const LegacyAnnonceRedirect = lazy(routePageLoaders.legacyAnnonce);
+const LegacyPropertySlugRedirect = lazy(routePageLoaders.legacyProperty);
+const HomePage = lazy(routePageLoaders.home);
+const ListingsIndexPage = lazy(routePageLoaders.listings);
+const ListingDetailPage = lazy(routePageLoaders.listingDetail);
+const AboutPageV2 = lazy(routePageLoaders.about);
+const CityHubPage = lazy(routePageLoaders.city);
+const ContactPageV2 = lazy(routePageLoaders.contact);
+const FeesPage = lazy(routePageLoaders.fees);
+const RealEstateRegulationsPage = lazy(routePageLoaders.regulations);
+const SellPage = lazy(routePageLoaders.sell);
+const EstimationPageV2 = lazy(routePageLoaders.estimation);
+const ServicesPage = lazy(routePageLoaders.services);
+const ReviewsPage = lazy(routePageLoaders.reviews);
+const GeographyPage = lazy(routePageLoaders.geography);
+const RecentSalesPage = lazy(routePageLoaders.recentSales);
+const LegalTextPage = lazy(routePageLoaders.legalText);
+const SiteMapPage = lazy(routePageLoaders.siteMap);
+const SelectionPage = lazy(routePageLoaders.selection);
+const AdminMarketCountersPage = lazy(routePageLoaders.admin);
+const NotFoundPage = lazy(routePageLoaders.notFound);
 
 function LayoutShell() {
   return (
@@ -65,6 +63,7 @@ function RouteScrollManager() {
 export function AppRouter() {
   return (
     <BrowserRouter>
+      <RouteIntentPrefetcher />
       <RouteScrollManager />
       <CookieConsentManager />
       <Suspense fallback={null}>
