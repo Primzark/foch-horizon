@@ -23,6 +23,8 @@ type MobileMenuSwipe = {
   offset: number;
 };
 
+const MOBILE_MENU_EDGE_WIDTH = 40;
+
 export function AppHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const mobileDrawerRef = useRef<HTMLDivElement>(null);
@@ -55,7 +57,7 @@ export function AppHeader() {
       const target = event.target;
       const startsCloseSwipe = mobileOpen && drawer && target instanceof Node && drawer.contains(target);
       const anotherDialogIsOpen = document.querySelector('[role="dialog"][data-state="open"]');
-      const startsOpenSwipe = !mobileOpen && !anotherDialogIsOpen && event.clientX <= 24;
+      const startsOpenSwipe = !mobileOpen && !anotherDialogIsOpen && event.clientX <= MOBILE_MENU_EDGE_WIDTH;
       if (!startsCloseSwipe && !startsOpenSwipe) return;
 
       swipeRef.current = {
@@ -253,7 +255,7 @@ export function AppHeader() {
           </nav>
         </div>
       </header>
-      <div aria-hidden="true" className="fixed inset-y-0 left-0 z-40 w-6 touch-pan-y lg:hidden" />
+      <div aria-hidden="true" className="fixed inset-y-0 left-0 z-40 w-10 touch-pan-y lg:hidden" />
       <SheetContent
         ref={mobileDrawerRef}
         side="left"
