@@ -307,8 +307,11 @@ export default function ListingDetailPage({
       <div ref={contentRef} className="grid gap-8 lg:grid-cols-[1fr_340px]">
         <div>
           <ListingGallery images={property.images} title={property.title} />
+          {announcementSwipeHint && (
+            <div className="mt-1 flex justify-end pr-1">{announcementSwipeHint}</div>
+          )}
 
-          <div className="mt-6 flex flex-wrap items-start justify-between gap-4">
+          <div className={`${announcementSwipeHint ? "mt-2" : "mt-6"} flex flex-wrap items-start justify-between gap-4`}>
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Réf du bien {property.id}</p>
               <h1 className="mt-1 font-display text-4xl">{property.title}</h1>
@@ -327,14 +330,7 @@ export default function ListingDetailPage({
             </div>
 
             <div className="w-full text-left sm:ml-auto sm:w-auto sm:text-right">
-              {announcementSwipeHint ? (
-                <div className="flex items-center justify-between gap-3">
-                  <p className="font-display text-5xl leading-tight tracking-tight text-brand-strong sm:text-6xl">{formatPrice(property.priceAmount, property.transactionType)}</p>
-                  <div className="shrink-0 lg:hidden">{announcementSwipeHint}</div>
-                </div>
-              ) : (
-                <p className="font-display text-5xl leading-tight tracking-tight text-brand-strong sm:text-6xl">{formatPrice(property.priceAmount, property.transactionType)}</p>
-              )}
+              <p className="font-display text-5xl leading-tight tracking-tight text-brand-strong sm:text-6xl">{formatPrice(property.priceAmount, property.transactionType)}</p>
               <div className="mt-3 flex flex-wrap items-center gap-2 sm:justify-end">
                 <Button
                   variant="outline"

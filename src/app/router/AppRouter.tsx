@@ -96,13 +96,20 @@ function PropertyDetailRouteModal() {
     : null;
   const canBrowseAnnouncements = Boolean(previousProperty || nextProperty);
   const announcementSwipeHint = canBrowseAnnouncements ? (
-    <span className="inline-flex h-12 w-12 items-center justify-center text-brand-strong/65">
+    <span className="relative inline-flex h-9 w-14 items-center justify-center text-brand-strong/70">
       <motion.span
         aria-hidden="true"
-        animate={prefersReducedMotion ? undefined : { x: [0, 7, 0, -7, 0] }}
-        transition={prefersReducedMotion ? undefined : { duration: 2.6, repeat: Infinity, repeatDelay: 1.8, ease: "easeInOut" }}
+        className="absolute h-6 w-6 rounded-full bg-brand/10 blur-md"
+        animate={prefersReducedMotion ? undefined : { x: [0, 7, 0, -7, 0], opacity: [0.12, 0.28, 0.12, 0.24, 0.12] }}
+        transition={prefersReducedMotion ? undefined : { duration: 2.8, repeat: Infinity, repeatDelay: 1.8, ease: "easeInOut" }}
+      />
+      <motion.span
+        aria-hidden="true"
+        className="relative"
+        animate={prefersReducedMotion ? undefined : { x: [0, 10, 0, -10, 0], y: [0, -1, 0, 1, 0], scale: [1, 1.04, 1, 1.04, 1] }}
+        transition={prefersReducedMotion ? undefined : { duration: 2.8, repeat: Infinity, repeatDelay: 1.8, ease: "easeInOut" }}
       >
-        <Hand className="h-7 w-7" strokeWidth={1.7} />
+        <Hand className="h-8 w-8" strokeWidth={1.7} />
       </motion.span>
       <span className="sr-only">Glissez vers la gauche ou la droite pour parcourir les annonces. Vous pouvez aussi utiliser les flèches du clavier.</span>
     </span>
@@ -134,14 +141,6 @@ function PropertyDetailRouteModal() {
         >
           <ChevronRight aria-hidden="true" className="h-5 w-5" />
         </Button>
-        <motion.span
-          aria-hidden="true"
-          className="inline-flex h-10 w-10 items-center justify-center text-brand-strong/55"
-          animate={prefersReducedMotion ? undefined : { x: [0, 6, 0, -6, 0] }}
-          transition={prefersReducedMotion ? undefined : { duration: 2.8, repeat: Infinity, repeatDelay: 2, ease: "easeInOut" }}
-        >
-          <Hand className="h-7 w-7" strokeWidth={1.7} />
-        </motion.span>
       </div>
     </div>
   ) : null;
