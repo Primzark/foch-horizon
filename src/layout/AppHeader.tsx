@@ -1,4 +1,4 @@
-import { useEffect, useState, type MouseEvent } from "react";
+import { useEffect, useRef, useState, type MouseEvent } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { BotMessageSquare, Heart, Menu, Phone, Search } from "lucide-react";
 import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -10,8 +10,25 @@ import { primaryLinks, openSiteAssistant } from "@/layout/navigation";
 import { preloadSiteChatbot } from "@/features/content/components/siteChatbotPreload";
 import { scrollToPageTop } from "@/lib/navigation/scrollToPageTop";
 
+type MobileMenuSwipe = {
+  pointerId: number;
+  startX: number;
+  startY: number;
+  lastX: number;
+  lastAt: number;
+  width: number;
+  startedOpen: boolean;
+  dragging: boolean;
+  cancelled: boolean;
+  offset: number;
+};
+
 export function AppHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const mobileDrawerRef = useRef<HTMLDivElement>(null);
+  const swipeRef = useRef<MobileMenuSwipe | null>(null);
+  const settleTimerRef = useRef<number | null>(null);
+  const suppressClickUntilRef = useRef(0);
   const location = useLocation();
   const setSearchDrawerOpen = useUiStore((state) => state.setSearchDrawerOpen);
   const favoriteIds = useFavoritesStore((state) => state.ids);
@@ -23,6 +40,143 @@ export function AppHeader() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
+  useEffect(() => {
+    const clearSettleTimer = () => {
+      if (settleTimerRef.current !== null) {
+        window.clearTimeout(settleTimerRef.current);
+        settleTimerRef.current = null;
+      }
+    };
+
+    const onPointerDown = (event: PointerEvent) => {
+      if (event.pointerType === "mouse" || !event.isPrimary || event.button !== 0 || window.innerWidth >= 1024) return;
+
+      const drawer = mobileDrawerRef.current;
+      const target = event.target;
+      const startsCloseSwipe = mobileOpen && drawer && target instanceof Node && drawer.contains(target);
+      const anotherDialogIsOpen = document.querySelector('[role="dialog"][data-state="open"]');
+      const startsOpenSwipe = !mobileOpen && !anotherDialogIsOpen && event.clientX <= 24;
+      if (!startsCloseSwipe && !startsOpenSwipe) return;
+
+      swipeRef.current = {
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        lastX: event.clientX,
+        lastAt: event.timeStamp,
+        width: drawer?.getBoundingClientRect().width || Math.min(window.innerWidth * 0.88, 360),
+        startedOpen: Boolean(startsCloseSwipe),
+        dragging: false,
+        cancelled: false,
+        offset: 0,
+      };
+    };
+
+    const onPointerMove = (event: PointerEvent) => {
+      const swipe = swipeRef.current;
+      if (!swipe || swipe.pointerId !== event.pointerId || swipe.cancelled) return;
+
+      const deltaX = event.clientX - swipe.startX;
+      const deltaY = event.clientY - swipe.startY;
+      if (!swipe.dragging) {
+        if (Math.abs(deltaX) < 8 && Math.abs(deltaY) < 8) return;
+        if (Math.abs(deltaX) < Math.abs(deltaY) * 1.1 || (swipe.startedOpen ? deltaX >= 0 : deltaX <= 0)) {
+          swipe.cancelled = true;
+          return;
+        }
+        swipe.dragging = true;
+        if (swipe.startedOpen) {
+          clearSettleTimer();
+          mobileDrawerRef.current?.style.setProperty("transition", "none");
+        }
+      }
+
+      const drawer = mobileDrawerRef.current;
+      if (swipe.startedOpen) {
+        swipe.offset = Math.max(-swipe.width, Math.min(0, deltaX));
+        if (drawer) drawer.style.setProperty("translate", `${swipe.offset}px 0`);
+      }
+      swipe.lastX = event.clientX;
+      swipe.lastAt = event.timeStamp;
+      if (event.cancelable) event.preventDefault();
+    };
+
+    const onPointerUp = (event: PointerEvent) => {
+      const swipe = swipeRef.current;
+      if (!swipe || swipe.pointerId !== event.pointerId) return;
+      swipeRef.current = null;
+      if (!swipe.dragging || swipe.cancelled) return;
+
+      suppressClickUntilRef.current = Date.now() + 100;
+      const elapsed = Math.max(1, event.timeStamp - swipe.lastAt);
+      const velocityX = (event.clientX - swipe.lastX) / elapsed;
+      const drawer = mobileDrawerRef.current;
+
+      if (!swipe.startedOpen) {
+        const distance = event.clientX - swipe.startX;
+        if (distance >= 64 || (distance >= 28 && velocityX >= 0.55)) setMobileOpen(true);
+        return;
+      }
+
+      const offset = Math.max(-swipe.width, Math.min(0, event.clientX - swipe.startX));
+      const shouldClose = -offset >= swipe.width * 0.28 || (offset <= -24 && velocityX <= -0.55);
+      if (shouldClose) {
+        setMobileOpen(false);
+        if (drawer) {
+          clearSettleTimer();
+          settleTimerRef.current = window.setTimeout(() => {
+            drawer.style.removeProperty("translate");
+            drawer.style.removeProperty("transition");
+            settleTimerRef.current = null;
+          }, 360);
+        }
+        return;
+      }
+
+      if (drawer) {
+        drawer.style.setProperty("transition", "translate 220ms cubic-bezier(0.22, 1, 0.36, 1)");
+        drawer.style.setProperty("translate", "0px 0");
+        clearSettleTimer();
+        settleTimerRef.current = window.setTimeout(() => {
+          drawer.style.removeProperty("translate");
+          drawer.style.removeProperty("transition");
+          settleTimerRef.current = null;
+        }, 250);
+      }
+    };
+
+    const onPointerCancel = (event: PointerEvent) => {
+      const swipe = swipeRef.current;
+      if (!swipe || swipe.pointerId !== event.pointerId) return;
+      swipeRef.current = null;
+      const drawer = mobileDrawerRef.current;
+      if (!swipe.startedOpen || !swipe.dragging || !drawer) return;
+      drawer.style.setProperty("transition", "translate 220ms cubic-bezier(0.22, 1, 0.36, 1)");
+      drawer.style.setProperty("translate", "0px 0");
+      clearSettleTimer();
+      settleTimerRef.current = window.setTimeout(() => {
+        drawer.style.removeProperty("translate");
+        drawer.style.removeProperty("transition");
+        settleTimerRef.current = null;
+      }, 250);
+    };
+
+    window.addEventListener("pointerdown", onPointerDown);
+    window.addEventListener("pointermove", onPointerMove, { passive: false });
+    window.addEventListener("pointerup", onPointerUp);
+    window.addEventListener("pointercancel", onPointerCancel);
+    return () => {
+      window.removeEventListener("pointerdown", onPointerDown);
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
+      window.removeEventListener("pointercancel", onPointerCancel);
+    };
+  }, [mobileOpen]);
+
+  useEffect(() => () => {
+    if (settleTimerRef.current !== null) window.clearTimeout(settleTimerRef.current);
+  }, []);
+
   const prewarmAssistant = () => {
     void preloadSiteChatbot().catch(() => undefined);
   };
@@ -31,6 +185,12 @@ export function AppHeader() {
     if (location.pathname !== "/" || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     event.preventDefault();
     scrollToPageTop();
+  };
+
+  const handleMobileDrawerClickCapture = (event: MouseEvent<HTMLDivElement>) => {
+    if (Date.now() > suppressClickUntilRef.current) return;
+    event.preventDefault();
+    event.stopPropagation();
   };
 
   const assistantButton = (mobile = false) => (
@@ -49,7 +209,7 @@ export function AppHeader() {
 
   return (
     <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-      <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur-md [padding-top:env(safe-area-inset-top)]">
+      <header className="sticky top-0 z-50 touch-pan-y border-b border-border bg-background/95 backdrop-blur-md [padding-top:env(safe-area-inset-top)]">
         <div className="container mx-auto px-3 sm:px-4">
           <div className="flex min-h-20 items-center justify-between gap-2 lg:min-h-[72px]">
             <SheetTrigger asChild>
@@ -93,7 +253,13 @@ export function AppHeader() {
           </nav>
         </div>
       </header>
-      <SheetContent side="left" className="flex h-dvh w-[88vw] max-w-[360px] flex-col bg-background p-0 lg:hidden">
+      <div aria-hidden="true" className="fixed inset-y-0 left-0 z-40 w-6 touch-pan-y lg:hidden" />
+      <SheetContent
+        ref={mobileDrawerRef}
+        side="left"
+        onClickCapture={handleMobileDrawerClickCapture}
+        className="flex h-dvh w-[88vw] max-w-[360px] touch-pan-y flex-col bg-background p-0 lg:hidden"
+      >
         <SheetTitle className="border-b border-border px-5 py-6 font-display text-2xl">Foch Immobilier</SheetTitle>
         <nav aria-label="Navigation mobile" className="flex flex-1 flex-col gap-1 overflow-y-auto px-4 py-3">
           {primaryLinks.map((item) => (
