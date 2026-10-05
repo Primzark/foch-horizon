@@ -182,6 +182,7 @@ function PropertyDetailRouteModal() {
         </div>
         <div
           ref={detailsScrollRef}
+          data-menu-swipe-ignore
           className="min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain"
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}

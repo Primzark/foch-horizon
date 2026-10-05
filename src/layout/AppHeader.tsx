@@ -55,7 +55,7 @@ export function AppHeader() {
       const target = event.target;
       const startsCloseSwipe = mobileOpen && drawer && target instanceof Node && drawer.contains(target);
       const startsInGestureOwnedRegion = target instanceof Element && Boolean(
-        target.closest("[data-property-gallery], [aria-roledescription='carousel'], .leaflet-container, img"),
+        target.closest("[data-menu-swipe-ignore], [data-property-gallery], [aria-roledescription='carousel'], .leaflet-container, img"),
       );
       const startsOpenSwipe = !mobileOpen && !startsInGestureOwnedRegion;
       if (!startsCloseSwipe && !startsOpenSwipe) return;
