@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect, useLayoutEffect, useRef, useState, type TouchEvent } from "react";
-import { Hand, Maximize2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Hand, Maximize2 } from "lucide-react";
 import { BrowserRouter, Link, Navigate, Outlet, Route, Routes, useLocation, useNavigate, useNavigationType, useParams, type Location } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
@@ -95,6 +95,56 @@ function PropertyDetailRouteModal() {
     ? budgetItems[propertyIndex + 1]
     : null;
   const canBrowseAnnouncements = Boolean(previousProperty || nextProperty);
+  const announcementSwipeHint = canBrowseAnnouncements ? (
+    <span className="inline-flex h-12 w-12 items-center justify-center text-brand-strong/65">
+      <motion.span
+        aria-hidden="true"
+        animate={prefersReducedMotion ? undefined : { x: [0, 7, 0, -7, 0] }}
+        transition={prefersReducedMotion ? undefined : { duration: 2.6, repeat: Infinity, repeatDelay: 1.8, ease: "easeInOut" }}
+      >
+        <Hand className="h-7 w-7" strokeWidth={1.7} />
+      </motion.span>
+      <span className="sr-only">Glissez vers la gauche ou la droite pour parcourir les annonces. Vous pouvez aussi utiliser les flèches du clavier.</span>
+    </span>
+  ) : null;
+  const announcementNavigationControls = canBrowseAnnouncements ? (
+    <div className="hidden justify-end lg:flex">
+      <div className="flex items-center gap-2" role="group" aria-label="Navigation entre les annonces">
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="h-10 w-10 rounded-full border-border bg-background/90 p-0 shadow-sm"
+          aria-label="Annonce précédente"
+          title="Annonce précédente"
+          disabled={!previousProperty}
+          onClick={() => previousProperty && openProperty(previousProperty, -1)}
+        >
+          <ChevronLeft aria-hidden="true" className="h-5 w-5" />
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="h-10 w-10 rounded-full border-border bg-background/90 p-0 shadow-sm"
+          aria-label="Annonce suivante"
+          title="Annonce suivante"
+          disabled={!nextProperty}
+          onClick={() => nextProperty && openProperty(nextProperty, 1)}
+        >
+          <ChevronRight aria-hidden="true" className="h-5 w-5" />
+        </Button>
+        <motion.span
+          aria-hidden="true"
+          className="inline-flex h-10 w-10 items-center justify-center text-brand-strong/55"
+          animate={prefersReducedMotion ? undefined : { x: [0, 6, 0, -6, 0] }}
+          transition={prefersReducedMotion ? undefined : { duration: 2.8, repeat: Infinity, repeatDelay: 2, ease: "easeInOut" }}
+        >
+          <Hand className="h-7 w-7" strokeWidth={1.7} />
+        </motion.span>
+      </div>
+    </div>
+  ) : null;
 
   const openProperty = (item: PropertySearchItem, direction: -1 | 1) => {
     setNavigationDirection(direction);
@@ -168,22 +218,6 @@ function PropertyDetailRouteModal() {
             <DialogTitle className="truncate font-display text-lg font-normal sm:text-xl max-[360px]:text-base">Aperçu de l’annonce</DialogTitle>
             <DialogDescription className="sr-only">Fiche complète du bien. Ouvrez-la en plein écran pour accéder à toute la page.</DialogDescription>
           </DialogHeader>
-          {canBrowseAnnouncements && (
-            <div
-              role="note"
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-brand-border/70 bg-brand-soft/60 px-2 py-1 text-[11px] font-medium leading-none text-brand-strong lg:hidden"
-            >
-              <motion.span
-                aria-hidden="true"
-                animate={prefersReducedMotion ? undefined : { x: [0, 4, 0, -4, 0] }}
-                transition={prefersReducedMotion ? undefined : { duration: 2.4, repeat: Infinity, repeatDelay: 1.6, ease: "easeInOut" }}
-              >
-                <Hand className="h-4 w-4" />
-              </motion.span>
-              <span aria-hidden="true" className="max-[360px]:hidden">Glissez</span>
-              <span className="sr-only">vers la gauche ou la droite pour parcourir les annonces. Utilisez aussi les flèches du clavier.</span>
-            </div>
-          )}
           <div className="flex shrink-0 items-center gap-1.5">
             <Button variant="outline" size="sm" className="shrink-0" asChild>
               <Link
@@ -235,7 +269,10 @@ function PropertyDetailRouteModal() {
                   </section>
                 )}
               >
-                <ListingDetailPage />
+                <ListingDetailPage
+                  announcementSwipeHint={announcementSwipeHint}
+                  announcementNavigationControls={announcementNavigationControls}
+                />
               </Suspense>
             </motion.div>
           </AnimatePresence>

@@ -1,7 +1,7 @@
 import { Link, Navigate, useLocation, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion, useScroll } from "framer-motion";
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, type ReactNode } from "react";
 import { Bath, BedDouble, Car, Copy, Heart, MapPin, Maximize, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cityById, cityBySlug } from "@/features/cities/data/cities";
@@ -112,7 +112,13 @@ function toPropertyPreview(item: PropertySearchItem): Property {
   };
 }
 
-export default function ListingDetailPage() {
+export default function ListingDetailPage({
+  announcementSwipeHint,
+  announcementNavigationControls,
+}: {
+  announcementSwipeHint?: ReactNode;
+  announcementNavigationControls?: ReactNode;
+} = {}) {
   const contentRef = useRef<HTMLDivElement | null>(null);
   const location = useLocation();
   const params = useParams();
@@ -320,8 +326,15 @@ export default function ListingDetailPage() {
               </p>
             </div>
 
-            <div className="w-full text-left sm:w-auto sm:text-right">
-              <p className="font-display text-5xl leading-tight tracking-tight text-brand-strong sm:text-6xl">{formatPrice(property.priceAmount, property.transactionType)}</p>
+            <div className="w-full text-left sm:ml-auto sm:w-auto sm:text-right">
+              {announcementSwipeHint ? (
+                <div className="flex items-center justify-between gap-3">
+                  <p className="font-display text-5xl leading-tight tracking-tight text-brand-strong sm:text-6xl">{formatPrice(property.priceAmount, property.transactionType)}</p>
+                  <div className="shrink-0 lg:hidden">{announcementSwipeHint}</div>
+                </div>
+              ) : (
+                <p className="font-display text-5xl leading-tight tracking-tight text-brand-strong sm:text-6xl">{formatPrice(property.priceAmount, property.transactionType)}</p>
+              )}
               <div className="mt-3 flex flex-wrap items-center gap-2 sm:justify-end">
                 <Button
                   variant="outline"
@@ -353,6 +366,7 @@ export default function ListingDetailPage() {
                   <Copy className="mr-1 h-3.5 w-3.5" /> Réf
                 </Button>
               </div>
+              {announcementNavigationControls}
             </div>
           </div>
 
