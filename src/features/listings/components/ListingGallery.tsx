@@ -94,7 +94,7 @@ export function ListingGallery({ images, title }: { images: PropertyImage[]; tit
   };
 
   return (
-    <div>
+    <div data-property-gallery>
       <div
         className="relative touch-pan-y overflow-hidden rounded-2xl border border-border"
         onTouchStart={handleTouchStart}
@@ -169,7 +169,7 @@ export function ListingGallery({ images, title }: { images: PropertyImage[]; tit
               <Expand className="h-4 w-4" />
             </button>
           </DialogTrigger>
-          <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-5xl">
+          <DialogContent data-property-gallery className="max-h-[90vh] overflow-y-auto sm:max-w-5xl">
             <DialogHeader>
               <DialogTitle>{title}</DialogTitle>
               <DialogDescription>Galerie du bien</DialogDescription>

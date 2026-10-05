@@ -1,12 +1,15 @@
-import { Suspense, lazy, useLayoutEffect, useRef } from "react";
-import { Maximize2 } from "lucide-react";
-import { BrowserRouter, Link, Navigate, Outlet, Route, Routes, useLocation, useNavigate, useNavigationType, type Location } from "react-router-dom";
+import { Suspense, lazy, useEffect, useLayoutEffect, useRef, type TouchEvent } from "react";
+import { ChevronLeft, ChevronRight, Maximize2 } from "lucide-react";
+import { BrowserRouter, Link, Navigate, Outlet, Route, Routes, useLocation, useNavigate, useNavigationType, useParams, type Location } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
 import { AppLayout } from "@/layout/AppLayout";
 import { CookieConsentManager } from "@/layout/CookieConsentManager";
 import { routePageLoaders } from "@/app/router/routePageLoaders";
 import { RouteIntentPrefetcher } from "@/app/router/RouteIntentPrefetcher";
+import type { PropertySearchParams, PropertySearchResponse, PropertySearchItem } from "@/types/api";
 
 const LegacyAnnonceRedirect = lazy(routePageLoaders.legacyAnnonce);
 const LegacyPropertySlugRedirect = lazy(routePageLoaders.legacyProperty);
@@ -34,6 +37,7 @@ interface PropertyModalRouteState {
   propertyModal?: boolean;
   backgroundLocation?: Location;
   propertyPreview?: unknown;
+  budgetFinderFilters?: PropertySearchParams;
 }
 
 function LayoutShell() {
@@ -72,31 +76,137 @@ function RouteScrollManager() {
 function PropertyDetailRouteModal() {
   const location = useLocation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const routeParams = useParams();
   const routeState = location.state as PropertyModalRouteState | null;
+  const detailsScrollRef = useRef<HTMLDivElement>(null);
+  const dialogContentRef = useRef<HTMLDivElement>(null);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const propertyId = Number(routeParams.idSlug?.split("-")[0]);
+  const budgetItems = routeState?.budgetFinderFilters
+    ? queryClient.getQueryData<PropertySearchResponse>(["budget-finder", routeState.budgetFinderFilters])?.items ?? null
+    : null;
+  const propertyIndex = budgetItems?.findIndex((item) => item.id === propertyId) ?? -1;
+  const previousProperty = budgetItems && propertyIndex > 0 ? budgetItems[propertyIndex - 1] : null;
+  const nextProperty = budgetItems && propertyIndex >= 0 && propertyIndex < budgetItems.length - 1
+    ? budgetItems[propertyIndex + 1]
+    : null;
+
+  const openProperty = (item: PropertySearchItem) => {
+    navigate(toCanonicalPropertyPath(item), {
+      replace: true,
+      state: {
+        propertyPreview: item,
+        propertyModal: true,
+        backgroundLocation: routeState?.backgroundLocation,
+        budgetFinderFilters: routeState?.budgetFinderFilters,
+      },
+    });
+  };
+
+  useEffect(() => {
+    if (detailsScrollRef.current) detailsScrollRef.current.scrollTop = 0;
+  }, [location.pathname]);
+
+  const handleTouchStart = (event: TouchEvent<HTMLDivElement>) => {
+    const target = event.target;
+    if (
+      target instanceof Element &&
+      target.closest("[data-property-gallery], button, a, input, textarea, select, [contenteditable='true'], [role='button']")
+    ) {
+      touchStartRef.current = null;
+      return;
+    }
+
+    const touch = event.changedTouches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  };
+
+  const handleTouchEnd = (event: TouchEvent<HTMLDivElement>) => {
+    const start = touchStartRef.current;
+    touchStartRef.current = null;
+    if (!start) return;
+
+    const touch = event.changedTouches[0];
+    const deltaX = touch.clientX - start.x;
+    const deltaY = touch.clientY - start.y;
+    if (Math.abs(deltaX) < 56 || Math.abs(deltaX) < Math.abs(deltaY) * 1.25) return;
+
+    if (deltaX < 0 && nextProperty) openProperty(nextProperty);
+    if (deltaX > 0 && previousProperty) openProperty(previousProperty);
+  };
 
   return (
     <Dialog open onOpenChange={(open) => {
       if (!open) navigate(-1);
     }}>
-      <DialogContent className="left-0 top-0 flex h-[100dvh] w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 p-0 sm:left-[50%] sm:top-[50%] sm:h-[min(92dvh,60rem)] sm:max-h-[92dvh] sm:w-[calc(100%-2rem)] sm:max-w-6xl sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-2xl sm:border">
+      <DialogContent
+        ref={dialogContentRef}
+        onKeyDown={(event) => {
+          if (!(event.target instanceof Node) || !dialogContentRef.current?.contains(event.target)) return;
+          if (event.altKey || event.ctrlKey || event.metaKey || event.defaultPrevented) return;
+          if (event.target instanceof HTMLElement && event.target.closest("input, textarea, select, [contenteditable='true']")) return;
+
+          if (event.key === "ArrowLeft" && previousProperty) {
+            event.preventDefault();
+            openProperty(previousProperty);
+          } else if (event.key === "ArrowRight" && nextProperty) {
+            event.preventDefault();
+            openProperty(nextProperty);
+          }
+        }}
+        className="left-0 top-0 flex h-[100dvh] w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 p-0 sm:left-[50%] sm:top-[50%] sm:h-[min(92dvh,60rem)] sm:max-h-[92dvh] sm:w-[calc(100%-2rem)] sm:max-w-6xl sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-2xl sm:border"
+      >
         <div className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-border bg-background px-4 pr-16 sm:px-6 sm:pr-20">
           <DialogHeader className="min-w-0 space-y-0 text-left">
             <DialogTitle className="truncate font-display text-lg font-normal sm:text-xl">Aperçu de l’annonce</DialogTitle>
             <DialogDescription className="sr-only">Fiche complète du bien. Ouvrez-la en plein écran pour accéder à toute la page.</DialogDescription>
           </DialogHeader>
-          <Button variant="outline" size="sm" className="shrink-0" asChild>
-            <Link
-              to={`${location.pathname}${location.search}`}
-              replace
-              state={routeState?.propertyPreview ? { propertyPreview: routeState.propertyPreview } : null}
-              aria-label="Ouvrir l’annonce en plein écran"
-            >
-              <Maximize2 aria-hidden="true" className="h-4 w-4 sm:mr-1.5" />
-              <span className="hidden sm:inline">Plein écran</span>
-            </Link>
-          </Button>
+          <div className="flex shrink-0 items-center gap-1.5">
+            {budgetItems && budgetItems.length > 1 && (
+              <>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  aria-label="Annonce précédente"
+                  title="Annonce précédente"
+                  disabled={!previousProperty}
+                  onClick={() => previousProperty && openProperty(previousProperty)}
+                >
+                  <ChevronLeft aria-hidden="true" className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  aria-label="Annonce suivante"
+                  title="Annonce suivante"
+                  disabled={!nextProperty}
+                  onClick={() => nextProperty && openProperty(nextProperty)}
+                >
+                  <ChevronRight aria-hidden="true" className="h-4 w-4" />
+                </Button>
+              </>
+            )}
+            <Button variant="outline" size="sm" className="shrink-0" asChild>
+              <Link
+                to={`${location.pathname}${location.search}`}
+                replace
+                state={routeState?.propertyPreview ? { propertyPreview: routeState.propertyPreview } : null}
+                aria-label="Ouvrir l’annonce en plein écran"
+              >
+                <Maximize2 aria-hidden="true" className="h-4 w-4 sm:mr-1.5" />
+                <span className="hidden sm:inline">Plein écran</span>
+              </Link>
+            </Button>
+          </div>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <div
+          ref={detailsScrollRef}
+          className="min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          onTouchCancel={() => { touchStartRef.current = null; }}
+        >
           <Suspense
             fallback={(
               <section className="container mx-auto min-h-[60vh] px-4 py-8" aria-busy="true" aria-label="Chargement de l’annonce">

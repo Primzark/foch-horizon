@@ -217,7 +217,7 @@ export function BudgetFinder() {
                           <Link
                             key={item.id}
                             to={toCanonicalPropertyPath({ id: item.id, slug: item.slug })}
-                            state={{ propertyPreview: item, propertyModal: true, backgroundLocation: location }}
+                            state={{ propertyPreview: item, propertyModal: true, backgroundLocation: location, budgetFinderFilters: filters }}
                             onClick={() => setIsResultsDialogOpen(false)}
                             className="group flex min-h-[76px] items-center gap-3 py-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                           >
@@ -314,7 +314,7 @@ export function BudgetFinder() {
                     <Link
                       key={item.id}
                       to={toCanonicalPropertyPath({ id: item.id, slug: item.slug })}
-                      state={{ propertyPreview: item, propertyModal: true, backgroundLocation: location }}
+                      state={{ propertyPreview: item, propertyModal: true, backgroundLocation: location, budgetFinderFilters: filters }}
                       onClick={() => setIsResultsDialogOpen(false)}
                       className={`group flex min-h-[72px] items-center gap-3 py-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:min-h-[88px] lg:gap-4 lg:py-3 ${index >= 3 ? "hidden lg:flex" : ""}`}
                     >
