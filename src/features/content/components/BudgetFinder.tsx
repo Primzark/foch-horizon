@@ -3,6 +3,14 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { SearchThinkingState } from "@/features/content/components/SearchThinkingState";
 import { geographyGuideOptions } from "@/features/content/data/geographyGuideOptions";
@@ -183,11 +191,76 @@ export function BudgetFinder() {
               </div>
             </div>
             {hasValidBudget && listingsQuery.data && listingsQuery.data.total > 0 && (
-              <Button variant="brand" size="sm" asChild>
-                <Link to={resultsHref}>
-                  Voir les biens <ArrowRight aria-hidden="true" className="ml-1.5 h-4 w-4" />
-                </Link>
-              </Button>
+              <>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="brand" size="sm" className="lg:hidden">
+                      Voir les biens <ArrowRight aria-hidden="true" className="ml-1.5 h-4 w-4" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="bottom-0 left-0 top-auto flex h-[min(88dvh,48rem)] max-h-[88dvh] w-full max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-t-2xl rounded-b-none border-x-0 border-b-0 p-0 sm:left-[50%] sm:top-[50%] sm:bottom-auto sm:h-[min(80vh,48rem)] sm:max-h-[80vh] sm:w-[calc(100%-2rem)] sm:max-w-2xl sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-xl sm:border">
+                    <DialogHeader className="shrink-0 border-b border-border px-5 py-5 pr-14 text-left">
+                      <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Votre sélection</p>
+                      <DialogTitle className="font-display text-2xl font-normal leading-tight">
+                        {listingsQuery.data.total} bien{listingsQuery.data.total === 1 ? "" : "s"} correspondant à vos critères
+                      </DialogTitle>
+                      <DialogDescription>
+                        {selectedTypeLabel ?? "Tous les types"} · {selectedArea?.name ?? "Tous les secteurs"}
+                        {formattedBudget ? ` · Jusqu’à ${formattedBudget} €` : ""}
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5">
+                      <div className="divide-y divide-border">
+                        {resultItems.map((item) => (
+                          <Link
+                            key={item.id}
+                            to={toCanonicalPropertyPath({ id: item.id, slug: item.slug })}
+                            state={{ propertyPreview: item }}
+                            className="group flex min-h-[76px] items-center gap-3 py-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          >
+                            {item.coverImageUrl ? (
+                              <img
+                                src={getPropertyImageUrl(item.coverImageUrl, 200)}
+                                srcSet={getPropertyImageSrcSet(item.coverImageUrl, [200, 400])}
+                                sizes="80px"
+                                alt=""
+                                loading="lazy"
+                                decoding="async"
+                                className="h-12 w-16 shrink-0 rounded-lg object-cover"
+                              />
+                            ) : (
+                              <div className="flex h-12 w-16 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-brand-strong" aria-hidden="true">
+                                <MapPin className="h-5 w-5" />
+                              </div>
+                            )}
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate text-sm font-medium group-hover:text-brand-strong">{item.title}</span>
+                              <span className="mt-1 block truncate text-[11px] text-muted-foreground">
+                                {item.city.name} · {formatPropertyTypeLabel(item.type)} · {item.surfaceM2} m²
+                              </span>
+                            </span>
+                            <span className="shrink-0 text-right text-xs font-semibold tabular-nums text-brand-strong">
+                              {formatPrice(item.priceAmount, item.transaction)}
+                            </span>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="shrink-0 border-t border-border bg-background px-5 py-4 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+                      <Button variant="brand" className="w-full" asChild>
+                        <Link to={resultsHref}>
+                          Afficher tous les biens <ArrowRight aria-hidden="true" className="ml-1.5 h-4 w-4" />
+                        </Link>
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+                <Button variant="brand" size="sm" className="hidden lg:inline-flex" asChild>
+                  <Link to={resultsHref}>
+                    Voir les biens <ArrowRight aria-hidden="true" className="ml-1.5 h-4 w-4" />
+                  </Link>
+                </Button>
+              </>
             )}
           </div>
 
