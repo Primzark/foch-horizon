@@ -22,8 +22,8 @@ export default function SellPage() {
     <>
       <StorefrontPageHero
         eyebrow="Vendre"
-        title="Vendre avec méthode, du mandat à l'acte"
-        description="Nous construisons une stratégie de vente cohérente avec votre bien, votre calendrier et les standards du marché local."
+        title="Vendre votre bien"
+        description="Le cabinet est à votre disposition dans le cadre de la mise en vente de votre bien avec des négociateurs expérimentés et un large carnet d’adresses et de recherches."
       />
 
       <section className="container mx-auto px-4 py-10">

@@ -128,7 +128,7 @@ export function BudgetFinder() {
                 </span>
               </div>
               <p id="budget-finder-hint" className="text-xs text-muted-foreground">
-                Prix d’achat maximum
+                Budget maximal
               </p>
             </div>
 

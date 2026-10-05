@@ -87,10 +87,10 @@ export default function HomePage() {
             alt="Scène de plage au Havre, peinture de Raoul Dufy"
             width={870}
             height={647}
-            className="h-full w-full object-cover object-center"
+            className="h-full w-full object-cover object-[center_40%]"
             loading="eager"
             decoding="async"
-            fetchPriority="high"
+            fetchpriority="high"
           />
         </picture>
         <div className="absolute inset-0 bg-gradient-to-r from-black/38 via-black/16 to-black/0" />

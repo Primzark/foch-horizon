@@ -24,6 +24,8 @@ interface LeadFormProps {
   description?: string;
   ctaLabel?: string;
   showAppointmentFields?: boolean;
+  variant?: "card" | "plain";
+  disableMotion?: boolean;
 }
 
 export function LeadForm({
@@ -34,6 +36,8 @@ export function LeadForm({
   description,
   ctaLabel = "Envoyer",
   showAppointmentFields = false,
+  variant = "card",
+  disableMotion = false,
 }: LeadFormProps) {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -48,6 +52,7 @@ export function LeadForm({
   const successRef = useRef<HTMLDivElement | null>(null);
   const submissionLockRef = useRef(false);
   const { reducedMotion } = useMotionPreference();
+  const animationsEnabled = !disableMotion && !reducedMotion;
   const [formState, setFormState] = useState({
     firstName: "",
     lastName: "",
@@ -135,7 +140,7 @@ export function LeadForm({
   };
 
   return (
-    <section className="rounded-2xl border border-border bg-card p-5">
+    <section className={variant === "card" ? "rounded-2xl border border-border bg-card p-5" : "p-0"}>
       <h3 className="font-display text-xl">{title}</h3>
       {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
       <p className="mt-2 text-xs text-muted-foreground">Tous les champs sont obligatoires, sauf le téléphone.</p>
@@ -144,10 +149,10 @@ export function LeadForm({
         {submitted ? (
           <motion.div
             key="lead-success"
-            initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 10, scale: 0.98 }}
+            initial={animationsEnabled ? { opacity: 0, y: 10, scale: 0.98 } : false}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -8, scale: 0.98 }}
-            transition={{ duration: 0.24, ease: "easeOut" }}
+            exit={animationsEnabled ? { opacity: 0, y: -8, scale: 0.98 } : undefined}
+            transition={{ duration: animationsEnabled ? 0.24 : 0, ease: "easeOut" }}
             className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-5"
             ref={successRef}
             role="status"
@@ -187,10 +192,10 @@ export function LeadForm({
             noValidate
             aria-busy={loading}
             className="mt-4 space-y-3"
-            initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 10 }}
+            initial={animationsEnabled ? { opacity: 0, y: 10 } : false}
             animate={{ opacity: 1, y: 0 }}
-            exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -8 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
+            exit={animationsEnabled ? { opacity: 0, y: -8 } : undefined}
+            transition={{ duration: animationsEnabled ? 0.2 : 0, ease: "easeOut" }}
           >
             <FormErrorSummary id="lead-error-summary" ref={summaryRef} errors={summaryErrors} />
             <div aria-hidden="true" className="absolute left-[-10000px] top-auto h-px w-px overflow-hidden">

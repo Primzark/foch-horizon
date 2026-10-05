@@ -10,7 +10,7 @@ import { GeographyGuideDetails } from "@/features/content/components/GeographyGu
 import { GeographyMap } from "@/features/content/components/GeographyMap";
 
 const guideSections = [
-  { number: "01", title: "Le Havre et ses quartiers", description: "Du centre reconstruit aux quartiers historiques, résidentiels et au front de mer.", guideIds: ["le-havre", "centre-ville", "halles-centrales", "hotel-de-ville", "notre-dame", "saint-francois", "perrey", "danton", "bleville", "la-plage", "gobelins", "saint-michel"] },
+  { number: "01", title: "Le Havre et ses quartiers", description: "Du centre reconstruit aux quartiers historiques, résidentiels et au front de mer.", guideIds: ["le-havre", "centre-ville", "avenue-foch", "halles-centrales", "hotel-de-ville", "notre-dame", "saint-francois", "perrey", "danton", "bleville", "la-plage", "gobelins", "saint-michel"] },
   { number: "02", title: "Le littoral et les coteaux", description: "Des communes résidentielles à la côte d’Albâtre.", guideIds: ["sainte-adresse", "octeville-sur-mer", "etretat"] },
   { number: "03", title: "L’agglomération havraise", description: "Villes et communes proches, reliées au Havre par les transports et les services du quotidien.", guideIds: ["montivilliers", "harfleur", "gainneville", "gonfreville-l-orcher", "rogerville", "saint-laurent-de-brevedent", "maneglise"] },
   { number: "04", title: "Entre Le Havre et Saint-Romain", description: "Des bourgs et villages du pays de Caux, à découvrir selon les trajets et les services recherchés.", guideIds: ["saint-romain", "etainhus", "epretot", "saint-aubin-routot", "la-remuee", "gommerville", "la-cerlangue", "les-trois-pierres"] },
@@ -18,7 +18,7 @@ const guideSections = [
 ];
 
 const mapPoints: Record<string, [number, number]> = {
-  "halles-centrales": [49.4897, 0.1089], "hotel-de-ville": [49.493132, 0.10811], "le-havre": [49.4944, 0.1072], "centre-ville": [49.4984, 0.116], "notre-dame": [49.487, 0.108333],
+  "halles-centrales": [49.4897, 0.1089], "hotel-de-ville": [49.493132, 0.10811], "le-havre": [49.4944, 0.1072], "centre-ville": [49.4984, 0.116], "avenue-foch": [49.4934, 0.1005], "notre-dame": [49.487, 0.108333],
   "saint-francois": [49.4895, 0.120], perrey: [49.488611, 0.099467], danton: [49.494242, 0.121804], bleville: [49.520324, 0.099586], "la-plage": [49.495, 0.080],
   gobelins: [49.4905, 0.094], "saint-michel": [49.500, 0.098], "sainte-adresse": [49.5055, 0.084],
   "octeville-sur-mer": [49.554, 0.145], montivilliers: [49.545, 0.188], maneglise: [49.552, 0.299],

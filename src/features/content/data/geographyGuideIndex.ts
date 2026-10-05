@@ -27,6 +27,7 @@ export const geographyGuideIndex: GeographyGuideLabel[] = [
   { id: "danton", name: "Danton", placeType: "quartier" },
   { id: "bleville", name: "Bois de Bléville", placeType: "quartier" },
   { id: "centre-ville", name: "Le centre-ville", placeType: "quartier" },
+  { id: "avenue-foch", name: "Avenue Foch", placeType: "quartier" },
   { id: "harfleur", name: "Harfleur", placeType: "commune" },
   { id: "gonfreville-l-orcher", name: "Gonfreville-l’Orcher", placeType: "commune" },
   { id: "rogerville", name: "Rogerville", placeType: "commune" },

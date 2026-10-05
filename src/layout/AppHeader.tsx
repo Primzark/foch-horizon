@@ -65,7 +65,7 @@ export function AppHeader() {
                   alt="Foch Immobilier"
                   width={500}
                   height={146}
-                  className="h-auto w-[124px] mix-blend-multiply sm:w-[145px] lg:w-[160px]"
+                  className="h-auto w-[140px] mix-blend-multiply sm:w-[170px] lg:w-[190px]"
                   decoding="async"
                 />
               </picture>

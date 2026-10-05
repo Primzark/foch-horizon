@@ -120,7 +120,7 @@ export function ListingGallery({ images, title }: { images: PropertyImage[]; tit
                 alt={activeImage.altText}
                 className="absolute inset-0 h-full w-full object-cover"
                 loading="eager"
-                fetchPriority="high"
+                fetchpriority="high"
                 decoding="async"
                 onLoad={preloadAdjacentImages}
               />

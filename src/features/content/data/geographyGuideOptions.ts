@@ -25,6 +25,7 @@ export const geographyGuideOptions = [
   { id: "danton", name: "Danton", city: "le-havre", query: "Danton" },
   { id: "bleville", name: "Bois de Bléville", city: "le-havre", query: "Bléville" },
   { id: "centre-ville", name: "Le centre-ville", city: "le-havre", query: "centre-ville" },
+  { id: "avenue-foch", name: "Avenue Foch", city: "le-havre", query: "Avenue Foch" },
   { id: "harfleur", name: "Harfleur", query: "Harfleur" },
   { id: "gonfreville-l-orcher", name: "Gonfreville-l’Orcher", query: "Gonfreville-l'Orcher" },
   { id: "rogerville", name: "Rogerville", query: "Rogerville" },

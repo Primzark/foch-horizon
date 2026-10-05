@@ -197,7 +197,7 @@ export function SearchDrawer() {
               />
             </div>
             <div>
-              <Label htmlFor="priceMin">Prix min</Label>
+              <Label htmlFor="priceMin">Budget minimum</Label>
               <Input
                 id="priceMin"
                 type="number"
@@ -207,7 +207,7 @@ export function SearchDrawer() {
               />
             </div>
             <div>
-              <Label htmlFor="priceMax">Prix max</Label>
+              <Label htmlFor="priceMax">Budget maximum</Label>
               <Input
                 id="priceMax"
                 type="number"

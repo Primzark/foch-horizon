@@ -15,8 +15,8 @@ export function ActiveFiltersChips({ filters, onClear, onClearAll }: ActiveFilte
   if (filters.bedroomsMin != null) entries.push({ key: "bedroomsMin", label: `Chambres >= ${filters.bedroomsMin}` });
   if (filters.bathroomsMin != null) entries.push({ key: "bathroomsMin", label: `SDB >= ${filters.bathroomsMin}` });
   if (filters.garagesMin != null) entries.push({ key: "garagesMin", label: `Garages >= ${filters.garagesMin}` });
-  if (filters.priceMin != null) entries.push({ key: "priceMin", label: `Prix min ${filters.priceMin}` });
-  if (filters.priceMax != null) entries.push({ key: "priceMax", label: `Prix max ${filters.priceMax}` });
+  if (filters.priceMin != null) entries.push({ key: "priceMin", label: `Budget min ${filters.priceMin}` });
+  if (filters.priceMax != null) entries.push({ key: "priceMax", label: `Budget max ${filters.priceMax}` });
   if (filters.surfaceMin != null) entries.push({ key: "surfaceMin", label: `Surface >= ${filters.surfaceMin}m²` });
   if (filters.terrainMin != null) entries.push({ key: "terrainMin", label: `Terrain >= ${filters.terrainMin}m²` });
 
