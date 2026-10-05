@@ -4,7 +4,7 @@ import { ArrowRight, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { cities } from "@/features/cities/data/cities";
+import { geographyGuideOptions } from "@/features/content/data/geographyGuideOptions";
 import { searchProperties } from "@/features/listings/api/properties.service";
 import { propertyTypeOptions } from "@/features/listings/data/options";
 import { buildSearchParams } from "@/features/listings/utils/query";
@@ -16,13 +16,16 @@ import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings
 export function BudgetFinder() {
   const [budgetText, setBudgetText] = useState("350000");
   const [propertyType, setPropertyType] = useState<PropertyType | "">("");
-  const [city, setCity] = useState("");
+  const [areaId, setAreaId] = useState("");
   const [settledBudget, setSettledBudget] = useState<number | null>(350000);
 
   const transaction = "vente" as const;
   const parsedBudget = budgetText.trim() ? Number(budgetText) : Number.NaN;
   const hasValidBudget = Number.isFinite(parsedBudget) && parsedBudget > 0;
   const isBudgetSettled = hasValidBudget && parsedBudget === settledBudget;
+  const selectedArea = geographyGuideOptions.find((area) => area.id === areaId);
+  const havreAreas = geographyGuideOptions.filter((area) => area.city === "le-havre");
+  const otherAreas = geographyGuideOptions.filter((area) => area.city !== "le-havre");
 
   useEffect(() => {
     const nextBudget = hasValidBudget ? parsedBudget : null;
@@ -35,26 +38,41 @@ export function BudgetFinder() {
       transaction,
       priceMax: settledBudget ?? 0,
       type: propertyType || undefined,
-      city: city || undefined,
+      city: selectedArea?.city,
+      q: selectedArea?.query,
       page: 1,
-      pageSize: 12,
+      pageSize: 48,
       sort: "price_asc",
     }),
-    [city, propertyType, settledBudget, transaction],
+    [propertyType, selectedArea, settledBudget, transaction],
   );
 
   const listingsQuery = useQuery({
     queryKey: ["budget-finder", filters],
-    queryFn: () => searchProperties(filters),
+    queryFn: async () => {
+      const firstPage = await searchProperties(filters);
+      const pageCount = Math.ceil(firstPage.total / firstPage.pageSize);
+      if (pageCount <= 1) return firstPage;
+
+      const additionalPages = await Promise.all(
+        Array.from({ length: pageCount - 1 }, (_, index) =>
+          searchProperties({ ...filters, page: index + 2 }),
+        ),
+      );
+
+      return {
+        ...firstPage,
+        items: [...firstPage.items, ...additionalPages.flatMap((page) => page.items)],
+      };
+    },
     enabled: isBudgetSettled,
     staleTime: 1000 * 30,
   });
 
   const resultsHref = `/biens?${buildSearchParams(filters).toString()}`;
-  const withoutCityHref = `/biens?${buildSearchParams({ ...filters, city: undefined }).toString()}`;
+  const withoutAreaHref = `/biens?${buildSearchParams({ ...filters, city: undefined, q: undefined }).toString()}`;
   const withoutTypeHref = `/biens?${buildSearchParams({ ...filters, type: undefined }).toString()}`;
   const resultItems = listingsQuery.data?.items ?? [];
-  const otherResultCount = Math.max(0, (listingsQuery.data?.total ?? 0) - Math.min(resultItems.length, 3));
   const isWaitingForBudget = hasValidBudget && !isBudgetSettled;
 
   return (
@@ -112,14 +130,21 @@ export function BudgetFinder() {
               <label htmlFor="budget-finder-city" className="text-sm font-medium">Secteur</label>
               <select
                 id="budget-finder-city"
-                value={city}
-                onChange={(event) => setCity(event.target.value)}
+                value={areaId}
+                onChange={(event) => setAreaId(event.target.value)}
                 className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
-                <option value="">Toutes les communes</option>
-                {cities.map((item) => (
-                  <option key={item.id} value={item.slug}>{item.name}</option>
-                ))}
+                <option value="">Tous les secteurs</option>
+                <optgroup label="Le Havre et ses quartiers">
+                  {havreAreas.map((guide) => (
+                    <option key={guide.id} value={guide.id}>{guide.name}</option>
+                  ))}
+                </optgroup>
+                <optgroup label="Autres communes et secteurs">
+                  {otherAreas.map((guide) => (
+                    <option key={guide.id} value={guide.id}>{guide.name}</option>
+                  ))}
+                </optgroup>
               </select>
             </div>
           </div>
@@ -165,14 +190,14 @@ export function BudgetFinder() {
             ) : listingsQuery.data?.total === 0 ? (
               <div className="py-6">
                 <p className="text-sm leading-relaxed text-muted-foreground">
-                  {city || propertyType
+                  {selectedArea || propertyType
                     ? "Aucun bien ne correspond à ces sélections pour le moment. Élargissez le secteur ou le type de bien."
                     : "Aucun bien publié ne correspond actuellement à ce budget."}
                 </p>
                 <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
-                  {city && (
-                    <Link to={withoutCityHref} className="inline-flex items-center gap-1 text-sm font-medium text-brand-strong underline-offset-4 hover:underline">
-                      Inclure les autres communes <ArrowRight aria-hidden="true" className="h-4 w-4" />
+                  {selectedArea && (
+                    <Link to={withoutAreaHref} className="inline-flex items-center gap-1 text-sm font-medium text-brand-strong underline-offset-4 hover:underline">
+                      Inclure les autres secteurs <ArrowRight aria-hidden="true" className="h-4 w-4" />
                     </Link>
                   )}
                   {propertyType && (
@@ -180,49 +205,51 @@ export function BudgetFinder() {
                       Inclure les autres types <ArrowRight aria-hidden="true" className="h-4 w-4" />
                     </Link>
                   )}
-                  {!city && !propertyType && <span className="text-sm text-muted-foreground">Essayez un autre montant.</span>}
+                  {!selectedArea && !propertyType && <span className="text-sm text-muted-foreground">Essayez un autre montant.</span>}
                 </div>
               </div>
             ) : (
-              <div className="divide-y divide-border">
-                {resultItems.slice(0, 3).map((item) => (
-                  <Link
-                    key={item.id}
-                    to={toCanonicalPropertyPath({ id: item.id, slug: item.slug })}
-                    state={{ propertyPreview: item }}
-                    className="group flex min-h-[88px] items-center gap-4 py-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  >
-                    {item.coverImageUrl ? (
-                      <img
-                        src={getPropertyImageUrl(item.coverImageUrl, 200)}
-                        srcSet={getPropertyImageSrcSet(item.coverImageUrl, [200, 400])}
-                        sizes="80px"
-                        alt=""
-                        loading="lazy"
-                        decoding="async"
-                        className="h-16 w-20 shrink-0 rounded-lg object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-16 w-20 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-brand-strong" aria-hidden="true">
-                        <MapPin className="h-5 w-5" />
-                      </div>
-                    )}
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate font-medium group-hover:text-brand-strong">{item.title}</span>
-                      <span className="mt-1 block truncate text-xs text-muted-foreground">
-                        {item.city.name} · {formatPropertyTypeLabel(item.type)} · {item.surfaceM2} m²
+              <div
+                role="region"
+                aria-label="Annonces correspondant à votre budget"
+                tabIndex={0}
+                className="max-h-[min(65vh,28rem)] overflow-y-auto overscroll-contain pr-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <div className="divide-y divide-border">
+                  {resultItems.map((item) => (
+                    <Link
+                      key={item.id}
+                      to={toCanonicalPropertyPath({ id: item.id, slug: item.slug })}
+                      state={{ propertyPreview: item }}
+                      className="group flex min-h-[88px] items-center gap-4 py-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      {item.coverImageUrl ? (
+                        <img
+                          src={getPropertyImageUrl(item.coverImageUrl, 200)}
+                          srcSet={getPropertyImageSrcSet(item.coverImageUrl, [200, 400])}
+                          sizes="80px"
+                          alt=""
+                          loading="lazy"
+                          decoding="async"
+                          className="h-16 w-20 shrink-0 rounded-lg object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-16 w-20 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-brand-strong" aria-hidden="true">
+                          <MapPin className="h-5 w-5" />
+                        </div>
+                      )}
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-medium group-hover:text-brand-strong">{item.title}</span>
+                        <span className="mt-1 block truncate text-xs text-muted-foreground">
+                          {item.city.name} · {formatPropertyTypeLabel(item.type)} · {item.surfaceM2} m²
+                        </span>
                       </span>
-                    </span>
-                    <span className="shrink-0 text-right text-sm font-semibold tabular-nums text-brand-strong">
-                      {formatPrice(item.priceAmount, item.transaction)}
-                    </span>
-                  </Link>
-                ))}
-                {otherResultCount > 0 && (
-                  <p className="pt-3 text-xs text-muted-foreground">
-                    {otherResultCount} autre{otherResultCount === 1 ? "" : "s"} annonce{otherResultCount === 1 ? "" : "s"} correspond{otherResultCount === 1 ? "" : "ent"}.
-                  </p>
-                )}
+                      <span className="shrink-0 text-right text-sm font-semibold tabular-nums text-brand-strong">
+                        {formatPrice(item.priceAmount, item.transaction)}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
               </div>
             )}
           </div>

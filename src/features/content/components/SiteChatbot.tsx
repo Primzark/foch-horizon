@@ -1043,7 +1043,7 @@ export function SiteChatbot({ initiallyOpen = false }: { initiallyOpen?: boolean
   const prefersReducedMotion = useReducedMotion();
   const isHomePage = location.pathname === "/";
   const assistantContainerClassName = cn(
-    "pointer-events-auto fixed z-[160] bottom-[max(0.75rem,env(safe-area-inset-bottom))] right-[max(0.75rem,env(safe-area-inset-right))] flex max-w-[calc(100vw-env(safe-area-inset-left)-env(safe-area-inset-right)-1.5rem)] flex-col items-end",
+    "pointer-events-none fixed z-[160] bottom-[max(0.75rem,env(safe-area-inset-bottom))] right-[max(0.75rem,env(safe-area-inset-right))] flex max-w-[calc(100vw-env(safe-area-inset-left)-env(safe-area-inset-right)-1.5rem)] flex-col items-end",
     isHomePage && "w-[min(420px,calc(100vw-1.5rem))]",
   );
   const assistantPanelClassName = cn(
@@ -1075,6 +1075,8 @@ export function SiteChatbot({ initiallyOpen = false }: { initiallyOpen?: boolean
   const leadServerErrorRef = useRef<HTMLParagraphElement | null>(null);
   const leadSubmissionLockRef = useRef(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const answerStartMessageIdRef = useRef<string | null>(null);
+  const previousOpenRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const requestSequenceRef = useRef(0);
   const openingSequenceRef = useRef(0);
@@ -1122,6 +1124,11 @@ export function SiteChatbot({ initiallyOpen = false }: { initiallyOpen?: boolean
   const appendMessage = useCallback((message: ChatMessage) => {
     setMessages((current) => trimMessages([...current, message]));
   }, []);
+
+  const appendAssistantMessage = useCallback((message: ChatMessage) => {
+    answerStartMessageIdRef.current = message.id;
+    appendMessage(message);
+  }, [appendMessage]);
 
   const updateMessageById = useCallback((messageId: string, updater: (current: ChatMessage) => ChatMessage) => {
     setMessages((current) =>
@@ -1220,7 +1227,9 @@ export function SiteChatbot({ initiallyOpen = false }: { initiallyOpen?: boolean
     conversationIdRef.current = createMessageId();
     setConversationState({});
     setLeadForm({ firstName: "", lastName: "", email: "", criteria: "" });
-    setMessages([nextOpeningGreetingMessage()]);
+    const greeting = nextOpeningGreetingMessage();
+    answerStartMessageIdRef.current = greeting.id;
+    setMessages([greeting]);
     trackEvent("chatbot_reset", { source: "site_chatbot" });
     emitChatbotTelemetry("chatbot_reset", { source: "local" });
     void resetAgencyChatbotMemory(sessionIdRef.current).then((cleared) => {
@@ -1238,8 +1247,28 @@ export function SiteChatbot({ initiallyOpen = false }: { initiallyOpen?: boolean
   }, [emitChatbotTelemetry, nextOpeningGreetingMessage, unlockRequestState]);
 
   useEffect(() => {
-    if (!scrollRef.current) return;
-    scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    const container = scrollRef.current;
+    if (!container) return;
+
+    const justOpened = open && !previousOpenRef.current;
+    previousOpenRef.current = open;
+
+    const answerStartMessageId = answerStartMessageIdRef.current;
+    if (answerStartMessageId) {
+      const answer = document.getElementById(`site-chatbot-message-${answerStartMessageId}`);
+      if (answer && container.contains(answer)) {
+        const containerTop = container.getBoundingClientRect().top;
+        const answerTop = answer.getBoundingClientRect().top;
+        container.scrollTop = Math.max(0, container.scrollTop + answerTop - containerTop - 12);
+        answerStartMessageIdRef.current = null;
+        return;
+      }
+    }
+
+    const lastMessage = messages[messages.length - 1];
+    if (justOpened || lastMessage?.role === "user") {
+      container.scrollTop = container.scrollHeight;
+    }
   }, [messages, open, showLeadCapture]);
 
   useEffect(() => {
@@ -1336,7 +1365,7 @@ export function SiteChatbot({ initiallyOpen = false }: { initiallyOpen?: boolean
       if (telemetry?.replaceMessageId) {
         updateMessageById(telemetry.replaceMessageId, () => nextMessage);
       } else {
-        appendMessage(nextMessage);
+        appendAssistantMessage(nextMessage);
       }
 
       if (reply.conversationStatePatch) {
@@ -1577,7 +1606,7 @@ export function SiteChatbot({ initiallyOpen = false }: { initiallyOpen?: boolean
         setShowLeadCapture(true);
       }
     },
-    [appendMessage, emitChatbotTelemetry, updateMessageById],
+    [appendAssistantMessage, emitChatbotTelemetry, updateMessageById],
   );
 
   const sendChatRequest = async (params: {
@@ -1675,7 +1704,7 @@ export function SiteChatbot({ initiallyOpen = false }: { initiallyOpen?: boolean
       const requestPromise = shouldUseStreaming
         ? (async () => {
             streamedPlaceholderId = createMessageId();
-            appendMessage({
+            appendAssistantMessage({
               id: streamedPlaceholderId,
               role: "assistant",
               content: "",
@@ -1818,7 +1847,7 @@ export function SiteChatbot({ initiallyOpen = false }: { initiallyOpen?: boolean
         },
       });
 
-      appendMessage({
+      appendAssistantMessage({
         id: createMessageId(),
         role: "assistant",
         content:
@@ -1950,7 +1979,7 @@ export function SiteChatbot({ initiallyOpen = false }: { initiallyOpen?: boolean
         chatbotContext: buildLeadChatbotContext(),
       });
 
-      appendMessage({
+      appendAssistantMessage({
         id: createMessageId(),
         role: "assistant",
         content:
@@ -3085,6 +3114,7 @@ export function SiteChatbot({ initiallyOpen = false }: { initiallyOpen?: boolean
               {messages.map((message) => (
                 <article
                   key={message.id}
+                  id={`site-chatbot-message-${message.id}`}
                   className={cn(
                     "max-w-[92%] rounded-xl px-3 py-2 text-sm",
                     message.role === "assistant"
@@ -3495,7 +3525,7 @@ export function SiteChatbot({ initiallyOpen = false }: { initiallyOpen?: boolean
       <Button
         type="button"
         variant="brand"
-        className="h-11 w-11 rounded-full p-0 text-xs shadow-card sm:h-12 sm:w-auto sm:max-w-none sm:px-4 sm:text-sm"
+        className="pointer-events-auto h-11 w-11 rounded-full p-0 text-xs shadow-card sm:h-12 sm:w-auto sm:max-w-none sm:px-4 sm:text-sm"
         onClick={openChatWithGreeting}
         aria-label={open ? "Fermer l’assistant" : "Assistant immobilier IA"}
       >

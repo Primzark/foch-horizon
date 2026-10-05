@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ArrowUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { scrollToPageTop } from "@/lib/navigation/scrollToPageTop";
 
 const SCROLL_THRESHOLD_PX = 320;
 
@@ -19,15 +20,6 @@ export function BackToTopButton() {
     return () => window.removeEventListener("scroll", updateVisibility);
   }, []);
 
-  const handleBackToTop = () => {
-    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    window.scrollTo({
-      top: 0,
-      behavior: prefersReducedMotion ? "auto" : "smooth",
-    });
-  };
-
   return (
     <Button
       type="button"
@@ -35,7 +27,7 @@ export function BackToTopButton() {
       size="icon"
       aria-label="Remonter en haut de page"
       title="Haut de page"
-      onClick={handleBackToTop}
+      onClick={scrollToPageTop}
       className={cn(
         "fixed z-[120] h-11 w-11 rounded-full border-border/70 bg-background/95 shadow-lg backdrop-blur transition-all duration-200",
         "left-[max(0.75rem,env(safe-area-inset-left))] sm:left-[max(1rem,env(safe-area-inset-left))]",

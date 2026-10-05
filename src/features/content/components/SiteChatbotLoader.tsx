@@ -68,7 +68,7 @@ export function SiteChatbotLoader() {
   return (
     <div
       className={cn(
-        "pointer-events-auto fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] right-[max(0.75rem,env(safe-area-inset-right))] z-[160] flex max-w-[calc(100vw-env(safe-area-inset-left)-env(safe-area-inset-right)-1.5rem)] flex-col items-end",
+        "pointer-events-none fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] right-[max(0.75rem,env(safe-area-inset-right))] z-[160] flex max-w-[calc(100vw-env(safe-area-inset-left)-env(safe-area-inset-right)-1.5rem)] flex-col items-end",
         isHomePage && "w-[min(420px,calc(100vw-1.5rem))]",
       )}
     >
@@ -77,7 +77,7 @@ export function SiteChatbotLoader() {
           <button
             type="button"
             aria-label="Fermer le chatbot"
-            className="fixed inset-0 z-[150] bg-black/20"
+            className="pointer-events-auto fixed inset-0 z-[150] bg-black/20"
             onClick={closePendingOpen}
           />
           <section
@@ -134,7 +134,7 @@ export function SiteChatbotLoader() {
         <Button
           type="button"
           variant="brand"
-          className="h-11 w-11 rounded-full p-0 text-xs shadow-card sm:h-12 sm:w-auto sm:max-w-none sm:px-4 sm:text-sm"
+          className="pointer-events-auto h-11 w-11 rounded-full p-0 text-xs shadow-card sm:h-12 sm:w-auto sm:max-w-none sm:px-4 sm:text-sm"
           onClick={openAssistant}
           onPointerEnter={prewarm}
           onPointerDown={prewarm}

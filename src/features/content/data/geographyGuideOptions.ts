@@ -1,0 +1,39 @@
+/**
+ * Compact labels and search terms for the homepage budget filter.
+ * Keep these entries aligned with geographyGuides.ts while avoiding a load of
+ * the full copy and market data for every guide on the homepage.
+ */
+export const geographyGuideOptions = [
+  { id: "le-havre", name: "Le Havre", city: "le-havre" },
+  { id: "sainte-adresse", name: "Sainte-Adresse", city: "sainte-adresse" },
+  { id: "la-plage", name: "La plage et Saint-Vincent", city: "le-havre", query: "Saint-Vincent" },
+  { id: "gobelins", name: "Les Gobelins", city: "le-havre", query: "Gobelins" },
+  { id: "saint-michel", name: "Saint-Michel", city: "le-havre", query: "Saint-Michel" },
+  { id: "octeville-sur-mer", name: "Octeville-sur-Mer", query: "Octeville-sur-Mer" },
+  { id: "montivilliers", name: "Montivilliers", city: "montivilliers" },
+  { id: "maneglise", name: "Manéglise", city: "maneglise" },
+  { id: "gainneville", name: "Gainneville", city: "gainneville" },
+  { id: "saint-romain", name: "Saint-Romain-de-Colbosc", query: "Saint-Romain-de-Colbosc" },
+  { id: "etretat", name: "Étretat", query: "Étretat" },
+  { id: "deauville", name: "Deauville", query: "Deauville" },
+  { id: "trouville", name: "Trouville-sur-Mer", query: "Trouville-sur-Mer" },
+  { id: "halles-centrales", name: "Halles Centrales", city: "le-havre", query: "Halles" },
+  { id: "hotel-de-ville", name: "Hôtel de Ville", city: "le-havre", query: "Hôtel de Ville" },
+  { id: "notre-dame", name: "Notre-Dame", city: "le-havre", query: "Notre-Dame" },
+  { id: "saint-francois", name: "Saint-François", city: "le-havre", query: "Saint-François" },
+  { id: "perrey", name: "Le Perrey", city: "le-havre", query: "Perrey" },
+  { id: "danton", name: "Danton", city: "le-havre", query: "Danton" },
+  { id: "bleville", name: "Bois de Bléville", city: "le-havre", query: "Bléville" },
+  { id: "centre-ville", name: "Le centre-ville", city: "le-havre", query: "centre-ville" },
+  { id: "harfleur", name: "Harfleur", query: "Harfleur" },
+  { id: "gonfreville-l-orcher", name: "Gonfreville-l’Orcher", query: "Gonfreville-l'Orcher" },
+  { id: "rogerville", name: "Rogerville", query: "Rogerville" },
+  { id: "saint-laurent-de-brevedent", name: "Saint-Laurent-de-Brèvedent", query: "Saint-Laurent-de-Brèvedent" },
+  { id: "etainhus", name: "Étainhus", query: "Étainhus" },
+  { id: "epretot", name: "Épretot", query: "Épretot" },
+  { id: "saint-aubin-routot", name: "Saint-Aubin-Routot", query: "Saint-Aubin-Routot" },
+  { id: "la-remuee", name: "La Remuée", query: "La Remuée" },
+  { id: "gommerville", name: "Gommerville", query: "Gommerville" },
+  { id: "la-cerlangue", name: "La Cerlangue", query: "La Cerlangue" },
+  { id: "les-trois-pierres", name: "Les Trois-Pierres", query: "Les Trois-Pierres" },
+] as const;

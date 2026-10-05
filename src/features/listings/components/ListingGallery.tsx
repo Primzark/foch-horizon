@@ -1,6 +1,6 @@
 import { useRef, useState, type TouchEvent } from "react";
-import { Expand, Images } from "lucide-react";
-import { motion } from "framer-motion";
+import { ChevronLeft, ChevronRight, Expand, Images } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   Dialog,
   DialogContent,
@@ -19,8 +19,15 @@ import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
 import { getMotionDirectorProfile } from "@/lib/visuals/motionDirector";
 import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
 
+const galleryImageVariants = {
+  enter: (direction: number) => ({ x: direction * 48, opacity: 0 }),
+  center: { x: 0, opacity: 1 },
+  exit: (direction: number) => ({ x: direction * -48, opacity: 0 }),
+};
+
 export function ListingGallery({ images, title }: { images: PropertyImage[]; title: string }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [slideDirection, setSlideDirection] = useState<-1 | 1>(1);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const warmedImageUrlsRef = useRef(new Map<string, HTMLImageElement>());
   const { reducedMotion } = useMotionPreference();
@@ -37,6 +44,17 @@ export function ListingGallery({ images, title }: { images: PropertyImage[]; tit
   const activeImage = images[activeIndex];
   const imageMood = inferPlaceImageMood(title, activeImage.altText);
   const motionDirector = getMotionDirectorProfile(imageMood);
+
+  const navigateImage = (direction: -1 | 1) => {
+    setSlideDirection(direction);
+    setSelectedIndex((current) => (current + direction + images.length) % images.length);
+  };
+
+  const selectImage = (index: number) => {
+    if (index === activeIndex) return;
+    setSlideDirection(index > activeIndex ? 1 : -1);
+    setSelectedIndex(index);
+  };
 
   const preloadAdjacentImages = () => {
     if (images.length < 2) return;
@@ -72,7 +90,7 @@ export function ListingGallery({ images, title }: { images: PropertyImage[]; tit
     const deltaY = touch.clientY - start.y;
     if (Math.abs(deltaX) < 48 || Math.abs(deltaX) < Math.abs(deltaY) * 1.2) return;
 
-    setSelectedIndex((current) => (current + (deltaX < 0 ? 1 : -1) + images.length) % images.length);
+    navigateImage(deltaX < 0 ? 1 : -1);
   };
 
   return (
@@ -86,18 +104,28 @@ export function ListingGallery({ images, title }: { images: PropertyImage[]; tit
         }}
       >
         <ContextAwareParallax mood={imageMood} reducedMotion={reducedMotion} intensity="immersive" scrollReactive className="z-[0]">
-          <img
-            key={activeImage.id}
-            src={getPropertyImageUrl(activeImage.sourceUrl, 400)}
-            srcSet={getPropertyImageSrcSet(activeImage.sourceUrl)}
-            sizes="(max-width: 1023px) calc(100vw - 2rem), 66vw"
-            alt={activeImage.altText}
-            className="aspect-[16/10] w-full object-cover"
-            loading="eager"
-            fetchPriority="high"
-            decoding="async"
-            onLoad={preloadAdjacentImages}
-          />
+          <div className="relative aspect-[16/10] w-full overflow-hidden">
+            <AnimatePresence initial={false} custom={slideDirection} mode="sync">
+              <motion.img
+                key={activeImage.id}
+                custom={slideDirection}
+                variants={galleryImageVariants}
+                initial={reducedMotion ? false : "enter"}
+                animate={reducedMotion ? { x: 0, opacity: 1 } : "center"}
+                exit={reducedMotion ? { opacity: 0 } : "exit"}
+                transition={{ duration: reducedMotion ? 0 : 0.34, ease: [0.22, 1, 0.36, 1] }}
+                src={getPropertyImageUrl(activeImage.sourceUrl, 400)}
+                srcSet={getPropertyImageSrcSet(activeImage.sourceUrl)}
+                sizes="(max-width: 1023px) calc(100vw - 2rem), 66vw"
+                alt={activeImage.altText}
+                className="absolute inset-0 h-full w-full object-cover"
+                loading="eager"
+                fetchPriority="high"
+                decoding="async"
+                onLoad={preloadAdjacentImages}
+              />
+            </AnimatePresence>
+          </div>
         </ContextAwareParallax>
         <PlaceAtmosphereLayer mood={imageMood} animated={false} variant="gallery" className="z-[1]" />
         <div className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-t from-black/22 via-black/8 to-transparent" />
@@ -106,6 +134,29 @@ export function ListingGallery({ images, title }: { images: PropertyImage[]; tit
           <Images className="mr-1 inline h-3.5 w-3.5" />
           {activeIndex + 1}/{images.length}
         </div>
+
+        {images.length > 1 && (
+          <>
+            <button
+              type="button"
+              aria-label="Image précédente"
+              title="Image précédente"
+              onClick={() => navigateImage(-1)}
+              className="absolute left-3 top-1/2 z-[4] -translate-y-1/2 rounded-full bg-background/90 p-2.5 shadow-md transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              aria-label="Image suivante"
+              title="Image suivante"
+              onClick={() => navigateImage(1)}
+              className="absolute right-3 top-1/2 z-[4] -translate-y-1/2 rounded-full bg-background/90 p-2.5 shadow-md transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              <ChevronRight className="h-5 w-5" aria-hidden="true" />
+            </button>
+          </>
+        )}
 
         <Dialog>
           <DialogTrigger asChild>
@@ -155,7 +206,7 @@ export function ListingGallery({ images, title }: { images: PropertyImage[]; tit
             <button
               key={image.id}
               type="button"
-              onClick={() => setSelectedIndex(index)}
+              onClick={() => selectImage(index)}
               className={cn(
                 "overflow-hidden rounded-lg border transition-all duration-300",
                 index === activeIndex

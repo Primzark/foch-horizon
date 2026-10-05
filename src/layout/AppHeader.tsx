@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { BotMessageSquare, Heart, Menu, Phone, Search } from "lucide-react";
 import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -8,6 +8,7 @@ import { useUiStore } from "@/lib/state/useUiStore";
 import { trackEvent } from "@/lib/analytics/events";
 import { primaryLinks, openSiteAssistant } from "@/layout/navigation";
 import { preloadSiteChatbot } from "@/features/content/components/siteChatbotPreload";
+import { scrollToPageTop } from "@/lib/navigation/scrollToPageTop";
 
 export function AppHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -24,6 +25,12 @@ export function AppHeader() {
 
   const prewarmAssistant = () => {
     void preloadSiteChatbot().catch(() => undefined);
+  };
+
+  const handleLogoClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (location.pathname !== "/" || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    scrollToPageTop();
   };
 
   const assistantButton = (mobile = false) => (
@@ -50,7 +57,7 @@ export function AppHeader() {
                 <Menu className="h-5 w-5" />
               </button>
             </SheetTrigger>
-            <Link to="/" className="flex min-w-0 items-center gap-2" aria-label="Foch Immobilier — Accueil">
+            <Link to="/" onClick={handleLogoClick} className="flex min-w-0 items-center gap-2" aria-label="Foch Immobilier — Accueil">
               <picture>
                 <source srcSet="/images/foch-immobilier-logo.webp" type="image/webp" />
                 <img
