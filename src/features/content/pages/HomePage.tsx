@@ -91,7 +91,7 @@ export default function HomePage() {
             alt="Scène de plage au Havre, peinture de Raoul Dufy"
             width={870}
             height={647}
-            className="h-full w-full object-cover object-[center_40%]"
+            className="h-full w-full object-cover object-[center_8%]"
             loading="eager"
             decoding="async"
             fetchpriority="high"

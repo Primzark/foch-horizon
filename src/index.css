@@ -348,8 +348,8 @@
 .page-banner { height: 360px; }
 @media (min-width: 768px) { .page-banner { height: 420px; } }
 
-.homepage-hero-content { height: auto; min-height: 476px; }
-@media (min-width: 768px) { .homepage-hero-content { height: 496px; min-height: 0; } }
+.homepage-hero-content { height: auto; min-height: 440px; }
+@media (min-width: 768px) { .homepage-hero-content { height: 480px; min-height: 0; } }
 
 .storefront-page-hero__background { object-position: center top; }
 
