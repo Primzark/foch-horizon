@@ -4,6 +4,7 @@ import { ArrowRight, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SearchThinkingState } from "@/features/content/components/SearchThinkingState";
 import { geographyGuideOptions } from "@/features/content/data/geographyGuideOptions";
 import { searchProperties } from "@/features/listings/api/properties.service";
 import { propertyTypeOptions } from "@/features/listings/data/options";
@@ -24,8 +25,17 @@ export function BudgetFinder() {
   const hasValidBudget = Number.isFinite(parsedBudget) && parsedBudget > 0;
   const isBudgetSettled = hasValidBudget && parsedBudget === settledBudget;
   const selectedArea = geographyGuideOptions.find((area) => area.id === areaId);
+  const selectedTypeLabel = propertyTypeOptions.find((option) => option.value === propertyType)?.label;
   const havreAreas = geographyGuideOptions.filter((area) => area.city === "le-havre");
   const otherAreas = geographyGuideOptions.filter((area) => area.city !== "le-havre");
+  const formattedBudget = hasValidBudget
+    ? new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(parsedBudget)
+    : null;
+  const searchDetails = [
+    `Type : ${selectedTypeLabel ?? "Tous les types"}`,
+    `Secteur : ${selectedArea?.name ?? "Tous les secteurs"}`,
+    formattedBudget ? `Budget max. : ${formattedBudget} €` : null,
+  ].filter(Boolean).join(" · ");
 
   useEffect(() => {
     const nextBudget = hasValidBudget ? parsedBudget : null;
@@ -74,6 +84,7 @@ export function BudgetFinder() {
   const withoutTypeHref = `/biens?${buildSearchParams({ ...filters, type: undefined }).toString()}`;
   const resultItems = listingsQuery.data?.items ?? [];
   const isWaitingForBudget = hasValidBudget && !isBudgetSettled;
+  const isSearching = isWaitingForBudget || listingsQuery.isFetching;
 
   return (
     <section className="border-y border-border bg-muted/25" aria-labelledby="budget-finder-title">
@@ -157,12 +168,19 @@ export function BudgetFinder() {
               <h3 className="mt-1 font-display text-2xl">
                 {!hasValidBudget
                   ? "Saisissez votre budget"
-                  : isWaitingForBudget || listingsQuery.isLoading
+                  : isSearching
                     ? "Recherche des annonces…"
                     : listingsQuery.isError
                       ? "Annonces momentanément indisponibles"
-                      : `${listingsQuery.data?.total ?? 0} bien${listingsQuery.data?.total === 1 ? "" : "s"} dans votre budget`}
+                      : `${listingsQuery.data?.total ?? 0} bien${listingsQuery.data?.total === 1 ? "" : "s"} ${selectedArea || propertyType ? "correspondant à vos critères" : "dans votre budget"}`}
               </h3>
+              <div aria-label="Critères de recherche" className="mt-2 flex flex-wrap gap-1.5 text-[11px] text-muted-foreground">
+                <span className="rounded-full border border-border bg-background px-2 py-1">{selectedTypeLabel ?? "Tous les types"}</span>
+                <span className="rounded-full border border-border bg-background px-2 py-1">{selectedArea?.name ?? "Tous les secteurs"}</span>
+                {formattedBudget && (
+                  <span className="rounded-full border border-border bg-background px-2 py-1">Jusqu’à {formattedBudget} €</span>
+                )}
+              </div>
             </div>
             {hasValidBudget && listingsQuery.data && listingsQuery.data.total > 0 && (
               <Button variant="brand" size="sm" asChild>
@@ -173,12 +191,12 @@ export function BudgetFinder() {
             )}
           </div>
 
-          <div className="mt-2" aria-live="polite" aria-busy={isWaitingForBudget || listingsQuery.isLoading}>
+          <div className="mt-2" aria-busy={isSearching}>
             {!hasValidBudget ? (
               <p className="py-7 text-sm text-muted-foreground">Entrez un montant supérieur à zéro pour afficher les annonces correspondantes.</p>
-            ) : isWaitingForBudget || listingsQuery.isLoading ? (
-              <div className="divide-y divide-border" aria-hidden="true">
-                {[0, 1, 2].map((item) => <div key={item} className="h-[76px] animate-pulse bg-muted/40" />)}
+            ) : isSearching ? (
+              <div className="py-3">
+                <SearchThinkingState className="max-w-full" details={searchDetails} />
               </div>
             ) : listingsQuery.isError ? (
               <div className="py-6">
