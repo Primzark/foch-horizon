@@ -39,7 +39,6 @@ interface PropertyModalRouteState {
   backgroundLocation?: Location;
   propertyPreview?: unknown;
   budgetFinderFilters?: PropertySearchParams;
-  announcementSwipeHintDismissed?: boolean;
 }
 
 function LayoutShell() {
@@ -96,7 +95,7 @@ function PropertyDetailRouteModal() {
     ? budgetItems[propertyIndex + 1]
     : null;
   const canBrowseAnnouncements = Boolean(previousProperty || nextProperty);
-  const announcementSwipeHint = canBrowseAnnouncements && !routeState?.announcementSwipeHintDismissed ? (
+  const announcementSwipeHint = canBrowseAnnouncements ? (
     <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
       <span>Glissez à gauche ou à droite</span>
       <span className="relative inline-flex h-9 w-14 shrink-0 items-center justify-center text-brand-strong/70" aria-hidden="true">
@@ -156,7 +155,6 @@ function PropertyDetailRouteModal() {
         propertyModal: true,
         backgroundLocation: routeState?.backgroundLocation,
         budgetFinderFilters: routeState?.budgetFinderFilters,
-        announcementSwipeHintDismissed: true,
       },
     });
   };
