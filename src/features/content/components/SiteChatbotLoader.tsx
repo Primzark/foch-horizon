@@ -53,44 +53,6 @@ export function SiteChatbotLoader() {
     return () => window.cancelAnimationFrame(frame);
   }, [Chatbot, pendingOpen]);
 
-  useEffect(() => {
-    const connection = (navigator as Navigator & { connection?: { effectiveType?: string; saveData?: boolean } }).connection;
-    if (connection?.saveData || /^(slow-)?2g$/.test(connection?.effectiveType ?? "")) return;
-
-    const idleWindow = window as Window & {
-      requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number;
-      cancelIdleCallback?: (handle: number) => void;
-    };
-    let idleHandle: number | null = null;
-    let fallbackTimer: number | null = null;
-    let listeningForLoad = false;
-
-    const schedulePreload = () => {
-      const preload = () => {
-        void preloadSiteChatbot().catch(() => undefined);
-      };
-
-      if (idleWindow.requestIdleCallback) {
-        idleHandle = idleWindow.requestIdleCallback(preload, { timeout: 2500 });
-      } else {
-        fallbackTimer = window.setTimeout(preload, 2500);
-      }
-    };
-
-    if (document.readyState === "complete") {
-      schedulePreload();
-    } else {
-      window.addEventListener("load", schedulePreload, { once: true });
-      listeningForLoad = true;
-    }
-
-    return () => {
-      if (listeningForLoad) window.removeEventListener("load", schedulePreload);
-      if (idleHandle !== null) idleWindow.cancelIdleCallback?.(idleHandle);
-      if (fallbackTimer !== null) window.clearTimeout(fallbackTimer);
-    };
-  }, []);
-
   const closePendingOpen = () => {
     setPendingOpen(false);
     setLoadError(false);

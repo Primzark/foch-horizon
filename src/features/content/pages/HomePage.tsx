@@ -1,6 +1,5 @@
 import { useMemo, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Compass, Handshake } from "lucide-react";
 import { GoogleGIcon } from "@/components/branding/GoogleGIcon";
@@ -17,7 +16,6 @@ import { getSiteUrl, useSeo } from "@/lib/seo/useSeo";
 import { getAgencyReviews } from "@/features/content/api/googleReviews.service";
 import { inferPlaceImageMood } from "@/lib/visuals/placeImageMotion";
 import { ScrollReveal } from "@/components/visuals/ScrollReveal";
-import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
 import { getMotionDirectorProfile } from "@/lib/visuals/motionDirector";
 import { PhotoAttribution, type PhotoAttributionCredit } from "@/features/content/components/PhotoAttribution";
 
@@ -62,7 +60,6 @@ export default function HomePage() {
     [],
   );
   const reviewsQuery = useQuery({ queryKey: ["agency-google-reviews-home"], queryFn: getAgencyReviews });
-  const { reducedMotion } = useMotionPreference();
   const siteUrl = getSiteUrl();
   const heroMood = inferPlaceImageMood("Le Havre");
   const heroMotionDirector = useMemo(() => getMotionDirectorProfile(heroMood), [heroMood]);
@@ -83,43 +80,32 @@ export default function HomePage() {
   return (
     <div className="homepage-page w-full min-w-0 overflow-x-clip">
       <section className="relative z-20 overflow-visible">
-        <img
-          src={HERO_IMAGE_URL}
-          alt="Scène de plage au Havre, peinture de Raoul Dufy"
-          className="absolute inset-0 h-full w-full object-cover object-center"
-          loading="eager"
-          decoding="async"
-          fetchpriority="high"
-        />
+        <picture className="absolute inset-0">
+          <source srcSet="/images/dufy-final-pick.webp" type="image/webp" />
+          <img
+            src={HERO_IMAGE_URL}
+            alt="Scène de plage au Havre, peinture de Raoul Dufy"
+            width={870}
+            height={647}
+            className="h-full w-full object-cover object-center"
+            loading="eager"
+            decoding="async"
+            fetchPriority="high"
+          />
+        </picture>
         <div className="absolute inset-0 bg-gradient-to-r from-black/38 via-black/16 to-black/0" />
         <PhotoAttribution credit={HERO_IMAGE_CREDIT} />
         <div className="page-banner homepage-hero-content container relative z-[5] mx-auto flex flex-col justify-center px-4 py-5 md:py-8">
-          <motion.h1
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: reducedMotion ? 0.3 : heroMotionDirector.revealDuration }}
-            className="max-w-4xl font-display text-3xl text-white md:text-5xl"
-          >
+          <h1 className="max-w-4xl font-display text-3xl text-white md:text-5xl">
             <span className="block text-4xl font-semibold sm:text-5xl md:text-7xl">Depuis 1972</span>
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: reducedMotion ? 0.3 : heroMotionDirector.revealDuration, delay: reducedMotion ? 0.08 : heroMotionDirector.revealStagger * 2 }}
-            className="mt-3 max-w-2xl text-base text-white drop-shadow-sm md:text-lg"
-          >
+          </h1>
+          <p className="mt-3 max-w-2xl text-base text-white drop-shadow-sm md:text-lg">
             Notre cabinet accompagne vendeurs et acquéreurs avec une approche sur mesure.
-          </motion.p>
+          </p>
 
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: reducedMotion ? 0.3 : heroMotionDirector.revealDuration, delay: reducedMotion ? 0.12 : heroMotionDirector.revealStagger * 3 }}
-            className="mt-6"
-            style={ctaSweepStyle}
-          >
+          <div className="mt-6" style={ctaSweepStyle}>
             <MainSearchBar seedItems={instantSearchItems} />
-          </motion.div>
+          </div>
         </div>
       </section>
       <section data-live-content="/biens" className="container mx-auto px-4 pt-5 pb-12 md:pt-8 md:pb-12">

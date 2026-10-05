@@ -5,7 +5,7 @@ export function PageBreadcrumbs({ hidden = false }: { hidden?: boolean }) {
   const { pathname } = useLocation();
   const crumbs = pageBreadcrumbs(pathname);
   if (!crumbs.length || pathname.startsWith("/admin")) return null;
-  return <nav aria-label="Fil d’Ariane" aria-hidden={hidden || undefined} className={`container mx-auto px-4 py-3 text-xs text-muted-foreground ${hidden ? "invisible" : ""}`}>
+  return <nav aria-label="Fil d’Ariane" aria-hidden={hidden || undefined} className={`container mx-auto px-4 py-3 text-xs text-muted-foreground ${hidden ? "hidden" : ""}`}>
     <ol className="flex flex-wrap items-center gap-2">
       {crumbs.map((crumb, index) => <li key={crumb.path} className="flex items-center gap-2">
         {index > 0 && <span aria-hidden="true">/</span>}

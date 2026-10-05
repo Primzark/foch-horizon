@@ -1,4 +1,4 @@
-import { Suspense, useCallback, useLayoutEffect, useRef } from "react";
+import { Suspense, useCallback, useLayoutEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useLocation, useNavigationType } from "react-router-dom";
 import { PageBreadcrumbs } from "@/layout/PageBreadcrumbs";
@@ -27,11 +27,13 @@ function RouteReadyMarker({
 export function AppLayout({ children }: { children: ReactNode }) {
   const location = useLocation();
   const navigationType = useNavigationType();
+  const [readyLocationKey, setReadyLocationKey] = useState<string | null>(null);
   const previousLocation = useRef(location);
   const scrollPositions = useRef(new Map<string, number>());
   const pendingScroll = useRef<{ key: string; hash?: string; top?: number } | null>(null);
 
   const markRouteReady = useCallback((key: string) => {
+    setReadyLocationKey(key);
     const pending = pendingScroll.current;
     if (pending?.key === key) {
       if (pending.hash) {
@@ -42,6 +44,8 @@ export function AppLayout({ children }: { children: ReactNode }) {
       pendingScroll.current = null;
     }
   }, []);
+
+  const isRouteReady = readyLocationKey === location.key;
 
   useLayoutEffect(() => {
     const originalRestoration = window.history.scrollRestoration;
@@ -79,9 +83,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
           {children}
           <RouteReadyMarker locationKey={location.key} hash={location.hash} onReady={markRouteReady} />
         </Suspense>
-        <PageBreadcrumbs />
+        <PageBreadcrumbs hidden={!isRouteReady} />
       </main>
-      <AppFooter />
+      <AppFooter hidden={!isRouteReady} />
       <SearchDrawer />
       <BackToTopButton />
       <SiteChatbotLoader />

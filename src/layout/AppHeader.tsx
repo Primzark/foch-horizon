@@ -51,12 +51,17 @@ export function AppHeader() {
               </button>
             </SheetTrigger>
             <Link to="/" className="flex min-w-0 items-center gap-2" aria-label="Foch Immobilier — Accueil">
-              <img
-                src="/images/foch-immobilier-logo.jpg"
-                alt="Foch Immobilier"
-                className="h-auto w-[124px] mix-blend-multiply sm:w-[145px] lg:w-[160px]"
-                decoding="async"
-              />
+              <picture>
+                <source srcSet="/images/foch-immobilier-logo.webp" type="image/webp" />
+                <img
+                  src="/images/foch-immobilier-logo.jpg"
+                  alt="Foch Immobilier"
+                  width={500}
+                  height={146}
+                  className="h-auto w-[124px] mix-blend-multiply sm:w-[145px] lg:w-[160px]"
+                  decoding="async"
+                />
+              </picture>
             </Link>
             <p className="hidden text-xs uppercase tracking-[0.2em] text-muted-foreground lg:block">Immobilier au Havre · Depuis 1972</p>
             <div className="flex shrink-0 items-center gap-2">
