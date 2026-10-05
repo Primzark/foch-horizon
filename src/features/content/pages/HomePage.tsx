@@ -5,6 +5,7 @@ import { ArrowRight, Compass, Handshake } from "lucide-react";
 import { GoogleGIcon } from "@/components/branding/GoogleGIcon";
 import { BudgetFinder } from "@/features/content/components/BudgetFinder";
 import { MainSearchBar } from "@/features/content/components/MainSearchBar";
+import { SearchThinkingState } from "@/features/content/components/SearchThinkingState";
 import { getFeaturedProperties } from "@/features/listings/api/properties.service";
 import { ListingCard } from "@/features/listings/components/ListingCard";
 import { AgentInitialsAvatar } from "@/features/listings/components/AgentInitialsAvatar";
@@ -107,7 +108,7 @@ export default function HomePage() {
             Notre cabinet accompagne vendeurs et acquéreurs avec une approche sur mesure.
           </p>
 
-          <div className="mt-6" style={ctaSweepStyle}>
+          <div className="relative top-6 md:top-8" style={ctaSweepStyle}>
             <MainSearchBar seedItems={instantSearchItems} />
           </div>
         </div>
@@ -124,6 +125,14 @@ export default function HomePage() {
             </Link>
           </div>
         </ScrollReveal>
+
+        {featuredQuery.isLoading && (
+          <SearchThinkingState
+            label="Chargement de la sélection"
+            details="Nous préparons les biens à découvrir."
+            className="mb-4 w-fit max-w-full"
+          />
+        )}
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {featuredQuery.isLoading &&

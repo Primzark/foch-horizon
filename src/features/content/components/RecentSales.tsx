@@ -7,6 +7,7 @@ import { ScrollReveal } from "@/components/visuals/ScrollReveal";
 import { geographyPhotoCredits } from "@/features/content/data/geographyGuides";
 import { PhotoAttribution } from "@/features/content/components/PhotoAttribution";
 import { getRecentSales } from "@/features/content/api/recentSales.service";
+import { SearchThinkingState } from "@/features/content/components/SearchThinkingState";
 import { searchProperties } from "@/features/listings/api/properties.service";
 import { formatPrice, formatPropertyTypeLabel } from "@/features/listings/utils/formatting";
 import { PropertyPreviewLink } from "@/features/listings/components/PropertyPreviewLink";
@@ -45,7 +46,12 @@ export function RecentSales({ compact = false }: { compact?: boolean }) {
             </div>
             {compact && <Link to="/nos-dernieres-ventes" className="inline-flex items-center gap-2 text-sm hover:underline">Nos dernières ventes <ArrowRight className="h-4 w-4" /></Link>}
           </div>
-          {query.isLoading && <p className="mt-6 text-sm text-muted-foreground" role="status">Chargement de nos dernières ventes…</p>}
+          {query.isLoading && (
+            <SearchThinkingState
+              label="Chargement des dernières ventes"
+              className="mt-6 w-fit max-w-full"
+            />
+          )}
           {query.isError && (
             <div className="mt-6 flex flex-wrap items-center gap-4">
               <p className="text-sm text-muted-foreground">Nos dernières ventes ne sont pas disponibles pour le moment.</p>
@@ -53,7 +59,10 @@ export function RecentSales({ compact = false }: { compact?: boolean }) {
             </div>
           )}
           {!compact && query.data?.length === 0 && availablePropertiesQuery.isLoading && (
-            <p className="mt-6 text-sm text-muted-foreground" role="status">Chargement de notre sélection…</p>
+            <SearchThinkingState
+              label="Chargement de notre sélection"
+              className="mt-6 w-fit max-w-full"
+            />
           )}
           {!compact && !query.isLoading && !query.isError && carouselProperties.length > 0 && (
             <Carousel

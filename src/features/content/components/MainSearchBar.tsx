@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent, type KeyboardEvent } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { House, Search, SlidersHorizontal } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import type { PropertySearchItem, PropertySearchParams, PropertySearchResponse }
 import type { TransactionType } from "@/types/domain";
 import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
 import { createPropertyModalRouteState } from "@/features/listings/navigation/propertyModalNavigation";
+import { SearchThinkingState } from "@/features/content/components/SearchThinkingState";
 
 const searchPrompts = ["Le Havre", "Sainte-Adresse", "Montivilliers", "vue mer"];
 const searchShortcuts: Array<{ label: string; filters: Partial<PropertySearchParams> }> = [
@@ -202,7 +203,15 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
           <input type="hidden" name="transaction" value="vente" />
           <div className="flex items-center gap-2">
             <div className="hidden w-fit shrink-0 items-center rounded-full bg-muted/80 p-1 sm:flex">
-              <span className="rounded-full bg-background px-4 py-2 text-sm font-medium text-foreground shadow-sm">
+              <span className="group inline-flex items-center gap-1.5 rounded-full bg-background px-4 py-2 text-sm font-medium text-foreground shadow-sm">
+                <motion.span
+                  aria-hidden="true"
+                  whileHover={reducedMotion ? undefined : { y: -2, rotate: -7, scale: 1.08 }}
+                  transition={{ type: "spring", stiffness: 420, damping: 14 }}
+                  className="inline-flex"
+                >
+                  <House className="h-4 w-4 text-brand-strong" />
+                </motion.span>
                 Acheter
               </span>
             </div>
@@ -273,6 +282,15 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
               transition={{ duration: reducedMotion ? 0 : 0.16, ease: "easeOut" }}
               className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-40 overflow-hidden rounded-2xl border border-border bg-background text-foreground shadow-xl"
             >
+              {suggestions.length === 0 && inventoryQuery.isLoading && (
+                <div className="p-2">
+                  <SearchThinkingState
+                    label="Je recherche les biens"
+                    details="Je vérifie les annonces correspondant à votre recherche."
+                    className="max-w-full"
+                  />
+                </div>
+              )}
               <div id="main-search-suggestions" role="listbox" aria-label="Suggestions de biens" className="max-h-[min(24rem,60vh)] overflow-y-auto p-2">
                 {suggestions.length === 0 && inventoryQuery.isFetched && (
                   <p role="status" className="px-3 py-4 text-sm text-muted-foreground">

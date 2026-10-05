@@ -21,6 +21,7 @@ import { useUiStore } from "@/lib/state/useUiStore";
 import { getSiteUrl, useSeo } from "@/lib/seo/useSeo";
 import { formatPrice, formatPropertyTypeLabel, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
 import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
+import { SearchThinkingState } from "@/features/content/components/SearchThinkingState";
 
 const defaultParams: PropertySearchParams = {
   transaction: "vente",
@@ -205,11 +206,18 @@ export default function ListingsIndexPage() {
       )}
 
       {query.isLoading && (
-        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, index) => (
-            <div key={index} className="h-[320px] animate-pulse rounded-2xl bg-muted/60" />
-          ))}
-        </div>
+        <>
+          <SearchThinkingState
+            label="Recherche en cours"
+            details="Nous préparons les annonces correspondant à vos critères."
+            className="mt-6 w-fit max-w-full"
+          />
+          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <div key={index} className="h-[320px] animate-pulse rounded-2xl bg-muted/60" />
+            ))}
+          </div>
+        </>
       )}
 
       {query.isError && (
