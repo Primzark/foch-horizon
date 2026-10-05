@@ -18,6 +18,8 @@ interface PropertyMapSplitViewProps {
 }
 
 const DEFAULT_CENTER: L.LatLngTuple = [49.505, 0.14];
+const SELECTED_PROPERTY_ZOOM = 15;
+const MAP_FLY_DURATION_SECONDS = 0.5;
 const TILE_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 
 const cityAnchors: Record<string, L.LatLngTuple> = {
@@ -60,6 +62,11 @@ function makePriceIcon(item: PropertySearchItem, selected: boolean): L.DivIcon {
   });
 }
 
+function setMarkerSelected(marker: L.Marker, selected: boolean) {
+  marker.getElement()?.querySelector(".foch-price-marker")?.classList.toggle("foch-price-marker--selected", selected);
+  marker.setZIndexOffset(selected ? 1000 : 0);
+}
+
 export function PropertyMapSplitView({ items, page, pageSize, total, onPageChange }: PropertyMapSplitViewProps) {
   const mapElementRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -68,6 +75,7 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
   const rowRefs = useRef(new Map<number, HTMLButtonElement>());
   const onSelectRef = useRef<(id: number) => void>(() => undefined);
   const selectedIdRef = useRef<number | null>(null);
+  const highlightedIdRef = useRef<number | null>(null);
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
   const positions = useMemo(
@@ -76,11 +84,12 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
   );
   const selectedItem = items.find((item) => item.id === selectedId) ?? null;
 
-  onSelectRef.current = setSelectedId;
+  const selectProperty = (id: number | null) => {
+    selectedIdRef.current = id;
+    setSelectedId(id);
+  };
 
-  useEffect(() => {
-    selectedIdRef.current = selectedId;
-  }, [selectedId]);
+  onSelectRef.current = (id) => selectProperty(id);
 
   useEffect(() => {
     if (!mapElementRef.current) return;
@@ -127,6 +136,7 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
       marker.bindTooltip(item.title, { direction: "top", offset: [0, -14], opacity: 1 });
       marker.on("click", () => onSelectRef.current(item.id));
       marker.addTo(markerLayer);
+      if (item.id === selectedIdRef.current) marker.setZIndexOffset(1000);
       markerRefs.current.set(item.id, marker);
     });
 
@@ -144,18 +154,33 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
   }, [positions]);
 
   useEffect(() => {
+    const map = mapRef.current;
+    const previousMarker = highlightedIdRef.current == null
+      ? undefined
+      : markerRefs.current.get(highlightedIdRef.current);
+    if (previousMarker && highlightedIdRef.current !== selectedId) {
+      setMarkerSelected(previousMarker, false);
+    }
+
+    highlightedIdRef.current = selectedId;
     if (selectedId == null) return;
 
     const row = rowRefs.current.get(selectedId);
     row?.scrollIntoView({ behavior: "smooth", block: "nearest" });
 
     const marker = markerRefs.current.get(selectedId);
-    const map = mapRef.current;
     if (!marker || !map) return;
 
     const item = items.find((candidate) => candidate.id === selectedId);
-    if (item) marker.setIcon(makePriceIcon(item, true));
-    map.flyTo(marker.getLatLng(), Math.max(map.getZoom(), 13), { duration: 0.55 });
+    if (item) setMarkerSelected(marker, true);
+
+    // A new click takes over from the current flight, so rapid selections always
+    // animate toward the latest property instead of finishing an old flight.
+    map.stop();
+    map.flyTo(marker.getLatLng(), SELECTED_PROPERTY_ZOOM, {
+      duration: MAP_FLY_DURATION_SECONDS,
+      easeLinearity: 0.25,
+    });
   }, [items, selectedId]);
 
   const recenterMap = () => {
@@ -203,7 +228,7 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
                   }}
                   type="button"
                   aria-pressed={isSelected}
-                  onClick={() => setSelectedId(item.id)}
+                  onClick={() => selectProperty(item.id)}
                   className="grid w-full grid-cols-[92px_minmax(0,1fr)] gap-3 rounded-xl text-left outline-none ring-offset-background transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:grid-cols-[112px_minmax(0,1fr)]"
                 >
                   <img
@@ -294,7 +319,7 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
             </div>
             <button
               type="button"
-              onClick={() => setSelectedId(null)}
+              onClick={() => selectProperty(null)}
               aria-label="Effacer la sélection sur la carte"
               className="absolute right-1 top-1 rounded-full p-1 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
