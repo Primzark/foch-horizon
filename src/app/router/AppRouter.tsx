@@ -1,6 +1,7 @@
-import { Suspense, lazy, useEffect, useLayoutEffect, useRef, type TouchEvent } from "react";
+import { Suspense, lazy, useEffect, useLayoutEffect, useRef, useState, type TouchEvent } from "react";
 import { ChevronLeft, ChevronRight, Maximize2 } from "lucide-react";
 import { BrowserRouter, Link, Navigate, Outlet, Route, Routes, useLocation, useNavigate, useNavigationType, useParams, type Location } from "react-router-dom";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -82,6 +83,8 @@ function PropertyDetailRouteModal() {
   const detailsScrollRef = useRef<HTMLDivElement>(null);
   const dialogContentRef = useRef<HTMLDivElement>(null);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const [navigationDirection, setNavigationDirection] = useState<-1 | 1>(1);
+  const prefersReducedMotion = useReducedMotion();
   const propertyId = Number(routeParams.idSlug?.split("-")[0]);
   const budgetItems = routeState?.budgetFinderFilters
     ? queryClient.getQueryData<PropertySearchResponse>(["budget-finder", routeState.budgetFinderFilters])?.items ?? null
@@ -92,7 +95,8 @@ function PropertyDetailRouteModal() {
     ? budgetItems[propertyIndex + 1]
     : null;
 
-  const openProperty = (item: PropertySearchItem) => {
+  const openProperty = (item: PropertySearchItem, direction: -1 | 1) => {
+    setNavigationDirection(direction);
     navigate(toCanonicalPropertyPath(item), {
       replace: true,
       state: {
@@ -132,8 +136,8 @@ function PropertyDetailRouteModal() {
     const deltaY = touch.clientY - start.y;
     if (Math.abs(deltaX) < 56 || Math.abs(deltaX) < Math.abs(deltaY) * 1.25) return;
 
-    if (deltaX < 0 && nextProperty) openProperty(nextProperty);
-    if (deltaX > 0 && previousProperty) openProperty(previousProperty);
+    if (deltaX < 0 && nextProperty) openProperty(nextProperty, 1);
+    if (deltaX > 0 && previousProperty) openProperty(previousProperty, -1);
   };
 
   return (
@@ -149,13 +153,13 @@ function PropertyDetailRouteModal() {
 
           if (event.key === "ArrowLeft" && previousProperty) {
             event.preventDefault();
-            openProperty(previousProperty);
+            openProperty(previousProperty, -1);
           } else if (event.key === "ArrowRight" && nextProperty) {
             event.preventDefault();
-            openProperty(nextProperty);
+            openProperty(nextProperty, 1);
           }
         }}
-        className="left-0 top-0 flex h-[100dvh] w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 p-0 sm:left-[50%] sm:top-[50%] sm:h-[min(92dvh,60rem)] sm:max-h-[92dvh] sm:w-[calc(100%-2rem)] sm:max-w-6xl sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-2xl sm:border"
+        className="left-0 top-0 flex h-[100dvh] w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 p-0 sm:left-[50%] sm:top-[50%] sm:h-[min(92dvh,60rem)] sm:max-h-[92dvh] sm:w-[calc(100%-2rem)] sm:max-w-none sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-2xl sm:border"
       >
         <div className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-border bg-background px-4 pr-16 sm:px-6 sm:pr-20">
           <DialogHeader className="min-w-0 space-y-0 text-left">
@@ -163,30 +167,6 @@ function PropertyDetailRouteModal() {
             <DialogDescription className="sr-only">Fiche complète du bien. Ouvrez-la en plein écran pour accéder à toute la page.</DialogDescription>
           </DialogHeader>
           <div className="flex shrink-0 items-center gap-1.5">
-            {budgetItems && budgetItems.length > 1 && (
-              <>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  aria-label="Annonce précédente"
-                  title="Annonce précédente"
-                  disabled={!previousProperty}
-                  onClick={() => previousProperty && openProperty(previousProperty)}
-                >
-                  <ChevronLeft aria-hidden="true" className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  aria-label="Annonce suivante"
-                  title="Annonce suivante"
-                  disabled={!nextProperty}
-                  onClick={() => nextProperty && openProperty(nextProperty)}
-                >
-                  <ChevronRight aria-hidden="true" className="h-4 w-4" />
-                </Button>
-              </>
-            )}
             <Button variant="outline" size="sm" className="shrink-0" asChild>
               <Link
                 to={`${location.pathname}${location.search}`}
@@ -207,25 +187,69 @@ function PropertyDetailRouteModal() {
           onTouchEnd={handleTouchEnd}
           onTouchCancel={() => { touchStartRef.current = null; }}
         >
-          <Suspense
-            fallback={(
-              <section className="container mx-auto min-h-[60vh] px-4 py-8" aria-busy="true" aria-label="Chargement de l’annonce">
-                <div className="mb-4 h-4 w-44 rounded bg-muted" aria-hidden="true" />
-                <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
-                  <div>
-                    <div className="aspect-[16/10] rounded-2xl bg-muted" aria-hidden="true" />
-                    <div className="mt-6 h-8 w-2/3 rounded bg-muted" aria-hidden="true" />
-                    <div className="mt-3 h-5 w-1/3 rounded bg-muted" aria-hidden="true" />
-                  </div>
-                  <div className="h-56 rounded-2xl bg-muted" aria-hidden="true" />
-                </div>
-                <span className="sr-only">Chargement de l’annonce…</span>
-              </section>
-            )}
-          >
-            <ListingDetailPage />
-          </Suspense>
+          <AnimatePresence mode="wait" initial={false} custom={navigationDirection}>
+            <motion.div
+              key={location.pathname}
+              custom={navigationDirection}
+              variants={{
+                enter: (direction: number) => ({ opacity: 0, x: direction * 36 }),
+                center: { opacity: 1, x: 0 },
+                exit: (direction: number) => ({ opacity: 0, x: direction * -36 }),
+              }}
+              initial={prefersReducedMotion ? "center" : "enter"}
+              animate="center"
+              exit={prefersReducedMotion ? "center" : "exit"}
+              transition={{ duration: prefersReducedMotion ? 0 : 0.26, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <Suspense
+                fallback={(
+                  <section className="container mx-auto min-h-[60vh] px-4 py-8" aria-busy="true" aria-label="Chargement de l’annonce">
+                    <div className="mb-4 h-4 w-44 rounded bg-muted" aria-hidden="true" />
+                    <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
+                      <div>
+                        <div className="aspect-[16/10] rounded-2xl bg-muted" aria-hidden="true" />
+                        <div className="mt-6 h-8 w-2/3 rounded bg-muted" aria-hidden="true" />
+                        <div className="mt-3 h-5 w-1/3 rounded bg-muted" aria-hidden="true" />
+                      </div>
+                      <div className="h-56 rounded-2xl bg-muted" aria-hidden="true" />
+                    </div>
+                    <span className="sr-only">Chargement de l’annonce…</span>
+                  </section>
+                )}
+              >
+                <ListingDetailPage />
+              </Suspense>
+            </motion.div>
+          </AnimatePresence>
         </div>
+        {budgetItems && budgetItems.length > 1 && (
+          <div role="group" className="pointer-events-none absolute inset-y-0 left-0 right-0 z-[201] flex items-center justify-between px-2 sm:px-3" aria-label="Navigation entre les annonces">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="pointer-events-auto h-11 w-11 rounded-full border-border bg-background/95 p-0 shadow-lg backdrop-blur transition-transform hover:scale-105"
+              aria-label="Annonce précédente"
+              title="Annonce précédente"
+              disabled={!previousProperty}
+              onClick={() => previousProperty && openProperty(previousProperty, -1)}
+            >
+              <ChevronLeft aria-hidden="true" className="h-5 w-5" />
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="pointer-events-auto h-11 w-11 rounded-full border-border bg-background/95 p-0 shadow-lg backdrop-blur transition-transform hover:scale-105"
+              aria-label="Annonce suivante"
+              title="Annonce suivante"
+              disabled={!nextProperty}
+              onClick={() => nextProperty && openProperty(nextProperty, 1)}
+            >
+              <ChevronRight aria-hidden="true" className="h-5 w-5" />
+            </Button>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
