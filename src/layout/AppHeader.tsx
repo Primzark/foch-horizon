@@ -54,8 +54,7 @@ export function AppHeader() {
       const drawer = mobileDrawerRef.current;
       const target = event.target;
       const startsCloseSwipe = mobileOpen && drawer && target instanceof Node && drawer.contains(target);
-      const anotherDialogIsOpen = document.querySelector('[role="dialog"][data-state="open"]');
-      const startsOpenSwipe = !mobileOpen && !anotherDialogIsOpen;
+      const startsOpenSwipe = !mobileOpen;
       if (!startsCloseSwipe && !startsOpenSwipe) return;
 
       swipeRef.current = {
