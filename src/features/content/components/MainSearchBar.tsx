@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent, type KeyboardEvent } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Search, SlidersHorizontal } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { useUiStore } from "@/lib/state/useUiStore";
@@ -12,6 +12,7 @@ import { formatPrice, formatPropertyTypeLabel, normalizeKeyword, toCanonicalProp
 import type { PropertySearchItem, PropertySearchParams, PropertySearchResponse } from "@/types/api";
 import type { TransactionType } from "@/types/domain";
 import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
+import { createPropertyModalRouteState } from "@/features/listings/navigation/propertyModalNavigation";
 
 const searchPrompts = ["Le Havre", "Sainte-Adresse", "Montivilliers", "vue mer"];
 const searchShortcuts: Array<{ label: string; filters: Partial<PropertySearchParams> }> = [
@@ -30,6 +31,7 @@ interface MainSearchBarProps {
 
 export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const setSearchDrawerOpen = useUiStore((state) => state.setSearchDrawerOpen);
   const { reducedMotion } = useMotionPreference();
@@ -138,7 +140,9 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
   const openSuggestion = (index: number) => {
     const suggestion = suggestions[index];
     if (!suggestion) return;
-    navigate(toCanonicalPropertyPath(suggestion), { state: { propertyPreview: suggestion } });
+    navigate(toCanonicalPropertyPath(suggestion), {
+      state: createPropertyModalRouteState(location, suggestion, suggestions),
+    });
     setFocused(false);
   };
 

@@ -32,6 +32,7 @@ import { useUiStore } from "@/lib/state/useUiStore";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { SearchThinkingState } from "@/features/content/components/SearchThinkingState";
+import { createPropertyModalRouteState } from "@/features/listings/navigation/propertyModalNavigation";
 
 type ChatRole = "assistant" | "user";
 
@@ -1985,9 +1986,13 @@ export function SiteChatbot({ initiallyOpen = false }: { initiallyOpen?: boolean
   const navigateFromChat = useCallback(
     (path: string) => {
       closeChat();
-      navigate(path);
+      if (/^\/biens\/\d+(?:-|\/|$)/.test(path)) {
+        navigate(path, { state: createPropertyModalRouteState(location) });
+      } else {
+        navigate(path);
+      }
     },
-    [closeChat, navigate],
+    [closeChat, location, navigate],
   );
 
   const handlePropertySuggestionClick = useCallback(

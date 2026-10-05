@@ -1,16 +1,17 @@
 import { Suspense, lazy, useEffect, useLayoutEffect, useRef, useState, type TouchEvent } from "react";
 import { ChevronLeft, ChevronRight, Hand, Maximize2 } from "lucide-react";
-import { BrowserRouter, Link, Navigate, Outlet, Route, Routes, useLocation, useNavigate, useNavigationType, useParams, type Location } from "react-router-dom";
+import { BrowserRouter, Link, Navigate, Outlet, Route, Routes, useLocation, useNavigate, useNavigationType, useParams } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import type { PropertyModalRouteState } from "@/features/listings/navigation/propertyModalNavigation";
 import { toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
 import { AppLayout } from "@/layout/AppLayout";
 import { CookieConsentManager } from "@/layout/CookieConsentManager";
 import { routePageLoaders } from "@/app/router/routePageLoaders";
 import { RouteIntentPrefetcher } from "@/app/router/RouteIntentPrefetcher";
-import type { PropertySearchParams, PropertySearchResponse, PropertySearchItem } from "@/types/api";
+import type { PropertySearchResponse, PropertySearchItem } from "@/types/api";
 
 const LegacyAnnonceRedirect = lazy(routePageLoaders.legacyAnnonce);
 const LegacyPropertySlugRedirect = lazy(routePageLoaders.legacyProperty);
@@ -33,13 +34,6 @@ const SiteMapPage = lazy(routePageLoaders.siteMap);
 const SelectionPage = lazy(routePageLoaders.selection);
 const AdminMarketCountersPage = lazy(routePageLoaders.admin);
 const NotFoundPage = lazy(routePageLoaders.notFound);
-
-interface PropertyModalRouteState {
-  propertyModal?: boolean;
-  backgroundLocation?: Location;
-  propertyPreview?: unknown;
-  budgetFinderFilters?: PropertySearchParams;
-}
 
 function LayoutShell() {
   return (
@@ -89,10 +83,11 @@ function PropertyDetailRouteModal() {
   const budgetItems = routeState?.budgetFinderFilters
     ? queryClient.getQueryData<PropertySearchResponse>(["budget-finder", routeState.budgetFinderFilters])?.items ?? null
     : null;
-  const propertyIndex = budgetItems?.findIndex((item) => item.id === propertyId) ?? -1;
-  const previousProperty = budgetItems && propertyIndex > 0 ? budgetItems[propertyIndex - 1] : null;
-  const nextProperty = budgetItems && propertyIndex >= 0 && propertyIndex < budgetItems.length - 1
-    ? budgetItems[propertyIndex + 1]
+  const announcementItems = routeState?.announcementItems ?? budgetItems;
+  const propertyIndex = announcementItems?.findIndex((item) => item.id === propertyId) ?? -1;
+  const previousProperty = announcementItems && propertyIndex > 0 ? announcementItems[propertyIndex - 1] : null;
+  const nextProperty = announcementItems && propertyIndex >= 0 && propertyIndex < announcementItems.length - 1
+    ? announcementItems[propertyIndex + 1]
     : null;
   const canBrowseAnnouncements = Boolean(previousProperty || nextProperty);
   const announcementSwipeHint = canBrowseAnnouncements ? (
@@ -146,6 +141,7 @@ function PropertyDetailRouteModal() {
         propertyPreview: item,
         propertyModal: true,
         backgroundLocation: routeState?.backgroundLocation,
+        announcementItems,
         budgetFinderFilters: routeState?.budgetFinderFilters,
       },
     });

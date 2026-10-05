@@ -8,7 +8,8 @@ import { geographyPhotoCredits } from "@/features/content/data/geographyGuides";
 import { PhotoAttribution } from "@/features/content/components/PhotoAttribution";
 import { getRecentSales } from "@/features/content/api/recentSales.service";
 import { searchProperties } from "@/features/listings/api/properties.service";
-import { formatPrice, formatPropertyTypeLabel, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
+import { formatPrice, formatPropertyTypeLabel } from "@/features/listings/utils/formatting";
+import { PropertyPreviewLink } from "@/features/listings/components/PropertyPreviewLink";
 import type { PropertySearchItem } from "@/types/api";
 import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
 
@@ -78,7 +79,7 @@ export function RecentSales({ compact = false }: { compact?: boolean }) {
               <CarouselContent className="-ml-4 pb-3">
                 {carouselProperties.map((property) => (
                   <CarouselItem key={property.id} className="basis-[88%] pl-4 sm:basis-[62%] lg:basis-[46%] xl:basis-[38%]">
-                    <PropertyCarouselCard property={property} isSold={carouselShowsSales} />
+                    <PropertyCarouselCard property={property} browseItems={carouselProperties} isSold={carouselShowsSales} />
                   </CarouselItem>
                 ))}
               </CarouselContent>
@@ -158,14 +159,12 @@ export function RecentSales({ compact = false }: { compact?: boolean }) {
   );
 }
 
-function PropertyCarouselCard({ property, isSold }: { property: PropertySearchItem; isSold: boolean }) {
-  const propertyPath = toCanonicalPropertyPath({ id: property.id, slug: property.slug });
-
+function PropertyCarouselCard({ property, browseItems, isSold }: { property: PropertySearchItem; browseItems: PropertySearchItem[]; isSold: boolean }) {
   return (
     <article className="h-full">
-      <Link
-        to={propertyPath}
-        state={{ propertyPreview: property }}
+      <PropertyPreviewLink
+        item={property}
+        browseItems={browseItems}
         aria-label={`Voir le bien : ${property.title}`}
         className="group block h-full overflow-hidden rounded-2xl border border-border bg-card transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-1 hover:border-brand-border hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       >
@@ -201,7 +200,7 @@ function PropertyCarouselCard({ property, isSold }: { property: PropertySearchIt
             </span>
           </div>
         </div>
-      </Link>
+      </PropertyPreviewLink>
     </article>
   );
 }

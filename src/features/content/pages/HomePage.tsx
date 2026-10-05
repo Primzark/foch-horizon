@@ -52,6 +52,10 @@ export default function HomePage() {
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
   });
+  const featuredItems = useMemo(
+    () => (featuredQuery.data ?? []).slice(0, 6).map(toSearchItem),
+    [featuredQuery.data],
+  );
   const instantSearchItems = useMemo(
     () => properties.filter((property) => property.status !== "off_market").map((property) => ({
       ...toSearchItem(property),
@@ -126,10 +130,11 @@ export default function HomePage() {
             Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="h-[320px] animate-pulse rounded-2xl bg-muted/60" />
             ))}
-          {(featuredQuery.data ?? []).slice(0, 6).map((property, index) => (
+          {featuredItems.map((item, index) => (
             <ListingCard
-              key={property.id}
-              item={toSearchItem(property)}
+              key={item.id}
+              item={item}
+              browseItems={featuredItems}
               revealIndex={index}
               eagerImage={index === 0}
               className="paper-grain [--paper-grain-opacity:0.032] [--paper-grain-mobile-reduction:0.018]"

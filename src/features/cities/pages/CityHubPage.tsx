@@ -243,7 +243,7 @@ export default function CityHubPage() {
             <h2 id="city-properties-title" className="mb-4 font-display text-3xl">Biens {atLocation(cityGuide.name)}</h2>
             <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
               {cityProperties.map((item, index) => (
-                <ListingCard key={item.id} item={item} revealIndex={index} />
+                <ListingCard key={item.id} item={item} browseItems={cityProperties} revealIndex={index} />
               ))}
             </div>
           </section>
@@ -314,7 +314,7 @@ export default function CityHubPage() {
         ) : (
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {cityProperties.map((item, index) => (
-              <ListingCard key={item.id} item={item} revealIndex={index} />
+              <ListingCard key={item.id} item={item} browseItems={cityProperties} revealIndex={index} />
             ))}
           </div>
         )}

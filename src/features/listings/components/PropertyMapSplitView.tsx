@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowUpRight, LocateFixed, MapPin, X } from "lucide-react";
 import * as L from "leaflet";
-import { Link } from "react-router-dom";
 import type { PropertySearchItem } from "@/types/api";
-import { formatPrice, formatPropertyTypeLabel, normalizeKeyword, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
+import { PropertyPreviewLink } from "@/features/listings/components/PropertyPreviewLink";
+import { formatPrice, formatPropertyTypeLabel, normalizeKeyword } from "@/features/listings/utils/formatting";
 import { PaginationBar } from "@/features/listings/components/PaginationBar";
 import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
 import "leaflet/dist/leaflet.css";
@@ -257,13 +257,13 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
                   </span>
                 </button>
                 <div className="mt-1 flex justify-end">
-                  <Link
-                    to={toCanonicalPropertyPath(item)}
-                    state={{ propertyPreview: item }}
+                  <PropertyPreviewLink
+                    item={item}
+                    browseItems={items}
                     className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold text-brand-strong underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     Voir l’annonce <ArrowUpRight aria-hidden="true" className="h-3.5 w-3.5" />
-                  </Link>
+                  </PropertyPreviewLink>
                 </div>
               </article>
             );
@@ -275,7 +275,7 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
         </div>
       </section>
 
-      <section aria-label="Carte des biens" className="relative h-[440px] overflow-hidden rounded-2xl border border-border bg-muted lg:h-[min(74vh,780px)]">
+      <section aria-label="Carte des biens" className="relative isolate h-[440px] overflow-hidden rounded-2xl border border-border bg-muted lg:h-[min(74vh,780px)]">
         <div ref={mapElementRef} className="foch-property-map h-full w-full" />
 
         <button
@@ -307,14 +307,14 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
                 <span className="truncate text-sm font-semibold text-brand-strong">
                   {formatPrice(selectedItem.priceAmount, selectedItem.transaction)}
                 </span>
-                <Link
-                  to={toCanonicalPropertyPath(selectedItem)}
-                  state={{ propertyPreview: selectedItem }}
+                <PropertyPreviewLink
+                  item={selectedItem}
+                  browseItems={items}
                   aria-label={`Voir l’annonce ${selectedItem.title}`}
                   className="rounded-full p-1 text-brand-strong hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <ArrowUpRight aria-hidden="true" className="h-4 w-4" />
-                </Link>
+                </PropertyPreviewLink>
               </p>
             </div>
             <button

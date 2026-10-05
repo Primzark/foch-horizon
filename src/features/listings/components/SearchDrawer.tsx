@@ -15,6 +15,7 @@ import { buildSearchParams, parseSearchParams } from "@/features/listings/utils/
 import type { PropertySearchParams } from "@/types/api";
 import { useUiStore } from "@/lib/state/useUiStore";
 import { trackEvent } from "@/lib/analytics/events";
+import { createPropertyModalRouteState } from "@/features/listings/navigation/propertyModalNavigation";
 
 const defaultFilters: PropertySearchParams = {
   transaction: "vente",
@@ -56,7 +57,7 @@ export function SearchDrawer() {
       if (property) {
         navigate(toCanonicalPropertyPath(property), {
           replace: false,
-          state: { propertyPreview: toSearchItem(property) },
+          state: createPropertyModalRouteState(location, toSearchItem(property)),
         });
         setSearchDrawerOpen(false);
         trackEvent("filter_applied", { reference });
@@ -67,7 +68,7 @@ export function SearchDrawer() {
     const searchParams = buildSearchParams(normalized);
     navigate({ pathname: "/biens", search: searchParams.toString() }, { replace: false });
     trackEvent("filter_applied", normalized as Record<string, unknown>);
-  }, [navigate, setSearchDrawerOpen]);
+  }, [location, navigate, setSearchDrawerOpen]);
 
   useEffect(() => {
     if (isMobile) {

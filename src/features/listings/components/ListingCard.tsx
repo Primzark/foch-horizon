@@ -1,14 +1,13 @@
 import { Heart, MapPin, Maximize, BedDouble, Bath, Car, Sparkles, Star } from "lucide-react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
 import type { PropertySearchItem } from "@/types/api";
 import { cn } from "@/lib/utils";
 import DpeBadge from "@/components/property/DpeBadge";
+import { PropertyPreviewLink } from "@/features/listings/components/PropertyPreviewLink";
 import {
   formatPrice,
   formatPropertyTypeLabel,
   getPropertyCardLabels,
-  toCanonicalPropertyPath,
 } from "@/features/listings/utils/formatting";
 import { useFavoritesStore } from "@/features/favorites/useFavoritesStore";
 import { getPlaceImageMotionPreset, inferPlaceImageMood } from "@/lib/visuals/placeImageMotion";
@@ -24,14 +23,14 @@ interface ListingCardProps {
   revealIndex?: number;
   eagerImage?: boolean;
   className?: string;
+  browseItems?: PropertySearchItem[];
 }
 
-export function ListingCard({ item, viewMode = "grid", revealIndex = 0, eagerImage = false, className }: ListingCardProps) {
+export function ListingCard({ item, viewMode = "grid", revealIndex = 0, eagerImage = false, className, browseItems }: ListingCardProps) {
   const toggleFavorite = useFavoritesStore((state) => state.toggle);
   const isFavorite = useFavoritesStore((state) => state.isFavorite(item.id));
   const { reducedMotion } = useMotionPreference();
 
-  const path = toCanonicalPropertyPath({ id: item.id, slug: item.slug });
   const labels = getPropertyCardLabels(item);
   const propertyTypeLabel = formatPropertyTypeLabel(item.type);
   const imageMood = inferPlaceImageMood(item.city.name, item.title, propertyTypeLabel);
@@ -58,7 +57,7 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, eagerIma
         itemScope
         itemType="https://schema.org/RealEstateListing"
       >
-        <Link to={path} state={{ propertyPreview: item }} className="group grid gap-4 p-3 md:grid-cols-[280px_1fr] md:p-4" itemProp="url">
+        <PropertyPreviewLink item={item} browseItems={browseItems} className="group grid gap-4 p-3 md:grid-cols-[280px_1fr] md:p-4" itemProp="url">
           <div className="relative overflow-hidden rounded-xl">
             <ContextAwareParallax mood={imageMood} reducedMotion={reducedMotion} intensity="subtle">
               <img
@@ -155,7 +154,7 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, eagerIma
               </button>
             </div>
           </div>
-        </Link>
+        </PropertyPreviewLink>
         <meta itemProp="identifier" content={String(item.id)} />
         <meta itemProp="floorSize" content={String(item.surfaceM2)} />
         <div itemProp="offers" itemScope itemType="https://schema.org/Offer">
@@ -175,7 +174,7 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, eagerIma
       itemScope
       itemType="https://schema.org/RealEstateListing"
     >
-      <Link to={path} state={{ propertyPreview: item }} className="relative block overflow-hidden" itemProp="url">
+      <PropertyPreviewLink item={item} browseItems={browseItems} className="relative block overflow-hidden" itemProp="url">
         <ContextAwareParallax mood={imageMood} reducedMotion={reducedMotion} intensity="subtle">
           <img
             src={getPropertyImageUrl(item.coverImageUrl, 400)}
@@ -232,7 +231,7 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, eagerIma
         >
           <Heart className={cn("h-4 w-4", isFavorite && "fill-brand text-brand")} />
         </button>
-      </Link>
+      </PropertyPreviewLink>
 
       <div className="space-y-2 p-3 sm:p-4">
         <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">

@@ -82,7 +82,7 @@ export default function SelectionPage() {
       ) : (
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {savedListings.map((listing, index) => (
-            <ListingCard key={listing.id} item={listing} revealIndex={index} eagerImage={index === 0} />
+            <ListingCard key={listing.id} item={listing} browseItems={savedListings} revealIndex={index} eagerImage={index === 0} />
           ))}
         </div>
       )}
