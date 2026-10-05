@@ -146,6 +146,7 @@ function PropertyDetailRouteModal() {
     }}>
       <DialogContent
         ref={dialogContentRef}
+        data-menu-swipe-ignore
         onKeyDown={(event) => {
           if (!(event.target instanceof Node) || !dialogContentRef.current?.contains(event.target)) return;
           if (event.altKey || event.ctrlKey || event.metaKey || event.defaultPrevented) return;
@@ -182,7 +183,6 @@ function PropertyDetailRouteModal() {
         </div>
         <div
           ref={detailsScrollRef}
-          data-menu-swipe-ignore
           className="min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain"
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
