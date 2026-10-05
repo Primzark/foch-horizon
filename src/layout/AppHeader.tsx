@@ -54,7 +54,10 @@ export function AppHeader() {
       const drawer = mobileDrawerRef.current;
       const target = event.target;
       const startsCloseSwipe = mobileOpen && drawer && target instanceof Node && drawer.contains(target);
-      const startsOpenSwipe = !mobileOpen;
+      const startsInSwipeableMedia = target instanceof Element && Boolean(
+        target.closest("[data-property-gallery], [aria-roledescription='carousel'], img"),
+      );
+      const startsOpenSwipe = !mobileOpen && !startsInSwipeableMedia;
       if (!startsCloseSwipe && !startsOpenSwipe) return;
 
       swipeRef.current = {
