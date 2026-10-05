@@ -234,12 +234,12 @@ export function BudgetFinder() {
                 className="pr-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:max-h-[min(65vh,28rem)] lg:overflow-y-auto lg:overscroll-contain"
               >
                 <div className="divide-y divide-border">
-                  {resultItems.map((item) => (
+                  {resultItems.map((item, index) => (
                     <Link
                       key={item.id}
                       to={toCanonicalPropertyPath({ id: item.id, slug: item.slug })}
                       state={{ propertyPreview: item }}
-                      className="group flex min-h-[88px] items-center gap-4 py-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      className={`group flex min-h-[72px] items-center gap-3 py-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:min-h-[88px] lg:gap-4 lg:py-3 ${index >= 3 ? "hidden lg:flex" : ""}`}
                     >
                       {item.coverImageUrl ? (
                         <img
@@ -249,24 +249,27 @@ export function BudgetFinder() {
                           alt=""
                           loading="lazy"
                           decoding="async"
-                          className="h-16 w-20 shrink-0 rounded-lg object-cover"
+                          className="h-12 w-16 shrink-0 rounded-lg object-cover lg:h-16 lg:w-20"
                         />
                       ) : (
-                        <div className="flex h-16 w-20 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-brand-strong" aria-hidden="true">
+                        <div className="flex h-12 w-16 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-brand-strong lg:h-16 lg:w-20" aria-hidden="true">
                           <MapPin className="h-5 w-5" />
                         </div>
                       )}
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate font-medium group-hover:text-brand-strong">{item.title}</span>
-                        <span className="mt-1 block truncate text-xs text-muted-foreground">
+                        <span className="block truncate text-sm font-medium group-hover:text-brand-strong lg:text-base">{item.title}</span>
+                        <span className="mt-1 block truncate text-[11px] text-muted-foreground lg:text-xs">
                           {item.city.name} · {formatPropertyTypeLabel(item.type)} · {item.surfaceM2} m²
                         </span>
                       </span>
-                      <span className="shrink-0 text-right text-sm font-semibold tabular-nums text-brand-strong">
+                      <span className="shrink-0 text-right text-xs font-semibold tabular-nums text-brand-strong lg:text-sm">
                         {formatPrice(item.priceAmount, item.transaction)}
                       </span>
                     </Link>
                   ))}
+                  {resultItems.length > 3 && (
+                    <p className="py-2 text-xs text-muted-foreground lg:hidden">Aperçu des 3 premières annonces.</p>
+                  )}
                 </div>
               </div>
             )}
