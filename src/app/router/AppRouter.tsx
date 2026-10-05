@@ -1,5 +1,8 @@
 import { Suspense, lazy, useLayoutEffect, useRef } from "react";
-import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation, useNavigationType } from "react-router-dom";
+import { Maximize2 } from "lucide-react";
+import { BrowserRouter, Link, Navigate, Outlet, Route, Routes, useLocation, useNavigate, useNavigationType, type Location } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AppLayout } from "@/layout/AppLayout";
 import { CookieConsentManager } from "@/layout/CookieConsentManager";
 import { routePageLoaders } from "@/app/router/routePageLoaders";
@@ -26,6 +29,12 @@ const SiteMapPage = lazy(routePageLoaders.siteMap);
 const SelectionPage = lazy(routePageLoaders.selection);
 const AdminMarketCountersPage = lazy(routePageLoaders.admin);
 const NotFoundPage = lazy(routePageLoaders.notFound);
+
+interface PropertyModalRouteState {
+  propertyModal?: boolean;
+  backgroundLocation?: Location;
+  propertyPreview?: unknown;
+}
 
 function LayoutShell() {
   return (
@@ -60,14 +69,67 @@ function RouteScrollManager() {
   return null;
 }
 
-export function AppRouter() {
+function PropertyDetailRouteModal() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const routeState = location.state as PropertyModalRouteState | null;
+
   return (
-    <BrowserRouter>
-      <RouteIntentPrefetcher />
-      <RouteScrollManager />
-      <CookieConsentManager />
+    <Dialog open onOpenChange={(open) => {
+      if (!open) navigate(-1);
+    }}>
+      <DialogContent className="left-0 top-0 flex h-[100dvh] w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 p-0 sm:left-[50%] sm:top-[50%] sm:h-[min(92dvh,60rem)] sm:max-h-[92dvh] sm:w-[calc(100%-2rem)] sm:max-w-6xl sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-2xl sm:border">
+        <div className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-border bg-background px-4 pr-16 sm:px-6 sm:pr-20">
+          <DialogHeader className="min-w-0 space-y-0 text-left">
+            <DialogTitle className="truncate font-display text-lg font-normal sm:text-xl">Aperçu de l’annonce</DialogTitle>
+            <DialogDescription className="sr-only">Fiche complète du bien. Ouvrez-la en plein écran pour accéder à toute la page.</DialogDescription>
+          </DialogHeader>
+          <Button variant="outline" size="sm" className="shrink-0" asChild>
+            <Link
+              to={`${location.pathname}${location.search}`}
+              replace
+              state={routeState?.propertyPreview ? { propertyPreview: routeState.propertyPreview } : null}
+              aria-label="Ouvrir l’annonce en plein écran"
+            >
+              <Maximize2 aria-hidden="true" className="h-4 w-4 sm:mr-1.5" />
+              <span className="hidden sm:inline">Plein écran</span>
+            </Link>
+          </Button>
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          <Suspense
+            fallback={(
+              <section className="container mx-auto min-h-[60vh] px-4 py-8" aria-busy="true" aria-label="Chargement de l’annonce">
+                <div className="mb-4 h-4 w-44 rounded bg-muted" aria-hidden="true" />
+                <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
+                  <div>
+                    <div className="aspect-[16/10] rounded-2xl bg-muted" aria-hidden="true" />
+                    <div className="mt-6 h-8 w-2/3 rounded bg-muted" aria-hidden="true" />
+                    <div className="mt-3 h-5 w-1/3 rounded bg-muted" aria-hidden="true" />
+                  </div>
+                  <div className="h-56 rounded-2xl bg-muted" aria-hidden="true" />
+                </div>
+                <span className="sr-only">Chargement de l’annonce…</span>
+              </section>
+            )}
+          >
+            <ListingDetailPage />
+          </Suspense>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function AppRoutes() {
+  const location = useLocation();
+  const routeState = location.state as PropertyModalRouteState | null;
+  const backgroundLocation = routeState?.propertyModal ? routeState.backgroundLocation : undefined;
+
+  return (
+    <>
       <Suspense fallback={null}>
-        <Routes>
+        <Routes location={backgroundLocation ?? location}>
           <Route path="/admin" element={<AdminMarketCountersPage />} />
           <Route element={<LayoutShell />}>
             <Route path="/" element={<HomePage />} />
@@ -109,6 +171,22 @@ export function AppRouter() {
           </Route>
         </Routes>
       </Suspense>
+      {backgroundLocation && routeState?.propertyModal && (
+        <Routes>
+          <Route path="/biens/:idSlug/*" element={<PropertyDetailRouteModal />} />
+        </Routes>
+      )}
+    </>
+  );
+}
+
+export function AppRouter() {
+  return (
+    <BrowserRouter>
+      <RouteIntentPrefetcher />
+      <RouteScrollManager />
+      <CookieConsentManager />
+      <AppRoutes />
     </BrowserRouter>
   );
 }

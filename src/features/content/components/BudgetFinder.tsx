@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, MapPin } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -23,7 +23,9 @@ import type { PropertyType } from "@/types/domain";
 import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
 
 export function BudgetFinder() {
+  const location = useLocation();
   const [budgetText, setBudgetText] = useState("350000");
+  const [isResultsDialogOpen, setIsResultsDialogOpen] = useState(false);
   const [propertyType, setPropertyType] = useState<PropertyType | "">("");
   const [areaId, setAreaId] = useState("");
   const [settledBudget, setSettledBudget] = useState<number | null>(350000);
@@ -192,7 +194,7 @@ export function BudgetFinder() {
             </div>
             {hasValidBudget && listingsQuery.data && listingsQuery.data.total > 0 && (
               <>
-                <Dialog>
+                <Dialog open={isResultsDialogOpen} onOpenChange={setIsResultsDialogOpen}>
                   <DialogTrigger asChild>
                     <Button variant="brand" size="sm" className="lg:hidden">
                       Voir les biens <ArrowRight aria-hidden="true" className="ml-1.5 h-4 w-4" />
@@ -215,7 +217,8 @@ export function BudgetFinder() {
                           <Link
                             key={item.id}
                             to={toCanonicalPropertyPath({ id: item.id, slug: item.slug })}
-                            state={{ propertyPreview: item }}
+                            state={{ propertyPreview: item, propertyModal: true, backgroundLocation: location }}
+                            onClick={() => setIsResultsDialogOpen(false)}
                             className="group flex min-h-[76px] items-center gap-3 py-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                           >
                             {item.coverImageUrl ? (
@@ -311,7 +314,8 @@ export function BudgetFinder() {
                     <Link
                       key={item.id}
                       to={toCanonicalPropertyPath({ id: item.id, slug: item.slug })}
-                      state={{ propertyPreview: item }}
+                      state={{ propertyPreview: item, propertyModal: true, backgroundLocation: location }}
+                      onClick={() => setIsResultsDialogOpen(false)}
                       className={`group flex min-h-[72px] items-center gap-3 py-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:min-h-[88px] lg:gap-4 lg:py-3 ${index >= 3 ? "hidden lg:flex" : ""}`}
                     >
                       {item.coverImageUrl ? (
