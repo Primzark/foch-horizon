@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect, useLayoutEffect, useRef, useState, type TouchEvent } from "react";
-import { ChevronLeft, ChevronRight, Hand, Maximize2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Hand, Maximize2, Repeat2 } from "lucide-react";
 import { BrowserRouter, Link, Navigate, Outlet, Route, Routes, useLocation, useNavigate, useNavigationType, useParams, type Location } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
@@ -39,6 +39,7 @@ interface PropertyModalRouteState {
   backgroundLocation?: Location;
   propertyPreview?: unknown;
   budgetFinderFilters?: PropertySearchParams;
+  announcementSwipeHintDismissed?: boolean;
 }
 
 function LayoutShell() {
@@ -95,23 +96,26 @@ function PropertyDetailRouteModal() {
     ? budgetItems[propertyIndex + 1]
     : null;
   const canBrowseAnnouncements = Boolean(previousProperty || nextProperty);
-  const announcementSwipeHint = canBrowseAnnouncements ? (
-    <span className="relative inline-flex h-9 w-14 items-center justify-center text-brand-strong/70">
-      <motion.span
-        aria-hidden="true"
-        className="absolute h-6 w-6 rounded-full bg-brand/10 blur-md"
-        animate={prefersReducedMotion ? undefined : { x: [0, 7, 0, -7, 0], opacity: [0.12, 0.28, 0.12, 0.24, 0.12] }}
-        transition={prefersReducedMotion ? undefined : { duration: 2.8, repeat: Infinity, repeatDelay: 1.8, ease: "easeInOut" }}
-      />
-      <motion.span
-        aria-hidden="true"
-        className="relative"
-        animate={prefersReducedMotion ? undefined : { x: [0, 10, 0, -10, 0], y: [0, -1, 0, 1, 0], scale: [1, 1.04, 1, 1.04, 1] }}
-        transition={prefersReducedMotion ? undefined : { duration: 2.8, repeat: Infinity, repeatDelay: 1.8, ease: "easeInOut" }}
-      >
-        <Hand className="h-8 w-8" strokeWidth={1.7} />
-      </motion.span>
-      <span className="sr-only">Glissez vers la gauche ou la droite pour parcourir les annonces. Vous pouvez aussi utiliser les flèches du clavier.</span>
+  const announcementSwipeHint = canBrowseAnnouncements && !routeState?.announcementSwipeHintDismissed ? (
+    <span className="inline-flex items-center gap-2 rounded-full border border-border/80 bg-background/90 px-3 py-1.5 text-xs font-medium text-muted-foreground shadow-sm backdrop-blur-sm">
+      <span>Glissez à gauche ou à droite</span>
+      <span className="relative inline-flex h-7 w-10 shrink-0 items-center justify-center text-brand-strong/75" aria-hidden="true">
+        <motion.span
+          className="absolute"
+          animate={prefersReducedMotion ? undefined : { x: [0, 3, 0, -3, 0], opacity: [0.55, 0.9, 0.55, 0.9, 0.55] }}
+          transition={prefersReducedMotion ? undefined : { duration: 2.4, repeat: Infinity, repeatDelay: 1.2, ease: "easeInOut" }}
+        >
+          <Repeat2 className="h-5 w-5" strokeWidth={1.8} />
+        </motion.span>
+        <motion.span
+          className="absolute right-0.5 top-0.5"
+          animate={prefersReducedMotion ? undefined : { x: [0, 2, 0, -2, 0], y: [0, -1, 0, 1, 0] }}
+          transition={prefersReducedMotion ? undefined : { duration: 2.4, repeat: Infinity, repeatDelay: 1.2, ease: "easeInOut" }}
+        >
+          <Hand className="h-4 w-4" strokeWidth={1.8} />
+        </motion.span>
+      </span>
+      <span className="sr-only">Vous pouvez aussi utiliser les flèches du clavier.</span>
     </span>
   ) : null;
   const announcementNavigationControls = canBrowseAnnouncements ? (
@@ -154,6 +158,7 @@ function PropertyDetailRouteModal() {
         propertyModal: true,
         backgroundLocation: routeState?.backgroundLocation,
         budgetFinderFilters: routeState?.budgetFinderFilters,
+        announcementSwipeHintDismissed: true,
       },
     });
   };
