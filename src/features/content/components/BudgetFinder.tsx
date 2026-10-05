@@ -231,7 +231,7 @@ export function BudgetFinder() {
                 role="region"
                 aria-label="Annonces correspondant à votre budget"
                 tabIndex={0}
-                className="max-h-[min(65vh,28rem)] overflow-y-auto overscroll-contain pr-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="pr-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:max-h-[min(65vh,28rem)] lg:overflow-y-auto lg:overscroll-contain"
               >
                 <div className="divide-y divide-border">
                   {resultItems.map((item) => (
