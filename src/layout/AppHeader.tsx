@@ -54,10 +54,10 @@ export function AppHeader() {
       const drawer = mobileDrawerRef.current;
       const target = event.target;
       const startsCloseSwipe = mobileOpen && drawer && target instanceof Node && drawer.contains(target);
-      const startsInSwipeableMedia = target instanceof Element && Boolean(
-        target.closest("[data-property-gallery], [aria-roledescription='carousel'], img"),
+      const startsInGestureOwnedRegion = target instanceof Element && Boolean(
+        target.closest("[data-property-gallery], [aria-roledescription='carousel'], .foch-property-map, img"),
       );
-      const startsOpenSwipe = !mobileOpen && !startsInSwipeableMedia;
+      const startsOpenSwipe = !mobileOpen && !startsInGestureOwnedRegion;
       if (!startsCloseSwipe && !startsOpenSwipe) return;
 
       swipeRef.current = {
