@@ -99,13 +99,16 @@ function PropertyDetailRouteModal() {
     <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
       <span>Glissez à gauche ou à droite</span>
       <span className="relative inline-flex h-9 w-14 shrink-0 items-center justify-center text-brand-strong/70" aria-hidden="true">
+        {/* The route presence wrapper skips initial animations; explicit start values keep this cue moving on first open. */}
         <motion.span
           className="absolute h-6 w-6 rounded-full bg-brand/10 blur-md"
+          initial={prefersReducedMotion ? false : { x: 0, opacity: 0.12 }}
           animate={prefersReducedMotion ? undefined : { x: [0, 7, 0, -7, 0], opacity: [0.12, 0.28, 0.12, 0.24, 0.12] }}
           transition={prefersReducedMotion ? undefined : { duration: 2.8, repeat: Infinity, repeatDelay: 1.8, ease: "easeInOut" }}
         />
         <motion.span
           className="relative"
+          initial={prefersReducedMotion ? false : { x: 0, y: 0, scale: 1 }}
           animate={prefersReducedMotion ? undefined : { x: [0, 10, 0, -10, 0], y: [0, -1, 0, 1, 0], scale: [1, 1.04, 1, 1.04, 1] }}
           transition={prefersReducedMotion ? undefined : { duration: 2.8, repeat: Infinity, repeatDelay: 1.8, ease: "easeInOut" }}
         >
