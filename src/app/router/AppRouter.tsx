@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect, useLayoutEffect, useRef, useState, type TouchEvent } from "react";
-import { ChevronLeft, ChevronRight, Maximize2 } from "lucide-react";
+import { Hand, Maximize2 } from "lucide-react";
 import { BrowserRouter, Link, Navigate, Outlet, Route, Routes, useLocation, useNavigate, useNavigationType, useParams, type Location } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
@@ -94,6 +94,7 @@ function PropertyDetailRouteModal() {
   const nextProperty = budgetItems && propertyIndex >= 0 && propertyIndex < budgetItems.length - 1
     ? budgetItems[propertyIndex + 1]
     : null;
+  const canBrowseAnnouncements = Boolean(previousProperty || nextProperty);
 
   const openProperty = (item: PropertySearchItem, direction: -1 | 1) => {
     setNavigationDirection(direction);
@@ -162,11 +163,27 @@ function PropertyDetailRouteModal() {
         }}
         className="left-0 top-0 flex h-[100dvh] w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 p-0 sm:left-[50%] sm:top-[50%] sm:h-[min(92dvh,60rem)] sm:max-h-[92dvh] sm:w-[calc(100%-2rem)] sm:max-w-none sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-2xl sm:border"
       >
-        <div className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-border bg-background px-4 pr-16 sm:px-6 sm:pr-20">
+        <div className="flex h-16 shrink-0 items-center justify-between gap-2 border-b border-border bg-background px-4 pr-16 sm:gap-3 sm:px-6 sm:pr-20">
           <DialogHeader className="min-w-0 space-y-0 text-left">
-            <DialogTitle className="truncate font-display text-lg font-normal sm:text-xl">Aperçu de l’annonce</DialogTitle>
+            <DialogTitle className="truncate font-display text-lg font-normal sm:text-xl max-[360px]:text-base">Aperçu de l’annonce</DialogTitle>
             <DialogDescription className="sr-only">Fiche complète du bien. Ouvrez-la en plein écran pour accéder à toute la page.</DialogDescription>
           </DialogHeader>
+          {canBrowseAnnouncements && (
+            <div
+              role="note"
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-brand-border/70 bg-brand-soft/60 px-2 py-1 text-[11px] font-medium leading-none text-brand-strong lg:hidden"
+            >
+              <motion.span
+                aria-hidden="true"
+                animate={prefersReducedMotion ? undefined : { x: [0, 4, 0, -4, 0] }}
+                transition={prefersReducedMotion ? undefined : { duration: 2.4, repeat: Infinity, repeatDelay: 1.6, ease: "easeInOut" }}
+              >
+                <Hand className="h-4 w-4" />
+              </motion.span>
+              <span aria-hidden="true" className="max-[360px]:hidden">Glissez</span>
+              <span className="sr-only">vers la gauche ou la droite pour parcourir les annonces. Utilisez aussi les flèches du clavier.</span>
+            </div>
+          )}
           <div className="flex shrink-0 items-center gap-1.5">
             <Button variant="outline" size="sm" className="shrink-0" asChild>
               <Link
@@ -223,34 +240,6 @@ function PropertyDetailRouteModal() {
             </motion.div>
           </AnimatePresence>
         </div>
-        {budgetItems && budgetItems.length > 1 && (
-          <div role="group" className="pointer-events-none absolute inset-y-0 left-0 right-0 z-[201] flex items-center justify-between px-2 sm:px-3" aria-label="Navigation entre les annonces">
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              className="pointer-events-auto h-11 w-11 rounded-full border-border bg-background/95 p-0 shadow-lg backdrop-blur transition-transform hover:scale-105"
-              aria-label="Annonce précédente"
-              title="Annonce précédente"
-              disabled={!previousProperty}
-              onClick={() => previousProperty && openProperty(previousProperty, -1)}
-            >
-              <ChevronLeft aria-hidden="true" className="h-5 w-5" />
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              className="pointer-events-auto h-11 w-11 rounded-full border-border bg-background/95 p-0 shadow-lg backdrop-blur transition-transform hover:scale-105"
-              aria-label="Annonce suivante"
-              title="Annonce suivante"
-              disabled={!nextProperty}
-              onClick={() => nextProperty && openProperty(nextProperty, 1)}
-            >
-              <ChevronRight aria-hidden="true" className="h-5 w-5" />
-            </Button>
-          </div>
-        )}
       </DialogContent>
     </Dialog>
   );
