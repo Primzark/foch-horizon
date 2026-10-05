@@ -105,6 +105,12 @@
       radial-gradient(circle at 86% 0%, hsl(145 30% 92%), transparent 46%);
   }
 
+  @media (max-width: 1023px) {
+    body {
+      touch-action: pan-y;
+    }
+  }
+
   h1,
   h2,
   h3,
