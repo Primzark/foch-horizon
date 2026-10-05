@@ -79,6 +79,8 @@ function PropertyDetailRouteModal() {
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const [navigationDirection, setNavigationDirection] = useState<-1 | 1>(1);
   const prefersReducedMotion = useReducedMotion();
+  const propertyModalDepth = routeState?.propertyModalDepth ?? 0;
+  const hasPreviousPropertyModal = propertyModalDepth > 0;
   const propertyId = Number(routeParams.idSlug?.split("-")[0]);
   const budgetItems = routeState?.budgetFinderFilters
     ? queryClient.getQueryData<PropertySearchResponse>(["budget-finder", routeState.budgetFinderFilters])?.items ?? null
@@ -91,7 +93,7 @@ function PropertyDetailRouteModal() {
     : null;
   const canBrowseAnnouncements = Boolean(previousProperty || nextProperty);
   const announcementSwipeHint = canBrowseAnnouncements ? (
-    <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
+    <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground lg:hidden">
       <span>Glissez à gauche ou à droite</span>
       <span className="relative inline-flex h-9 w-14 shrink-0 items-center justify-center text-brand-strong/70" aria-hidden="true">
         <span className={`absolute h-6 w-6 rounded-full bg-brand/10 blur-md${prefersReducedMotion ? "" : " announcement-swipe-glow"}`} />
@@ -143,6 +145,7 @@ function PropertyDetailRouteModal() {
         backgroundLocation: routeState?.backgroundLocation,
         announcementItems,
         budgetFinderFilters: routeState?.budgetFinderFilters,
+        propertyModalDepth,
       },
     });
   };
@@ -181,7 +184,7 @@ function PropertyDetailRouteModal() {
 
   return (
     <Dialog open onOpenChange={(open) => {
-      if (!open) navigate(-1);
+      if (!open) navigate(-(propertyModalDepth + 1));
     }}>
       <DialogContent
         ref={dialogContentRef}
@@ -207,6 +210,20 @@ function PropertyDetailRouteModal() {
             <DialogDescription className="sr-only">Fiche complète du bien. Ouvrez-la en plein écran pour accéder à toute la page.</DialogDescription>
           </DialogHeader>
           <div className="flex shrink-0 items-center gap-1.5">
+            {hasPreviousPropertyModal && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-9 shrink-0 px-2 sm:px-3"
+                aria-label="Revenir à l’annonce précédente"
+                title="Revenir à l’annonce précédente"
+                onClick={() => navigate(-1)}
+              >
+                <ChevronLeft aria-hidden="true" className="h-4 w-4 sm:-ml-1" />
+                <span className="hidden sm:inline">Retour</span>
+              </Button>
+            )}
             <Button variant="outline" size="sm" className="shrink-0" asChild>
               <Link
                 to={`${location.pathname}${location.search}`}

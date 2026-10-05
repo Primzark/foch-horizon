@@ -312,10 +312,10 @@ export default function ListingDetailPage({
         <div>
           <ListingGallery images={property.images} title={property.title} />
           {announcementSwipeHint && (
-            <div className="mt-1 flex justify-end pr-1">{announcementSwipeHint}</div>
+            <div className="mt-1 flex justify-end pr-1 lg:hidden">{announcementSwipeHint}</div>
           )}
 
-          <div className={`${announcementSwipeHint ? "mt-2" : "mt-6"} flex flex-wrap items-start justify-between gap-4`}>
+          <div className={`${announcementSwipeHint ? "mt-2 lg:mt-6" : "mt-6"} flex flex-wrap items-start justify-between gap-4`}>
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Réf du bien {property.id}</p>
               <h1 className="mt-1 font-display text-4xl">{property.title}</h1>

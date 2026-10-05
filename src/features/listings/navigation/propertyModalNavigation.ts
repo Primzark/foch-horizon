@@ -7,6 +7,7 @@ export interface PropertyModalRouteState {
   propertyPreview?: PropertySearchItem;
   announcementItems?: PropertySearchItem[];
   budgetFinderFilters?: PropertySearchParams;
+  propertyModalDepth?: number;
 }
 
 export function createPropertyModalRouteState(
@@ -19,10 +20,14 @@ export function createPropertyModalRouteState(
     ? currentState.backgroundLocation
     : location;
   const resolvedItems = announcementItems ?? currentState?.announcementItems;
+  const propertyModalDepth = currentState?.propertyModal
+    ? (currentState.propertyModalDepth ?? 0) + 1
+    : 0;
 
   return {
     propertyModal: true,
     backgroundLocation,
+    propertyModalDepth,
     ...(propertyPreview ? { propertyPreview } : {}),
     ...(resolvedItems ? { announcementItems: resolvedItems } : {}),
     ...(currentState?.budgetFinderFilters ? { budgetFinderFilters: currentState.budgetFinderFilters } : {}),
