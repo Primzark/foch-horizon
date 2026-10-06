@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -44,6 +45,10 @@ function normalizeFilters(filters: PropertySearchParams): PropertySearchParams {
     transaction: "vente",
     page: 1,
   };
+}
+
+function formatAreaAvailability(count: number): string {
+  return `${count.toLocaleString("fr-FR")} bien${count > 1 ? "s" : ""}`;
 }
 
 export function SearchDrawer() {
@@ -101,6 +106,41 @@ export function SearchDrawer() {
 
   const selectedFeatures = useMemo(() => new Set(draft.features ?? []), [draft.features]);
   const selectedArea = getSelectedArea(draft);
+  const genericQuery = geographyGuideOptions.some((area) => area.query === draft.q) ? undefined : draft.q;
+  const areaCounts = useQuery({
+    queryKey: ["geography-area-property-counts", {
+      type: draft.type,
+      q: genericQuery,
+      bedroomsMin: draft.bedroomsMin,
+      bathroomsMin: draft.bathroomsMin,
+      garagesMin: draft.garagesMin,
+      priceMin: draft.priceMin,
+      priceMax: draft.priceMax,
+      surfaceMin: draft.surfaceMin,
+      surfaceMax: draft.surfaceMax,
+      terrainMin: draft.terrainMin,
+      terrainMax: draft.terrainMax,
+      features: draft.features,
+    }],
+    queryFn: async () => {
+      const { getGeographyAreaPropertyCounts } = await import("@/features/listings/api/geographyAreaCounts.service");
+      return getGeographyAreaPropertyCounts(draft);
+    },
+    enabled: searchDrawerOpen,
+    staleTime: 60_000,
+  });
+
+  const renderAreaOption = (name: string, count: number | undefined) => (
+    <span className="flex w-full min-w-0 items-center justify-between gap-4">
+      <span className="truncate">{name}</span>
+      <span
+        className="ml-auto shrink-0 text-xs tabular-nums text-muted-foreground group-data-[highlighted]:text-accent-foreground"
+        aria-label={count == null ? (areaCounts.isLoading ? "Calcul des disponibilités" : "Disponibilités indisponibles") : formatAreaAvailability(count)}
+      >
+        {count == null ? (areaCounts.isLoading ? "…" : areaCounts.isError ? "—" : "") : formatAreaAvailability(count)}
+      </span>
+    </span>
+  );
 
   return (
     <Sheet open={searchDrawerOpen} onOpenChange={setSearchDrawerOpen}>
@@ -169,20 +209,22 @@ export function SearchDrawer() {
                 <SelectValue placeholder="Toutes les villes et tous les secteurs" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Toutes les villes et tous les secteurs</SelectItem>
+                <SelectItem value="all" className="group">
+                  {renderAreaOption("Toutes les villes et tous les secteurs", areaCounts.data?.all)}
+                </SelectItem>
                 <SelectGroup>
                   <SelectLabel>Le Havre et ses quartiers</SelectLabel>
                   {havreAreas.map((area) => (
-                    <SelectItem key={area.id} value={area.id}>
-                      {area.name}
+                    <SelectItem key={area.id} value={area.id} className="group">
+                      {renderAreaOption(area.name, areaCounts.data?.byArea[area.id])}
                     </SelectItem>
                   ))}
                 </SelectGroup>
                 <SelectGroup>
                   <SelectLabel>Autres communes et secteurs</SelectLabel>
                   {otherAreas.map((area) => (
-                    <SelectItem key={area.id} value={area.id}>
-                      {area.name}
+                    <SelectItem key={area.id} value={area.id} className="group">
+                      {renderAreaOption(area.name, areaCounts.data?.byArea[area.id])}
                     </SelectItem>
                   ))}
                 </SelectGroup>
