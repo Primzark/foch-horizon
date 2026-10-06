@@ -41,7 +41,7 @@ export function RecentSales({ compact = false }: { compact?: boolean }) {
                 {!compact && query.data?.length === 0 ? "À découvrir au Havre et alentours" : "Des projets accompagnés"}
               </p>
               <h2 className="mt-2 font-display text-3xl md:text-4xl">
-                {compact || query.data?.length ? "Nos dernières ventes" : "La sélection du moment"}
+                Nos dernières ventes
               </h2>
             </div>
             {compact && <Link to="/nos-dernieres-ventes" className="inline-flex items-center gap-2 text-sm hover:underline">Voir toutes les ventes <ArrowRight className="h-4 w-4" /></Link>}
