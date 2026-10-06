@@ -1,4 +1,5 @@
 import { agentById, agents } from "@/features/listings/data/agents";
+import { cityById } from "@/features/cities/data/cities";
 import { propertyById } from "@/features/listings/data/properties";
 import { leadInputSchema } from "@/features/leads/types/lead.schema";
 import { apiJson, isEdgeApiEnabled } from "@/lib/api/client";
@@ -64,9 +65,14 @@ export async function submitLead(input: LeadInput): Promise<{ ok: true; leadId: 
   }
 
   if (isEdgeApiEnabled()) {
+    const city = payload.cityId ? cityById.get(payload.cityId) : undefined;
     return apiJson<{ ok: true; leadId: string; assignedAgentId: string | null }>("/api/leads", {
       method: "POST",
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        ...payload,
+        // Frontend city IDs are aliases such as "city-le-havre"; the API accepts a slug or UUID.
+        cityId: city?.slug ?? payload.cityId,
+      }),
     });
   }
 
