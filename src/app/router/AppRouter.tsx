@@ -1,12 +1,13 @@
 import { Suspense, lazy, useEffect, useLayoutEffect, useRef, useState, type TouchEvent } from "react";
-import { ChevronLeft, ChevronRight, Hand, Maximize2 } from "lucide-react";
+import { Building2, ChevronLeft, Hand, Maximize2 } from "lucide-react";
 import { BrowserRouter, Link, Navigate, Outlet, Route, Routes, useLocation, useNavigate, useNavigationType, useParams } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { PropertyModalRouteState } from "@/features/listings/navigation/propertyModalNavigation";
-import { toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
+import { formatPrice, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
+import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
 import { AppLayout } from "@/layout/AppLayout";
 import { CookieConsentManager } from "@/layout/CookieConsentManager";
 import { routePageLoaders } from "@/app/router/routePageLoaders";
@@ -78,6 +79,7 @@ function PropertyDetailRouteModal() {
   const dialogContentRef = useRef<HTMLDivElement>(null);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const [navigationDirection, setNavigationDirection] = useState<-1 | 1>(1);
+  const [stickySummaryPortalElement, setStickySummaryPortalElement] = useState<HTMLDivElement | null>(null);
   const prefersReducedMotion = useReducedMotion();
   const propertyModalDepth = routeState?.propertyModalDepth ?? 0;
   const hasPreviousPropertyModal = propertyModalDepth > 0;
@@ -107,30 +109,51 @@ function PropertyDetailRouteModal() {
   const announcementNavigationControls = canBrowseAnnouncements ? (
     <div className="hidden justify-end lg:flex">
       <div className="flex items-center gap-2" role="group" aria-label="Navigation entre les annonces">
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          className="h-10 w-10 rounded-full border-border bg-background/90 p-0 shadow-sm"
-          aria-label="Annonce précédente"
-          title="Annonce précédente"
-          disabled={!previousProperty}
-          onClick={() => previousProperty && openProperty(previousProperty, -1)}
-        >
-          <ChevronLeft aria-hidden="true" className="h-5 w-5" />
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          className="h-10 w-10 rounded-full border-border bg-background/90 p-0 shadow-sm"
-          aria-label="Annonce suivante"
-          title="Annonce suivante"
-          disabled={!nextProperty}
-          onClick={() => nextProperty && openProperty(nextProperty, 1)}
-        >
-          <ChevronRight aria-hidden="true" className="h-5 w-5" />
-        </Button>
+        {previousProperty && (
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="h-10 w-10 rounded-full border-border bg-background/90 p-0 shadow-sm"
+            aria-label="Annonce précédente"
+            title="Annonce précédente"
+            onClick={() => openProperty(previousProperty, -1)}
+          >
+            <ChevronLeft aria-hidden="true" className="h-5 w-5" />
+          </Button>
+        )}
+        {nextProperty && (
+          <button
+            type="button"
+            aria-label={`Annonce suivante : ${nextProperty.title}, ${nextProperty.city.name}, ${formatPrice(nextProperty.priceAmount, nextProperty.transaction)}`}
+            title="Découvrir l’annonce suivante"
+            onClick={() => openProperty(nextProperty, 1)}
+            className="flex h-[3.75rem] w-64 items-center gap-2 rounded-xl border border-border bg-background/90 p-1.5 text-left shadow-sm transition-[border-color,background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-brand-border hover:bg-brand-soft/30 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            {nextProperty.coverImageUrl ? (
+              <img
+                src={getPropertyImageUrl(nextProperty.coverImageUrl, 200)}
+                srcSet={getPropertyImageSrcSet(nextProperty.coverImageUrl, [200, 400])}
+                sizes="64px"
+                alt=""
+                className="h-12 w-16 shrink-0 rounded-lg object-cover"
+                loading="lazy"
+                decoding="async"
+              />
+            ) : (
+              <span aria-hidden="true" className="flex h-12 w-16 shrink-0 items-center justify-center rounded-lg bg-muted">
+                <Building2 className="h-5 w-5 text-muted-foreground" />
+              </span>
+            )}
+            <span className="min-w-0 flex-1">
+              <span className="block text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">À suivre</span>
+              <span className="block truncate text-xs font-semibold text-foreground">{nextProperty.title}</span>
+              <span className="block truncate text-[11px] text-muted-foreground">
+                {nextProperty.city.name} · {formatPrice(nextProperty.priceAmount, nextProperty.transaction)}
+              </span>
+            </span>
+          </button>
+        )}
       </div>
     </div>
   ) : null;
@@ -202,7 +225,7 @@ function PropertyDetailRouteModal() {
             openProperty(nextProperty, 1);
           }
         }}
-        className="left-0 top-0 flex h-[100dvh] w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 p-0 sm:left-[50%] sm:top-[50%] sm:h-[min(92dvh,60rem)] sm:max-h-[92dvh] sm:w-[calc(100%-2rem)] sm:max-w-none sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-2xl sm:border"
+        className="left-0 top-0 flex h-[100dvh] w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 p-0 [&>button]:flex [&>button]:h-11 [&>button]:w-11 [&>button]:items-center [&>button]:justify-center [&>button]:rounded-full [&>button]:bg-background [&>button]:shadow-sm [&>button>svg]:h-5 [&>button>svg]:w-5 sm:left-[50%] sm:top-[50%] sm:h-[min(92dvh,60rem)] sm:max-h-[92dvh] sm:w-[calc(100%-2rem)] sm:max-w-none sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-2xl sm:border"
       >
         <div className="flex h-16 shrink-0 items-center justify-between gap-2 border-b border-border bg-background px-4 pr-16 sm:gap-3 sm:px-6 sm:pr-20">
           <DialogHeader className="min-w-0 space-y-0 text-left">
@@ -237,6 +260,7 @@ function PropertyDetailRouteModal() {
             </Button>
           </div>
         </div>
+        <div ref={setStickySummaryPortalElement} className="pointer-events-none absolute inset-0 z-50" />
         <div
           ref={detailsScrollRef}
           className="min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain"
@@ -277,6 +301,8 @@ function PropertyDetailRouteModal() {
                 <ListingDetailPage
                   announcementSwipeHint={announcementSwipeHint}
                   announcementNavigationControls={announcementNavigationControls}
+                  stickySummaryPortalElement={stickySummaryPortalElement}
+                  stickySummaryTop={64}
                 />
               </Suspense>
             </motion.div>

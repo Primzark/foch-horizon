@@ -1,13 +1,14 @@
 import { Link, Navigate, useLocation, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion, useScroll } from "framer-motion";
-import { useMemo, useRef, type ReactNode } from "react";
-import { Bath, BedDouble, Car, Copy, Heart, MapPin, Maximize, Phone } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
+import { ArrowRight, Bath, BedDouble, Car, Copy, Heart, MapPin, Maximize, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cityById, cityBySlug } from "@/features/cities/data/cities";
 import { getPropertyById, getSimilarProperties } from "@/features/listings/api/properties.service";
 import { ListingGallery } from "@/features/listings/components/ListingGallery";
-import { ListingCard } from "@/features/listings/components/ListingCard";
+import { PropertyPreviewLink } from "@/features/listings/components/PropertyPreviewLink";
 import { ListingShareButton } from "@/features/listings/components/ListingShareButton";
 import DpeBadge from "@/components/property/DpeBadge";
 import { agentById } from "@/features/listings/data/agents";
@@ -23,6 +24,8 @@ import {
 import { useFavoritesStore } from "@/features/favorites/useFavoritesStore";
 import { getSiteUrl, useSeo } from "@/lib/seo/useSeo";
 import { trackEvent } from "@/lib/analytics/events";
+import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
+import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
 import type { PropertySearchItem } from "@/types/api";
 import type { Property } from "@/types/domain";
 
@@ -115,15 +118,24 @@ function toPropertyPreview(item: PropertySearchItem): Property {
 export default function ListingDetailPage({
   announcementSwipeHint,
   announcementNavigationControls,
+  stickySummaryPortalElement = null,
+  stickySummaryTop = 88,
 }: {
   announcementSwipeHint?: ReactNode;
   announcementNavigationControls?: ReactNode;
+  stickySummaryPortalElement?: HTMLElement | null;
+  stickySummaryTop?: number;
 } = {}) {
   const contentRef = useRef<HTMLDivElement | null>(null);
+  const summaryRef = useRef<HTMLDivElement | null>(null);
+  const contactRef = useRef<HTMLDivElement | null>(null);
+  const [summaryVisible, setSummaryVisible] = useState(true);
+  const [contactVisible, setContactVisible] = useState(false);
   const location = useLocation();
   const params = useParams();
   const favoriteIds = useFavoritesStore((state) => state.ids);
   const toggleFavorite = useFavoritesStore((state) => state.toggle);
+  const { reducedMotion } = useMotionPreference();
   const parsedRoute = parseRouteIdAndSlug(params.idSlug);
   const propertyId = parsedRoute?.id ?? null;
   const siteUrl = getSiteUrl();
@@ -159,8 +171,68 @@ export default function ListingDetailPage({
 
   const property = propertyQuery.data;
   const isFavorite = property ? favoriteIds.includes(property.id) : false;
+  const nextPropertyToDiscover = similarItems[0];
+
+  useEffect(() => {
+    const summary = summaryRef.current;
+    const contact = contactRef.current;
+    if (!summary || !contact) return;
+
+    if (typeof IntersectionObserver === "undefined") {
+      setSummaryVisible(false);
+      setContactVisible(false);
+      return;
+    }
+
+    setSummaryVisible(true);
+    setContactVisible(false);
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.target === summary) setSummaryVisible(entry.isIntersecting);
+          if (entry.target === contact) setContactVisible(entry.isIntersecting);
+        });
+      },
+      { rootMargin: `-${stickySummaryTop}px 0px 0px 0px`, threshold: 0 },
+    );
+
+    observer.observe(summary);
+    observer.observe(contact);
+    return () => observer.disconnect();
+  }, [property?.id, stickySummaryTop]);
 
   const canonicalPath = property ? toCanonicalPropertyPath({ id: property.id, slug: property.slug }) : null;
+  const showStickySummary = Boolean(property && !summaryVisible && !contactVisible);
+
+  const stickySummary = property && showStickySummary ? (
+    <div className="pointer-events-auto fixed inset-x-3 bottom-[calc(4rem_+_env(safe-area-inset-bottom))] z-[105] mx-auto max-w-3xl lg:hidden">
+      <div className="flex min-w-0 items-center gap-2 rounded-full border border-border/80 bg-background/95 p-1.5 pl-3 shadow-lg backdrop-blur-md">
+        <p className="shrink-0 text-[13px] font-semibold tracking-tight text-brand-strong">
+          {formatPrice(property.priceAmount, property.transactionType)}
+        </p>
+        <span aria-hidden="true" className="h-4 shrink-0 border-l border-border" />
+        <p className="min-w-0 flex-1 truncate text-[11px] text-muted-foreground">
+          {[
+            property.rooms != null ? `${property.rooms} pièce${property.rooms > 1 ? "s" : ""}` : null,
+            `${property.surfaceM2} m²`,
+          ].filter(Boolean).join(" · ")}
+        </p>
+        <Button
+          type="button"
+          variant="brand"
+          size="sm"
+          className="h-9 shrink-0 rounded-full px-3 text-xs"
+          onClick={() => {
+            contactRef.current?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "center" });
+            trackEvent("listing_viewed", { propertyId: property.id, action: "sticky_contact" });
+          }}
+        >
+          Contacter
+        </Button>
+      </div>
+    </div>
+  ) : null;
 
   useSeo(
     property && !propertyQuery.isPlaceholderData
@@ -286,7 +358,7 @@ export default function ListingDetailPage({
   ];
 
   return (
-    <section className="container mx-auto px-4 py-8">
+    <section className="container mx-auto px-4 py-8 pb-28 lg:pb-8">
       <div className="pointer-events-none fixed right-5 top-1/2 z-20 hidden h-36 -translate-y-1/2 lg:block">
         <div className="h-full w-1 rounded-full bg-border/70">
           <motion.span
@@ -315,7 +387,7 @@ export default function ListingDetailPage({
             <div className="mt-1 flex justify-end pr-1 lg:hidden">{announcementSwipeHint}</div>
           )}
 
-          <div className={`${announcementSwipeHint ? "mt-2 lg:mt-6" : "mt-6"} flex flex-wrap items-start justify-between gap-4`}>
+          <div ref={summaryRef} className={`${announcementSwipeHint ? "mt-2 lg:mt-6" : "mt-6"} flex flex-wrap items-start justify-between gap-4`}>
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Réf du bien {property.id}</p>
               <h1 className="mt-1 font-display text-4xl">{property.title}</h1>
@@ -436,28 +508,56 @@ export default function ListingDetailPage({
             )}
           </section>
 
-          <LeadForm
-            source="property_page"
-            propertyId={property.id}
-            cityId={property.cityId}
-            title="Demander une visite"
-            description="Indiquez vos disponibilités, nous revenons vers vous rapidement."
-            ctaLabel="Envoyer ma demande"
-            showAppointmentFields
-          />
+          <div ref={contactRef} id="property-contact-form" className="scroll-mt-28">
+            <LeadForm
+              source="property_page"
+              propertyId={property.id}
+              cityId={property.cityId}
+              title="Demander une visite"
+              description="Indiquez vos disponibilités, nous revenons vers vous rapidement."
+              ctaLabel="Envoyer ma demande"
+              showAppointmentFields
+            />
+          </div>
         </aside>
       </div>
 
-      {similarItems.length > 0 && (
+      {nextPropertyToDiscover && (
         <section className="mt-12">
-          <h2 className="font-display text-3xl">Biens similaires</h2>
-          <div className="mt-4 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {similarItems.map((item, index) => (
-              <ListingCard key={item.id} item={item} browseItems={similarItems} revealIndex={index} />
-            ))}
-          </div>
+          <h2 className="font-display text-3xl">Prochain bien à découvrir</h2>
+          <PropertyPreviewLink
+            item={nextPropertyToDiscover}
+            browseItems={similarItems}
+            className="group relative mt-4 flex min-h-[18rem] flex-col justify-end overflow-hidden rounded-2xl bg-neutral-950 p-6 text-white shadow-sm transition-shadow duration-500 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:min-h-[22rem] sm:p-9"
+            aria-label={`Découvrir le bien suivant : ${nextPropertyToDiscover.title}, ${nextPropertyToDiscover.city.name}, ${formatPrice(nextPropertyToDiscover.priceAmount, nextPropertyToDiscover.transaction)}`}
+          >
+            {nextPropertyToDiscover.coverImageUrl && (
+              <img
+                src={getPropertyImageUrl(nextPropertyToDiscover.coverImageUrl, 1200)}
+                srcSet={getPropertyImageSrcSet(nextPropertyToDiscover.coverImageUrl)}
+                sizes="(max-width: 767px) calc(100vw - 2rem), 1000px"
+                alt=""
+                className="absolute inset-0 h-full w-full scale-[1.015] object-cover opacity-45 saturate-[0.82] transition-[opacity,transform,filter] duration-1000 ease-out group-hover:scale-100 group-hover:opacity-80 group-hover:saturate-100 motion-reduce:transition-none"
+                loading="lazy"
+                decoding="async"
+              />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/38 to-black/15 transition-opacity duration-700 group-hover:opacity-70 motion-reduce:transition-none" />
+            <div className="relative z-10 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/75">{nextPropertyToDiscover.city.name} · {nextPropertyToDiscover.surfaceM2} m²</p>
+                <h3 className="mt-2 max-w-2xl font-display text-3xl leading-tight sm:text-4xl">{nextPropertyToDiscover.title}</h3>
+                <p className="mt-2 text-lg font-medium text-white/90">{formatPrice(nextPropertyToDiscover.priceAmount, nextPropertyToDiscover.transaction)}</p>
+              </div>
+              <span className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 self-start rounded-full bg-background px-5 text-sm font-semibold text-foreground transition-colors duration-300 group-hover:bg-brand-soft group-focus-visible:bg-brand-soft sm:self-auto">
+                Next property
+                <ArrowRight className="h-4 w-4 transition-transform duration-500 group-hover:translate-x-1 motion-reduce:transition-none" aria-hidden="true" />
+              </span>
+            </div>
+          </PropertyPreviewLink>
         </section>
       )}
+      {stickySummaryPortalElement ? stickySummary && createPortal(stickySummary, stickySummaryPortalElement) : stickySummary}
     </section>
   );
 }
