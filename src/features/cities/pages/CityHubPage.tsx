@@ -28,6 +28,7 @@ type LocationHeroProps = {
   locationLabel: string;
   imageUrl: string;
   imageAlt: string;
+  imagePosition?: string;
   credit?: GeographyPhotoCredit;
   reducedMotion: boolean;
 };
@@ -66,7 +67,7 @@ function RelatedGeographyLinks({ guide, listingHref, estimateCity }: { guide: (t
   );
 }
 
-function LocationHero({ pageTitle, locationName, locationSlug, locationLabel, imageUrl, imageAlt, credit, reducedMotion }: LocationHeroProps) {
+function LocationHero({ pageTitle, locationName, locationSlug, locationLabel, imageUrl, imageAlt, imagePosition, credit, reducedMotion }: LocationHeroProps) {
   const heroMood = inferPlaceImageMood(locationName, locationSlug);
   const heroMotionPreset = getPlaceImageMotionPreset(heroMood);
   const motionDirector = getMotionDirectorProfile(heroMood);
@@ -78,6 +79,7 @@ function LocationHero({ pageTitle, locationName, locationSlug, locationLabel, im
           src={imageUrl}
           alt={imageAlt}
           className="h-full w-full object-cover"
+          style={imagePosition ? { objectPosition: imagePosition } : undefined}
           initial={reducedMotion ? { opacity: 0.9 } : { opacity: 0, scale: heroMotionPreset.enterScale, y: heroMotionPreset.enterY }}
           animate={
             reducedMotion
@@ -211,6 +213,7 @@ export default function CityHubPage() {
           locationLabel={getLocationLabel(cityGuide)}
           imageUrl={cityGuide.heroImage.src}
           imageAlt={cityGuide.heroImage.alt}
+          imagePosition={cityGuide.heroImage.objectPosition}
           credit={cityGuide.heroImage.credit}
           reducedMotion={reducedMotion}
         />

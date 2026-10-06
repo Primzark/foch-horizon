@@ -2,7 +2,7 @@ export type GeographyGuide = {
   id: string;
   name: string;
   pageTitle: string;
-  heroImage: { src: string; alt: string; credit?: GeographyPhotoCredit };
+  heroImage: { src: string; alt: string; credit?: GeographyPhotoCredit; objectPosition?: string };
   listingSearch: { city?: string; query?: string };
   subtitle: string;
   averagePrice: string;
@@ -45,7 +45,7 @@ const commonsCredit = (creator: string, fileTitle: string, licenseVersion: "2.0"
   modification: "Fichier redimensionné et converti en WebP; cadrage adapté à l’affichage",
 });
 
-const commonsByCredit = (creator: string, fileTitle: string, licenseVersion: "3.0" | "4.0"): GeographyPhotoCredit => ({
+const commonsByCredit = (creator: string, fileTitle: string, licenseVersion: "1.0" | "2.0" | "3.0" | "4.0"): GeographyPhotoCredit => ({
   title: fileTitle,
   creator,
   sourceUrl: `https://commons.wikimedia.org/wiki/File:${encodeURIComponent(fileTitle.replace(/ /g, "_"))}`,
@@ -63,15 +63,38 @@ const commonsZeroCredit: GeographyPhotoCredit = {
   modification: "Fichier redimensionné et converti en WebP; cadrage adapté à l’affichage",
 };
 
+const orcherCommonsZeroCredit: GeographyPhotoCredit = {
+  title: "Le château d'Orcher. Façade vue de la vallée de la Seine.jpg",
+  creator: "VVVCFFrance",
+  sourceUrl: "https://commons.wikimedia.org/wiki/File:Le_ch%C3%A2teau_d%27Orcher._Fa%C3%A7ade_vue_de_la_vall%C3%A9e_de_la_Seine.jpg",
+  license: "CC0 1.0",
+  licenseUrl: "https://creativecommons.org/publicdomain/zero/1.0/deed.fr",
+  modification: "Fichier redimensionné et converti en WebP; cadrage adapté à l’affichage",
+};
+
 export const geographyPhotoCredits = {
   panorama: commonsCredit("Martin Falbisoner", "Panorama of Le Havre, September 2019.jpg", "4.0"),
   perret: commonsZeroCredit,
   saintFrancois: commonsCredit("Philippe Alès", "Le Havre (France), quarter Saint-François and Bassin du Roy.JPG", "3.0"),
   saintVincent: commonsCredit("Philippe Alès", "Place Saint-Vincent (France).jpg", "4.0"),
-  perrey: commonsCredit("Alexandre Prevot", "Résidence de France (53292327343).jpg", "2.0"),
+  hallesCentrales: commonsCredit("Marc Ryckaert", "Le Havre Marché couvert R01.jpg", "4.0"),
+  gobelins: commonsByCredit("touzainphilippe", "Rue Georges Braque le Havre 76600 - panoramio.jpg", "3.0"),
+  gonfreville: orcherCommonsZeroCredit,
+  saintRomain: commonsCredit("Pymouss", "Saint-Romain-de-Colbosc - halle aux blés.JPG", "3.0"),
+  laCerlangue: commonsCredit("Pymouss", "La Cerlangue - Église Saint-Jean d'Abbetot 05.jpg", "3.0"),
+  etainhus: commonsCredit("Philippe Alès", "Church of Etainhus (France).JPG", "3.0"),
+  epretot: commonsCredit("Philippe Alès", "Church of Epretot (France).JPG", "3.0"),
+  gommerville: commonsByCredit("Gordito1869", "Schloss Filieres 7.JPG", "3.0"),
+  lesTroisPierres: commonsCredit("Pymouss", "Les Trois-Pierres - mairie.JPG", "3.0"),
+  saintAubinRoutot: commonsCredit("Pymouss", "Saint-Aubin-Routot - église 01.jpg", "3.0"),
+  perrey: commonsCredit("Jean-Christophe BENOIST", "Le Havre - Architecture Perret.jpg", "4.0"),
+  centreVille: commonsByCredit("Erik Levilly", "LeHavre.jpg", "1.0"),
   notreDame: commonsCredit("MOSSOT", "Le Havre - Cathédrale Notre-Dame du Havre - Façade occidentale.jpg", "3.0"),
   hotelDeVille: commonsCredit("Marc Ryckaert", "Le Havre Place Hôtel de Ville R05.jpg", "4.0"),
-  danton: commonsCredit("Alexandre Prevot", "Potain MD 345 B L12 (51353061553).jpg", "2.0"),
+  danton: commonsCredit("Alexandre Prevot", "94, rue Jules Lecesne (52821497550).jpg", "2.0"),
+  rogerville: commonsCredit("Philippe Alès", "Église de Rogerville (Seine-Maritime) 1.JPG", "3.0"),
+  saintLaurent: commonsCredit("Pymouss", "Saint-Laurent-de-Brèvedent - centre-bourg.jpg", "3.0"),
+  avenueFoch: commonsCredit("Florian Pépellin", "Voie Verte Avenue Foch du Havre (juillet 2024) 1.JPG", "4.0"),
   bleVille: commonsByCredit("touzainphilippe", "Belle petite maison - panoramio.jpg", "3.0"),
 };
 
@@ -172,9 +195,9 @@ export const geographyGuides: GeographyGuide[] = [
     name: "Les Gobelins",
     pageTitle: "Immobilier aux Gobelins",
     heroImage: {
-      src: "/images/geography/panorama-le-havre.webp",
-      alt: "Panorama urbain du Havre, contexte général du secteur Saint-Vincent-Gobelins",
-      credit: havrePanoramaCredit,
+      src: "/images/geography/gobelins-rue-georges-braque.webp",
+      alt: "La brasserie Paillette, rue Georges-Braque dans le secteur des Gobelins au Havre, photographie de 2011",
+      credit: geographyPhotoCredits.gobelins,
     },
     listingSearch: { city: "le-havre", query: "Gobelins" },
     subtitle: "Un quartier résidentiel entre le centre et le littoral",
@@ -342,8 +365,10 @@ export const geographyGuides: GeographyGuide[] = [
     name: "Saint-Romain-de-Colbosc",
     pageTitle: "Immobilier à Saint-Romain-de-Colbosc",
     heroImage: {
-      src: "/images/geography/pays-de-caux-original.svg",
-      alt: "Illustration originale évoquant un bourg du pays de Caux",
+      src: "/images/geography/saint-romain-de-colbosc.webp",
+      alt: "La halle aux blés historique de Saint-Romain-de-Colbosc",
+      credit: geographyPhotoCredits.saintRomain,
+      objectPosition: "center 40%",
     },
     listingSearch: { query: "Saint-Romain-de-Colbosc" },
     subtitle: "Bourg-centre commerçant au cœur du pays de Caux",
@@ -495,8 +520,8 @@ function additionalGuide(input: AdditionalGuideInput): GeographyGuide {
 
 const additionalGeographyGuides: GeographyGuide[] = [
   additionalGuide({
-    id: "halles-centrales", reviewedAt: "2026-09-30", name: "Halles Centrales", pageTitle: "Immobilier aux Halles Centrales au Havre",
-    heroImage: { src: "/images/geography/architecture-perret.webp", alt: "Architecture du centre reconstruit du Havre, où se situe le secteur des Halles Centrales", credit: commonsZeroCredit },
+    id: "halles-centrales", reviewedAt: "2026-10-06", name: "Halles Centrales", pageTitle: "Immobilier aux Halles Centrales au Havre",
+    heroImage: { src: "/images/geography/halles-centrales.webp", alt: "L’allée commerçante et la charpente en brique des Halles Centrales du Havre", credit: geographyPhotoCredits.hallesCentrales, objectPosition: "center 48%" },
     listingSearch: { city: "le-havre", query: "Halles" },
     subtitle: "Un secteur commerçant du centre reconstruit, autour du marché couvert et près du Volcan",
     averagePrice: "", area: "Le Havre · centre reconstruit · secteur des Halles Centrales",
@@ -543,8 +568,8 @@ const additionalGeographyGuides: GeographyGuide[] = [
     nearbyGuideIds: ["centre-ville", "halles-centrales", "saint-michel", "perrey", "gobelins"], placeType: "quartier",
   }),
   additionalGuide({
-    id: "avenue-foch", name: "Avenue Foch", pageTitle: "Immobilier avenue Foch au Havre",
-    heroImage: { src: "/images/geography/panorama-le-havre.webp", alt: "Vue sur Le Havre et le centre-ville" },
+    id: "avenue-foch", reviewedAt: "2026-10-06", name: "Avenue Foch", pageTitle: "Immobilier avenue Foch au Havre",
+    heroImage: { src: "/images/geography/avenue-foch-voie-verte.webp", alt: "La voie verte de l’avenue Foch au Havre, entre les immeubles du centre reconstruit", credit: geographyPhotoCredits.avenueFoch, objectPosition: "center 55%" },
     listingSearch: { city: "le-havre", query: "Avenue Foch" },
     subtitle: "Une grande avenue du centre-ville, près du square Saint-Roch et des commerces",
     averagePrice: "", area: "Le Havre · centre-ville",
@@ -600,8 +625,8 @@ const additionalGeographyGuides: GeographyGuide[] = [
     nearbyGuideIds: ["notre-dame", "centre-ville", "perrey", "la-plage"], placeType: "quartier",
   }),
   additionalGuide({
-    id: "perrey", name: "Le Perrey", pageTitle: "Immobilier dans le quartier du Perrey au Havre",
-    heroImage: { src: "/images/geography/perrey-residence-de-france.webp", alt: "La Résidence de France, ensemble de logements du quartier Perrey au Havre", credit: geographyPhotoCredits.perrey },
+    id: "perrey", reviewedAt: "2026-10-06", name: "Le Perrey", pageTitle: "Immobilier dans le quartier du Perrey au Havre",
+    heroImage: { src: "/images/geography/perrey-perret-architecture.webp", alt: "Immeubles de l’architecture Perret au Havre, représentatifs du secteur Perrey-Perret", credit: geographyPhotoCredits.perrey, objectPosition: "center 46%" },
     listingSearch: { city: "le-havre", query: "Perrey" },
     subtitle: "Un secteur central entre la plage, l’hôtel de ville et le front de mer",
     averagePrice: "", area: "Le Havre · Perrey-Perret",
@@ -616,8 +641,8 @@ const additionalGeographyGuides: GeographyGuide[] = [
     nearbyGuideIds: ["centre-ville", "la-plage", "notre-dame", "saint-francois", "gobelins"], placeType: "quartier",
   }),
   additionalGuide({
-    id: "danton", reviewedAt: "2026-10-01", name: "Danton", pageTitle: "Immobilier dans le quartier Danton au Havre",
-    heroImage: { src: "/images/geography/danton-simone-veil-construction.webp", alt: "Chantier du pôle Simone-Veil, rue Lesueur, dans le quartier Danton au Havre en 2019", credit: geographyPhotoCredits.danton },
+    id: "danton", reviewedAt: "2026-10-06", name: "Danton", pageTitle: "Immobilier dans le quartier Danton au Havre",
+    heroImage: { src: "/images/geography/danton-rue-jules-lecesne.webp", alt: "Immeuble résidentiel au 94 rue Jules-Lecesne, près du quartier Danton au Havre", credit: geographyPhotoCredits.danton, objectPosition: "center 44%" },
     listingSearch: { city: "le-havre", query: "Danton" },
     subtitle: "Équipements de quartier, places et squares dans le centre-ouest du Havre",
     averagePrice: "2 127 €/m²", area: "Le Havre · estimation MeilleursAgents « Anatole France / Danton »",
@@ -657,8 +682,8 @@ const additionalGeographyGuides: GeographyGuide[] = [
     nearbyGuideIds: ["le-havre", "saint-michel", "danton", "gainneville", "gonfreville-l-orcher"], placeType: "quartier",
   }),
   additionalGuide({
-    id: "centre-ville", name: "Le centre-ville", pageTitle: "Immobilier dans le centre-ville du Havre",
-    heroImage: { src: "/images/geography/architecture-perret.webp", alt: "Façades et perspectives du centre reconstruit du Havre", credit: commonsZeroCredit },
+    id: "centre-ville", reviewedAt: "2026-10-06", name: "Le centre-ville", pageTitle: "Immobilier dans le centre-ville du Havre",
+    heroImage: { src: "/images/geography/centre-ville-havre.webp", alt: "Vue aérienne du centre-ville reconstruit du Havre et de l’église Saint-Joseph", credit: geographyPhotoCredits.centreVille, objectPosition: "center 58%" },
     listingSearch: { city: "le-havre", query: "centre-ville" },
     subtitle: "Centre reconstruit, grands équipements, commerces et services accessibles à pied",
     averagePrice: "", area: "Le Havre · centre reconstruit",
@@ -689,8 +714,8 @@ const additionalGeographyGuides: GeographyGuide[] = [
     nearbyGuideIds: ["gonfreville-l-orcher", "gainneville", "montivilliers", "le-havre"], placeType: "commune",
   }),
   additionalGuide({
-    id: "gonfreville-l-orcher", name: "Gonfreville-l’Orcher", pageTitle: "Immobilier à Gonfreville-l’Orcher",
-    heroImage: cityscape, listingSearch: { query: "Gonfreville-l'Orcher" },
+    id: "gonfreville-l-orcher", reviewedAt: "2026-10-06", name: "Gonfreville-l’Orcher", pageTitle: "Immobilier à Gonfreville-l’Orcher",
+    heroImage: { src: "/images/geography/gonfreville-chateau-orcher.webp", alt: "Le château d’Orcher, monument dominant la vallée de la Seine à Gonfreville-l’Orcher", credit: geographyPhotoCredits.gonfreville, objectPosition: "center 30%" }, listingSearch: { query: "Gonfreville-l'Orcher" },
     subtitle: "Commune aux paysages contrastés, entre quartiers résidentiels et activités portuaires",
     averagePrice: "2 133 €/m²", area: "Seine-Maritime · Le Havre Seine Métropole",
     link: { label: "Mairie et informations sur la commune", href: "https://www.gonfreville-l-orcher.fr/" },
@@ -705,8 +730,8 @@ const additionalGeographyGuides: GeographyGuide[] = [
     nearbyGuideIds: ["harfleur", "rogerville", "gainneville", "saint-romain"], placeType: "commune",
   }),
   additionalGuide({
-    id: "rogerville", name: "Rogerville", pageTitle: "Immobilier à Rogerville",
-    heroImage: cityscape, listingSearch: { query: "Rogerville" },
+    id: "rogerville", reviewedAt: "2026-10-06", name: "Rogerville", pageTitle: "Immobilier à Rogerville",
+    heroImage: { src: "/images/geography/rogerville-eglise.webp", alt: "L’église de Rogerville et son clocher, repère du bourg", credit: geographyPhotoCredits.rogerville, objectPosition: "center 12%" }, listingSearch: { query: "Rogerville" },
     subtitle: "Une commune entre le Havre, l’aéroport et les paysages de l’estuaire",
     averagePrice: "2 635 €/m²", area: "Seine-Maritime · Le Havre Seine Métropole",
     link: { label: "Fiche officielle de la commune", href: lhsmTown("rogerville") },
@@ -721,8 +746,8 @@ const additionalGeographyGuides: GeographyGuide[] = [
     nearbyGuideIds: ["gonfreville-l-orcher", "gainneville", "saint-romain", "la-cerlangue"], placeType: "commune",
   }),
   additionalGuide({
-    id: "saint-laurent-de-brevedent", name: "Saint-Laurent-de-Brèvedent", pageTitle: "Immobilier à Saint-Laurent-de-Brèvedent",
-    heroImage: cityscape, listingSearch: { query: "Saint-Laurent-de-Brèvedent" },
+    id: "saint-laurent-de-brevedent", reviewedAt: "2026-10-06", name: "Saint-Laurent-de-Brèvedent", pageTitle: "Immobilier à Saint-Laurent-de-Brèvedent",
+    heroImage: { src: "/images/geography/saint-laurent-brevedent.webp", alt: "Le centre-bourg de Saint-Laurent-de-Brèvedent et ses bâtiments municipaux", credit: geographyPhotoCredits.saintLaurent, objectPosition: "center 62%" }, listingSearch: { query: "Saint-Laurent-de-Brèvedent" },
     subtitle: "Un village résidentiel entre la vallée de la Lézarde et le pays de Caux",
     averagePrice: "2 480 €/m²", area: "Seine-Maritime · Le Havre Seine Métropole",
     link: { label: "Vie communale et contacts officiels", href: lhsmTown("saint-laurent-de-brevedent") },
@@ -737,8 +762,8 @@ const additionalGeographyGuides: GeographyGuide[] = [
     nearbyGuideIds: ["montivilliers", "gainneville", "saint-romain", "etainhus"], placeType: "commune",
   }),
   additionalGuide({
-    id: "etainhus", name: "Étainhus", pageTitle: "Immobilier à Étainhus",
-    heroImage: cityscape, listingSearch: { query: "Étainhus" },
+    id: "etainhus", reviewedAt: "2026-10-06", name: "Étainhus", pageTitle: "Immobilier à Étainhus",
+    heroImage: { src: "/images/geography/etainhus-eglise.webp", alt: "L’église Saint-Jacques et son clocher à Étainhus", credit: geographyPhotoCredits.etainhus, objectPosition: "center 10%" }, listingSearch: { query: "Étainhus" },
     subtitle: "Une commune du pays de Caux dotée d’une gare sur la ligne Le Havre–Fécamp",
     averagePrice: "2 409 €/m²", area: "Seine-Maritime · Le Havre Seine Métropole",
     link: { label: "Informations communales et site de la mairie", href: lhsmTown("etainhus") },
@@ -753,8 +778,8 @@ const additionalGeographyGuides: GeographyGuide[] = [
     nearbyGuideIds: ["epretot", "saint-romain", "saint-aubin-routot", "saint-laurent-de-brevedent"], placeType: "commune",
   }),
   additionalGuide({
-    id: "epretot", name: "Épretot", pageTitle: "Immobilier à Épretot",
-    heroImage: cityscape, listingSearch: { query: "Épretot" },
+    id: "epretot", reviewedAt: "2026-10-06", name: "Épretot", pageTitle: "Immobilier à Épretot",
+    heroImage: { src: "/images/geography/epretot-eglise.webp", alt: "L’église Saint-Pierre et le paysage rural d’Épretot", credit: geographyPhotoCredits.epretot, objectPosition: "center 20%" }, listingSearch: { query: "Épretot" },
     subtitle: "Un village cauchois entre Le Havre et Saint-Romain-de-Colbosc",
     averagePrice: "2 554 €/m²", area: "Seine-Maritime · Le Havre Seine Métropole",
     link: { label: "Histoire et informations de la mairie", href: lhsmTown("epretot") },
@@ -769,8 +794,8 @@ const additionalGeographyGuides: GeographyGuide[] = [
     nearbyGuideIds: ["etainhus", "saint-romain", "saint-aubin-routot", "la-remuee"], placeType: "commune",
   }),
   additionalGuide({
-    id: "saint-aubin-routot", name: "Saint-Aubin-Routot", pageTitle: "Immobilier à Saint-Aubin-Routot",
-    heroImage: cityscape, listingSearch: { query: "Saint-Aubin-Routot" },
+    id: "saint-aubin-routot", reviewedAt: "2026-10-06", name: "Saint-Aubin-Routot", pageTitle: "Immobilier à Saint-Aubin-Routot",
+    heroImage: { src: "/images/geography/saint-aubin-routot-eglise.webp", alt: "L’église de Saint-Aubin-Routot dans le bourg à la tombée du jour", credit: geographyPhotoCredits.saintAubinRoutot, objectPosition: "center 18%" }, listingSearch: { query: "Saint-Aubin-Routot" },
     subtitle: "Une commune rurale à l’est de l’agglomération havraise",
     averagePrice: "2 360 €/m²", area: "Seine-Maritime · Le Havre Seine Métropole",
     link: { label: "Mairie et informations communales", href: lhsmTown("saint-aubin-routot") },
@@ -801,8 +826,8 @@ const additionalGeographyGuides: GeographyGuide[] = [
     nearbyGuideIds: ["saint-aubin-routot", "epretot", "saint-romain", "gommerville"], placeType: "commune",
   }),
   additionalGuide({
-    id: "gommerville", name: "Gommerville", pageTitle: "Immobilier à Gommerville",
-    heroImage: cityscape, listingSearch: { query: "Gommerville" },
+    id: "gommerville", reviewedAt: "2026-10-06", name: "Gommerville", pageTitle: "Immobilier à Gommerville",
+    heroImage: { src: "/images/geography/gommerville-chateau-filieres.webp", alt: "Le château de Filières, situé sur la commune de Gommerville", credit: geographyPhotoCredits.gommerville, objectPosition: "center 42%" }, listingSearch: { query: "Gommerville" },
     subtitle: "Une petite commune rurale à proximité du pôle de Saint-Romain-de-Colbosc",
     averagePrice: "2 257 €/m²", area: "Seine-Maritime · Le Havre Seine Métropole",
     link: { label: "Fiche officielle de la commune", href: lhsmTown("gommerville") },
@@ -816,8 +841,8 @@ const additionalGeographyGuides: GeographyGuide[] = [
     nearbyGuideIds: ["la-remuee", "saint-romain", "la-cerlangue", "les-trois-pierres"], placeType: "commune",
   }),
   additionalGuide({
-    id: "la-cerlangue", name: "La Cerlangue", pageTitle: "Immobilier à La Cerlangue",
-    heroImage: cityscape, listingSearch: { query: "La Cerlangue" },
+    id: "la-cerlangue", reviewedAt: "2026-10-06", name: "La Cerlangue", pageTitle: "Immobilier à La Cerlangue",
+    heroImage: { src: "/images/geography/la-cerlangue-eglise.webp", alt: "L’église Saint-Jean-d’Abbetot à La Cerlangue", credit: geographyPhotoCredits.laCerlangue, objectPosition: "center 10%" }, listingSearch: { query: "La Cerlangue" },
     subtitle: "Une vaste commune rurale entre le pays de Caux et l’estuaire de la Seine",
     averagePrice: "2 225 €/m²", area: "Seine-Maritime · Le Havre Seine Métropole",
     link: { label: "Commune et démarches locales", href: lhsmTown("la-cerlangue") },
@@ -831,8 +856,8 @@ const additionalGeographyGuides: GeographyGuide[] = [
     nearbyGuideIds: ["gommerville", "la-remuee", "rogerville", "saint-romain"], placeType: "commune",
   }),
   additionalGuide({
-    id: "les-trois-pierres", name: "Les Trois-Pierres", pageTitle: "Immobilier aux Trois-Pierres",
-    heroImage: cityscape, listingSearch: { query: "Les Trois-Pierres" },
+    id: "les-trois-pierres", reviewedAt: "2026-10-06", name: "Les Trois-Pierres", pageTitle: "Immobilier aux Trois-Pierres",
+    heroImage: { src: "/images/geography/les-trois-pierres-mairie.webp", alt: "La mairie en brique des Trois-Pierres", credit: geographyPhotoCredits.lesTroisPierres, objectPosition: "center 42%" }, listingSearch: { query: "Les Trois-Pierres" },
     subtitle: "Un village du pays de Caux entre Saint-Romain-de-Colbosc et Bolbec",
     averagePrice: "2 387 €/m²", area: "Seine-Maritime · Le Havre Seine Métropole",
     link: { label: "Histoire et coordonnées de la mairie", href: lhsmTown("les-trois-pierres") },
