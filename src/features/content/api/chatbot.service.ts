@@ -1910,6 +1910,12 @@ function isEdgeReplyUsable(payload: unknown): payload is ChatbotReply {
   return typeof maybeReply.answer === "string" && maybeReply.answer.trim().length > 0;
 }
 
+function getLegacyEdgeProvider(payload: unknown): ChatbotReply["edgeProvider"] {
+  if (!payload || typeof payload !== "object") return undefined;
+  const source = (payload as Record<string, unknown>).source;
+  return source === "gemini" || source === "openai" || source === "fallback" ? source : undefined;
+}
+
 function sanitizeToolSearchParams(raw: unknown): ToolSearchParams | undefined {
   if (!raw || typeof raw !== "object") return undefined;
   const candidate = raw as Record<string, unknown>;
@@ -1974,7 +1980,7 @@ function sanitizeCitations(raw: unknown): ChatbotCitation[] | undefined {
 
   const citations = raw
     .filter((value): value is Record<string, unknown> => Boolean(value && typeof value === "object"))
-    .map((citation) => {
+    .map((citation): ChatbotCitation | null => {
       const path = typeof citation.path === "string" ? citation.path.trim() : "";
       if (!path) return null;
 
@@ -2080,7 +2086,7 @@ function sanitizeToolTrace(raw: unknown): ChatbotToolTrace[] | undefined {
   if (!Array.isArray(raw)) return undefined;
   const traces = raw
     .filter((value): value is Record<string, unknown> => Boolean(value && typeof value === "object"))
-    .map((trace) => {
+    .map((trace): ChatbotToolTrace | null => {
       const tool =
         trace.tool === "search_properties" ||
         trace.tool === "aggregate_properties" ||
@@ -2163,7 +2169,7 @@ function sanitizeAnalysisCards(raw: unknown): ChatbotAnalysisCard[] | undefined 
   if (!Array.isArray(raw)) return undefined;
   const cards = raw
     .filter((value): value is Record<string, unknown> => Boolean(value && typeof value === "object"))
-    .map((card) => {
+    .map((card): ChatbotAnalysisCard | null => {
       const kind =
         card.kind === "property_photo_insights" ||
         card.kind === "property_plan_insights" ||
@@ -2518,7 +2524,7 @@ function sanitizeActions(raw: unknown): ChatbotUiAction[] | undefined {
       const suggestions = Array.isArray(data.suggestions)
         ? data.suggestions
             .filter((item): item is Record<string, unknown> => Boolean(item && typeof item === "object"))
-            .map((item) => {
+            .map((item): SanitizedFacetSuggestion | null => {
               const label = typeof item.label === "string" ? item.label.trim().slice(0, 80) : "";
               const patch = sanitizeToolSearchParams(item.patch) ?? {};
               const removeKeys = sanitizeFilterPatchKeys(item.removeKeys);
@@ -2567,12 +2573,12 @@ function sanitizeActions(raw: unknown): ChatbotUiAction[] | undefined {
       const options = Array.isArray(data.options)
         ? data.options
             .filter((item): item is Record<string, unknown> => Boolean(item && typeof item === "object"))
-            .map((item) => {
-              const scope =
+            .map((item): SanitizedScopeOption | null => {
+              const scope: SanitizedScopeOption["scope"] | null =
                 item.scope === "current_filtered" ||
                 item.scope === "global_active_inventory" ||
                 item.scope === "selected_properties"
-                  ? item.scope
+                  ? item.scope as SanitizedScopeOption["scope"]
                   : null;
               const label = typeof item.label === "string" ? item.label.trim().slice(0, 80) : "";
               if (!scope || !label) return null;
@@ -2901,13 +2907,7 @@ export async function askAgencyChatbot(request: ChatbotRequest): Promise<Chatbot
       );
     }
 
-    const inferredEdgeProvider =
-      responsePayload.edgeProvider ??
-      ((responsePayload as Partial<ChatbotReply> & { source?: unknown }).source === "gemini" ||
-      (responsePayload as Partial<ChatbotReply> & { source?: unknown }).source === "openai" ||
-      (responsePayload as Partial<ChatbotReply> & { source?: unknown }).source === "fallback"
-        ? ((responsePayload as Partial<ChatbotReply> & { source?: "gemini" | "openai" | "fallback" }).source ?? undefined)
-        : undefined);
+    const inferredEdgeProvider = responsePayload.edgeProvider ?? getLegacyEdgeProvider(responsePayload);
 
     return normalizeReplyOutput(
       applyRouteMetadata(
@@ -3006,13 +3006,7 @@ async function parseSseResponseStream(
           finalReply = normalizeReplyOutput({
             ...maybeReply,
             source: "edge",
-            edgeProvider:
-              maybeReply.edgeProvider ??
-              ((maybeReply as Partial<ChatbotReply> & { source?: unknown }).source === "gemini" ||
-              (maybeReply as Partial<ChatbotReply> & { source?: unknown }).source === "openai" ||
-              (maybeReply as Partial<ChatbotReply> & { source?: unknown }).source === "fallback"
-                ? ((maybeReply as Partial<ChatbotReply> & { source?: "gemini" | "openai" | "fallback" }).source ?? undefined)
-                : undefined),
+            edgeProvider: maybeReply.edgeProvider ?? getLegacyEdgeProvider(maybeReply),
           });
         }
       }

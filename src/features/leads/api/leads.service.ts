@@ -45,7 +45,19 @@ function assignAgent(input: LeadInput): string | null {
 
 export async function submitLead(input: LeadInput): Promise<{ ok: true; leadId: string; assignedAgentId: string | null }> {
   const validatedInput = leadInputSchema.parse(input);
-  const payload: LeadInput = { ...validatedInput, formStartedAt: validatedInput.formStartedAt ?? Date.now() };
+  // With strictNullChecks disabled, Zod's inferred type marks required fields optional;
+  // parse() validates them before the normalized values are passed on.
+  const payload: LeadInput = {
+    ...validatedInput,
+    source: validatedInput.source!,
+    firstName: validatedInput.firstName!,
+    lastName: validatedInput.lastName!,
+    email: validatedInput.email!,
+    message: validatedInput.message!,
+    consent: true,
+    chatbotContext: validatedInput.chatbotContext as LeadInput["chatbotContext"],
+    formStartedAt: validatedInput.formStartedAt ?? Date.now(),
+  };
 
   if (payload.website?.trim()) {
     return { ok: true, leadId: crypto.randomUUID(), assignedAgentId: null };

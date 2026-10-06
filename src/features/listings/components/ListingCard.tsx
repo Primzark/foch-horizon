@@ -71,7 +71,7 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, eagerIma
                   imageMotionPreset.hoverClassName,
                 )}
                 loading={eagerImage ? "eager" : "lazy"}
-                fetchpriority="low"
+                fetchPriority="low"
                 itemProp="image"
               />
             </ContextAwareParallax>
@@ -192,7 +192,7 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, eagerIma
               imageMotionPreset.hoverClassName,
             )}
             loading={eagerImage ? "eager" : "lazy"}
-            fetchpriority="low"
+            fetchPriority="low"
             itemProp="image"
           />
         </ContextAwareParallax>

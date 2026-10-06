@@ -1,3 +1,5 @@
+import { useUiStore } from "@/lib/state/useUiStore";
+
 export type AnalyticsEventName =
   | "search_opened"
   | "filter_applied"
@@ -7,6 +9,12 @@ export type AnalyticsEventName =
   | "phone_clicked"
   | "extranet_clicked"
   | "favorites_opened"
+  | "comparison_add"
+  | "comparison_remove"
+  | "comparison_open"
+  | "comparison_differences_toggle"
+  | "comparison_listing_click"
+  | "comparison_contact_click"
   | "motion_performance"
   | "motion_pref_changed"
   | "chatbot_opened"
@@ -32,6 +40,10 @@ export type AnalyticsEventName =
 
 export function trackEvent(name: AnalyticsEventName, payload?: Record<string, unknown>): void {
   if (typeof window === "undefined") {
+    return;
+  }
+
+  if (useUiStore.getState().cookieConsent !== "accepted") {
     return;
   }
 

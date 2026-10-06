@@ -3,6 +3,7 @@ import { ArrowLeftRight, X } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { PROPERTY_COMPARE_LIMIT, usePropertyCompareStore } from "@/features/listings/state/usePropertyCompareStore";
+import { trackEvent } from "@/lib/analytics/events";
 import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
 
 export function PropertyCompareTray() {
@@ -15,6 +16,12 @@ export function PropertyCompareTray() {
   const isComparisonPage = location.pathname === "/biens/comparer";
   const isPropertyPreviewModal = Boolean((location.state as { propertyModal?: boolean } | null)?.propertyModal);
   const isVisible = ids.length > 0 && !isComparisonPage && !isPropertyPreviewModal;
+  const clearComparison = () => {
+    ids.forEach((propertyId) => {
+      trackEvent("comparison_remove", { property_id: propertyId, source: "comparison_tray_clear" });
+    });
+    clear();
+  };
 
   return (
     <AnimatePresence>
@@ -57,7 +64,7 @@ export function PropertyCompareTray() {
               className="h-9 w-9 shrink-0 rounded-full text-muted-foreground"
               aria-label="Vider la sélection de comparaison"
               title="Vider la sélection"
-              onClick={clear}
+              onClick={clearComparison}
             >
               <X className="h-4 w-4" />
             </Button>

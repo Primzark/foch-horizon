@@ -28,7 +28,8 @@ export function CookieConsentManager() {
     const consentRestored = accepted && consentChanged && priorConsent === "rejected" && gtmWasAlreadyLoaded;
     let pageViewTimer: number | undefined;
 
-    if (accepted && (routeChanged || consentRestored)) {
+    const initialAcceptedPage = accepted && !gtmWasAlreadyLoaded;
+    if (accepted && (routeChanged || consentRestored || initialAcceptedPage)) {
       pageViewTimer = window.setTimeout(() => {
         trackGoogleAnalyticsPageView(pageLocation, routeChanged ? priorPageLocation ?? undefined : undefined);
       }, 0);

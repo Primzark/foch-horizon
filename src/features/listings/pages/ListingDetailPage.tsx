@@ -176,6 +176,7 @@ export default function ListingDetailPage({
   const [summaryVisible, setSummaryVisible] = useState(true);
   const [contactVisible, setContactVisible] = useState(false);
   const location = useLocation();
+  const comparisonOrigin = (location.state as { comparisonOrigin?: unknown } | null)?.comparisonOrigin === true;
   const params = useParams();
   const favoriteIds = useFavoritesStore((state) => state.ids);
   const toggleFavorite = useFavoritesStore((state) => state.toggle);
@@ -218,6 +219,10 @@ export default function ListingDetailPage({
   );
 
   const property = propertyQuery.data;
+  const trackComparisonContactClick = (method: "sticky_contact" | "phone" | "email") => {
+    if (!comparisonOrigin || !property) return;
+    trackEvent("comparison_contact_click", { property_id: property.id, method });
+  };
   const isFavorite = property ? favoriteIds.includes(property.id) : false;
   const nextPropertyToDiscover = similarItems[0];
   const secondarySimilarItems = similarItems.slice(1, 4);
@@ -276,6 +281,7 @@ export default function ListingDetailPage({
           onClick={() => {
             contactRef.current?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "center" });
             trackEvent("listing_viewed", { propertyId: property.id, action: "sticky_contact" });
+            trackComparisonContactClick("sticky_contact");
           }}
         >
           Contacter
@@ -393,7 +399,7 @@ export default function ListingDetailPage({
   const routeSlug = parsedRoute?.slug ? sanitizePropertySlug(parsedRoute.slug) : null;
 
   if (routeSlug !== canonicalSlug) {
-    return <Navigate to={canonicalPath!} replace />;
+    return <Navigate to={canonicalPath!} replace state={location.state} />;
   }
 
   const city = cityById.get(property.cityId);
@@ -432,7 +438,7 @@ export default function ListingDetailPage({
 
       <div ref={contentRef} className="grid gap-8 lg:grid-cols-[1fr_340px]">
         <div>
-          <ListingGallery images={property.images} title={property.title} />
+          <ListingGallery images={property.images} title={property.title} propertyId={property.id} />
           {announcementSwipeHint && (
             <div className="mt-1 flex justify-end pr-1 lg:hidden">{announcementSwipeHint}</div>
           )}
@@ -550,12 +556,19 @@ export default function ListingDetailPage({
             <a
               href={`tel:${(agent?.phone ?? "02 35 42 51 76").replace(/\s+/g, "")}`}
               className="mt-3 inline-flex items-center gap-2 rounded-full border border-border px-3 py-1 text-sm"
-              onClick={() => trackEvent("phone_clicked", { source: "property_sidebar", propertyId: property.id })}
+              onClick={() => {
+                trackEvent("phone_clicked", { source: "property_sidebar", propertyId: property.id });
+                trackComparisonContactClick("phone");
+              }}
             >
               <Phone className="h-4 w-4" /> {agent?.phone ?? "02 35 42 51 76"}
             </a>
             {agent?.email && (
-              <a href={`mailto:${agent.email}`} className="mt-2 block text-sm text-muted-foreground hover:underline">
+              <a
+                href={`mailto:${agent.email}`}
+                className="mt-2 block text-sm text-muted-foreground hover:underline"
+                onClick={() => trackComparisonContactClick("email")}
+              >
                 {agent.email}
               </a>
             )}

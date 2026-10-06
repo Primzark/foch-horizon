@@ -3,7 +3,14 @@
  * Keep these entries aligned with geographyGuides.ts while avoiding a load of
  * the full copy and market data for every guide on the homepage.
  */
-export const geographyGuideOptions = [
+interface GeographyGuideOption {
+  id: string;
+  name: string;
+  city?: string;
+  query?: string;
+}
+
+export const geographyGuideOptions: readonly GeographyGuideOption[] = [
   { id: "le-havre", name: "Le Havre", city: "le-havre" },
   { id: "sainte-adresse", name: "Sainte-Adresse", city: "sainte-adresse" },
   { id: "la-plage", name: "La plage et Saint-Vincent", city: "le-havre", query: "Saint-Vincent" },
@@ -37,4 +44,4 @@ export const geographyGuideOptions = [
   { id: "gommerville", name: "Gommerville", query: "Gommerville" },
   { id: "la-cerlangue", name: "La Cerlangue", query: "La Cerlangue" },
   { id: "les-trois-pierres", name: "Les Trois-Pierres", query: "Les Trois-Pierres" },
-] as const;
+];

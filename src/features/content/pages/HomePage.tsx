@@ -95,7 +95,7 @@ export default function HomePage() {
             className="h-full w-full object-cover object-[center_8%]"
             loading="eager"
             decoding="async"
-            fetchpriority="high"
+            fetchPriority="high"
           />
         </picture>
         <div className="absolute inset-0 bg-gradient-to-r from-black/38 via-black/16 to-black/0" />

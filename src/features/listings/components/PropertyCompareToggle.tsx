@@ -2,6 +2,7 @@ import { ArrowLeftRight, Check } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { PROPERTY_COMPARE_LIMIT, usePropertyCompareStore } from "@/features/listings/state/usePropertyCompareStore";
+import { trackEvent } from "@/lib/analytics/events";
 import { cn } from "@/lib/utils";
 
 export function PropertyCompareToggle({ propertyId, className }: { propertyId: number; className?: string }) {
@@ -29,7 +30,12 @@ export function PropertyCompareToggle({ propertyId, className }: { propertyId: n
           toast.info("Vous pouvez comparer jusqu’à 3 biens.");
           return;
         }
-        toggle(propertyId);
+        if (toggle(propertyId)) {
+          trackEvent(isSelected ? "comparison_remove" : "comparison_add", {
+            property_id: propertyId,
+            source: window.location.pathname,
+          });
+        }
       }}
     >
       {isSelected ? <Check aria-hidden="true" className="h-3.5 w-3.5" /> : <ArrowLeftRight aria-hidden="true" className="h-3.5 w-3.5" />}

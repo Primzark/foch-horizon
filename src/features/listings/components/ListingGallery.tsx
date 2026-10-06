@@ -24,7 +24,7 @@ const galleryImageVariants = {
   exit: { opacity: 0, scale: 0.99 },
 };
 
-export function ListingGallery({ images, title }: { images: PropertyImage[]; title: string }) {
+export function ListingGallery({ images, title, propertyId }: { images: PropertyImage[]; title: string; propertyId: number }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [showAllPhotos, setShowAllPhotos] = useState(false);
@@ -124,7 +124,7 @@ export function ListingGallery({ images, title }: { images: PropertyImage[]; tit
                   alt={activeImage.altText}
                   className="absolute inset-0 h-full w-full object-cover"
                   loading="eager"
-                  fetchpriority="high"
+                  fetchPriority="high"
                   decoding="async"
                   onLoad={preloadAdjacentImages}
                 />
@@ -169,7 +169,7 @@ export function ListingGallery({ images, title }: { images: PropertyImage[]; tit
               aria-label="Ouvrir la galerie en plein écran"
               onClick={() => {
                 setShowAllPhotos(false);
-                trackEvent("gallery_opened");
+                trackEvent("gallery_opened", { property_id: propertyId });
               }}
             >
               <Expand className="h-4 w-4" />
@@ -185,7 +185,7 @@ export function ListingGallery({ images, title }: { images: PropertyImage[]; tit
                 className="inline-flex min-h-10 items-center gap-2 rounded-full border border-border bg-background px-4 text-sm font-medium transition-colors hover:border-brand-border hover:bg-brand-soft/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 onClick={() => {
                   setShowAllPhotos(true);
-                  trackEvent("gallery_opened");
+                  trackEvent("gallery_opened", { property_id: propertyId });
                 }}
               >
                 <Images className="h-4 w-4" aria-hidden="true" />

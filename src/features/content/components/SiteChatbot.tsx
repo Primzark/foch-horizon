@@ -356,7 +356,7 @@ function sanitizeCitations(raw: unknown): ChatbotCitation[] | undefined {
       const candidate = value as Partial<ChatbotCitation>;
       return typeof candidate.path === "string";
     })
-    .map((citation) => {
+    .map((citation): ChatbotCitation | null => {
       const path = citation.path.trim();
       const inferredKind =
         citation.kind === "site" || citation.kind === "web"
@@ -1850,7 +1850,7 @@ export function SiteChatbot({ initiallyOpen = false }: { initiallyOpen?: boolean
         memorySummary: lastAssistant?.memory?.summary,
       },
       selectedProperties: selectedProperties.length > 0 ? selectedProperties : undefined,
-      planner: lastAssistant?.planner,
+      planner: lastAssistant?.planner ? { ...lastAssistant.planner } : undefined,
       toolSummary,
       multimodalHighlights: multimodalHighlights && multimodalHighlights.length > 0 ? multimodalHighlights : undefined,
       sourceMetadata: {

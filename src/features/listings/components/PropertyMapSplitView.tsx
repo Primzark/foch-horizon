@@ -94,6 +94,8 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
   useEffect(() => {
     if (!mapElementRef.current) return;
 
+    const markersForCleanup = markerRefs.current;
+
     const map = L.map(mapElementRef.current, {
       center: DEFAULT_CENTER,
       zoom: 11,
@@ -113,7 +115,7 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
       map.remove();
       mapRef.current = null;
       markerLayerRef.current = null;
-      markerRefs.current.clear();
+      markersForCleanup.clear();
     };
   }, []);
 

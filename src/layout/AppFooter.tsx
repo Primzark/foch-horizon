@@ -2,6 +2,7 @@ import { MapPin, Phone, Mail, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { primaryLinks } from "@/layout/navigation";
 import { getConfiguredPublicSiteUrl } from "@/lib/seo/siteUrl";
+import { trackEvent } from "@/lib/analytics/events";
 import { useUiStore } from "@/lib/state/useUiStore";
 
 const legalLinks = [

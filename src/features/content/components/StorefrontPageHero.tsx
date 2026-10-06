@@ -21,7 +21,7 @@ export function StorefrontPageHero({ eyebrow, title, description, children }: St
         height={678}
         loading="eager"
         decoding="async"
-        fetchpriority="high"
+        fetchPriority="high"
         className="storefront-page-hero__background absolute inset-0 -z-10 h-full w-full object-cover"
       />
       <div aria-hidden="true" className="storefront-page-hero__scrim pointer-events-none absolute inset-0 -z-[5]" />

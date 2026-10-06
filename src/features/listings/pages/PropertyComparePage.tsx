@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueries } from "@tanstack/react-query";
 import { ArrowLeft, ArrowLeftRight, Building2, Check, X } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -10,6 +10,7 @@ import { formatPrice, formatPropertyTypeLabel, toCanonicalPropertyPath } from "@
 import { cityById } from "@/features/cities/data/cities";
 import { PROPERTY_COMPARE_LIMIT, usePropertyCompareStore } from "@/features/listings/state/usePropertyCompareStore";
 import { useSeo } from "@/lib/seo/useSeo";
+import { trackEvent } from "@/lib/analytics/events";
 import type { Property } from "@/types/domain";
 
 interface CompareRow {
@@ -118,6 +119,18 @@ export default function PropertyComparePage() {
   const ids = usePropertyCompareStore((state) => state.ids);
   const remove = usePropertyCompareStore((state) => state.remove);
   const [showOnlyDifferences, setShowOnlyDifferences] = useState(false);
+  const hasTrackedOpen = useRef(false);
+
+  useEffect(() => {
+    if (hasTrackedOpen.current) return;
+    hasTrackedOpen.current = true;
+    trackEvent("comparison_open", { selected_count: ids.length, source: "comparison_page" });
+  }, [ids.length]);
+
+  const handleRemove = (propertyId: number, placement: string) => {
+    trackEvent("comparison_remove", { property_id: propertyId, source: placement });
+    remove(propertyId);
+  };
 
   const propertyQueries = useQueries({
     queries: ids.map((id) => ({
@@ -190,7 +203,14 @@ export default function PropertyComparePage() {
         {properties.length >= 2 && (
           <label htmlFor="show-only-differences" className="inline-flex min-h-10 cursor-pointer items-center gap-3 self-start rounded-full border border-border bg-card px-3.5 text-sm sm:self-auto">
             <span>Afficher uniquement les différences</span>
-            <Switch id="show-only-differences" checked={showOnlyDifferences} onCheckedChange={setShowOnlyDifferences} />
+            <Switch
+              id="show-only-differences"
+              checked={showOnlyDifferences}
+              onCheckedChange={(enabled) => {
+                setShowOnlyDifferences(enabled);
+                trackEvent("comparison_differences_toggle", { enabled, selected_count: properties.length });
+              }}
+            />
           </label>
         )}
       </div>
@@ -203,7 +223,7 @@ export default function PropertyComparePage() {
           </p>
           <div className="flex flex-wrap gap-2">
             {unavailable.map(({ id }) => (
-              <Button key={id} type="button" variant="outline" size="sm" className="h-8 rounded-full px-3 text-xs" onClick={() => remove(id)}>
+              <Button key={id} type="button" variant="outline" size="sm" className="h-8 rounded-full px-3 text-xs" onClick={() => handleRemove(id, "unavailable_notice")}>
                 Retirer réf. {id} <X className="ml-1 h-3.5 w-3.5" />
               </Button>
             ))}
@@ -226,7 +246,7 @@ export default function PropertyComparePage() {
                 <p className="truncate text-sm font-medium">{property.title}</p>
                 <p className="text-sm text-muted-foreground">{formatPrice(property.priceAmount, property.transactionType)}</p>
               </div>
-              <Button type="button" variant="ghost" size="icon" className="h-9 w-9 shrink-0 rounded-full" aria-label={`Retirer le bien ${property.id}`} onClick={() => remove(property.id)}>
+              <Button type="button" variant="ghost" size="icon" className="h-9 w-9 shrink-0 rounded-full" aria-label={`Retirer le bien ${property.id}`} onClick={() => handleRemove(property.id, "single_property_summary")}>
                 <X className="h-4 w-4" />
               </Button>
             </div>
@@ -251,16 +271,26 @@ export default function PropertyComparePage() {
                       <th scope="col" key={property.id} className="w-[220px] min-w-[220px] p-3 align-top sm:w-[250px] sm:min-w-[250px]">
                         <div className="relative">
                           <ComparisonPhoto property={property} />
-                          <Button type="button" variant="secondary" size="icon" className="absolute right-2 top-2 h-8 w-8 rounded-full shadow-sm" aria-label={`Retirer ${property.title} de la comparaison`} onClick={() => remove(property.id)}>
+                          <Button type="button" variant="secondary" size="icon" className="absolute right-2 top-2 h-8 w-8 rounded-full shadow-sm" aria-label={`Retirer ${property.title} de la comparaison`} onClick={() => handleRemove(property.id, "comparison_table")}>
                             <X className="h-4 w-4" />
                           </Button>
                         </div>
                         <p className="mt-3 text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">Réf. {property.id} · {cityName ?? property.postalCode}</p>
-                        <Link to={toCanonicalPropertyPath(property)} className="mt-1 line-clamp-2 block font-display text-lg leading-snug text-foreground transition-colors hover:text-brand-strong">
+                        <Link
+                          to={toCanonicalPropertyPath(property)}
+                          state={{ comparisonOrigin: true }}
+                          onClick={() => trackEvent("comparison_listing_click", { property_id: property.id, placement: "comparison_title" })}
+                          className="mt-1 line-clamp-2 block font-display text-lg leading-snug text-foreground transition-colors hover:text-brand-strong"
+                        >
                           {property.title}
                         </Link>
                         <p className="mt-1 text-sm font-semibold text-brand-strong">{formatPrice(property.priceAmount, property.transactionType)}</p>
-                        <Link to={toCanonicalPropertyPath(property)} className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-foreground underline decoration-brand/40 underline-offset-4 hover:text-brand-strong">
+                        <Link
+                          to={toCanonicalPropertyPath(property)}
+                          state={{ comparisonOrigin: true }}
+                          onClick={() => trackEvent("comparison_listing_click", { property_id: property.id, placement: "comparison_link" })}
+                          className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-foreground underline decoration-brand/40 underline-offset-4 hover:text-brand-strong"
+                        >
                           Voir l’annonce <span aria-hidden="true">→</span>
                         </Link>
                       </th>
