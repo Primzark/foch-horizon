@@ -8,6 +8,7 @@ import { SearchDrawer } from "@/features/listings/components/SearchDrawer";
 import { BackToTopButton } from "@/components/ui/BackToTopButton";
 import { SiteChatbotLoader } from "@/features/content/components/SiteChatbotLoader";
 import { PropertyCompareTray } from "@/features/listings/components/PropertyCompareTray";
+import { LanguageDocumentSync } from "@/lib/i18n/LanguageProvider";
 
 function RouteReadyMarker({
   locationKey,
@@ -78,6 +79,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <LanguageDocumentSync />
       <AppHeader />
       <main>
         <Suspense fallback={null}>

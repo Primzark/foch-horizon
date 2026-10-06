@@ -2,6 +2,8 @@ import { useEffect } from "react";
 import { siteEntities } from "@/lib/seo/entities";
 import { pageBreadcrumbs } from "@/lib/seo/breadcrumbs";
 import { getConfiguredPublicSiteUrl, getSiteUrl, toAbsoluteUrl } from "@/lib/seo/siteUrl";
+import { useSiteLanguage } from "@/lib/i18n/LanguageProvider";
+import { translateText } from "@/lib/i18n/catalog";
 
 export { getConfiguredPublicSiteUrl, getSiteUrl } from "@/lib/seo/siteUrl";
 
@@ -87,6 +89,7 @@ function upsertJsonLd(jsonLd: object | object[]): void {
 }
 
 export function useSeo(options: SeoOptions): void {
+  const { language } = useSiteLanguage();
   useEffect(() => {
     const configuredSiteUrl = getConfiguredPublicSiteUrl();
     const siteUrl = getSiteUrl();
@@ -95,20 +98,22 @@ export function useSeo(options: SeoOptions): void {
     const canonicalUrl = configuredSiteUrl ? toAbsoluteUrl(canonicalPath, configuredSiteUrl) : null;
     const imageUrl = toAbsoluteUrl(options.image ?? defaultOgImage, siteUrl);
 
-    document.title = options.title;
+    const pageTitle = translateText(options.title, language);
+    const pageDescription = translateText(options.description, language);
+    document.title = pageTitle;
 
-    upsertMeta("description", options.description);
+    upsertMeta("description", pageDescription);
     upsertMeta("author", "Foch Immobilier");
     upsertMeta("theme-color", "#2eca6a");
-    upsertPropertyMeta("og:title", options.title);
-    upsertPropertyMeta("og:description", options.description);
+    upsertPropertyMeta("og:title", pageTitle);
+    upsertPropertyMeta("og:description", pageDescription);
     upsertPropertyMeta("og:type", options.type ?? "website");
     upsertPropertyMeta("og:site_name", "Foch Immobilier");
-    upsertPropertyMeta("og:locale", "fr_FR");
+    upsertPropertyMeta("og:locale", language === "en" ? "en_GB" : "fr_FR");
     upsertPropertyMeta("og:image", imageUrl);
     upsertMeta("twitter:card", "summary_large_image");
-    upsertMeta("twitter:title", options.title);
-    upsertMeta("twitter:description", options.description);
+    upsertMeta("twitter:title", pageTitle);
+    upsertMeta("twitter:description", pageDescription);
     upsertMeta("twitter:image", imageUrl);
     if (canonicalUrl) {
       upsertCanonical(canonicalUrl);
@@ -122,14 +127,14 @@ export function useSeo(options: SeoOptions): void {
 
     const supplied = options.jsonLd ? (Array.isArray(options.jsonLd) ? options.jsonLd : [options.jsonLd]) : [];
     const pageUrl = toAbsoluteUrl(canonicalPath, siteUrl);
-    const crumbs = pageBreadcrumbs(canonicalPath, options.title);
+    const crumbs = pageBreadcrumbs(canonicalPath, pageTitle).map((crumb) => ({ ...crumb, name: translateText(crumb.name, language) }));
     // One stable business identity across all routes; breadcrumbs follow visible navigation.
     const content = supplied.filter((node) => !["RealEstateAgent", "Organization", "WebSite", "BreadcrumbList"].includes((node as { "@type"?: string })["@type"] ?? ""));
     upsertJsonLd({
       "@context": "https://schema.org",
       "@graph": [
         ...siteEntities(siteUrl),
-        { "@type": "WebPage", "@id": `${pageUrl}#webpage`, url: pageUrl, name: options.title, description: options.description, inLanguage: "fr-FR", isPartOf: { "@id": `${siteUrl}/#website` }, publisher: { "@id": `${siteUrl}/#agency` }, ...(crumbs.length ? { breadcrumb: { "@id": `${pageUrl}#breadcrumb` } } : {}) },
+        { "@type": "WebPage", "@id": `${pageUrl}#webpage`, url: pageUrl, name: pageTitle, description: pageDescription, inLanguage: language === "en" ? "en-GB" : "fr-FR", isPartOf: { "@id": `${siteUrl}/#website` }, publisher: { "@id": `${siteUrl}/#agency` }, ...(crumbs.length ? { breadcrumb: { "@id": `${pageUrl}#breadcrumb` } } : {}) },
         ...(crumbs.length ? [{ "@type": "BreadcrumbList", "@id": `${pageUrl}#breadcrumb`, itemListElement: crumbs.map((crumb, index) => ({ "@type": "ListItem", position: index + 1, name: crumb.name, item: toAbsoluteUrl(crumb.path, siteUrl) })) }] : []),
         ...content,
       ],
@@ -138,5 +143,5 @@ export function useSeo(options: SeoOptions): void {
     return () => {
       removeJsonLdNodes();
     };
-  }, [options]);
+  }, [options, language]);
 }

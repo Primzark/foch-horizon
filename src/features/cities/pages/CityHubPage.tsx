@@ -20,6 +20,7 @@ import { getMotionDirectorProfile } from "@/lib/visuals/motionDirector";
 import { geographyGuides, type GeographyPhotoCredit } from "@/features/content/data/geographyGuides";
 import { GeographyGuideDetails } from "@/features/content/components/GeographyGuideDetails";
 import { PhotoAttribution } from "@/features/content/components/PhotoAttribution";
+import { useSiteLanguage } from "@/lib/i18n/LanguageProvider";
 
 type LocationHeroProps = {
   pageTitle: string;
@@ -39,6 +40,7 @@ function getLocationLabel(guide?: (typeof geographyGuides)[number]) {
 }
 
 function RelatedGeographyLinks({ guide, listingHref, estimateCity }: { guide: (typeof geographyGuides)[number]; listingHref: string; estimateCity: string }) {
+  const { language } = useSiteLanguage();
   const nearby = (guide.nearbyGuideIds ?? [])
     .map((id) => geographyGuides.find((item) => item.id === id))
     .filter((item): item is (typeof geographyGuides)[number] => Boolean(item));
@@ -48,12 +50,12 @@ function RelatedGeographyLinks({ guide, listingHref, estimateCity }: { guide: (t
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Continuer la visite</p>
-          <h2 id={`related-geography-${guide.id}`} className="mt-1 font-display text-2xl">À proximité {ofLocation(guide.name)}</h2>
+          <h2 id={`related-geography-${guide.id}`} className="mt-1 font-display text-2xl">{language === "en" ? "Nearby areas" : `À proximité ${ofLocation(guide.name)}`}</h2>
         </div>
         <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
-          <Link to={listingHref} className="font-medium text-brand-strong underline underline-offset-4">Annonces immobilières : {guide.name}</Link>
-          <Link to={`/estimation?ville=${encodeURIComponent(estimateCity)}`} className="font-medium text-brand-strong underline underline-offset-4">Estimer un bien {atLocation(guide.name)}</Link>
-          <Link to="/vendre" className="font-medium text-brand-strong underline underline-offset-4">Vendre avec l’agence</Link>
+          <Link to={listingHref} className="font-medium text-brand-strong underline underline-offset-4">{language === "en" ? `Property listings: ${guide.name}` : `Annonces immobilières : ${guide.name}`}</Link>
+          <Link to={`/estimation?ville=${encodeURIComponent(estimateCity)}`} className="font-medium text-brand-strong underline underline-offset-4">{language === "en" ? "Request a valuation" : `Estimer un bien ${atLocation(guide.name)}`}</Link>
+          <Link to="/vendre" className="font-medium text-brand-strong underline underline-offset-4">{language === "en" ? "Sell with our agency" : "Vendre avec l’agence"}</Link>
         </div>
       </div>
       {nearby.length > 0 && (
@@ -122,6 +124,7 @@ function LocationHero({ pageTitle, locationName, locationSlug, locationLabel, im
 }
 
 export default function CityHubPage() {
+  const { language } = useSiteLanguage();
   const { ville } = useParams();
   const [searchParams] = useSearchParams();
   const citySlug = ville ?? "";
@@ -221,7 +224,7 @@ export default function CityHubPage() {
         <section className="mt-8 rounded-2xl border border-border bg-card p-6 sm:p-8" aria-labelledby="city-guide-title">
           <header className="mb-6 max-w-3xl">
             <p className="text-xs font-medium uppercase tracking-[0.18em] text-brand-strong">Repères sur le secteur · {cityGuide.area}</p>
-            <h2 id="city-guide-title" className="mt-2 font-display text-3xl">Vivre {atLocation(cityGuide.name)}</h2>
+            <h2 id="city-guide-title" className="mt-2 font-display text-3xl">{language === "en" ? `Living in ${cityGuide.name}` : `Vivre ${atLocation(cityGuide.name)}`}</h2>
           </header>
           <GeographyGuideDetails guide={cityGuide} />
         </section>

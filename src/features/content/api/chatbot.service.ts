@@ -360,6 +360,7 @@ export interface ChatbotReply {
 
 export interface ChatbotRequest {
   question: string;
+  language?: "fr" | "en";
   chatHistory?: Array<{ role: "user" | "assistant"; content: string }>;
   conversationState?: ChatbotConversationState;
   actionRequest?: ChatbotActionRequest;
@@ -970,7 +971,31 @@ function isRentalQuestion(text: string): boolean {
   return /\b(louer|location|locatif|locative|loyer|bailleur|locataire)\b/.test(normalizeKeyword(text));
 }
 
-function buildRentalUnavailableAnswer(context?: ConversationContext): ChatbotReply {
+function buildRentalUnavailableAnswer(context?: ConversationContext, language: "fr" | "en" = "fr"): ChatbotReply {
+  if (language === "en") {
+    if (context && districtComparisonPattern.test(context.normalizedQuestion) && /investissement locatif|locatif|locative/.test(context.normalizedQuestion)) {
+      return {
+        source: "local",
+        answer: "For a buy-to-let project in Le Havre, Saint-François, Eure–Docks and Perret are worth comparing against your budget, property type and target yield. Foch Immobilier does not list rentals; the agency helps with purchases, sales and valuations. Visit /geographie for area guides or /biens for properties for sale.",
+        suggestedPrompts: ["What properties are for sale in Saint-François, Eure–Docks or Perret?", "What are the advantages of these neighbourhoods?", "Open /geographie", "Open /biens"],
+      };
+    }
+
+    if (context && context.normalizedHistory.length > 0 && hasPropertyContext(context)) {
+      return {
+        source: "local",
+        answer: "I’ll keep your search criteria in mind. Foch Immobilier does not list rentals; the catalogue shows properties for sale at /biens.",
+        suggestedPrompts: ["Show properties for sale matching my criteria", "I want to buy in Le Havre", "I’d like a valuation"],
+      };
+    }
+
+    return {
+      source: "local",
+      answer: "Foch Immobilier does not list rental properties. The agency helps with purchases, sales and valuations; browse properties for sale at /biens.",
+      suggestedPrompts: ["View properties for sale", "I want to sell my property", "I’d like a valuation"],
+    };
+  }
+
   if (
     context &&
     districtComparisonPattern.test(context.normalizedQuestion) &&
@@ -2857,14 +2882,17 @@ export const chatbotServiceTestInternals = {
 export async function askAgencyChatbot(request: ChatbotRequest): Promise<ChatbotReply> {
   const context = buildConversationContext(request.question, request.chatHistory);
   if (isRentalQuestion(request.question)) {
-    return normalizeReplyOutput(buildRentalUnavailableAnswer(context));
+    return normalizeReplyOutput(buildRentalUnavailableAnswer(context, request.language));
   }
 
   const edgeRagForWebsiteQuestionsEnabled =
-    (import.meta.env.VITE_CHATBOT_ENABLE_EDGE_RAG as string | undefined)?.toLowerCase() === "true";
+    (import.meta.env.VITE_CHATBOT_ENABLE_EDGE_RAG as string | undefined)?.toLowerCase() === "true" ||
+    (request.language === "en" && isEdgeApiEnabled());
   const edgeAgentToolsEnabled =
     ((import.meta.env.VITE_CHATBOT_ENABLE_EDGE_AGENT_TOOLS as string | undefined) ?? "false").toLowerCase() === "true";
-  const routerV2Enabled = ((import.meta.env.VITE_CHATBOT_ROUTER_V2 as string | undefined) ?? "true").toLowerCase() !== "false";
+  const routerV2Enabled = request.language === "en"
+    ? false
+    : ((import.meta.env.VITE_CHATBOT_ROUTER_V2 as string | undefined) ?? "true").toLowerCase() !== "false";
   const routeDecision = decideChatbotRoute(context, {
     edgeApiEnabled: isEdgeApiEnabled(),
     edgeRagForWebsiteQuestionsEnabled,
@@ -3059,14 +3087,17 @@ export async function askAgencyChatbotStream(
 ): Promise<ChatbotReply> {
   const context = buildConversationContext(request.question, request.chatHistory);
   if (isRentalQuestion(request.question)) {
-    return normalizeReplyOutput(buildRentalUnavailableAnswer(context));
+    return normalizeReplyOutput(buildRentalUnavailableAnswer(context, request.language));
   }
 
   const edgeRagForWebsiteQuestionsEnabled =
-    (import.meta.env.VITE_CHATBOT_ENABLE_EDGE_RAG as string | undefined)?.toLowerCase() === "true";
+    (import.meta.env.VITE_CHATBOT_ENABLE_EDGE_RAG as string | undefined)?.toLowerCase() === "true" ||
+    (request.language === "en" && isEdgeApiEnabled());
   const edgeAgentToolsEnabled =
     ((import.meta.env.VITE_CHATBOT_ENABLE_EDGE_AGENT_TOOLS as string | undefined) ?? "false").toLowerCase() === "true";
-  const routerV2Enabled = ((import.meta.env.VITE_CHATBOT_ROUTER_V2 as string | undefined) ?? "true").toLowerCase() !== "false";
+  const routerV2Enabled = request.language === "en"
+    ? false
+    : ((import.meta.env.VITE_CHATBOT_ROUTER_V2 as string | undefined) ?? "true").toLowerCase() !== "false";
   const routeDecision = decideChatbotRoute(context, {
     edgeApiEnabled: isEdgeApiEnabled(),
     edgeRagForWebsiteQuestionsEnabled,

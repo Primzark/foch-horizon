@@ -9,6 +9,7 @@ import { trackEvent } from "@/lib/analytics/events";
 import { primaryLinks, openSiteAssistant } from "@/layout/navigation";
 import { preloadSiteChatbot } from "@/features/content/components/siteChatbotPreload";
 import { scrollToPageTop } from "@/lib/navigation/scrollToPageTop";
+import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 
 type MobileMenuSwipe = {
   pointerId: number;
@@ -234,6 +235,7 @@ export function AppHeader() {
             </Link>
             <p className="hidden text-xs uppercase tracking-[0.2em] text-muted-foreground lg:block">Immobilier au Havre · Depuis 1972</p>
             <div className="flex shrink-0 items-center gap-2">
+              <LanguageSwitcher className="hidden sm:inline-flex" />
               <a href="tel:0235425176" className="hidden items-center gap-2 text-sm hover:text-brand-strong md:inline-flex" aria-label="Appeler l'agence au 02 35 42 51 76">
                 <Phone className="h-4 w-4" /><span className="hidden xl:inline">02 35 42 51 76</span>
               </a>
@@ -262,6 +264,10 @@ export function AppHeader() {
         className="flex h-dvh w-[88vw] max-w-[360px] touch-pan-y flex-col bg-background p-0 lg:hidden"
       >
         <SheetTitle className="border-b border-border px-5 py-6 font-display text-2xl">Foch Immobilier</SheetTitle>
+        <div className="flex items-center justify-between border-b border-border px-5 py-3 text-xs uppercase tracking-[0.16em] text-muted-foreground">
+          <span>Langue / Language</span>
+          <LanguageSwitcher />
+        </div>
         <nav aria-label="Navigation mobile" className="flex flex-1 flex-col gap-1 overflow-y-auto px-4 py-3">
           {primaryLinks.map((item) => (
             <SheetClose asChild key={item.to}>

@@ -3,6 +3,8 @@ import { atLocation } from "@/lib/utils/frenchLocation";
 import { isHavreNeighborhood } from "@/lib/seo/entities";
 import { MoveUpRight } from "lucide-react";
 import { geographyGuides, type GeographyGuide } from "@/features/content/data/geographyGuides";
+import { useSiteLanguage } from "@/lib/i18n/LanguageProvider";
+import { translateText } from "@/lib/i18n/catalog";
 
 const guideFacts = [
   { key: "historyArchitecture", title: "Histoire et architecture" },
@@ -20,8 +22,8 @@ const guidePrices = [
   { key: "older", title: "Ancien" },
 ] as const;
 
-function formatReviewedAt(date: string): string {
-  return new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(`${date}T00:00:00Z`));
+function formatReviewedAt(date: string, language: "fr" | "en"): string {
+  return new Intl.DateTimeFormat(language === "en" ? "en-GB" : "fr-FR", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(`${date}T00:00:00Z`));
 }
 
 type GeographyGuideDetailsProps = {
@@ -31,6 +33,7 @@ type GeographyGuideDetailsProps = {
 };
 
 export function GeographyGuideDetails({ guide, className = "", headingLevel = 3 }: GeographyGuideDetailsProps) {
+  const { language } = useSiteLanguage();
   const Heading = `h${headingLevel}` as "h3" | "h4" | "h5";
   const searchParams = new URLSearchParams({ ...(guide.listingSearch.city ? { city: guide.listingSearch.city } : {}), ...(guide.listingSearch.query ? { q: guide.listingSearch.query } : {}) });
   const priceItems = (guide.priceBreakdown ?? guidePrices.map((price) => ({ label: price.title, value: guide[price.key] })))
@@ -38,7 +41,7 @@ export function GeographyGuideDetails({ guide, className = "", headingLevel = 3 
 
   return (
     <div className={className}>
-      {guide.reviewedAt && <p className="mb-4 text-xs text-muted-foreground">Repères locaux vérifiés le <time dateTime={guide.reviewedAt}>{formatReviewedAt(guide.reviewedAt)}</time> · Sources officielles citées ci-dessous.</p>}
+      {guide.reviewedAt && <p className="mb-4 text-xs text-muted-foreground">Repères locaux vérifiés le <time dateTime={guide.reviewedAt}>{formatReviewedAt(guide.reviewedAt, language)}</time> · Sources officielles citées ci-dessous.</p>}
       <div className="grid gap-x-6 gap-y-5 md:grid-cols-2">
         {guideFacts.map((fact) => (
           <section key={fact.key}>
@@ -79,16 +82,16 @@ export function GeographyGuideDetails({ guide, className = "", headingLevel = 3 
       </section>
 
       <section className="mt-6 border-t border-border pt-5" aria-label={`Projet immobilier : ${guide.name}`}>
-        <Heading className="text-sm font-semibold">Préparer votre projet {atLocation(guide.name)}</Heading>
+        <Heading className="text-sm font-semibold">{language === "en" ? `Plan your move in ${guide.name}` : `Préparer votre projet ${atLocation(guide.name)}`}</Heading>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
           Foch Immobilier vous accompagne depuis son agence du Havre, au 109 avenue Foch.
           {isHavreNeighborhood(guide) && <> Ce secteur appartient au <Link className="underline underline-offset-4" to="/immobilier/le-havre">Havre</Link>, en Seine-Maritime, en Normandie.</>}
         </p>
         <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-brand-strong">
-          <li><Link className="underline underline-offset-4" to={`/biens?${searchParams}&transaction=vente`}>Biens à acheter {atLocation(guide.name)}</Link></li>
-          <li><Link className="underline underline-offset-4" to={`/biens?${searchParams}&type=appartement`}>Appartements {atLocation(guide.name)}</Link></li>
-          <li><Link className="underline underline-offset-4" to={`/biens?${searchParams}&type=maison_villa`}>Maisons {atLocation(guide.name)}</Link></li>
-          <li><Link className="underline underline-offset-4" to={`/estimation?ville=${encodeURIComponent(guide.listingSearch.city ?? guide.name)}`}>Estimer votre bien {atLocation(guide.name)}</Link></li>
+          <li><Link className="underline underline-offset-4" to={`/biens?${searchParams}&transaction=vente`}>{language === "en" ? `Properties for sale in ${guide.name}` : `Biens à acheter ${atLocation(guide.name)}`}</Link></li>
+          <li><Link className="underline underline-offset-4" to={`/biens?${searchParams}&type=appartement`}>{language === "en" ? `Apartments in ${guide.name}` : `Appartements ${atLocation(guide.name)}`}</Link></li>
+          <li><Link className="underline underline-offset-4" to={`/biens?${searchParams}&type=maison_villa`}>{language === "en" ? `Houses in ${guide.name}` : `Maisons ${atLocation(guide.name)}`}</Link></li>
+          <li><Link className="underline underline-offset-4" to={`/estimation?ville=${encodeURIComponent(guide.listingSearch.city ?? guide.name)}`}>{language === "en" ? "Value your property" : `Estimer votre bien ${atLocation(guide.name)}`}</Link></li>
           <li><Link className="underline underline-offset-4" to="/vendre">Accompagnement pour vendre</Link></li>
           <li><Link className="underline underline-offset-4" to="/reglementation-immobiliere">Diagnostics et réglementation immobilière</Link></li>
           <li><Link className="underline underline-offset-4" to="/geographie">Patrimoine et quartiers du Havre</Link></li>
@@ -112,13 +115,15 @@ export function GeographyGuideDetails({ guide, className = "", headingLevel = 3 
 }
 
 export function ContextualText({ text }: { text: string }) {
+  const { language } = useSiteLanguage();
+  const localizedText = translateText(text, language);
   const linkPattern = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
   const nodes: React.ReactNode[] = [];
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
-  while ((match = linkPattern.exec(text)) !== null) {
-    if (match.index > lastIndex) nodes.push(text.slice(lastIndex, match.index));
+  while ((match = linkPattern.exec(localizedText)) !== null) {
+    if (match.index > lastIndex) nodes.push(localizedText.slice(lastIndex, match.index));
     nodes.push(
       <a key={`${match.index}-${match[1]}`} href={match[2]} target="_blank" rel="noopener noreferrer" className="font-medium text-brand-strong underline decoration-brand/50 underline-offset-4 hover:decoration-brand">
         {match[1]}
@@ -127,7 +132,7 @@ export function ContextualText({ text }: { text: string }) {
     lastIndex = linkPattern.lastIndex;
   }
 
-  if (nodes.length === 0) return text;
-  if (lastIndex < text.length) nodes.push(text.slice(lastIndex));
+  if (nodes.length === 0) return localizedText;
+  if (lastIndex < localizedText.length) nodes.push(localizedText.slice(lastIndex));
   return <>{nodes}</>;
 }

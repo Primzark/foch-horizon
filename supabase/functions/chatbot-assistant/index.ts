@@ -85,6 +85,7 @@ const actionRequestSchema = z.object({
 
 const payloadSchema = z.object({
   question: z.string().min(2).max(1200),
+  language: z.enum(["fr", "en"]).optional(),
   chatHistory: z
     .array(
       z.object({
@@ -105,11 +106,13 @@ const payloadSchema = z.object({
     .optional(),
 });
 
-const systemPrompt = `You are the assistant for Foch Immobilier in Le Havre, France.
-Use concise French.
-Focus on: properties for sale, neighborhoods (Perret, Saint-Francois, Saint-Vincent, Sanvic, Graville, Eure-Docks), services (achat, vente, estimation), and real-estate process (offre, compromis, notaire, acte).
+function buildAssistantSystemPrompt(language: "fr" | "en"): string {
+  return `You are the assistant for Foch Immobilier in Le Havre, France.
+${language === "en" ? "Respond in concise English." : "Use concise French."}
+Focus on: properties for sale, neighborhoods (Perret, Saint-Francois, Saint-Vincent, Sanvic, Graville, Eure-Docks), services (buying, selling, valuations), and the property process (offers, preliminary agreements, notaries, completion).
 If no perfect property match, invite the user to leave email + criteria so agency can follow up.
 Do not invent exact legal claims. Keep answers practical.`;
+}
 
 interface OpenAIEmbeddingResponse {
   data?: Array<{ embedding?: number[] }>;
@@ -1853,9 +1856,11 @@ async function generateAssistantAnswer(
   question: string,
   normalizedHistory: Array<{ role: "user" | "assistant"; content: string }>,
   ragContext: RAGContextResult,
+  language: "fr" | "en",
 ): Promise<AssistantGenerationResult | null> {
   const providerConfig = resolveGenerationProvider();
   if (!providerConfig) return null;
+  const systemPrompt = buildAssistantSystemPrompt(language);
 
   if (providerConfig.provider === "gemini") {
     const model = Deno.env.get("GEMINI_MODEL") ?? "gemini-2.5-flash-lite";
@@ -2490,6 +2495,7 @@ function plannerDecisionToActionRequest(decision: Extract<PlannerDecision, { dec
 
 function buildGeminiPlannerPrompt(input: {
   question: string;
+  language: "fr" | "en";
   chatHistory?: Array<{ role: "user" | "assistant"; content: string }>;
   conversationState?: ToolConversationState;
   includeHistoryTurns: number;
@@ -2604,7 +2610,7 @@ function buildGeminiPlannerPrompt(input: {
     "If request is vague or key criteria are missing, ask ONE clarification question instead of guessing.",
     "Never produce side effects. Never claim a tool result.",
     "Prefer clarify for ambiguous investment requests without city or transaction.",
-    "Use French for clarification.question and options.",
+    input.language === "en" ? "Use English for clarification.question and options." : "Use French for clarification.question and options.",
     v2Enabled
       ? "Use exact tool names from the allowed tools and keep steps minimal."
       : "Use exact tool names: search_properties, aggregate_properties, compare_properties, prepare_handoff.",
@@ -2622,12 +2628,14 @@ async function generateGeminiPlannerDecision(
   config: GeminiPlannerConfig,
   input: {
     question: string;
+    language: "fr" | "en";
     chatHistory?: Array<{ role: "user" | "assistant"; content: string }>;
     conversationState?: ToolConversationState;
   },
 ): Promise<{ decision: PlannerDecision | null; failureCode?: string }> {
   const prompt = buildGeminiPlannerPrompt({
     question: input.question,
+    language: input.language,
     chatHistory: input.chatHistory,
     conversationState: input.conversationState,
     includeHistoryTurns: config.includeHistoryTurns,
@@ -2694,7 +2702,27 @@ async function generateGeminiPlannerDecision(
   }
 }
 
-function buildFallback(question: string) {
+function buildFallback(question: string, language: "fr" | "en" = "fr") {
+  if (language === "en") {
+    const q = question.toLowerCase();
+    if (/compromis|notary|deed|signature|agreement/.test(q)) {
+      return {
+        answer: "A typical sale involves an accepted offer, financing checks, a preliminary agreement, the applicable cooling-off period and conditions, then completion before a notary. The agency can guide you through the process.",
+        suggestedPrompts: ["How long is it between the preliminary agreement and completion?", "What documents do I need to sell?", "Can you help me with financing?"],
+      };
+    }
+    if (/service|sell|sale|valuation|estimate/.test(q)) {
+      return {
+        answer: "Foch Immobilier helps clients buy and sell property and arrange valuations in Le Havre.",
+        suggestedPrompts: ["I’d like a valuation for my flat", "What selling services do you offer?", "I’m looking to buy in Le Havre"],
+      };
+    }
+    return {
+      answer: "I can help you explore available properties, Le Havre neighbourhoods and the steps involved in buying or selling. If you cannot find the right property, leave your email and search criteria so the agency can get in touch.",
+      suggestedPrompts: ["I’m looking for a flat to buy in the Perret neighbourhood", "Which Le Havre neighbourhood should I choose?", "How does a preliminary sales agreement work?"],
+    };
+  }
+
   const q = question.toLowerCase();
 
   if (/compromis|notaire|acte|signature/.test(q)) {
@@ -2732,25 +2760,25 @@ function buildFallback(question: string) {
   };
 }
 
-function buildRagFallbackWithoutGeneration(ragContext: RAGContextResult): { answer: string; suggestedPrompts: string[] } | null {
+function buildRagFallbackWithoutGeneration(ragContext: RAGContextResult, language: "fr" | "en" = "fr"): { answer: string; suggestedPrompts: string[] } | null {
   if (!ragContext.contextBlock || ragContext.citations.length === 0) return null;
 
   const siteCitation = ragContext.citations.find((citation) => citation.kind !== "web") ?? ragContext.citations[0];
   const citationLabel = siteCitation?.path || "la page demandée";
   const prompts = [
-    ...buildSuggestedPromptsFromCitations(ragContext.citations),
-    "Résumer les points clés",
-    "Ouvrir la page source",
+    ...buildSuggestedPromptsFromCitations(ragContext.citations, language),
+    ...(language === "en" ? ["Summarise the key points", "Open the source page"] : ["Résumer les points clés", "Ouvrir la page source"]),
   ].slice(0, 6);
 
   return {
-    answer:
-      `J’ai retrouvé des informations pertinentes sur ${citationLabel}. Souhaitez-vous un résumé rapide ou l’ouverture de la page ?`,
+    answer: language === "en"
+      ? `I found relevant information on ${citationLabel}. Would you like a short summary or to open the page?`
+      : `J’ai retrouvé des informations pertinentes sur ${citationLabel}. Souhaitez-vous un résumé rapide ou l’ouverture de la page ?`,
     suggestedPrompts: prompts,
   };
 }
 
-function buildSuggestedPromptsFromCitations(citations: RAGCitation[]): string[] {
+function buildSuggestedPromptsFromCitations(citations: RAGCitation[], language: "fr" | "en" = "fr"): string[] {
   const prompts: string[] = [];
   const seen = new Set<string>();
 
@@ -2758,7 +2786,7 @@ function buildSuggestedPromptsFromCitations(citations: RAGCitation[]): string[] 
     if (prompts.length >= 3) break;
     if (citation.kind === "web") continue;
     if (!citation.path.startsWith("/")) continue;
-    const prompt = `Ouvrir ${citation.path}`;
+    const prompt = `${language === "en" ? "Open" : "Ouvrir"} ${citation.path}`;
     if (seen.has(prompt)) continue;
     seen.add(prompt);
     prompts.push(prompt);
@@ -4519,6 +4547,7 @@ async function getPropertyAnalysisCards(
 
 async function orchestrateToolRequest(input: {
   question: string;
+  language: "fr" | "en";
   actionRequest?: ToolActionRequest;
   conversationState?: ToolConversationState;
   chatHistory?: Array<{ role: "user" | "assistant"; content: string }>;
@@ -5246,6 +5275,7 @@ async function orchestrateToolRequest(input: {
     } else {
       const plannerResult = await generateGeminiPlannerDecision(plannerConfig, {
         question: input.question,
+        language: input.language,
         chatHistory: input.chatHistory,
         conversationState: mergedConversationState,
       });
@@ -5455,6 +5485,7 @@ Deno.serve(async (request) => {
     const requestId = createRequestId();
 
     if (isRentalQuestion(payload.question)) {
+      const english = payload.language === "en";
       return secureJsonResponse(request, {
         source: "fallback",
         edgeProvider: "fallback",
@@ -5462,8 +5493,12 @@ Deno.serve(async (request) => {
         requestId,
         ragUsed: false,
         agentMode: "fallback",
-        answer: "L’agence Foch Immobilier accompagne les projets d’achat, de vente et d’estimation immobilière.",
-        suggestedPrompts: ["Voir les biens à vendre", "Je veux vendre mon bien", "Je veux faire estimer mon bien"],
+        answer: english
+          ? "Foch Immobilier helps clients buy and sell property and arrange valuations."
+          : "L’agence Foch Immobilier accompagne les projets d’achat, de vente et d’estimation immobilière.",
+        suggestedPrompts: english
+          ? ["View properties for sale", "I want to sell my property", "I’d like a valuation"]
+          : ["Voir les biens à vendre", "Je veux vendre mon bien", "Je veux faire estimer mon bien"],
         streamSupported: parseBooleanEnv("CHATBOT_STREAM_ENABLED", false),
       });
     }
@@ -5472,6 +5507,7 @@ Deno.serve(async (request) => {
     try {
       toolResult = await orchestrateToolRequest({
         question: payload.question,
+        language: payload.language ?? "fr",
         actionRequest: payload.actionRequest as ToolActionRequest | undefined,
         conversationState: payload.conversationState as ToolConversationState | undefined,
         chatHistory: payload.chatHistory,
@@ -5519,7 +5555,7 @@ Deno.serve(async (request) => {
     }
 
     if (!resolveGenerationProvider()) {
-      const ragFallback = buildRagFallbackWithoutGeneration(ragContext);
+      const ragFallback = buildRagFallbackWithoutGeneration(ragContext, payload.language ?? "fr");
       return secureJsonResponse(request, {
         source: "fallback",
         edgeProvider: "fallback",
@@ -5532,15 +5568,15 @@ Deno.serve(async (request) => {
         pageContextMode: ragContext.pageContextMeta?.fetchMode,
         pageContextCacheHit: ragContext.pageContextMeta?.cacheHit,
         streamSupported: parseBooleanEnv("CHATBOT_STREAM_ENABLED", false),
-        ...(ragFallback ?? buildFallback(payload.question)),
+        ...(ragFallback ?? buildFallback(payload.question, payload.language ?? "fr")),
       });
     }
 
     const normalizedHistory = normalizeHistoryForModel(payload.chatHistory, payload.question);
-    const generationResult = await generateAssistantAnswer(payload.question, normalizedHistory, ragContext);
+    const generationResult = await generateAssistantAnswer(payload.question, normalizedHistory, ragContext, payload.language ?? "fr");
 
     if (!generationResult) {
-      const ragFallback = buildRagFallbackWithoutGeneration(ragContext);
+      const ragFallback = buildRagFallbackWithoutGeneration(ragContext, payload.language ?? "fr");
       return secureJsonResponse(request, {
         source: "fallback",
         edgeProvider: "fallback",
@@ -5553,10 +5589,10 @@ Deno.serve(async (request) => {
         pageContextMode: ragContext.pageContextMeta?.fetchMode,
         pageContextCacheHit: ragContext.pageContextMeta?.cacheHit,
         streamSupported: parseBooleanEnv("CHATBOT_STREAM_ENABLED", false),
-        ...(ragFallback ?? buildFallback(payload.question)),
+        ...(ragFallback ?? buildFallback(payload.question, payload.language ?? "fr")),
       });
     }
-    const citationPrompts = buildSuggestedPromptsFromCitations(ragContext.citations);
+    const citationPrompts = buildSuggestedPromptsFromCitations(ragContext.citations, payload.language ?? "fr");
     const mergedCitations = mergeChatbotResponseCitations(ragContext.citations, generationResult.webSearch?.citations ?? []);
 
     const ragConversationPatch: Partial<ToolConversationState> | undefined = undefined;

@@ -4,6 +4,7 @@ import { consumeRequestLimit, getSiteCorsHeaders, isAllowedSiteOrigin, secureJso
 
 const streamPayloadSchema = z.object({
   question: z.string().min(2).max(1200),
+  language: z.enum(["fr", "en"]).optional(),
   chatHistory: z
     .array(
       z.object({

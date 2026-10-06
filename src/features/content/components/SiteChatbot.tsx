@@ -33,6 +33,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { SearchThinkingState } from "@/features/content/components/SearchThinkingState";
 import { createPropertyModalRouteState } from "@/features/listings/navigation/propertyModalNavigation";
+import { useSiteLanguage } from "@/lib/i18n/LanguageProvider";
 
 type ChatRole = "assistant" | "user";
 
@@ -948,6 +949,7 @@ function readStoredMessages(): ChatMessage[] {
 }
 
 export function SiteChatbot({ initiallyOpen = false }: { initiallyOpen?: boolean } = {}) {
+  const { language } = useSiteLanguage();
   const location = useLocation();
   const routeIdentity = `${location.pathname}${location.search}`;
   const previousRouteIdentity = useRef(routeIdentity);
@@ -1627,6 +1629,7 @@ export function SiteChatbot({ initiallyOpen = false }: { initiallyOpen?: boolean
             const reply = await askAgencyChatbotStream(
               {
                 question: text,
+                language,
                 chatHistory,
                 conversationState,
                 actionRequest: params.actionRequest,
@@ -1658,8 +1661,9 @@ export function SiteChatbot({ initiallyOpen = false }: { initiallyOpen?: boolean
             );
             return reply;
           })()
-        : askAgencyChatbot({
+          : askAgencyChatbot({
             question: text,
+            language,
             chatHistory,
             conversationState,
             actionRequest: params.actionRequest,
