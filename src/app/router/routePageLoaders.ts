@@ -4,6 +4,7 @@ export const routePageLoaders = {
   home: () => import("@/features/content/pages/HomePage"),
   listings: () => import("@/features/listings/pages/ListingsIndexPage"),
   listingDetail: () => import("@/features/listings/pages/ListingDetailPage"),
+  propertyCompare: () => import("@/features/listings/pages/PropertyComparePage"),
   about: () => import("@/features/content/pages/AboutPageV2"),
   city: () => import("@/features/cities/pages/CityHubPage"),
   contact: () => import("@/features/content/pages/ContactPageV2"),
@@ -37,6 +38,7 @@ export function getRoutePageKey(pathname: string): RoutePageKey {
     case "/biens-immobiliers":
     case "/buy":
     case "/rent": return "listings";
+    case "/biens/comparer": return "propertyCompare";
     case "/apropos": return "about";
     case "/contact": return "contact";
     case "/honoraires":

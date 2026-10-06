@@ -7,6 +7,7 @@ import { AppHeader } from "@/layout/AppHeader";
 import { SearchDrawer } from "@/features/listings/components/SearchDrawer";
 import { BackToTopButton } from "@/components/ui/BackToTopButton";
 import { SiteChatbotLoader } from "@/features/content/components/SiteChatbotLoader";
+import { PropertyCompareTray } from "@/features/listings/components/PropertyCompareTray";
 
 function RouteReadyMarker({
   locationKey,
@@ -87,6 +88,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
       </main>
       <AppFooter hidden={!isRouteReady} />
       <SearchDrawer />
+      <PropertyCompareTray />
       <BackToTopButton />
       <SiteChatbotLoader />
     </div>

@@ -19,6 +19,7 @@ const LegacyPropertySlugRedirect = lazy(routePageLoaders.legacyProperty);
 const HomePage = lazy(routePageLoaders.home);
 const ListingsIndexPage = lazy(routePageLoaders.listings);
 const ListingDetailPage = lazy(routePageLoaders.listingDetail);
+const PropertyComparePage = lazy(routePageLoaders.propertyCompare);
 const AboutPageV2 = lazy(routePageLoaders.about);
 const CityHubPage = lazy(routePageLoaders.city);
 const ContactPageV2 = lazy(routePageLoaders.contact);
@@ -326,6 +327,7 @@ function AppRoutes() {
           <Route element={<LayoutShell />}>
             <Route path="/" element={<HomePage />} />
             <Route path="/biens" element={<ListingsIndexPage />} />
+            <Route path="/biens/comparer" element={<PropertyComparePage />} />
             <Route path="/biens/:idSlug/*" element={<ListingDetailPage />} />
             <Route path="/annonce/:id" element={<LegacyAnnonceRedirect />} />
             <Route path="/biens-immobiliers" element={<Navigate to="/biens" replace />} />

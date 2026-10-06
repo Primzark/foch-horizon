@@ -16,6 +16,7 @@ import { ContextAwareParallax } from "@/components/visuals/ContextAwareParallax"
 import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
 import { getMotionDirectorProfile } from "@/lib/visuals/motionDirector";
 import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
+import { PropertyCompareToggle } from "@/features/listings/components/PropertyCompareToggle";
 
 interface ListingCardProps {
   item: PropertySearchItem;
@@ -136,22 +137,27 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, eagerIma
 
             <div className="mt-4 flex items-center justify-between">
               <p className="font-display text-3xl font-semibold tracking-tight text-brand-strong">{formatPrice(item.priceAmount, item.transaction)}</p>
-              <button
-                type="button"
-                className={cn(
-                  "inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs transition-colors",
-                  isFavorite
-                    ? "border-brand-border bg-brand-soft text-brand-strong"
-                    : "border-border text-foreground hover:border-brand-border hover:bg-brand-soft/60",
-                )}
-                onClick={(event) => {
-                  event.preventDefault();
-                  toggleFavorite(item.id);
-                }}
-              >
-                <Heart className={cn("h-4 w-4", isFavorite && "fill-brand text-brand")} />
-                Sauvegarder
-              </button>
+              <div className="flex shrink-0 items-center gap-1.5">
+                {item.status === "active" && item.transaction === "vente" && <PropertyCompareToggle propertyId={item.id} className="px-2.5" />}
+                <button
+                  type="button"
+                  className={cn(
+                    "inline-flex h-9 w-9 items-center justify-center rounded-full border transition-colors sm:h-auto sm:w-auto sm:gap-1 sm:px-3 sm:py-1",
+                    isFavorite
+                      ? "border-brand-border bg-brand-soft text-brand-strong"
+                      : "border-border text-foreground hover:border-brand-border hover:bg-brand-soft/60",
+                  )}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    toggleFavorite(item.id);
+                  }}
+                  aria-label={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+                >
+                  <Heart className={cn("h-4 w-4", isFavorite && "fill-brand text-brand")} />
+                  <span className="hidden sm:inline">Sauvegarder</span>
+                </button>
+              </div>
             </div>
           </div>
         </PropertyPreviewLink>
@@ -263,7 +269,10 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, eagerIma
           </span>
           {item.dpeLabel && <DpeBadge label={item.dpeLabel} size="sm" />}
         </div>
-        <p className="font-display text-3xl font-semibold tracking-tight text-brand-strong">{formatPrice(item.priceAmount, item.transaction)}</p>
+        <div className="flex items-center justify-between gap-2">
+          <p className="font-display text-2xl font-semibold tracking-tight text-brand-strong sm:text-3xl">{formatPrice(item.priceAmount, item.transaction)}</p>
+          {item.status === "active" && item.transaction === "vente" && <PropertyCompareToggle propertyId={item.id} />}
+        </div>
         <meta itemProp="identifier" content={String(item.id)} />
         <meta itemProp="floorSize" content={String(item.surfaceM2)} />
         <div itemProp="offers" itemScope itemType="https://schema.org/Offer">

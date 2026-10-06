@@ -10,6 +10,7 @@ import { getPropertyById, getSimilarProperties } from "@/features/listings/api/p
 import { ListingGallery } from "@/features/listings/components/ListingGallery";
 import { PropertyPreviewLink } from "@/features/listings/components/PropertyPreviewLink";
 import { ListingShareButton } from "@/features/listings/components/ListingShareButton";
+import { PropertyCompareToggle } from "@/features/listings/components/PropertyCompareToggle";
 import DpeBadge from "@/components/property/DpeBadge";
 import { agentById } from "@/features/listings/data/agents";
 import { geographyGuideOptions } from "@/features/content/data/geographyGuideOptions";
@@ -457,6 +458,9 @@ export default function ListingDetailPage({
             <div className="w-full text-left sm:ml-auto sm:w-auto sm:text-right">
               <p className="font-display text-5xl leading-tight tracking-tight text-brand-strong sm:text-6xl">{formatPrice(property.priceAmount, property.transactionType)}</p>
               <div className="mt-3 flex flex-wrap items-center gap-2 sm:justify-end">
+                {property.status === "active" && property.transactionType === "vente" && (
+                  <PropertyCompareToggle propertyId={property.id} />
+                )}
                 <Button
                   variant="outline"
                   size="sm"
