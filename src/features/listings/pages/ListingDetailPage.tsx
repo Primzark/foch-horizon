@@ -27,6 +27,7 @@ import {
 import { useFavoritesStore } from "@/features/favorites/useFavoritesStore";
 import { getSiteUrl, useSeo } from "@/lib/seo/useSeo";
 import { trackEvent } from "@/lib/analytics/events";
+import { useUiStore } from "@/lib/state/useUiStore";
 import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
 import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
 import { buildSearchParams } from "@/features/listings/utils/query";
@@ -173,8 +174,10 @@ export default function ListingDetailPage({
   const contentRef = useRef<HTMLDivElement | null>(null);
   const summaryRef = useRef<HTMLDivElement | null>(null);
   const contactRef = useRef<HTMLDivElement | null>(null);
+  const trackedPropertyViewId = useRef<number | null>(null);
   const [summaryVisible, setSummaryVisible] = useState(true);
   const [contactVisible, setContactVisible] = useState(false);
+  const cookieConsent = useUiStore((state) => state.cookieConsent);
   const location = useLocation();
   const comparisonOrigin = (location.state as { comparisonOrigin?: unknown } | null)?.comparisonOrigin === true;
   const params = useParams();
@@ -219,6 +222,14 @@ export default function ListingDetailPage({
   );
 
   const property = propertyQuery.data;
+  useEffect(() => {
+    if (cookieConsent !== "accepted" || !property || property.status !== "active" || propertyQuery.isPlaceholderData) return;
+    if (trackedPropertyViewId.current === property.id) return;
+
+    trackedPropertyViewId.current = property.id;
+    trackEvent("property_view", { property_id: property.id });
+  }, [cookieConsent, property, propertyQuery.isPlaceholderData]);
+
   const trackComparisonContactClick = (method: "sticky_contact" | "phone" | "email") => {
     if (!comparisonOrigin || !property) return;
     trackEvent("comparison_contact_click", { property_id: property.id, method });

@@ -116,7 +116,11 @@ export function LeadForm({
             : (formState.financingStatus as "cash" | "mortgage_in_progress" | "needs_financing"),
       });
 
-      trackEvent("lead_submitted", { source, propertyId, cityId });
+      trackEvent("lead_submitted", {
+        source,
+        property_id: propertyId,
+        city_id: cityId,
+      });
       toast.success("Votre demande a bien été transmise.");
       setSubmitted(true);
       window.requestAnimationFrame(() => successRef.current?.focus());

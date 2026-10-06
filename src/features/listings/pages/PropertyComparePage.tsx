@@ -124,7 +124,11 @@ export default function PropertyComparePage() {
   useEffect(() => {
     if (hasTrackedOpen.current) return;
     hasTrackedOpen.current = true;
-    trackEvent("comparison_open", { selected_count: ids.length, source: "comparison_page" });
+    trackEvent("comparison_open", {
+      selected_count: ids.length,
+      property_ids: ids.join(","),
+      source: "comparison_page",
+    });
   }, [ids.length]);
 
   const handleRemove = (propertyId: number, placement: string) => {
@@ -208,7 +212,11 @@ export default function PropertyComparePage() {
               checked={showOnlyDifferences}
               onCheckedChange={(enabled) => {
                 setShowOnlyDifferences(enabled);
-                trackEvent("comparison_differences_toggle", { enabled, selected_count: properties.length });
+                trackEvent("comparison_differences_toggle", {
+                  enabled,
+                  selected_count: properties.length,
+                  property_ids: properties.map((property) => property.id).join(","),
+                });
               }}
             />
           </label>

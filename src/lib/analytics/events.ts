@@ -3,6 +3,7 @@ import { useUiStore } from "@/lib/state/useUiStore";
 export type AnalyticsEventName =
   | "search_opened"
   | "filter_applied"
+  | "property_view"
   | "listing_viewed"
   | "gallery_opened"
   | "lead_submitted"
