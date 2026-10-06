@@ -4,10 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { cities } from "@/features/cities/data/cities";
+import { geographyGuideOptions } from "@/features/content/data/geographyGuideOptions";
 import { featureOptions, propertyTypeOptions } from "@/features/listings/data/options";
 import { parseReferenceFromQuery, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
 import { toSearchItem } from "@/features/listings/utils/mappers";
@@ -23,6 +23,19 @@ const defaultFilters: PropertySearchParams = {
   pageSize: 12,
   sort: "newest",
 };
+
+const havreAreas = geographyGuideOptions.filter((area) => area.city === "le-havre");
+const otherAreas = geographyGuideOptions.filter((area) => area.city !== "le-havre");
+
+function getSelectedArea(filters: Pick<PropertySearchParams, "city" | "q">) {
+  const exactMatch = geographyGuideOptions.find(
+    (area) => area.city === filters.city && area.query === filters.q,
+  );
+  if (exactMatch) return exactMatch;
+
+  // Keep a city selected when the keyword filter is being used independently.
+  return geographyGuideOptions.find((area) => area.city === filters.city && !area.query);
+}
 
 function normalizeFilters(filters: PropertySearchParams): PropertySearchParams {
   return {
@@ -87,6 +100,7 @@ export function SearchDrawer() {
   }, [draft, isMobile, pushFilters, searchDrawerOpen]);
 
   const selectedFeatures = useMemo(() => new Set(draft.features ?? []), [draft.features]);
+  const selectedArea = getSelectedArea(draft);
 
   return (
     <Sheet open={searchDrawerOpen} onOpenChange={setSearchDrawerOpen}>
@@ -97,7 +111,7 @@ export function SearchDrawer() {
         <SheetHeader className="pb-4">
           <SheetTitle>Rechercher un bien</SheetTitle>
           <SheetDescription>
-            Filtrez par type, ville et critères avancés. L'URL est mise à jour pour des liens partageables.
+            Filtrez par type, ville, secteur et critères avancés. L'URL est mise à jour pour des liens partageables.
           </SheetDescription>
         </SheetHeader>
 
@@ -123,21 +137,55 @@ export function SearchDrawer() {
           </div>
 
           <div>
-            <Label id="listing-search-city-label">Ville</Label>
+            <Label id="listing-search-city-label">Ville ou secteur</Label>
             <Select
-              value={draft.city ?? "all"}
-              onValueChange={(value) => setDraft((current) => ({ ...current, city: value === "all" ? undefined : value }))}
+              value={selectedArea?.id ?? "all"}
+              onValueChange={(value) => {
+                if (value === "all") {
+                  setDraft((current) => {
+                    const hasAreaQuery = geographyGuideOptions.some((area) => area.query === current.q);
+                    return {
+                      ...current,
+                      city: undefined,
+                      q: hasAreaQuery ? undefined : current.q,
+                    };
+                  });
+                  return;
+                }
+
+                const area = geographyGuideOptions.find((option) => option.id === value);
+                if (!area) return;
+                setDraft((current) => {
+                  const hasAreaQuery = geographyGuideOptions.some((option) => option.query === current.q);
+                  return {
+                    ...current,
+                    city: area.city,
+                    q: area.query ?? (hasAreaQuery ? undefined : current.q),
+                  };
+                });
+              }}
             >
               <SelectTrigger aria-labelledby="listing-search-city-label">
-                <SelectValue placeholder="Toutes les villes" />
+                <SelectValue placeholder="Toutes les villes et tous les secteurs" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Toutes les villes</SelectItem>
-                {cities.map((city) => (
-                  <SelectItem key={city.id} value={city.slug}>
-                    {city.name}
-                  </SelectItem>
-                ))}
+                <SelectItem value="all">Toutes les villes et tous les secteurs</SelectItem>
+                <SelectGroup>
+                  <SelectLabel>Le Havre et ses quartiers</SelectLabel>
+                  {havreAreas.map((area) => (
+                    <SelectItem key={area.id} value={area.id}>
+                      {area.name}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+                <SelectGroup>
+                  <SelectLabel>Autres communes et secteurs</SelectLabel>
+                  {otherAreas.map((area) => (
+                    <SelectItem key={area.id} value={area.id}>
+                      {area.name}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
               </SelectContent>
             </Select>
           </div>

@@ -90,6 +90,11 @@ export default function ListingsIndexPage() {
     setSearchParams(buildContextualSearchParams(next));
   };
 
+  const clearAreaFilter = () => {
+    const next: PropertySearchParams = { ...filters, city: undefined, q: undefined, page: 1 };
+    setSearchParams(buildContextualSearchParams(next));
+  };
+
   const clearAllCriteria = () => {
     setSearchParams(
       buildContextualSearchParams({
@@ -190,6 +195,7 @@ export default function ListingsIndexPage() {
       <ActiveFiltersChips
         filters={filters}
         onClear={clearFilter}
+        onClearArea={clearAreaFilter}
         onClearAll={() => setSearchParams(buildContextualSearchParams(defaultParams))}
       />
 

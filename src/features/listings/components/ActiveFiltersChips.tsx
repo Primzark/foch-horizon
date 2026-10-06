@@ -1,17 +1,26 @@
 import type { PropertySearchParams } from "@/types/api";
+import { geographyGuideOptions } from "@/features/content/data/geographyGuideOptions";
 
 interface ActiveFiltersChipsProps {
   filters: PropertySearchParams;
   onClear: (key: keyof PropertySearchParams) => void;
+  onClearArea: () => void;
   onClearAll: () => void;
 }
 
-export function ActiveFiltersChips({ filters, onClear, onClearAll }: ActiveFiltersChipsProps) {
-  const entries: Array<{ key: keyof PropertySearchParams; label: string }> = [];
+export function ActiveFiltersChips({ filters, onClear, onClearArea, onClearAll }: ActiveFiltersChipsProps) {
+  const entries: Array<{ key: keyof PropertySearchParams | "area"; label: string }> = [];
+  const selectedArea = geographyGuideOptions.find(
+    (area) => area.city === filters.city && area.query === filters.q,
+  );
 
+  if (selectedArea) {
+    entries.push({ key: "area", label: `Ville / secteur : ${selectedArea.name}` });
+  } else {
+    if (filters.city) entries.push({ key: "city", label: `Ville: ${filters.city}` });
+    if (filters.q) entries.push({ key: "q", label: `Mot-clé: ${filters.q}` });
+  }
   if (filters.type) entries.push({ key: "type", label: `Type: ${filters.type}` });
-  if (filters.city) entries.push({ key: "city", label: `Ville: ${filters.city}` });
-  if (filters.q) entries.push({ key: "q", label: `Mot-clé: ${filters.q}` });
   if (filters.bedroomsMin != null) entries.push({ key: "bedroomsMin", label: `Chambres >= ${filters.bedroomsMin}` });
   if (filters.bathroomsMin != null) entries.push({ key: "bathroomsMin", label: `SDB >= ${filters.bathroomsMin}` });
   if (filters.garagesMin != null) entries.push({ key: "garagesMin", label: `Garages >= ${filters.garagesMin}` });
@@ -31,7 +40,7 @@ export function ActiveFiltersChips({ filters, onClear, onClearAll }: ActiveFilte
           key={`${entry.key}-${entry.label}`}
           type="button"
           className="inline-flex items-center rounded-full border border-border px-3 py-1 text-xs"
-          onClick={() => onClear(entry.key)}
+          onClick={() => entry.key === "area" ? onClearArea() : onClear(entry.key)}
         >
           {entry.label} ×
         </button>
