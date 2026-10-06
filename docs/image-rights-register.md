@@ -12,7 +12,7 @@ Les photos issues de Wikimedia Commons sont identifiées par leur titre, auteur 
 
 | Secteur | Photographie | Auteur Commons | Licence |
 | --- | --- | --- | --- |
-| Halles Centrales | [Le Havre Marché couvert R01.jpg](https://commons.wikimedia.org/wiki/File:Le_Havre_March%C3%A9_couvert_R01.jpg) | Marc Ryckaert | CC BY-SA 4.0 |
+| Halles Centrales | [Rue Victor Hugo du Havre (juillet 2024).JPG](https://commons.wikimedia.org/wiki/File:Rue_Victor_Hugo_du_Havre_(juillet_2024).JPG) | Florian Pépellin | CC BY-SA 4.0 |
 | Gobelins | [Rue Georges Braque le Havre 76600 - panoramio.jpg](https://commons.wikimedia.org/wiki/File:Rue_Georges_Braque_le_Havre_76600_-_panoramio.jpg) | touzainphilippe | CC BY 3.0 |
 | Gonfreville-l’Orcher | [Le château d'Orcher. Façade vue de la vallée de la Seine.jpg](https://commons.wikimedia.org/wiki/File:Le_ch%C3%A2teau_d%27Orcher._Fa%C3%A7ade_vue_de_la_vall%C3%A9e_de_la_Seine.jpg) | VVVCFFrance | CC0 1.0 |
 | Saint-Romain-de-Colbosc | [Saint-Romain-de-Colbosc - halle aux blés.JPG](https://commons.wikimedia.org/wiki/File:Saint-Romain-de-Colbosc_-_halle_aux_bl%C3%A9s.JPG) | Pymouss | CC BY-SA 3.0 |

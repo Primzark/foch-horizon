@@ -77,7 +77,7 @@ export const geographyPhotoCredits = {
   perret: commonsZeroCredit,
   saintFrancois: commonsCredit("Philippe Alès", "Le Havre (France), quarter Saint-François and Bassin du Roy.JPG", "3.0"),
   saintVincent: commonsCredit("Philippe Alès", "Place Saint-Vincent (France).jpg", "4.0"),
-  hallesCentrales: commonsCredit("Marc Ryckaert", "Le Havre Marché couvert R01.jpg", "4.0"),
+  hallesCentrales: commonsCredit("Florian Pépellin", "Rue Victor Hugo du Havre (juillet 2024).JPG", "4.0"),
   gobelins: commonsByCredit("touzainphilippe", "Rue Georges Braque le Havre 76600 - panoramio.jpg", "3.0"),
   gonfreville: orcherCommonsZeroCredit,
   saintRomain: commonsCredit("Pymouss", "Saint-Romain-de-Colbosc - halle aux blés.JPG", "3.0"),
@@ -525,7 +525,7 @@ function additionalGuide(input: AdditionalGuideInput): GeographyGuide {
 const additionalGeographyGuides: GeographyGuide[] = [
   additionalGuide({
     id: "halles-centrales", reviewedAt: "2026-10-06", name: "Halles Centrales", pageTitle: "Immobilier aux Halles Centrales au Havre",
-    heroImage: { src: "/images/geography/halles-centrales.webp", alt: "L’allée commerçante et la charpente en brique des Halles Centrales du Havre", credit: geographyPhotoCredits.hallesCentrales, objectPosition: "center 48%" },
+    heroImage: { src: "/images/geography/halles-centrales.webp", alt: "Rue Victor Hugo, rue piétonne du centre-ville du Havre, à proximité des Halles Centrales", credit: geographyPhotoCredits.hallesCentrales, objectPosition: "center 58%" },
     listingSearch: { city: "le-havre", query: "Halles" },
     subtitle: "Un secteur commerçant du centre reconstruit, autour du marché couvert et près du Volcan",
     averagePrice: "", area: "Le Havre · centre reconstruit · secteur des Halles Centrales",
