@@ -102,7 +102,7 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
     });
     L.tileLayer(TILE_URL, {
       maxZoom: 19,
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap contributors</a>',
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">Contributeurs OpenStreetMap</a>',
     }).addTo(map);
     const markerLayer = L.layerGroup().addTo(map);
     mapRef.current = map;

@@ -3417,21 +3417,21 @@ export function SiteChatbot({ initiallyOpen = false }: { initiallyOpen?: boolean
               </form>
 
               <div className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[10px] leading-4 text-muted-foreground">
-                <span>AI can make mistakes, so double-check it.</span>
+                <span>L’IA peut se tromper. Vérifiez les informations importantes.</span>
                 <a
-                  href="https://support.google.com/gemini/answer/13594961?hl=en"
+                  href="https://support.google.com/gemini/answer/13594961?hl=fr"
                   target="_blank"
                   rel="noreferrer"
                   className="underline underline-offset-2 hover:text-foreground"
                 >
-                  Learn more
+                  En savoir plus
                 </a>
                 <span aria-hidden="true" className="text-border">
                   •
                 </span>
                 <span className="inline-flex items-center gap-1 font-medium text-foreground/80">
                   <GeminiLogo />
-                  Made with Gemini
+                  Propulsé par Gemini
                 </span>
               </div>
             </div>
