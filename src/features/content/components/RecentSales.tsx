@@ -44,7 +44,7 @@ export function RecentSales({ compact = false }: { compact?: boolean }) {
                 Nos dernières ventes
               </h2>
             </div>
-            {compact && <Link to="/nos-dernieres-ventes" className="inline-flex items-center gap-2 text-sm hover:underline">Voir toutes les ventes <ArrowRight className="h-4 w-4" /></Link>}
+            {compact && <Link to="/nos-dernieres-ventes" className="inline-flex items-center gap-2 text-sm hover:underline">Nos dernières ventes <ArrowRight className="h-4 w-4" /></Link>}
           </div>
           {query.isLoading && (
             <SearchThinkingState
