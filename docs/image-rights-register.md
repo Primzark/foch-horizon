@@ -8,7 +8,7 @@ Les photos issues de Wikimedia Commons sont identifiées par leur titre, auteur 
 
 - La bannière d’accueil utilise la photographie de Martpan représentant le tableau *L’Estacade et la Plage du Havre* de Raoul Dufy, publiée sous CC BY-SA 4.0. Le crédit est visible sur la bannière; le partage social utilise une photo d’agence distincte.
 - Les pages géographiques utilisent les photos Wikimedia dont les notices et licences sont enregistrées dans `src/features/content/data/geographyGuides.ts`. Les crédits apparaissent sur les bannières et sous les photos de la page Géographie.
-- Le 6 octobre 2026, les bannières des 16 secteurs ci-dessous ont été remplacées par des photographies localement pertinentes. Chaque fichier est redimensionné et converti en WebP; les bannières les recadrent selon l’écran.
+- Les bannières des 19 secteurs ci-dessous utilisent des photographies localement pertinentes. Chaque fichier est redimensionné et converti en WebP; les bannières les recadrent selon l’écran.
 
 | Secteur | Photographie | Auteur Commons | Licence |
 | --- | --- | --- | --- |
@@ -28,6 +28,9 @@ Les photos issues de Wikimedia Commons sont identifiées par leur titre, auteur 
 | Rogerville | [Église de Rogerville (Seine-Maritime) 1.JPG](https://commons.wikimedia.org/wiki/File:%C3%89glise_de_Rogerville_(Seine-Maritime)_1.JPG) | Philippe Alès | CC BY-SA 3.0 |
 | Saint-Laurent-de-Brèvedent | [Saint-Laurent-de-Brèvedent - centre-bourg.jpg](https://commons.wikimedia.org/wiki/File:Saint-Laurent-de-Br%C3%A8vedent_-_centre-bourg.jpg) | Pymouss | CC BY-SA 3.0 |
 | Avenue Foch | [Voie Verte Avenue Foch du Havre (juillet 2024) 1.JPG](https://commons.wikimedia.org/wiki/File:Voie_Verte_Avenue_Foch_du_Havre_(juillet_2024)_1.JPG) | Florian Pépellin | CC BY-SA 4.0 |
+| Harfleur | [Harfleur Le quai de la Douane le long de la Lézarde et l'église St-Martin.jpg](https://commons.wikimedia.org/wiki/File:Harfleur_Le_quai_de_la_Douane_le_long_de_la_L%C3%A9zarde_et_l'%C3%A9glise_St-Martin.jpg) | René Hourdry | CC BY-SA 4.0 |
+| La Remuée | [La remuée - mairie 01.JPG](https://commons.wikimedia.org/wiki/File:La_remu%C3%A9e_-_mairie_01.JPG) | Pymouss | CC BY-SA 3.0 |
+| Trouville-sur-Mer | [The seaside of Trouville sur Mer.jpg](https://commons.wikimedia.org/wiki/File:The_seaside_of_Trouville_sur_Mer.jpg) | Liberaler Humanist | CC BY-SA 3.0 |
 - Les photos d’histoire réutilisées dans les avis et dans le bloc « Nos belles ventes » sont décrites dans `src/features/content/data/leHavreHistoryContent.ts`. Elles indiquent maintenant leur titre, leur auteur ou nom Commons, la source, la licence et l’adaptation.
 - Les communes non concernées par le remplacement du 6 octobre conservent leur illustration SVG originale quand aucune photographie locale réutilisable n’a été retenue. Deux anciennes photos géographiques sans notice Wikimedia vérifiable et deux variantes Dufy inutilisées ont été supprimées.
 

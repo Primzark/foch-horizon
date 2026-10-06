@@ -5,9 +5,7 @@ import { ArrowRight, Compass, Handshake } from "lucide-react";
 import { GoogleGIcon } from "@/components/branding/GoogleGIcon";
 import { BudgetFinder } from "@/features/content/components/BudgetFinder";
 import { MainSearchBar } from "@/features/content/components/MainSearchBar";
-import { SearchThinkingState } from "@/features/content/components/SearchThinkingState";
-import { getFeaturedProperties } from "@/features/listings/api/properties.service";
-import { ListingCard } from "@/features/listings/components/ListingCard";
+import { RecentSales } from "@/features/content/components/RecentSales";
 import { AgentInitialsAvatar } from "@/features/listings/components/AgentInitialsAvatar";
 import { properties } from "@/features/listings/data/properties";
 import { agents } from "@/features/listings/data/agents";
@@ -46,17 +44,6 @@ const HERO_IMAGE_CREDIT: PhotoAttributionCredit = {
 };
 
 export default function HomePage() {
-  const featuredQuery = useQuery({
-    queryKey: ["featured-properties"],
-    queryFn: () => getFeaturedProperties(24),
-    staleTime: 1000 * 60 * 20,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-  });
-  const featuredItems = useMemo(
-    () => (featuredQuery.data ?? []).slice(0, 6).map(toSearchItem),
-    [featuredQuery.data],
-  );
   const instantSearchItems = useMemo(
     () => properties.filter((property) => property.status !== "off_market").map((property) => ({
       ...toSearchItem(property),
@@ -113,44 +100,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-      <section data-live-content="/biens" className="container mx-auto px-4 pt-5 pb-12 md:pt-8 md:pb-12">
-        <ScrollReveal mood={heroMood}>
-          <div className="mb-6 flex items-end justify-between gap-4">
-            <div>
-              <h2 className="font-display text-3xl">Sélection du moment</h2>
-            </div>
-            <Link to="/biens" className="inline-flex items-center gap-1 text-sm hover:underline">
-              Découvrir tous les biens
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-        </ScrollReveal>
-
-        {featuredQuery.isLoading && (
-          <SearchThinkingState
-            label="Chargement de la sélection"
-            details="Nous préparons les biens à découvrir."
-            className="mb-4 w-fit max-w-full"
-          />
-        )}
-
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {featuredQuery.isLoading &&
-            Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="h-[320px] animate-pulse rounded-2xl bg-muted/60" />
-            ))}
-          {featuredItems.map((item, index) => (
-            <ListingCard
-              key={item.id}
-              item={item}
-              browseItems={featuredItems}
-              revealIndex={index}
-              eagerImage={index === 0}
-              className="paper-grain [--paper-grain-opacity:0.032] [--paper-grain-mobile-reduction:0.018]"
-            />
-          ))}
-        </div>
-      </section>
+      <RecentSales compact />
 
       <ScrollReveal mood={heroMood}>
         <BudgetFinder />
