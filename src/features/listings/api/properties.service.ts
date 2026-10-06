@@ -385,31 +385,78 @@ export async function getPropertyByCanonicalPathId(idParam: string): Promise<Pro
   return property?.transactionType === "vente" ? property : null;
 }
 
-export async function getSimilarProperties(property: Property, limit = 3): Promise<Property[]> {
-  if (property.transactionType !== "vente") return [];
+export interface SimilarPropertyRecommendation {
+  property: Property;
+  reason: string;
+}
+
+export async function getSimilarProperties(property: Property, limit = 3): Promise<SimilarPropertyRecommendation[]> {
+  if (property.transactionType !== "vente" || limit <= 0) return [];
   await apiDelay();
 
-  const sameCity = properties.filter(
-    (item) =>
-      item.id !== property.id &&
-      item.cityId === property.cityId &&
-      item.transactionType === "vente" &&
-      item.status === "active",
-  );
+  const referencePrice = property.priceAmount;
+  const referenceSurface = property.surfaceM2;
+  const recommendations = properties
+    .filter(
+      (candidate) =>
+        candidate.id !== property.id &&
+        candidate.transactionType === "vente" &&
+        candidate.status === "active" &&
+        candidate.cityId === property.cityId &&
+        candidate.propertyType === property.propertyType &&
+        candidate.surfaceM2 > 0 &&
+        candidate.images.some((image) => image.sourceUrl.trim().length > 0),
+    )
+    .map((candidate) => {
+      const priceDifference = referencePrice > 0 ? Math.abs(candidate.priceAmount - referencePrice) / referencePrice : 1;
+      const surfaceDifference = referenceSurface > 0 ? Math.abs(candidate.surfaceM2 - referenceSurface) / referenceSurface : 1;
+      const roomDifference = property.rooms != null && candidate.rooms != null
+        ? Math.abs(candidate.rooms - property.rooms)
+        : null;
+      const samePostalCode = Boolean(property.postalCode && candidate.postalCode === property.postalCode);
+      const similarPrice = priceDifference <= 0.2;
+      const similarRooms = roomDifference != null && roomDifference <= 1;
+      const similarSurface = surfaceDifference <= 0.2;
+      const comparablePrice = priceDifference <= 0.35;
+      const comparableSurface = surfaceDifference <= 0.35;
+      const comparableSectorAndBudget = samePostalCode && comparablePrice;
+      const hasUsefulMatch = similarPrice || similarSurface || (similarRooms && (comparablePrice || comparableSurface)) || comparableSectorAndBudget;
 
-  if (sameCity.length >= limit) {
-    return sameCity.slice(0, limit);
-  }
+      const score =
+        40 +
+        (samePostalCode ? 15 : 0) +
+        (similarPrice ? 24 : comparablePrice ? 14 : priceDifference <= 0.5 ? 5 : -10) +
+        (roomDifference === 0 ? 14 : similarRooms ? 10 : roomDifference != null && roomDifference <= 2 ? 4 : 0) +
+        (similarSurface ? 18 : comparableSurface ? 10 : -5);
 
-  const sameTransaction = properties.filter(
-    (item) =>
-      item.id !== property.id &&
-      item.transactionType === "vente" &&
-      item.status === "active" &&
-      !sameCity.some((candidate) => candidate.id === item.id),
-  );
+      const reason = similarPrice
+        ? "Budget similaire"
+        : roomDifference === 0
+          ? "Même nombre de pièces"
+          : similarRooms
+            ? "Pièces proches"
+            : similarSurface
+              ? "Surface comparable"
+              : comparableSectorAndBudget
+                ? "Même secteur"
+                : null;
 
-  return [...sameCity, ...sameTransaction].slice(0, limit);
+      return { property: candidate, score, reason, hasUsefulMatch, priceDifference, surfaceDifference, roomDifference };
+    })
+    .filter((candidate) => candidate.hasUsefulMatch && candidate.reason != null)
+    .sort((left, right) =>
+      right.score - left.score ||
+      left.priceDifference - right.priceDifference ||
+      left.surfaceDifference - right.surfaceDifference ||
+      (left.roomDifference ?? Number.POSITIVE_INFINITY) - (right.roomDifference ?? Number.POSITIVE_INFINITY) ||
+      left.property.id - right.property.id,
+    )
+    .slice(0, limit);
+
+  return recommendations.map(({ property: candidate, reason }) => ({
+    property: candidate,
+    reason: reason!,
+  }));
 }
 
 export async function getFeaturedProperties(limit = 8): Promise<Property[]> {

@@ -12,12 +12,14 @@ import { PropertyPreviewLink } from "@/features/listings/components/PropertyPrev
 import { ListingShareButton } from "@/features/listings/components/ListingShareButton";
 import DpeBadge from "@/components/property/DpeBadge";
 import { agentById } from "@/features/listings/data/agents";
+import { geographyGuideOptions } from "@/features/content/data/geographyGuideOptions";
 import { toSearchItem } from "@/features/listings/utils/mappers";
 import { LeadForm } from "@/features/leads/components/LeadForm";
 import {
   formatPrice,
   formatPropertyTypeLabel,
   getPropertyStatusLabel,
+  normalizeKeyword,
   sanitizePropertySlug,
   toCanonicalPropertyPath,
 } from "@/features/listings/utils/formatting";
@@ -26,6 +28,7 @@ import { getSiteUrl, useSeo } from "@/lib/seo/useSeo";
 import { trackEvent } from "@/lib/analytics/events";
 import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
 import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
+import { buildSearchParams } from "@/features/listings/utils/query";
 import type { PropertySearchItem } from "@/types/api";
 import type { Property } from "@/types/domain";
 
@@ -90,7 +93,7 @@ function toPropertyPreview(item: PropertySearchItem): Property {
     priceCurrency: item.currency,
     surfaceM2: item.surfaceM2,
     terrainM2: null,
-    rooms: null,
+    rooms: item.rooms ?? null,
     bedrooms: item.bedrooms ?? null,
     bathrooms: item.bathrooms ?? null,
     parkingCount: item.parking ?? null,
@@ -113,6 +116,46 @@ function toPropertyPreview(item: PropertySearchItem): Property {
       : [],
     features: [],
   };
+}
+
+function getSimilarSearchHref(property: Property): string {
+  const priceMin = Math.floor((property.priceAmount * 0.75) / 1_000) * 1_000;
+  const priceMax = Math.ceil((property.priceAmount * 1.25) / 1_000) * 1_000;
+  const params = buildSearchParams({
+    transaction: property.transactionType,
+    type: property.propertyType,
+    city: cityById.get(property.cityId)?.slug,
+    priceMin,
+    priceMax,
+    page: 1,
+    sort: "newest",
+  });
+
+  return `/biens?${params.toString()}`;
+}
+
+function getRecommendationFacts(item: PropertySearchItem): string {
+  const roomFact = item.rooms != null && item.rooms > 0
+    ? `${item.rooms} pièce${item.rooms > 1 ? "s" : ""}`
+    : item.bedrooms != null
+      ? `${item.bedrooms} chambre${item.bedrooms > 1 ? "s" : ""}`
+      : null;
+  const facts = [roomFact, item.surfaceM2 > 0 ? `${item.surfaceM2} m²` : null].filter(Boolean);
+
+  return facts.join(" · ");
+}
+
+function getRecommendationLocation(item: PropertySearchItem): string {
+  const propertyWords = normalizeKeyword(`${item.title} ${item.slug}`).replace(/[^a-z0-9]+/g, " ").trim();
+  const matchingGuide = geographyGuideOptions
+    .map((guide) => ({ guide, phrase: "query" in guide && guide.query ? guide.query : guide.name }))
+    .filter(({ phrase }) => phrase.length >= 4 && propertyWords.includes(normalizeKeyword(phrase).replace(/[^a-z0-9]+/g, " ").trim()))
+    .sort((left, right) => right.phrase.length - left.phrase.length)[0];
+  const sector = matchingGuide?.guide.id === "la-plage"
+    ? "Saint-Vincent"
+    : matchingGuide?.guide.name.replace(/^(Le|La|Les)\s+/i, "");
+
+  return `${sector ?? item.city.name}${item.city.postalCode ? ` · ${item.city.postalCode}` : ""}`;
 }
 
 export default function ListingDetailPage({
@@ -160,18 +203,24 @@ export default function ListingDetailPage({
     queryKey: ["similar", propertyId],
     queryFn: () =>
       propertyQuery.data && !propertyQuery.isPlaceholderData
-        ? getSimilarProperties(propertyQuery.data, 3)
+        ? getSimilarProperties(propertyQuery.data, 4)
         : Promise.resolve([]),
     enabled: Boolean(propertyQuery.data && !propertyQuery.isPlaceholderData),
   });
   const similarItems = useMemo(
-    () => (similarQuery.data ?? []).map(toSearchItem),
+    () => (similarQuery.data ?? []).map(({ property: similarProperty }) => toSearchItem(similarProperty)),
+    [similarQuery.data],
+  );
+  const similarReasons = useMemo(
+    () => new Map((similarQuery.data ?? []).map(({ property: similarProperty, reason }) => [similarProperty.id, reason])),
     [similarQuery.data],
   );
 
   const property = propertyQuery.data;
   const isFavorite = property ? favoriteIds.includes(property.id) : false;
   const nextPropertyToDiscover = similarItems[0];
+  const secondarySimilarItems = similarItems.slice(1, 4);
+  const similarSearchHref = property ? getSimilarSearchHref(property) : null;
 
   useEffect(() => {
     const summary = summaryRef.current;
@@ -529,7 +578,7 @@ export default function ListingDetailPage({
             item={nextPropertyToDiscover}
             browseItems={similarItems}
             className="group relative mt-4 flex min-h-[18rem] flex-col justify-end overflow-hidden rounded-2xl bg-neutral-950 p-6 text-white shadow-sm transition-shadow duration-500 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:min-h-[22rem] sm:p-9"
-            aria-label={`Découvrir le bien suivant : ${nextPropertyToDiscover.title}, ${nextPropertyToDiscover.city.name}, ${formatPrice(nextPropertyToDiscover.priceAmount, nextPropertyToDiscover.transaction)}`}
+            aria-label={`Découvrir le bien suivant : ${nextPropertyToDiscover.title}, ${getRecommendationLocation(nextPropertyToDiscover)}, ${formatPrice(nextPropertyToDiscover.priceAmount, nextPropertyToDiscover.transaction)}`}
           >
             {nextPropertyToDiscover.coverImageUrl && (
               <img
@@ -545,7 +594,7 @@ export default function ListingDetailPage({
             <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/38 to-black/15 transition-opacity duration-700 group-hover:opacity-70 motion-reduce:transition-none" />
             <div className="relative z-10 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
               <div className="min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/75">{nextPropertyToDiscover.city.name} · {nextPropertyToDiscover.surfaceM2} m²</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/75">{getRecommendationLocation(nextPropertyToDiscover)} · {nextPropertyToDiscover.surfaceM2} m²</p>
                 <h3 className="mt-2 max-w-2xl font-display text-3xl leading-tight sm:text-4xl">{nextPropertyToDiscover.title}</h3>
                 <p className="mt-2 text-lg font-medium text-white/90">{formatPrice(nextPropertyToDiscover.priceAmount, nextPropertyToDiscover.transaction)}</p>
               </div>
@@ -555,6 +604,75 @@ export default function ListingDetailPage({
               </span>
             </div>
           </PropertyPreviewLink>
+        </section>
+      )}
+      {secondarySimilarItems.length > 0 && (
+        <section className="mt-10 sm:mt-12" aria-labelledby="similar-properties-heading">
+          <h2 id="similar-properties-heading" className="font-display text-2xl sm:text-3xl">Biens similaires</h2>
+          <div className="mt-4 grid grid-flow-col auto-cols-[84%] snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain pb-2 pr-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:auto-cols-[46%] lg:auto-cols-[32%] lg:justify-center lg:overflow-visible lg:pb-0 lg:pr-0">
+            {secondarySimilarItems.map((item) => {
+              const favorite = favoriteIds.includes(item.id);
+              const roomAndSurface = getRecommendationFacts(item);
+
+              return (
+                <article key={item.id} className="group relative min-w-0 snap-start">
+                  <PropertyPreviewLink
+                    item={item}
+                    browseItems={similarItems}
+                    className="block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4"
+                    aria-label={`Voir ${item.title}, ${getRecommendationLocation(item)}, ${formatPrice(item.priceAmount, item.transaction)}${roomAndSurface ? `, ${roomAndSurface}` : ""}`}
+                  >
+                    <div className="aspect-[1.9/1] overflow-hidden rounded-xl bg-muted">
+                      <img
+                        src={getPropertyImageUrl(item.coverImageUrl, 600)}
+                        srcSet={getPropertyImageSrcSet(item.coverImageUrl)}
+                        sizes="(max-width: 639px) 84vw, (max-width: 1023px) 46vw, 30vw"
+                        alt=""
+                        className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.035] motion-reduce:transition-none"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    </div>
+                    <div className="pt-3">
+                      <p className="font-display text-xl font-semibold tracking-tight text-brand-strong">
+                        {formatPrice(item.priceAmount, item.transaction)}
+                      </p>
+                      <p className="mt-1 text-sm text-muted-foreground">{getRecommendationLocation(item)}</p>
+                      {roomAndSurface && <p className="mt-1 text-sm text-foreground/80">{roomAndSurface}</p>}
+                      {similarReasons.get(item.id) && (
+                        <p className="mt-1.5 text-xs text-muted-foreground">{similarReasons.get(item.id)}</p>
+                      )}
+                    </div>
+                  </PropertyPreviewLink>
+                  <button
+                    type="button"
+                    className={`absolute right-3 top-3 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full border border-background/70 bg-background/90 text-foreground shadow-sm backdrop-blur-sm transition-colors hover:bg-background ${favorite ? "text-brand-strong" : ""}`}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      const action = favorite ? "favorite_removed" : "favorite_added";
+                      toggleFavorite(item.id);
+                      trackEvent("listing_viewed", { propertyId: item.id, action });
+                    }}
+                    aria-label={favorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+                    aria-pressed={favorite}
+                  >
+                    <Heart className={`h-4 w-4 ${favorite ? "fill-brand text-brand" : ""}`} aria-hidden="true" />
+                  </button>
+                </article>
+              );
+            })}
+          </div>
+          {similarSearchHref && (
+            <div className="mt-3 flex justify-end">
+              <Link
+                to={similarSearchHref}
+                className="inline-flex min-h-10 items-center gap-2 text-sm font-medium text-brand-strong underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                Voir les biens similaires
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+            </div>
+          )}
         </section>
       )}
       {stickySummaryPortalElement ? stickySummary && createPortal(stickySummary, stickySummaryPortalElement) : stickySummary}

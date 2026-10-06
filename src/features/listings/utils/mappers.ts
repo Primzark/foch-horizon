@@ -14,6 +14,7 @@ export function toSearchItem(property: Property): PropertySearchItem {
     priceAmount: property.priceAmount,
     currency: property.priceCurrency,
     surfaceM2: property.surfaceM2,
+    rooms: property.rooms,
     bedrooms: property.bedrooms,
     bathrooms: property.bathrooms,
     parking: property.parkingCount,

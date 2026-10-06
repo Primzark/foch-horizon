@@ -29,6 +29,7 @@ export interface PropertySearchItem {
   priceAmount: number;
   currency: "EUR";
   surfaceM2: number;
+  rooms?: number | null;
   bedrooms: number | null;
   bathrooms: number | null;
   parking: number | null;
