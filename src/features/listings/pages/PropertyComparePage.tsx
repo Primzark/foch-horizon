@@ -68,12 +68,6 @@ function ComparisonPhoto({ property }: { property: Property }) {
 function getCompareRows(properties: Property[]): CompareRow[] {
   return [
     { label: "Prix", values: properties.map((property) => formatPrice(property.priceAmount, property.transactionType)) },
-    {
-      label: "Prix au m²",
-      values: properties.map((property) => property.surfaceM2 > 0
-        ? `${new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(property.priceAmount / property.surfaceM2)} €/m²`
-        : null),
-    },
     { label: "Type", values: properties.map((property) => formatPropertyTypeLabel(property.propertyType)) },
     {
       label: "Ville",
@@ -202,7 +196,7 @@ export default function PropertyComparePage() {
         <div>
           <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">Votre sélection · {properties.length}/{PROPERTY_COMPARE_LIMIT}</p>
           <h1 className="mt-1 font-display text-3xl sm:text-4xl">Comparer les biens</h1>
-          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">Les informations manquantes sont indiquées comme non renseignées. Le prix au m² est calculé à partir de la surface habitable publiée.</p>
+          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">Les informations manquantes sont indiquées comme non renseignées.</p>
         </div>
         {properties.length >= 2 && (
           <label htmlFor="show-only-differences" className="inline-flex min-h-10 cursor-pointer items-center gap-3 self-start rounded-full border border-border bg-card px-3.5 text-sm sm:self-auto">

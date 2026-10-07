@@ -366,7 +366,6 @@ export async function runSharedPropertySearchQuery(
 export interface SharedPropertyAggregateMetrics {
   count: number;
   excludedSurfaceCount: number;
-  excludedPricePerM2Count: number;
   avgSurfaceM2: number | null;
   medianSurfaceM2: number | null;
   minSurfaceM2: number | null;
@@ -375,7 +374,6 @@ export interface SharedPropertyAggregateMetrics {
   medianPrice: number | null;
   minPrice: number | null;
   maxPrice: number | null;
-  avgPricePerM2: number | null;
 }
 
 export interface SharedPropertyAggregateBucket {
@@ -456,17 +454,9 @@ export function computeSharedPropertyAggregateMetrics(rows: SharedPropertyAggreg
   const surfaceValues = rows
     .map((row) => row.surface_m2)
     .filter((value): value is number => typeof value === "number" && Number.isFinite(value) && value > 0);
-  const pricePerM2Values = rows
-    .map((row) =>
-      typeof row.surface_m2 === "number" && Number.isFinite(row.surface_m2) && row.surface_m2 > 0 && row.price_amount > 0
-        ? row.price_amount / row.surface_m2
-        : null)
-    .filter((value): value is number => typeof value === "number" && Number.isFinite(value) && value > 0);
-
   const metrics: SharedPropertyAggregateMetrics = {
     count: rows.length,
     excludedSurfaceCount: Math.max(0, rows.length - surfaceValues.length),
-    excludedPricePerM2Count: Math.max(0, rows.length - pricePerM2Values.length),
     avgSurfaceM2: avg(surfaceValues),
     medianSurfaceM2: median(surfaceValues),
     minSurfaceM2: surfaceValues.length > 0 ? Math.min(...surfaceValues) : null,
@@ -475,7 +465,6 @@ export function computeSharedPropertyAggregateMetrics(rows: SharedPropertyAggreg
     medianPrice: median(priceValues),
     minPrice: priceValues.length > 0 ? Math.min(...priceValues) : null,
     maxPrice: priceValues.length > 0 ? Math.max(...priceValues) : null,
-    avgPricePerM2: avg(pricePerM2Values),
   };
 
   const breakdowns: SharedPropertyAggregateBreakdowns = {

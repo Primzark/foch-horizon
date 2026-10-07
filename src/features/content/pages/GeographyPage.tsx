@@ -1,10 +1,10 @@
 import { communeByGuideId, placeEntity } from "@/lib/seo/entities";
 import { Link } from "react-router-dom";
-import { ArrowRight, MoveUpRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSeo, getSiteUrl } from "@/lib/seo/useSeo";
 import { StorefrontPageHero } from "@/features/content/components/StorefrontPageHero";
-import { geographyGuides, geographyPhotoCredits, geographyPriceMethod } from "@/features/content/data/geographyGuides";
+import { geographyGuides, geographyPhotoCredits } from "@/features/content/data/geographyGuides";
 import { PhotoAttribution } from "@/features/content/components/PhotoAttribution";
 import { GeographyGuideDetails } from "@/features/content/components/GeographyGuideDetails";
 import { GeographyMap } from "@/features/content/components/GeographyMap";
@@ -219,24 +219,11 @@ export default function GeographyPage() {
           <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Bien choisir son secteur</p>
           <h2 id="geography-guides-heading" className="mt-2 font-display text-3xl md:text-4xl">Vivre et acheter dans nos secteurs</h2>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-            Histoire, formes de logements, écoles, commerces, déplacements et projets : ouvrez un guide pour comprendre le quotidien et les repères immobiliers de chaque ville ou quartier.
+            Histoire, formes de logements, écoles, commerces, déplacements et projets : ouvrez un guide pour comprendre le quotidien de chaque ville ou quartier.
           </p>
         </div>
 
-        <div className="mt-8 rounded-2xl border border-brand-border bg-brand-soft/50 p-5 md:p-6">
-          <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-            <div>
-              <h3 className="font-medium">{geographyPriceMethod.title}</h3>
-              <p className="mt-1 max-w-4xl text-sm leading-relaxed text-muted-foreground">{geographyPriceMethod.description}</p>
-            </div>
-            <p className="shrink-0 text-xs text-muted-foreground">{geographyPriceMethod.date}</p>
-          </div>
-          <a className="mt-3 inline-flex items-center gap-1 text-sm text-brand-strong underline underline-offset-4" href={geographyPriceMethod.dvfLink.href} target="_blank" rel="noreferrer">
-            {geographyPriceMethod.dvfLink.label}<MoveUpRight aria-hidden="true" className="h-3.5 w-3.5" />
-          </a>
-        </div>
-
-        <div className="mt-10 space-y-10">
+        <div className="mt-8 space-y-10">
           {guideSections.map((section) => (
             <div key={section.title}>
               <h3 className="mb-4 border-b border-border pb-3 font-display text-2xl">{section.title}</h3>

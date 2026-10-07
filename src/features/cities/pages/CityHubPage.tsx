@@ -181,7 +181,7 @@ export default function CityHubPage() {
       publisher: { "@id": `${siteUrl}/#agency` },
       about: placeEntity(cityGuide, siteUrl),
       spatialCoverage: { "@id": `${siteUrl}/immobilier/${cityGuide.id}#place` },
-      citation: [cityGuide.link.href, cityGuide.priceLink.href],
+      citation: [cityGuide.link.href],
       ...(cityGuide.reviewedAt ? { dateModified: cityGuide.reviewedAt } : {}),
     } : undefined,
   });

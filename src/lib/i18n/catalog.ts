@@ -272,7 +272,6 @@ export const englishCopy: Record<string, string> = {
   "Comparer": "Compare",
   "Ajouté": "Added",
   "Comparer les biens": "Compare properties",
-  "Les informations manquantes sont indiquées comme non renseignées. Le prix au m² est calculé à partir de la surface habitable publiée.": "Missing information is marked as not provided. Price per square metre is based on the listed living area.",
   "Afficher uniquement les différences": "Show differences only",
   "Retirez-les pour libérer une place.": "Remove a property to make room for another.",
   "Retirer réf.": "Remove ref.",
@@ -485,7 +484,6 @@ export const englishCopy: Record<string, string> = {
   "Surface habitable": "Living area",
   "Terrain": "Plot",
   "Prix": "Price",
-  "Prix au m²": "Price per m²",
   "Localisation": "Location",
     "Statut": "Status",
   "Étage": "Floor",
@@ -529,9 +527,7 @@ export const englishCopy: Record<string, string> = {
   "Préremplir le formulaire": "Prefill the form",
   "Surface moyenne": "Average area",
   "Prix moyen": "Average price",
-  "Prix/m² moyen": "Average price per m²",
   "sans surface": "without floor area",
-  "exclus du prix/m²": "excluded from price per m²",
   "Par transaction": "By transaction",
   "Par type": "By property type",
   "Villes principales": "Main towns",
@@ -968,14 +964,6 @@ function translateDynamicFrench(source: string): string | undefined {
     if (preposition === "au" && /^havre$/i.test(locality)) return "Living in Le Havre";
     if (preposition.startsWith("dans le quartier")) return `Living in the ${locality} neighbourhood`;
     return `Living in ${locality}`;
-  }
-
-  const pricePerSquareMetre = source.match(/^(\s*)([\d\s\u202f,.]+)\s*€\s*\/\s*m²(\s*)$/i);
-  if (pricePerSquareMetre) {
-    const numeric = Number(pricePerSquareMetre[2].replace(/[\s\u202f]/g, "").replace(",", "."));
-    if (Number.isFinite(numeric)) {
-      return `${pricePerSquareMetre[1]}€${new Intl.NumberFormat("en-GB", { maximumFractionDigits: 0 }).format(numeric)} per m²${pricePerSquareMetre[3]}`;
-    }
   }
 
   const reference = source.match(/^(\s*)(Réf(?:érence)?\.?\s*)(.+)$/i);

@@ -215,7 +215,6 @@ export type ChatbotUiAction =
         metrics: {
           count: number;
           excludedSurfaceCount?: number;
-          excludedPricePerM2Count?: number;
           avgSurfaceM2?: number | null;
           medianSurfaceM2?: number | null;
           minSurfaceM2?: number | null;
@@ -224,7 +223,6 @@ export type ChatbotUiAction =
           medianPrice?: number | null;
           minPrice?: number | null;
           maxPrice?: number | null;
-          avgPricePerM2?: number | null;
         };
         breakdowns?: {
           byTransaction?: Array<{ key: string; label: string; count: number; avgPrice?: number | null; avgSurfaceM2?: number | null }>;
@@ -2485,10 +2483,6 @@ function sanitizeActions(raw: unknown): ChatbotUiAction[] | undefined {
           typeof metricsCandidate.excludedSurfaceCount === "number" && Number.isFinite(metricsCandidate.excludedSurfaceCount)
             ? Math.max(0, Math.floor(metricsCandidate.excludedSurfaceCount))
             : undefined,
-        excludedPricePerM2Count:
-          typeof metricsCandidate.excludedPricePerM2Count === "number" && Number.isFinite(metricsCandidate.excludedPricePerM2Count)
-            ? Math.max(0, Math.floor(metricsCandidate.excludedPricePerM2Count))
-            : undefined,
         avgSurfaceM2: numericOrNull(metricsCandidate.avgSurfaceM2),
         medianSurfaceM2: numericOrNull(metricsCandidate.medianSurfaceM2),
         minSurfaceM2: numericOrNull(metricsCandidate.minSurfaceM2),
@@ -2497,7 +2491,6 @@ function sanitizeActions(raw: unknown): ChatbotUiAction[] | undefined {
         medianPrice: numericOrNull(metricsCandidate.medianPrice),
         minPrice: numericOrNull(metricsCandidate.minPrice),
         maxPrice: numericOrNull(metricsCandidate.maxPrice),
-        avgPricePerM2: numericOrNull(metricsCandidate.avgPricePerM2),
       };
       const scope =
         data.scope === "current_filtered" || data.scope === "global_active_inventory" || data.scope === "selected_properties"

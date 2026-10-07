@@ -291,7 +291,6 @@ describe("chatbot service", () => {
             medianPrice: 270000,
             minPrice: 190000,
             maxPrice: 350000,
-            avgPricePerM2: 3590,
           },
           sampleSizeLabel: "12 biens",
           breakdowns: {

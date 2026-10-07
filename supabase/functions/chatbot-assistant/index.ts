@@ -281,7 +281,6 @@ type PropertyAggregationScope = "current_filtered" | "global_active_inventory" |
 interface PropertyAggregateMetrics {
   count: number;
   excludedSurfaceCount?: number;
-  excludedPricePerM2Count?: number;
   avgSurfaceM2?: number | null;
   medianSurfaceM2?: number | null;
   minSurfaceM2?: number | null;
@@ -290,7 +289,6 @@ interface PropertyAggregateMetrics {
   medianPrice?: number | null;
   minPrice?: number | null;
   maxPrice?: number | null;
-  avgPricePerM2?: number | null;
 }
 
 interface PropertyAggregateBreakdownBucket {
@@ -2817,7 +2815,7 @@ interface PropertySearchQueryRow {
 const toolPropertyIntentPattern =
   /appartement|maison|villa|studio|t[1-9]\b|bien(?:s)?|acheter|achat|vente|budget|chambre|surface|m2|annonce/;
 const toolAggregateIntentPattern =
-  /moyenn|average|mediane|median|stat(?:s|istiques)?|prix\s*(?:au|\/)\s*m2|m2\s*(?:moyen|moyenne)|surface\s*(?:moyenne|moyen)/;
+  /moyenn|average|mediane|median|stat(?:s|istiques)?|surface\s*(?:moyenne|moyen)/;
 const toolCompareIntentPattern = /compar|compare|lequel est mieux|laquelle est mieux|entre les deux|entre ces biens/;
 const toolHandoffIntentPattern = /contact|conseiller|rappel|rappeler|etre contacte|etre rappele|mail|email/;
 const toolWebsiteIntentPattern =
@@ -3305,7 +3303,6 @@ function normalizeAggregateMetrics(metrics: SharedPropertyAggregateMetrics): Pro
   return {
     count: Math.max(0, Math.floor(metrics.count)),
     excludedSurfaceCount: Math.max(0, Math.floor(metrics.excludedSurfaceCount ?? 0)),
-    excludedPricePerM2Count: Math.max(0, Math.floor(metrics.excludedPricePerM2Count ?? 0)),
     avgSurfaceM2: roundMetricValue(metrics.avgSurfaceM2, 1),
     medianSurfaceM2: roundMetricValue(metrics.medianSurfaceM2, 1),
     minSurfaceM2: roundMetricValue(metrics.minSurfaceM2, 1),
@@ -3314,7 +3311,6 @@ function normalizeAggregateMetrics(metrics: SharedPropertyAggregateMetrics): Pro
     medianPrice: roundMetricValue(metrics.medianPrice, 0),
     minPrice: roundMetricValue(metrics.minPrice, 0),
     maxPrice: roundMetricValue(metrics.maxPrice, 0),
-    avgPricePerM2: roundMetricValue(metrics.avgPricePerM2, 0),
   };
 }
 
@@ -4812,9 +4808,6 @@ async function orchestrateToolRequest(input: {
       }
       if (metrics.avgPrice != null) {
         summaryParts.push(`Le prix moyen est ${formatPriceValue(metrics.avgPrice)}.`);
-      }
-      if (metrics.avgPricePerM2 != null) {
-        summaryParts.push(`Le prix moyen au m² est ${formatPriceValue(metrics.avgPricePerM2)} / m².`);
       }
       if (statsAction.data.lowSampleWarning) {
         summaryParts.push(statsAction.data.lowSampleWarning);

@@ -47,7 +47,6 @@ function ensureAggregateContract(payload) {
     "medianPrice",
     "minPrice",
     "maxPrice",
-    "avgPricePerM2",
   ];
   for (const key of numericKeys) {
     const value = metrics[key];

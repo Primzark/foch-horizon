@@ -877,11 +877,6 @@ function formatNumberValue(value: number | null | undefined, maximumFractionDigi
   return new Intl.NumberFormat("fr-FR", { maximumFractionDigits }).format(value);
 }
 
-function formatPricePerM2(value: number | null | undefined): string {
-  if (typeof value !== "number" || !Number.isFinite(value)) return "—";
-  return `${formatCompactPrice(value, "EUR")}/m²`;
-}
-
 function mergeToolSearchParamsPatch(
   base: ToolSearchParams | undefined,
   patch: Partial<ToolSearchParams>,
@@ -2468,17 +2463,13 @@ export function SiteChatbot({ initiallyOpen = false }: { initiallyOpen?: boolean
                 <p className="text-[10px] uppercase tracking-[0.08em] text-muted-foreground">Surface moyenne</p>
                 <p className="text-sm font-medium">{formatSurface(action.data.metrics.avgSurfaceM2 ?? null)}</p>
               </div>
-              <div className="rounded-md border border-border bg-card/80 px-2 py-1.5">
+              <div className="col-span-2 rounded-md border border-border bg-card/80 px-2 py-1.5">
                 <p className="text-[10px] uppercase tracking-[0.08em] text-muted-foreground">Prix moyen</p>
                 <p className="text-sm font-medium">
                   {typeof action.data.metrics.avgPrice === "number"
                     ? formatCompactPrice(action.data.metrics.avgPrice, "EUR")
                     : "—"}
                 </p>
-              </div>
-              <div className="rounded-md border border-border bg-card/80 px-2 py-1.5">
-                <p className="text-[10px] uppercase tracking-[0.08em] text-muted-foreground">Prix/m² moyen</p>
-                <p className="text-sm font-medium">{formatPricePerM2(action.data.metrics.avgPricePerM2 ?? null)}</p>
               </div>
             </div>
 
@@ -2487,10 +2478,6 @@ export function SiteChatbot({ initiallyOpen = false }: { initiallyOpen?: boolean
               {typeof action.data.metrics.excludedSurfaceCount === "number" && action.data.metrics.excludedSurfaceCount > 0 && (
                 <span>· {action.data.metrics.excludedSurfaceCount} sans surface</span>
               )}
-              {typeof action.data.metrics.excludedPricePerM2Count === "number" &&
-                action.data.metrics.excludedPricePerM2Count > 0 && (
-                  <span>· {action.data.metrics.excludedPricePerM2Count} exclus du prix/m²</span>
-                )}
             </div>
 
             {action.data.lowSampleWarning && (

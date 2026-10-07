@@ -166,7 +166,7 @@ export const leHavreDistrictHistory: DistrictHistorySection[] = [
     marketFocus:
       "Marché : appartements familiaux et biens de caractère au cœur du Havre, avec des valeurs stables et une forte profondeur d'acheteurs.",
     investmentAngle:
-      "Pour un achat patrimonial, Perret offre une bonne lisibilité des valeurs au m² et une profondeur de marché à la revente.",
+      "Pour un achat patrimonial, Perret offre une bonne lisibilité du marché et une profondeur d'acheteurs à la revente.",
     timeline: [
       "1945-1954 : lancement des grands îlots en béton armé",
       "2005 : inscription UNESCO et accélération de la demande patrimoniale",
@@ -175,7 +175,6 @@ export const leHavreDistrictHistory: DistrictHistorySection[] = [
     keywordTags: [
       "Immobilier Le Havre Perret",
       "Appartement centre Perret",
-      "Prix m² Perret",
       "Estimation Perret",
       "Patrimoine UNESCO",
     ],

@@ -23,7 +23,6 @@ interface PropertyAggregateResponse {
     medianPrice: number | null;
     minPrice: number | null;
     maxPrice: number | null;
-    avgPricePerM2: number | null;
   };
   breakdowns: {
     byTransaction: Array<{ key: string; label: string; count: number }>;
