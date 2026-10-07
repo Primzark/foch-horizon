@@ -179,7 +179,7 @@ export function ListingGallery({ images, title, propertyId }: { images: Property
           </DialogTrigger>
         </div>
 
-        <DialogContent data-property-gallery className="max-h-[90dvh] overflow-y-auto sm:max-w-5xl">
+        <DialogContent data-property-gallery data-menu-swipe-ignore className="max-h-[90dvh] overflow-y-auto sm:max-w-5xl">
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
             <DialogDescription>
@@ -229,7 +229,14 @@ export function ListingGallery({ images, title, propertyId }: { images: Property
               </div>
             </div>
           ) : (
-            <div className="relative isolate flex h-[min(68dvh,48rem)] min-h-[16rem] items-center justify-center overflow-hidden rounded-xl bg-neutral-950">
+            <div
+              className="relative isolate flex h-[min(68dvh,48rem)] min-h-[16rem] touch-pan-y items-center justify-center overflow-hidden rounded-xl bg-neutral-950"
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+              onTouchCancel={() => {
+                touchStartRef.current = null;
+              }}
+            >
               <div className="absolute left-3 top-3 z-10 rounded-full bg-background/90 px-3 py-1.5 text-xs font-medium">
                 {activeIndex + 1} / {images.length}
               </div>
