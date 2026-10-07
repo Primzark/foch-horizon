@@ -219,7 +219,7 @@ function PropertyDetailRouteModal() {
       <DialogContent
         ref={dialogContentRef}
         largeCloseButton
-        overlayClassName="bg-black/10"
+        overlayClassName="bg-black/45"
         data-menu-swipe-ignore
         onKeyDown={(event) => {
           if (!(event.target instanceof Node) || !dialogContentRef.current?.contains(event.target)) return;
