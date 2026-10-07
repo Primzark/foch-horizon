@@ -166,13 +166,13 @@ export default function ListingDetailPage({
   announcementNavigationControls,
   stickySummaryPortalElement = null,
   stickySummaryTop = 88,
-  compactTop = false,
+  previewLayout = false,
 }: {
   announcementSwipeHint?: ReactNode;
   announcementNavigationControls?: ReactNode;
   stickySummaryPortalElement?: HTMLElement | null;
   stickySummaryTop?: number;
-  compactTop?: boolean;
+  previewLayout?: boolean;
 } = {}) {
   const contentRef = useRef<HTMLDivElement | null>(null);
   const summaryRef = useRef<HTMLDivElement | null>(null);
@@ -441,7 +441,7 @@ export default function ListingDetailPage({
   ];
 
   return (
-    <section className={`container mx-auto px-4 ${compactTop ? "pt-4" : "pt-8"} pb-28 lg:pb-8`}>
+    <section className={`container mx-auto px-4 ${previewLayout ? "pt-4" : "pt-8"} pb-28 lg:pb-8`}>
       <div className="pointer-events-none fixed right-5 top-1/2 z-20 hidden h-36 -translate-y-1/2 lg:block">
         <div className="h-full w-1 rounded-full bg-border/70">
           <motion.span
@@ -575,7 +575,7 @@ export default function ListingDetailPage({
           </article>
         </div>
 
-        <aside className="space-y-4 lg:sticky lg:top-[calc(145px+env(safe-area-inset-top))] lg:h-fit">
+        <aside className={`space-y-4 lg:sticky ${previewLayout ? "lg:top-0" : "lg:top-[calc(145px+env(safe-area-inset-top))]"} lg:h-fit`}>
           <section className="rounded-2xl border border-border bg-card p-5">
             <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Votre interlocuteur</p>
             <p className="mt-2 font-display text-2xl">{agent?.fullName ?? "Foch Immobilier"}</p>

@@ -305,7 +305,7 @@ function PropertyDetailRouteModal() {
                   announcementNavigationControls={announcementNavigationControls}
                   stickySummaryPortalElement={stickySummaryPortalElement}
                   stickySummaryTop={64}
-                  compactTop
+                  previewLayout
                 />
               </Suspense>
             </motion.div>
