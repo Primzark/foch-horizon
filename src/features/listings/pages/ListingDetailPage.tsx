@@ -643,7 +643,7 @@ export default function ListingDetailPage({
           <Link to="/biens" className="hover:underline">
             Biens
           </Link>{" "}
-          / <span className="text-foreground">Réf {property.id}</span>
+          / <span className="text-foreground">{hasAnnouncementPosition ? navigationPosition : `Réf ${property.id}`}</span>
         </nav>
       </div>
 

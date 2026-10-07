@@ -236,7 +236,7 @@ function PropertyDetailRouteModal() {
       >
         <div className="relative flex h-16 shrink-0 items-center justify-between gap-2 border-b border-border bg-background px-4 pr-16 sm:gap-3 sm:px-6 sm:pr-20">
           <DialogHeader className="min-w-0 max-w-[50%] space-y-0 text-left sm:max-w-none">
-            <DialogTitle className="truncate font-display text-lg font-normal sm:text-xl max-[360px]:text-base">Aperçu de l’annonce</DialogTitle>
+            <DialogTitle className="sr-only">{routeState?.propertyPreview?.title ?? "Annonce immobilière"}</DialogTitle>
             <DialogDescription className="sr-only">Fiche complète du bien. Ouvrez-la en plein écran pour accéder à toute la page.</DialogDescription>
           </DialogHeader>
           <Button variant="outline" size="sm" className="absolute left-1/2 top-1/2 z-[1] shrink-0 -translate-x-1/2 -translate-y-1/2" asChild>
