@@ -310,13 +310,13 @@ function PropertyDetailRouteModal() {
                 fallback={(
                   <section className="container mx-auto min-h-[60vh] px-4 pt-4 pb-8" aria-busy="true" aria-label="Chargement de l’annonce">
                     <div className="mb-4 h-4 w-44 rounded bg-muted" aria-hidden="true" />
-                    <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
-                      <div>
+                    <div className="grid min-w-0 grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
+                      <div className="min-w-0">
                         <div className="aspect-[16/9] rounded-2xl bg-muted" aria-hidden="true" />
                         <div className="mt-6 h-8 w-2/3 rounded bg-muted" aria-hidden="true" />
                         <div className="mt-3 h-5 w-1/3 rounded bg-muted" aria-hidden="true" />
                       </div>
-                      <div className="h-56 rounded-2xl bg-muted" aria-hidden="true" />
+                      <div className="h-56 min-w-0 rounded-2xl bg-muted" aria-hidden="true" />
                     </div>
                     <span className="sr-only">Chargement de l’annonce…</span>
                   </section>
