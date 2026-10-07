@@ -25,9 +25,10 @@ interface ListingCardProps {
   eagerImage?: boolean;
   className?: string;
   browseItems?: PropertySearchItem[];
+  browseTotal?: number;
 }
 
-export function ListingCard({ item, viewMode = "grid", revealIndex = 0, eagerImage = false, className, browseItems }: ListingCardProps) {
+export function ListingCard({ item, viewMode = "grid", revealIndex = 0, eagerImage = false, className, browseItems, browseTotal }: ListingCardProps) {
   const toggleFavorite = useFavoritesStore((state) => state.toggle);
   const isFavorite = useFavoritesStore((state) => state.isFavorite(item.id));
   const { reducedMotion } = useMotionPreference();
@@ -58,7 +59,7 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, eagerIma
         itemScope
         itemType="https://schema.org/RealEstateListing"
       >
-        <PropertyPreviewLink item={item} browseItems={browseItems} className="group grid gap-4 p-3 md:grid-cols-[280px_1fr] md:p-4" itemProp="url">
+        <PropertyPreviewLink item={item} browseItems={browseItems} browseTotal={browseTotal} className="group grid gap-4 p-3 md:grid-cols-[280px_1fr] md:p-4" itemProp="url">
           <div className="relative overflow-hidden rounded-xl">
             <ContextAwareParallax mood={imageMood} reducedMotion={reducedMotion} intensity="subtle">
               <img
@@ -180,7 +181,7 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, eagerIma
       itemScope
       itemType="https://schema.org/RealEstateListing"
     >
-      <PropertyPreviewLink item={item} browseItems={browseItems} className="relative block overflow-hidden" itemProp="url">
+      <PropertyPreviewLink item={item} browseItems={browseItems} browseTotal={browseTotal} className="relative block overflow-hidden" itemProp="url">
         <ContextAwareParallax mood={imageMood} reducedMotion={reducedMotion} intensity="subtle">
           <img
             src={getPropertyImageUrl(item.coverImageUrl, 400)}

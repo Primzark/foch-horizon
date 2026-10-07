@@ -6,16 +6,18 @@ import { createPropertyModalRouteState } from "@/features/listings/navigation/pr
 interface PropertyPreviewLinkProps extends Omit<LinkProps, "to" | "state"> {
   item: PropertySearchItem;
   browseItems?: PropertySearchItem[];
+  browseTotal?: number;
+  browseMode?: "selection" | "similar";
 }
 
-export function PropertyPreviewLink({ item, browseItems, ...linkProps }: PropertyPreviewLinkProps) {
+export function PropertyPreviewLink({ item, browseItems, browseTotal, browseMode, ...linkProps }: PropertyPreviewLinkProps) {
   const location = useLocation();
 
   return (
     <Link
       {...linkProps}
       to={toCanonicalPropertyPath(item)}
-      state={createPropertyModalRouteState(location, item, browseItems)}
+      state={createPropertyModalRouteState(location, item, browseItems, browseTotal, browseMode)}
     />
   );
 }

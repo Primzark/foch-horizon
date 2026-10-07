@@ -333,7 +333,7 @@ export default function ListingsIndexPage() {
                             ease: isPriceSort ? [0.22, 1, 0.36, 1] : "easeOut",
                           }}
                         >
-                          <ListingCard item={item} browseItems={query.data.items} viewMode={viewMode} revealIndex={index} eagerImage={index === 0} />
+                          <ListingCard item={item} browseItems={query.data.items} browseTotal={query.data.total} viewMode={viewMode} revealIndex={index} eagerImage={index === 0} />
                         </motion.div>
                       ))}
                     </div>

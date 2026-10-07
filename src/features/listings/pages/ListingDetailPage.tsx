@@ -1,12 +1,12 @@
-import { Link, Navigate, useLocation, useParams } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion, useScroll } from "framer-motion";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { ArrowRight, Bath, BedDouble, Car, Copy, Heart, MapPin, Maximize, Phone } from "lucide-react";
+import { ArrowRight, Bath, BedDouble, Car, ChevronLeft, Copy, Heart, MapPin, Maximize, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cityById, cityBySlug } from "@/features/cities/data/cities";
-import { getPropertyById, getSimilarProperties } from "@/features/listings/api/properties.service";
+import { getPropertyById, getSimilarProperties, searchProperties } from "@/features/listings/api/properties.service";
 import { ListingGallery } from "@/features/listings/components/ListingGallery";
 import { PropertyPreviewLink } from "@/features/listings/components/PropertyPreviewLink";
 import { ListingShareButton } from "@/features/listings/components/ListingShareButton";
@@ -30,7 +30,7 @@ import { trackEvent } from "@/lib/analytics/events";
 import { useUiStore } from "@/lib/state/useUiStore";
 import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
 import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
-import { buildSearchParams } from "@/features/listings/utils/query";
+import { buildSearchParams, parseSearchParams } from "@/features/listings/utils/query";
 import type { PropertySearchItem } from "@/types/api";
 import type { Property } from "@/types/domain";
 import type { PropertyModalRouteState } from "@/features/listings/navigation/propertyModalNavigation";
@@ -182,6 +182,15 @@ export default function ListingDetailPage({
   const [contactVisible, setContactVisible] = useState(false);
   const cookieConsent = useUiStore((state) => state.cookieConsent);
   const location = useLocation();
+  const navigate = useNavigate();
+  const routeState = location.state as PropertyModalRouteState | null;
+  const backgroundListingSearch = routeState?.backgroundLocation?.pathname === "/biens"
+    ? routeState.backgroundLocation.search
+    : null;
+  const sourceSearchParams = useMemo(
+    () => backgroundListingSearch != null ? parseSearchParams(new URLSearchParams(backgroundListingSearch)) : null,
+    [backgroundListingSearch],
+  );
   const comparisonOrigin = (location.state as { comparisonOrigin?: unknown } | null)?.comparisonOrigin === true;
   const params = useParams();
   const favoriteIds = useFavoritesStore((state) => state.ids);
@@ -225,6 +234,157 @@ export default function ListingDetailPage({
   );
 
   const property = propertyQuery.data;
+  const announcementItems = routeState?.announcementItems;
+  const announcementIndex = announcementItems?.findIndex((item) => item.id === propertyId) ?? -1;
+  const hasAnnouncementPosition = Boolean(announcementItems && announcementIndex >= 0);
+  const navigationMode: "selection" | "similar" = hasAnnouncementPosition && routeState?.announcementMode !== "similar"
+    ? "selection"
+    : "similar";
+  const similarBrowseItems = property ? [toSearchItem(property), ...similarItems] : similarItems;
+  const navigationItems = hasAnnouncementPosition && announcementItems ? announcementItems : similarBrowseItems;
+  const navigationIndex = navigationItems.findIndex((item) => item.id === propertyId);
+  const startPage = routeState?.announcementStartPage ?? sourceSearchParams?.page ?? 1;
+  const endPage = routeState?.announcementEndPage ?? sourceSearchParams?.page ?? 1;
+  const pageSize = routeState?.announcementPageSize ?? sourceSearchParams?.pageSize ?? 12;
+  const navigationTotal = routeState?.announcementTotal ?? navigationItems.length;
+  const shouldLoadPreviousPage = !previewLayout
+    && navigationMode === "selection"
+    && sourceSearchParams != null
+    && navigationIndex >= 0
+    && navigationIndex <= 1
+    && startPage > 1;
+  const shouldLoadNextPage = !previewLayout
+    && navigationMode === "selection"
+    && sourceSearchParams != null
+    && navigationIndex >= Math.max(0, navigationItems.length - 2)
+    && endPage * pageSize < navigationTotal;
+  const previousPageParams = shouldLoadPreviousPage && sourceSearchParams
+    ? { ...sourceSearchParams, page: startPage - 1, pageSize }
+    : null;
+  const nextPageParams = shouldLoadNextPage && sourceSearchParams
+    ? { ...sourceSearchParams, page: endPage + 1, pageSize }
+    : null;
+  const previousPageQuery = useQuery({
+    queryKey: ["property-detail-navigation-page", "previous", previousPageParams],
+    queryFn: () => searchProperties(previousPageParams!),
+    enabled: previousPageParams != null,
+    staleTime: 5 * 60 * 1000,
+  });
+  const nextPageQuery = useQuery({
+    queryKey: ["property-detail-navigation-page", "next", nextPageParams],
+    queryFn: () => searchProperties(nextPageParams!),
+    enabled: nextPageParams != null,
+    staleTime: 5 * 60 * 1000,
+  });
+  const previousPageItems = previousPageQuery.data?.items ?? [];
+  const nextPageItems = nextPageQuery.data?.items ?? [];
+  const previousPageProperty = previousPageItems[previousPageItems.length - 1];
+  const nextPageProperty = nextPageItems[0];
+  const previousProperty = navigationIndex > 0
+    ? navigationItems[navigationIndex - 1]
+    : navigationMode === "selection" ? previousPageProperty : undefined;
+  const nextProperty = navigationIndex >= 0 && navigationIndex < navigationItems.length - 1
+    ? navigationItems[navigationIndex + 1]
+    : navigationMode === "selection" ? nextPageProperty : undefined;
+  const nextPropertyToDiscover = nextProperty;
+  const discoveryBrowseItems = navigationItems;
+  const navigationPosition = navigationMode === "selection"
+    ? Math.min(navigationTotal, (startPage - 1) * pageSize + navigationIndex + 1)
+    : navigationIndex + 1;
+  const navigationCount = navigationMode === "selection" ? navigationTotal : navigationItems.length;
+  const navigationContextReady = navigationItems.length > 1 || previousPageQuery.isFetching || nextPageQuery.isFetching;
+
+  const getFullPageNavigationState = (item: PropertySearchItem): PropertyModalRouteState => {
+    const isPreviousPageItem = previousPageProperty?.id === item.id;
+    const isNextPageItem = nextPageProperty?.id === item.id;
+    const mergedItems = isPreviousPageItem
+      ? [...previousPageItems, ...navigationItems.filter((existing) => !previousPageItems.some((previous) => previous.id === existing.id))]
+      : isNextPageItem
+        ? [...navigationItems, ...nextPageItems.filter((next) => !navigationItems.some((existing) => existing.id === next.id))]
+        : navigationItems;
+    const nextStartPage = isPreviousPageItem ? previousPageQuery.data?.page ?? Math.max(1, startPage - 1) : startPage;
+    const nextEndPage = isNextPageItem ? nextPageQuery.data?.page ?? endPage + 1 : endPage;
+
+    return {
+      propertyModal: false,
+      propertyPreview: item,
+      ...(routeState?.backgroundLocation ? { backgroundLocation: routeState.backgroundLocation } : {}),
+      announcementItems: mergedItems,
+      announcementTotal: previousPageQuery.data?.total ?? nextPageQuery.data?.total ?? navigationTotal,
+      announcementMode: navigationMode,
+      ...(navigationMode === "selection" ? {
+        announcementStartPage: nextStartPage,
+        announcementEndPage: nextEndPage,
+        announcementPageSize: previousPageQuery.data?.pageSize ?? nextPageQuery.data?.pageSize ?? pageSize,
+      } : {}),
+      ...(routeState?.budgetFinderFilters ? { budgetFinderFilters: routeState.budgetFinderFilters } : {}),
+    };
+  };
+
+  const navigationStatus = navigationMode === "selection" ? "Dans votre sélection" : "Biens similaires";
+  const fullPageNavigationControls = !previewLayout && navigationContextReady ? (
+    <section className="mt-4 rounded-2xl border border-border bg-muted/20 p-3 sm:p-4" aria-label="Navigation entre les annonces">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">{navigationStatus}</p>
+        <p className="shrink-0 text-xs tabular-nums text-muted-foreground">
+          {navigationPosition > 0 ? `${navigationPosition} / ${navigationCount}` : ""}
+        </p>
+      </div>
+      <div className="mt-3 flex items-stretch gap-2">
+        {previousProperty && (
+          <Link
+            to={toCanonicalPropertyPath(previousProperty)}
+            replace
+            state={getFullPageNavigationState(previousProperty)}
+            aria-label="Annonce précédente"
+            className="inline-flex min-h-[4.25rem] w-12 shrink-0 items-center justify-center rounded-xl border border-border bg-background text-foreground transition-colors hover:border-brand-border hover:bg-brand-soft/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:w-auto sm:gap-2 sm:px-4"
+          >
+            <ChevronLeft aria-hidden="true" className="h-5 w-5" />
+            <span className="hidden text-sm font-medium sm:inline">Précédent</span>
+          </Link>
+        )}
+        {nextProperty ? (
+          <Link
+            to={toCanonicalPropertyPath(nextProperty)}
+            replace
+            state={getFullPageNavigationState(nextProperty)}
+            aria-label={`Annonce suivante : ${nextProperty.title}, ${nextProperty.city.name}, ${formatPrice(nextProperty.priceAmount, nextProperty.transaction)}`}
+            className="group flex min-h-[4.25rem] min-w-0 flex-1 items-center gap-3 rounded-xl border border-border bg-background p-2 text-left transition-[border-color,background-color,box-shadow] duration-200 hover:border-brand-border hover:bg-brand-soft/30 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            {nextProperty.coverImageUrl ? (
+              <img
+                src={getPropertyImageUrl(nextProperty.coverImageUrl, 200)}
+                srcSet={getPropertyImageSrcSet(nextProperty.coverImageUrl, [200, 400])}
+                sizes="64px"
+                alt=""
+                className="h-12 w-16 shrink-0 rounded-lg object-cover"
+                loading="lazy"
+                decoding="async"
+              />
+            ) : (
+              <span aria-hidden="true" className="h-12 w-16 shrink-0 rounded-lg bg-muted" />
+            )}
+            <span className="min-w-0 flex-1">
+              <span className="block text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">À suivre</span>
+              <span className="block truncate text-sm font-semibold text-foreground">{nextProperty.title}</span>
+              <span className="block truncate text-xs text-muted-foreground">
+                {nextProperty.city.name} · {formatPrice(nextProperty.priceAmount, nextProperty.transaction)}
+              </span>
+            </span>
+            <ArrowRight aria-hidden="true" className="mr-1 h-4 w-4 shrink-0 text-brand-strong transition-transform group-hover:translate-x-0.5" />
+          </Link>
+        ) : previousPageQuery.isFetching || nextPageQuery.isFetching ? (
+          <div className="flex min-h-[4.25rem] min-w-0 flex-1 items-center justify-center rounded-xl border border-dashed border-border text-sm text-muted-foreground" aria-live="polite">
+            Chargement de la suite…
+          </div>
+        ) : navigationMode === "selection" && navigationPosition > 0 ? (
+          <div className="flex min-h-[4.25rem] min-w-0 flex-1 items-center justify-center rounded-xl border border-dashed border-border text-sm text-muted-foreground">
+            Fin de la sélection
+          </div>
+        ) : null}
+      </div>
+    </section>
+  ) : null;
   useEffect(() => {
     if (cookieConsent !== "accepted" || !property || property.status !== "active" || propertyQuery.isPlaceholderData) return;
     if (trackedPropertyViewId.current === property.id) return;
@@ -238,18 +398,6 @@ export default function ListingDetailPage({
     trackEvent("comparison_contact_click", { property_id: property.id, method });
   };
   const isFavorite = property ? favoriteIds.includes(property.id) : false;
-  const routeState = location.state as PropertyModalRouteState | null;
-  const announcementItems = routeState?.announcementItems;
-  const announcementIndex = announcementItems?.findIndex((item) => item.id === propertyId) ?? -1;
-  const hasAnnouncementPosition = Boolean(announcementItems && announcementIndex >= 0);
-  const nextInAnnouncementOrder = hasAnnouncementPosition && announcementItems && announcementIndex < announcementItems.length - 1
-    ? announcementItems[announcementIndex + 1]
-    : undefined;
-  const nextPropertyToDiscover = hasAnnouncementPosition ? nextInAnnouncementOrder : similarItems[0];
-  const similarBrowseItems = property ? [toSearchItem(property), ...similarItems] : similarItems;
-  const discoveryBrowseItems = hasAnnouncementPosition && announcementItems
-    ? announcementItems
-    : similarBrowseItems;
   const secondarySimilarItems = similarItems
     .filter((item) => item.id !== nextPropertyToDiscover?.id)
     .slice(0, 3);
@@ -286,6 +434,34 @@ export default function ListingDetailPage({
 
   const canonicalPath = property ? toCanonicalPropertyPath({ id: property.id, slug: property.slug }) : null;
   const showStickySummary = Boolean(property && !summaryVisible && !contactVisible);
+
+  const discoveryCardContent = nextPropertyToDiscover ? (
+    <>
+      {nextPropertyToDiscover.coverImageUrl && (
+        <img
+          src={getPropertyImageUrl(nextPropertyToDiscover.coverImageUrl, 1200)}
+          srcSet={getPropertyImageSrcSet(nextPropertyToDiscover.coverImageUrl)}
+          sizes="(max-width: 767px) calc(100vw - 2rem), 1000px"
+          alt=""
+          className="absolute inset-0 h-full w-full scale-[1.015] object-cover opacity-45 saturate-[0.82] transition-[opacity,transform,filter] duration-1000 ease-out group-hover:scale-100 group-hover:opacity-80 group-hover:saturate-100 motion-reduce:transition-none"
+          loading="lazy"
+          decoding="async"
+        />
+      )}
+      <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/38 to-black/15 transition-opacity duration-700 group-hover:opacity-70 motion-reduce:transition-none" />
+      <div className="relative z-10 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/75">{getRecommendationLocation(nextPropertyToDiscover)} · {nextPropertyToDiscover.surfaceM2} m²</p>
+          <h3 className="mt-2 max-w-2xl font-display text-3xl leading-tight sm:text-4xl">{nextPropertyToDiscover.title}</h3>
+          <p className="mt-2 text-lg font-medium text-white/90">{formatPrice(nextPropertyToDiscover.priceAmount, nextPropertyToDiscover.transaction)}</p>
+        </div>
+        <span className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 self-start rounded-full bg-background px-5 text-sm font-semibold text-foreground transition-colors duration-300 group-hover:bg-brand-soft group-focus-visible:bg-brand-soft sm:self-auto">
+          Découvrir
+          <ArrowRight className="h-4 w-4 transition-transform duration-500 group-hover:translate-x-1 motion-reduce:transition-none" aria-hidden="true" />
+        </span>
+      </div>
+    </>
+  ) : null;
 
   const stickySummary = property && showStickySummary ? (
     <div className="pointer-events-auto fixed inset-x-3 bottom-[calc(4rem_+_env(safe-area-inset-bottom))] z-[105] mx-auto max-w-3xl lg:hidden">
@@ -452,16 +628,24 @@ export default function ListingDetailPage({
         </div>
       </div>
 
-      <nav className="mb-4 text-sm text-muted-foreground">
-        <Link to="/" className="hover:underline">
-          Accueil
-        </Link>{" "}
-        /{" "}
-        <Link to="/biens" className="hover:underline">
-          Biens
-        </Link>{" "}
-        / <span className="text-foreground">Réf {property.id}</span>
-      </nav>
+      <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+        {!previewLayout && routeState?.backgroundLocation && (
+          <Button type="button" variant="ghost" size="sm" className="-ml-2 h-9 shrink-0 px-2 text-brand-strong" onClick={() => navigate(-1)}>
+            <ChevronLeft aria-hidden="true" className="mr-1 h-4 w-4" />
+            {routeState.backgroundLocation.pathname === "/biens" ? "Retour aux résultats" : "Retour"}
+          </Button>
+        )}
+        <nav className="text-sm text-muted-foreground">
+          <Link to="/" className="hover:underline">
+            Accueil
+          </Link>{" "}
+          /{" "}
+          <Link to="/biens" className="hover:underline">
+            Biens
+          </Link>{" "}
+          / <span className="text-foreground">Réf {property.id}</span>
+        </nav>
+      </div>
 
       <div ref={contentRef} className="grid gap-7 lg:grid-cols-[1fr_340px] lg:gap-8">
         <div>
@@ -527,6 +711,8 @@ export default function ListingDetailPage({
               {announcementNavigationControls}
             </div>
           </div>
+
+          {fullPageNavigationControls}
 
           <div className="mt-8 grid gap-3 rounded-2xl border border-border bg-card p-4 sm:grid-cols-4">
             {quickFacts.map((fact) => (
@@ -618,36 +804,28 @@ export default function ListingDetailPage({
       {nextPropertyToDiscover && (
         <section className="mt-16">
           <h2 className="font-display text-3xl">Prochain bien à découvrir</h2>
-          <PropertyPreviewLink
-            item={nextPropertyToDiscover}
-            browseItems={discoveryBrowseItems}
-            className="group relative mt-4 flex min-h-[18rem] flex-col justify-end overflow-hidden rounded-2xl bg-neutral-950 p-6 text-white shadow-sm transition-shadow duration-500 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:min-h-[22rem] sm:p-9"
-            aria-label={`Découvrir le bien suivant : ${nextPropertyToDiscover.title}, ${getRecommendationLocation(nextPropertyToDiscover)}, ${formatPrice(nextPropertyToDiscover.priceAmount, nextPropertyToDiscover.transaction)}`}
-          >
-            {nextPropertyToDiscover.coverImageUrl && (
-              <img
-                src={getPropertyImageUrl(nextPropertyToDiscover.coverImageUrl, 1200)}
-                srcSet={getPropertyImageSrcSet(nextPropertyToDiscover.coverImageUrl)}
-                sizes="(max-width: 767px) calc(100vw - 2rem), 1000px"
-                alt=""
-                className="absolute inset-0 h-full w-full scale-[1.015] object-cover opacity-45 saturate-[0.82] transition-[opacity,transform,filter] duration-1000 ease-out group-hover:scale-100 group-hover:opacity-80 group-hover:saturate-100 motion-reduce:transition-none"
-                loading="lazy"
-                decoding="async"
-              />
-            )}
-            <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/38 to-black/15 transition-opacity duration-700 group-hover:opacity-70 motion-reduce:transition-none" />
-            <div className="relative z-10 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-              <div className="min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/75">{getRecommendationLocation(nextPropertyToDiscover)} · {nextPropertyToDiscover.surfaceM2} m²</p>
-                <h3 className="mt-2 max-w-2xl font-display text-3xl leading-tight sm:text-4xl">{nextPropertyToDiscover.title}</h3>
-                <p className="mt-2 text-lg font-medium text-white/90">{formatPrice(nextPropertyToDiscover.priceAmount, nextPropertyToDiscover.transaction)}</p>
-              </div>
-              <span className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 self-start rounded-full bg-background px-5 text-sm font-semibold text-foreground transition-colors duration-300 group-hover:bg-brand-soft group-focus-visible:bg-brand-soft sm:self-auto">
-                Découvrir
-                <ArrowRight className="h-4 w-4 transition-transform duration-500 group-hover:translate-x-1 motion-reduce:transition-none" aria-hidden="true" />
-              </span>
-            </div>
-          </PropertyPreviewLink>
+          {previewLayout ? (
+            <PropertyPreviewLink
+              item={nextPropertyToDiscover}
+              browseItems={discoveryBrowseItems}
+              browseTotal={navigationCount}
+              browseMode={navigationMode}
+              className="group relative mt-4 flex min-h-[18rem] flex-col justify-end overflow-hidden rounded-2xl bg-neutral-950 p-6 text-white shadow-sm transition-shadow duration-500 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:min-h-[22rem] sm:p-9"
+              aria-label={`Découvrir le bien suivant : ${nextPropertyToDiscover.title}, ${getRecommendationLocation(nextPropertyToDiscover)}, ${formatPrice(nextPropertyToDiscover.priceAmount, nextPropertyToDiscover.transaction)}`}
+            >
+              {discoveryCardContent}
+            </PropertyPreviewLink>
+          ) : (
+            <Link
+              to={toCanonicalPropertyPath(nextPropertyToDiscover)}
+              replace
+              state={getFullPageNavigationState(nextPropertyToDiscover)}
+              className="group relative mt-4 flex min-h-[18rem] flex-col justify-end overflow-hidden rounded-2xl bg-neutral-950 p-6 text-white shadow-sm transition-shadow duration-500 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:min-h-[22rem] sm:p-9"
+              aria-label={`Découvrir le bien suivant : ${nextPropertyToDiscover.title}, ${getRecommendationLocation(nextPropertyToDiscover)}, ${formatPrice(nextPropertyToDiscover.priceAmount, nextPropertyToDiscover.transaction)}`}
+            >
+              {discoveryCardContent}
+            </Link>
+          )}
         </section>
       )}
       {secondarySimilarItems.length > 0 && (
@@ -663,6 +841,8 @@ export default function ListingDetailPage({
                   <PropertyPreviewLink
                     item={item}
                     browseItems={similarBrowseItems}
+                    browseTotal={similarBrowseItems.length}
+                    browseMode="similar"
                     className="block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4"
                     aria-label={`Voir ${item.title}, ${getRecommendationLocation(item)}, ${formatPrice(item.priceAmount, item.transaction)}${roomAndSurface ? `, ${roomAndSurface}` : ""}`}
                   >

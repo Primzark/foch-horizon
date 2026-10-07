@@ -168,6 +168,11 @@ function PropertyDetailRouteModal() {
         propertyModal: true,
         backgroundLocation: routeState?.backgroundLocation,
         announcementItems,
+        announcementTotal: routeState?.announcementTotal,
+        announcementMode: routeState?.announcementMode,
+        announcementStartPage: routeState?.announcementStartPage,
+        announcementEndPage: routeState?.announcementEndPage,
+        announcementPageSize: routeState?.announcementPageSize,
         budgetFinderFilters: routeState?.budgetFinderFilters,
         propertyModalDepth,
       },
@@ -238,7 +243,7 @@ function PropertyDetailRouteModal() {
             <Link
               to={`${location.pathname}${location.search}`}
               replace
-              state={routeState?.propertyPreview ? { propertyPreview: routeState.propertyPreview } : null}
+              state={routeState ? { ...routeState, propertyModal: false } : null}
               aria-label="Ouvrir l’annonce en plein écran"
             >
               <Maximize2 aria-hidden="true" className="h-4 w-4 sm:mr-1.5" />
