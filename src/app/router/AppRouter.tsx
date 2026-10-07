@@ -234,7 +234,7 @@ function PropertyDetailRouteModal() {
             openProperty(nextProperty, 1);
           }
         }}
-        className="left-0 top-0 flex h-[100dvh] w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 p-0 sm:left-[50%] sm:top-[50%] sm:h-[min(92dvh,60rem)] sm:max-h-[92dvh] sm:w-[calc(100%-2rem)] sm:max-w-none sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-2xl sm:border"
+        className="left-0 top-0 flex h-[100dvh] w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 p-0 sm:left-[50%] sm:top-[50%] sm:h-[min(92dvh,60rem)] sm:max-h-[92dvh] sm:w-[calc(100%-1rem)] sm:max-w-none lg:w-[86vw] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-2xl sm:border"
       >
         <div className="relative flex h-16 shrink-0 items-center justify-between gap-2 border-b border-border bg-background px-4 pr-16 sm:gap-3 sm:px-6 sm:pr-20">
           <DialogHeader className="min-w-0 max-w-[50%] space-y-0 text-left sm:max-w-none">
