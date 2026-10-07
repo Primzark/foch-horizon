@@ -7,6 +7,7 @@ export type SiteLanguage = "fr" | "en";
  */
 export const englishCopy: Record<string, string> = {
   "Accueil": "Home",
+  "Biens": "Properties",
   "Nos biens": "Properties",
   "Vendre": "Sell",
   "Nos dernières ventes": "Recent sales",
@@ -15,6 +16,7 @@ export const englishCopy: Record<string, string> = {
   "Géographie": "Areas",
   "Contact": "Contact",
   "L'agence": "The agency",
+  "Transactions immobilières": "Property transactions",
   "Immobilier au Havre · Depuis 1972": "Property in Le Havre · Since 1972",
   "Mon assistant IA": "AI assistant",
   "Ouvrir le menu": "Open menu",
@@ -39,6 +41,10 @@ export const englishCopy: Record<string, string> = {
   "Chargement de la sélection": "Loading our selection",
   "Nous préparons les biens à découvrir.": "We’re getting properties ready for you to explore.",
   "Explorer par ville": "Explore by town",
+  "Secteur": "Area",
+  "La plage et Saint-Vincent": "The beach and Saint-Vincent",
+  "Le centre-ville": "City centre",
+  "Bois de Bléville": "Bléville woods",
   "Explorez nos pages locales pour affiner votre recherche sur Le Havre et ses communes voisines.": "Explore our local guides to narrow your search in Le Havre and nearby towns.",
   "Immobilier": "Property in",
   "Lire les avis clients": "Read client reviews",
@@ -217,6 +223,11 @@ export const englishCopy: Record<string, string> = {
   "Découvrir": "Discover",
   "Biens similaires": "Similar properties",
   "Voir les biens similaires": "View similar properties",
+  "Même secteur": "Same area",
+  "Budget et pièces proches": "Similar budget and room count",
+  "Budget et surface proches": "Similar budget and floor area",
+  "Surface et pièces proches": "Similar floor area and room count",
+  "Critères proches": "Closely matched criteria",
   "À découvrir": "Explore",
     "Affinez votre recherche et trouvez le bien qui correspond à votre projet.": "Refine your search to find a property that fits your plans.",
   "Vous avez sauvegardé": "You’ve saved",
@@ -235,10 +246,27 @@ export const englishCopy: Record<string, string> = {
   "Chargement de la comparaison": "Loading comparison",
   "Chargement des biens sélectionnés…": "Loading selected properties…",
   "Retour aux biens": "Back to properties",
+  "Retour": "Back",
+  "Revenir à l’annonce précédente": "Return to the previous listing",
+  "Annonce précédente": "Previous listing",
+  "Annonce suivante": "Next listing",
+  "Navigation entre les annonces": "Listing navigation",
+  "À suivre": "Up next",
+  "Glissez à gauche ou à droite": "Swipe left or right",
+  "Vous pouvez aussi utiliser les flèches du clavier.": "You can also use the arrow keys.",
+  "Aperçu de l’annonce": "Listing preview",
+  "Fiche complète du bien. Ouvrez-la en plein écran pour accéder à toute la page.": "Full listing details. Open it full screen to access the complete page.",
+  "Ouvrir l’annonce en plein écran": "Open the listing full screen",
+  "Plein écran": "Full screen",
+  "Ajouter à la comparaison": "Add to comparison",
+  "Retirer de la comparaison": "Remove from comparison",
+  "Maximum de 3 biens": "Maximum of 3 properties",
   "Votre comparaison est vide": "Your comparison is empty",
   "Choisissez jusqu’à trois annonces dans la liste pour comparer leurs caractéristiques côte à côte.": "Choose up to three listings to compare their features side by side.",
   "Parcourir les biens": "Browse properties",
   "Votre sélection ·": "Your selection ·",
+  "Comparer": "Compare",
+  "Ajouté": "Added",
   "Comparer les biens": "Compare properties",
   "Les informations manquantes sont indiquées comme non renseignées. Le prix au m² est calculé à partir de la surface habitable publiée.": "Missing information is marked as not provided. Price per square metre is based on the listed living area.",
   "Afficher uniquement les différences": "Show differences only",
@@ -266,9 +294,13 @@ export const englishCopy: Record<string, string> = {
   "Image précédente": "Previous image",
   "Image suivante": "Next image",
   "Ouvrir la galerie en plein écran": "Open full-screen gallery",
+  "Voir la photo": "View photo",
   "Voir les": "View",
   "Revenir à la photo principale": "Return to the main photo",
   "Voir toutes les photos": "View all photos",
+  "Photo": "Photo",
+  "Description": "Description",
+  "Cave": "Cellar",
   "Photo précédente": "Previous photo",
   "Photo suivante": "Next photo",
   "Partager ce bien": "Share this property",
@@ -430,6 +462,8 @@ export const englishCopy: Record<string, string> = {
   "Appartement": "Apartment",
   "Autre": "Other",
   "Vente": "For sale",
+  "À vendre": "For sale",
+  "À louer": "For rent",
   "Plus récents": "Most recent",
   "Prix croissant": "Price: low to high",
   "Prix décroissant": "Price: high to low",
@@ -443,6 +477,7 @@ export const englishCopy: Record<string, string> = {
   "Pièces": "Rooms",
   "Salle de bain": "Bathroom",
   "Salles de bain": "Bathrooms",
+  "Sdb": "Bathrooms",
   "Surface habitable": "Living area",
   "Terrain": "Plot",
   "Prix": "Price",
@@ -660,6 +695,57 @@ export const englishCopy: Record<string, string> = {
   "Vivre": "Living",
   "Rue Victor Hugo, rue piétonne du centre-ville du Havre, à proximité des Halles Centrales": "Rue Victor Hugo, a pedestrian street in central Le Havre, close to the Halles Centrales",
   "Crédits photo : Rue Victor Hugo du Havre (juillet 2024).JPG": "Photo credit: Rue Victor Hugo du Havre (July 2024).JPG",
+  "Peinture de la plage de Sainte-Adresse, avec villas en bord de mer et baigneurs": "Painting of Sainte-Adresse beach, with seaside villas and swimmers",
+  "Crédits photo : La plage de Sainte-Adresse — image fournie par Foch Immobilier": "Photo credit: Sainte-Adresse beach — image provided to Foch Immobilier",
+  "Nouveauté Harfleur": "New listing · Harfleur",
+  "EXCLUSIVITE SAINT VINCENT": "Exclusive · Saint-Vincent",
+  "NOUVEAUTE PLACE DE BLEVILLE": "New listing · Place de Bléville",
+  "EXCLUSIVITE CENTRE D'HARFLEUR": "Exclusive · Harfleur town centre",
+  "Entre Coty Et Danton": "Between Coty and Danton",
+  "Les docks, dernier étage": "The Docks, top floor",
+  "Entre Palais de justice et Bassin du Commerce": "Between the courthouse and Bassin du Commerce",
+  "MONTMORENCY": "Montmorency",
+  "TRIPLE EXPOSITION VUE MER": "Three-aspect sea view",
+  "JOFFRE/ PARC HAUSER": "Joffre / Parc Hauser",
+  "SAINT MICHEL , CENTRE-VILLE": "Saint-Michel, city centre",
+  "Sanvic Mairie": "Sanvic Town Hall",
+  "Nouveauté A deux pas de Saint Vincent": "New listing · Steps from Saint-Vincent",
+  "EXCLUSIVITE SAINT MICHEL": "Exclusive · Saint-Michel",
+  "EXCLUSIVITE PLACE SAINTE CECILE": "Exclusive · Place Sainte-Cécile",
+  "NOUVEAUTE EXCLUSIVITE": "New listing · Exclusive",
+  "Place de l'Hôtel de Ville, Vue Ouest": "Place de l’Hôtel de Ville, west-facing",
+  "EXCLUSIVITE LES ORMEAUX": "Exclusive · Les Ormeaux",
+  "Face Casino": "Opposite the Casino",
+  "Début Graville, rue J.Mazarin": "Graville, Rue J. Mazarin",
+  "Nouveauté , exclusivité": "New listing · Exclusive",
+  "EXCLUSIVITE FELIX FAURE / PARC D'OR , PROXIMITE DES LYCEES": "Exclusive · Félix Faure / Parc d’Or, near schools",
+  "FONTAINE LA MALLET": "Fontaine-la-Mallet",
+  "EXCLUSIVITE AVENUE RENE COTY": "Exclusive · Avenue René Coty",
+  "EXCLUSIVITE HARFLEUR CENTRE": "Exclusive · Harfleur town centre",
+  "EXCLUSIVITE SAINTE CECILE": "Exclusive · Sainte-Cécile",
+  "NOUVEAUTE PROX UNIVERSITE": "New listing · Near the university",
+  "Proche forêt de Montgeon": "Near Montgeon Forest",
+  "Rouelles": "Rouelles",
+  "NOUVEAUTE Place de l'hôtel de ville": "New listing · Place de l’Hôtel de Ville",
+  "CENTRE DE SAINT ROMAIN DE COLBOSC": "Saint-Romain-de-Colbosc town centre",
+  "SANVIC EGLISE": "Sanvic Church",
+  "SAINTE ADRESSE": "Sainte-Adresse",
+  "SAINT VINCENT": "Saint-Vincent",
+  "EXCLUSIVITE SANVIC": "Exclusive · Sanvic",
+  "Saint Vincent": "Saint-Vincent",
+  "PROXIMITE DU CENTRE COTY": "Near the Coty centre",
+  "Nouveauté": "New listing",
+  "Proche du phare de Sainte Adresse": "Near the Sainte-Adresse lighthouse",
+  "À deux pas de Saint Vincent": "Steps from Saint-Vincent",
+  "GAINNEVILLE": "Gainneville",
+  "Belle PROPRIETE": "Beautiful property",
+  "NOUVEAUTE QUARTIER DANTON": "New listing · Danton neighbourhood",
+  "MAGNIFIQUE VUE SUR HONFLEUR": "Beautiful view over Honfleur",
+  "Entre le square Saint Roch et la plage": "Between Square Saint-Roch and the beach",
+  "Félix Faure": "Félix Faure",
+  "APPARTEMENT DE STANDING VUE VILLE ET MER": "Premium apartment with city and sea views",
+  "PROPRIETE DE CARACTERE": "Character property",
+  "NOUVEAUTE GAINNEVILLE CENTRE": "New listing · Gainneville town centre",
   "Immobilier aux": "Property in",
   "en images": "in pictures",
   "Foch Immobilier": "Foch Immobilier",
@@ -681,7 +767,97 @@ function preserveCase(source: string, translated: string): string {
   return translated;
 }
 
+function translateKnownPhrase(source: string): string {
+  const canonical = canonicalFrenchText(source.trim());
+  return englishCopy[canonical]
+    ?? normalizedEnglishCopy.get(normalize(canonical))
+    ?? translateDynamicFrench(canonical)
+    ?? source;
+}
+
+function translateDelimitedPhrase(source: string): string {
+  return source.split(/\s*·\s*/).map(translateKnownPhrase).join(" · ");
+}
+
 function translateDynamicFrench(source: string): string | undefined {
+  const propertyCountInBudget = source.match(/^(\d[\d\s,.]*)\s+biens? dans votre budget$/i);
+  if (propertyCountInBudget) {
+    const count = propertyCountInBudget[1].trim();
+    const noun = Number(count.replace(/\s/g, "")) === 1 ? "property" : "properties";
+    return `${count} ${noun} within your budget`;
+  }
+
+  const dpeClass = source.match(/^DPE,?\s*classe\s+([A-G])$/i);
+  if (dpeClass) return `Energy rating ${dpeClass[1].toUpperCase()}`;
+
+  const dpeShort = source.match(/^DPE\s+([A-G])$/i);
+  if (dpeShort) return `Energy rating ${dpeShort[1].toUpperCase()}`;
+
+  const dpeDetails = source.match(/^DPE,\s*classe\s+([A-G]),\s*([\d\s,.]+)\s+kilowattheures? par mètre carré et par an$/i);
+  if (dpeDetails) return `Energy rating ${dpeDetails[1].toUpperCase()}, ${dpeDetails[2].trim()} kWh/m² per year`;
+
+  const gesDetails = source.match(/^GES,\s*classe\s+([A-G]),\s*([\d\s,.]+)\s+kilogrammes? de CO₂ par mètre carré et par an$/i);
+  if (gesDetails) return `Greenhouse gas rating ${gesDetails[1].toUpperCase()}, ${gesDetails[2].trim()} kg CO₂/m² per year`;
+
+  const photoCount = source.match(/^Voir les (\d+) photos?$/i);
+  if (photoCount) return `View ${photoCount[1]} photo${Number(photoCount[1]) === 1 ? "" : "s"}`;
+
+  const photoPosition = source.match(/^Photo (\d+) sur (\d+)$/i);
+  if (photoPosition) return `Photo ${photoPosition[1]} of ${photoPosition[2]}`;
+
+  const allPhotosLabel = source.match(/^Toutes les photos du bien \((\d+)\)$/i);
+  if (allPhotosLabel) return `All property photos (${allPhotosLabel[1]})`;
+
+  const listingNavigationLabel = source.match(/^Annonce suivante\s*:\s*(.+?),\s*(.+?),\s*(.+)$/i);
+  if (listingNavigationLabel) {
+    const title = translateKnownPhrase(listingNavigationLabel[1]);
+    const price = translateKnownPhrase(listingNavigationLabel[3]);
+    return `Next listing: ${title}, ${translateKnownPhrase(listingNavigationLabel[2])}, ${price}`;
+  }
+
+  const nextPropertyCardLabel = source.match(/^Découvrir le bien suivant\s*:\s*(.+),\s*(.+),\s*(.+)$/i);
+  if (nextPropertyCardLabel) {
+    const title = translateKnownPhrase(nextPropertyCardLabel[1]);
+    const location = nextPropertyCardLabel[2].match(/^(.+?)\s*·\s*(\d{5})$/);
+    const localizedLocation = location
+      ? `${translateKnownPhrase(location[1])} · ${location[2]}`
+      : translateKnownPhrase(nextPropertyCardLabel[2]);
+    return `Discover the next property: ${title}, ${localizedLocation}, ${translateKnownPhrase(nextPropertyCardLabel[3])}`;
+  }
+
+  const similarPropertyLabel = source.match(/^Voir\s+(.+),\s*((?:€\s*)?[\d\s\u202f,.]+\s*€)(?:,\s*(.+))?$/i);
+  if (similarPropertyLabel) {
+    const locationSeparator = similarPropertyLabel[1].lastIndexOf(",");
+    if (locationSeparator >= 0) {
+      const title = similarPropertyLabel[1].slice(0, locationSeparator).trim();
+      const location = similarPropertyLabel[1].slice(locationSeparator + 1).trim();
+      const price = translateKnownPhrase(similarPropertyLabel[2]);
+      const facts = similarPropertyLabel[3] ? `, ${translateDelimitedPhrase(similarPropertyLabel[3])}` : "";
+      return `View ${translateKnownPhrase(title)}, ${translateDelimitedPhrase(location)}, ${price}${facts}`;
+    }
+  }
+
+  const propertySeoTitle = source.match(/^(.+?)\s+[–—]\s+(.+?)\s+[–—]\s+Prix\s+(.+?)\s+[–—]\s+Réf\.?\s*(\d+)$/i);
+  if (propertySeoTitle) {
+    const title = translateKnownPhrase(propertySeoTitle[1]);
+    const price = translateKnownPhrase(propertySeoTitle[3]);
+    return `${title} – ${propertySeoTitle[2]} – Price ${price} – Ref ${propertySeoTitle[4]}`;
+  }
+
+  const listingTitle = source.match(/^\s*(EXCLUSIVIT[ÉE]|NOUVEAUT[ÉE]S?|SOUS OFFRE|SOUS COMPROMIS)(\s*[-–—:·]\s*|\s+)(.+)$/i);
+  if (listingTitle) {
+    const prefix = normalize(listingTitle[1]);
+    const status = prefix.startsWith("exclusivite") ? "Exclusive"
+      : prefix.startsWith("nouveaute") ? "New listing"
+      : prefix === "sous offre" ? "Under offer"
+      : "Sale agreed";
+    const title = listingTitle[3]
+      .replace(/\bEXCLUSIVIT[ÉE]\b/gi, (word) => preserveCase(word, "Exclusive"))
+      .replace(/\bNOUVEAUT[ÉE]S?\b/gi, (word) => preserveCase(word, "New listing"));
+    const separator = /^[\s]*$/.test(listingTitle[2]) ? " · " : listingTitle[2];
+    return `${preserveCase(listingTitle[1], status)}${separator}${title}`;
+  }
+
   const propertyProject = source.match(/^Projet immobilier\s*:\s*(.+)$/i);
   if (propertyProject) return `Your property plans in ${propertyProject[1]}`;
 

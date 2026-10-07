@@ -1,5 +1,5 @@
 import { useRef, useState, type TouchEvent } from "react";
-import { ChevronLeft, ChevronRight, Expand, Images } from "lucide-react";
+import { ChevronLeft, ChevronRight, Images } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Dialog,
@@ -42,6 +42,7 @@ export function ListingGallery({ images, title, propertyId }: { images: Property
 
   const activeIndex = Math.min(selectedIndex, images.length - 1);
   const activeImage = images[activeIndex];
+  const galleryButtonLabel = images.length === 1 ? "Voir la photo" : `Voir les ${images.length} photos`;
   const imageMood = inferPlaceImageMood(title, activeImage.altText);
   const motionDirector = getMotionDirectorProfile(imageMood);
 
@@ -109,7 +110,7 @@ export function ListingGallery({ images, title, propertyId }: { images: Property
           }}
         >
           <ContextAwareParallax mood={imageMood} reducedMotion={reducedMotion} intensity="immersive" scrollReactive className="z-[0]">
-            <div className="relative aspect-[16/10] w-full overflow-hidden">
+            <div className="relative aspect-[16/9] w-full overflow-hidden">
               <AnimatePresence initial={!reducedMotion} mode="sync">
                 <motion.img
                   key={activeImage.id}
@@ -134,9 +135,8 @@ export function ListingGallery({ images, title, propertyId }: { images: Property
           <PlaceAtmosphereLayer mood={imageMood} animated={false} variant="gallery" className="z-[1]" />
           <div className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-t from-black/22 via-black/8 to-transparent" />
 
-          <div className="absolute left-3 top-3 z-[3] rounded-full bg-background/90 px-2 py-1 text-xs">
-            <Images className="mr-1 inline h-3.5 w-3.5" />
-            {activeIndex + 1}/{images.length}
+          <div aria-label={`Photo ${activeIndex + 1} sur ${images.length}`} className="absolute left-3 top-3 z-[3] rounded-full bg-background/90 px-2.5 py-1.5 text-xs font-medium shadow-sm backdrop-blur-sm">
+            {activeIndex + 1} / {images.length}
           </div>
 
           {images.length > 1 && (
@@ -165,35 +165,19 @@ export function ListingGallery({ images, title, propertyId }: { images: Property
           <DialogTrigger asChild>
             <button
               type="button"
-              className="absolute right-3 top-3 z-[3] rounded-full bg-background/90 p-2"
-              aria-label="Ouvrir la galerie en plein écran"
+              className="absolute right-3 top-3 z-[4] inline-flex min-h-10 items-center gap-2 rounded-full border border-white/70 bg-background/95 px-3.5 text-sm font-medium shadow-sm backdrop-blur-sm transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              aria-label={galleryButtonLabel}
+              title={galleryButtonLabel}
               onClick={() => {
-                setShowAllPhotos(false);
+                setShowAllPhotos(true);
                 trackEvent("gallery_opened", { property_id: propertyId });
               }}
             >
-              <Expand className="h-4 w-4" />
+              <Images className="h-4 w-4" aria-hidden="true" />
+              {galleryButtonLabel}
             </button>
           </DialogTrigger>
         </div>
-
-        {images.length > 1 && (
-          <div className="mt-3 flex justify-end">
-            <DialogTrigger asChild>
-              <button
-                type="button"
-                className="inline-flex min-h-10 items-center gap-2 rounded-full border border-border bg-background px-4 text-sm font-medium transition-colors hover:border-brand-border hover:bg-brand-soft/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                onClick={() => {
-                  setShowAllPhotos(true);
-                  trackEvent("gallery_opened", { property_id: propertyId });
-                }}
-              >
-                <Images className="h-4 w-4" aria-hidden="true" />
-                Voir les {images.length} photos
-              </button>
-            </DialogTrigger>
-          </div>
-        )}
 
         <DialogContent data-property-gallery className="max-h-[90dvh] overflow-y-auto sm:max-w-5xl">
           <DialogHeader>

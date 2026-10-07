@@ -419,31 +419,36 @@ export async function getSimilarProperties(property: Property, limit = 3): Promi
       const similarSurface = surfaceDifference <= 0.2;
       const comparablePrice = priceDifference <= 0.35;
       const comparableSurface = surfaceDifference <= 0.35;
-      const comparableSectorAndBudget = samePostalCode && comparablePrice;
-      const hasUsefulMatch = similarPrice || similarSurface || (similarRooms && (comparablePrice || comparableSurface)) || comparableSectorAndBudget;
+      const comparableRooms = roomDifference == null || roomDifference <= 1;
+      const sameAreaAndBudget = samePostalCode && comparablePrice && comparableRooms;
+      const balancedMatch = comparablePrice && comparableSurface && comparableRooms;
+      const hasUsefulMatch = sameAreaAndBudget || balancedMatch;
 
+      // A shared postcode can justify a size difference; elsewhere, budget,
+      // floor area and room count must all be close enough to compare fairly.
       const score =
-        40 +
-        (samePostalCode ? 15 : 0) +
-        (similarPrice ? 24 : comparablePrice ? 14 : priceDifference <= 0.5 ? 5 : -10) +
-        (roomDifference === 0 ? 14 : similarRooms ? 10 : roomDifference != null && roomDifference <= 2 ? 4 : 0) +
-        (similarSurface ? 18 : comparableSurface ? 10 : -5);
+        (samePostalCode ? 50 : 0) +
+        Math.max(0, 28 - priceDifference * 60) +
+        Math.max(0, 28 - surfaceDifference * 40) +
+        (roomDifference === 0 ? 16 : similarRooms ? 8 : 0);
 
-      const reason = similarPrice
-        ? "Budget similaire"
-        : roomDifference === 0
-          ? "Même nombre de pièces"
-          : similarRooms
-            ? "Pièces proches"
-            : similarSurface
-              ? "Surface comparable"
-              : comparableSectorAndBudget
-                ? "Même secteur"
-                : null;
+      const reason = samePostalCode
+        ? "Même secteur"
+        : similarPrice && similarRooms
+          ? "Budget et pièces proches"
+          : similarPrice && similarSurface
+            ? "Budget et surface proches"
+            : similarRooms && similarSurface
+              ? "Surface et pièces proches"
+              : similarPrice
+                ? "Budget similaire"
+                : similarSurface
+                  ? "Surface comparable"
+                  : "Critères proches";
 
       return { property: candidate, score, reason, hasUsefulMatch, priceDifference, surfaceDifference, roomDifference };
     })
-    .filter((candidate) => candidate.hasUsefulMatch && candidate.reason != null)
+    .filter((candidate) => candidate.hasUsefulMatch)
     .sort((left, right) =>
       right.score - left.score ||
       left.priceDifference - right.priceDifference ||
@@ -455,7 +460,7 @@ export async function getSimilarProperties(property: Property, limit = 3): Promi
 
   return recommendations.map(({ property: candidate, reason }) => ({
     property: candidate,
-    reason: reason!,
+    reason,
   }));
 }
 

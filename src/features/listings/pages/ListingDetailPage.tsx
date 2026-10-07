@@ -33,6 +33,7 @@ import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings
 import { buildSearchParams } from "@/features/listings/utils/query";
 import type { PropertySearchItem } from "@/types/api";
 import type { Property } from "@/types/domain";
+import type { PropertyModalRouteState } from "@/features/listings/navigation/propertyModalNavigation";
 
 function parseRouteIdAndSlug(rawIdSlug?: string): { id: number; slug: string | null } | null {
   if (!rawIdSlug) {
@@ -208,7 +209,7 @@ export default function ListingDetailPage({
     queryKey: ["similar", propertyId],
     queryFn: () =>
       propertyQuery.data && !propertyQuery.isPlaceholderData
-        ? getSimilarProperties(propertyQuery.data, 4)
+        ? getSimilarProperties(propertyQuery.data, 3)
         : Promise.resolve([]),
     enabled: Boolean(propertyQuery.data && !propertyQuery.isPlaceholderData),
   });
@@ -235,8 +236,21 @@ export default function ListingDetailPage({
     trackEvent("comparison_contact_click", { property_id: property.id, method });
   };
   const isFavorite = property ? favoriteIds.includes(property.id) : false;
-  const nextPropertyToDiscover = similarItems[0];
-  const secondarySimilarItems = similarItems.slice(1, 4);
+  const routeState = location.state as PropertyModalRouteState | null;
+  const announcementItems = routeState?.announcementItems;
+  const announcementIndex = announcementItems?.findIndex((item) => item.id === propertyId) ?? -1;
+  const hasAnnouncementPosition = Boolean(announcementItems && announcementIndex >= 0);
+  const nextInAnnouncementOrder = hasAnnouncementPosition && announcementItems && announcementIndex < announcementItems.length - 1
+    ? announcementItems[announcementIndex + 1]
+    : undefined;
+  const nextPropertyToDiscover = hasAnnouncementPosition ? nextInAnnouncementOrder : similarItems[0];
+  const similarBrowseItems = property ? [toSearchItem(property), ...similarItems] : similarItems;
+  const discoveryBrowseItems = hasAnnouncementPosition && announcementItems
+    ? announcementItems
+    : similarBrowseItems;
+  const secondarySimilarItems = similarItems
+    .filter((item) => item.id !== nextPropertyToDiscover?.id)
+    .slice(0, 3);
   const similarSearchHref = property ? getSimilarSearchHref(property) : null;
 
   useEffect(() => {
@@ -381,7 +395,7 @@ export default function ListingDetailPage({
         <div className="mb-4 h-4 w-44 rounded bg-muted" aria-hidden="true" />
         <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
           <div>
-            <div className="aspect-[16/10] rounded-2xl bg-muted" aria-hidden="true" />
+            <div className="aspect-[16/9] rounded-2xl bg-muted" aria-hidden="true" />
             <div className="mt-6 h-8 w-2/3 rounded bg-muted" aria-hidden="true" />
             <div className="mt-3 h-5 w-1/3 rounded bg-muted" aria-hidden="true" />
           </div>
@@ -447,17 +461,17 @@ export default function ListingDetailPage({
         / <span className="text-foreground">Réf {property.id}</span>
       </nav>
 
-      <div ref={contentRef} className="grid gap-8 lg:grid-cols-[1fr_340px]">
+      <div ref={contentRef} className="grid gap-7 lg:grid-cols-[1fr_340px] lg:gap-8">
         <div>
           <ListingGallery images={property.images} title={property.title} propertyId={property.id} />
           {announcementSwipeHint && (
             <div className="mt-1 flex justify-end pr-1 lg:hidden">{announcementSwipeHint}</div>
           )}
 
-          <div ref={summaryRef} className={`${announcementSwipeHint ? "mt-2 lg:mt-6" : "mt-6"} flex flex-wrap items-start justify-between gap-4`}>
+          <div ref={summaryRef} className={`${announcementSwipeHint ? "mt-2 lg:mt-5" : "mt-5"} flex flex-wrap items-start justify-between gap-x-6 gap-y-6`}>
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Réf du bien {property.id}</p>
-              <h1 className="mt-1 font-display text-4xl">{property.title}</h1>
+              <h1 className="mt-1 font-display text-4xl leading-[1.08]">{property.title}</h1>
               <div className="mt-2 flex flex-wrap gap-2">
                 <p className="inline-flex rounded-full border border-border px-3 py-1 text-xs font-medium text-foreground/90">
                   Type : {propertyTypeLabel}
@@ -472,9 +486,9 @@ export default function ListingDetailPage({
               </p>
             </div>
 
-            <div className="w-full text-left sm:ml-auto sm:w-auto sm:text-right">
+            <div className="w-full text-left sm:ml-auto sm:w-auto sm:min-w-[18rem] sm:text-right">
               <p className="font-display text-5xl leading-tight tracking-tight text-brand-strong sm:text-6xl">{formatPrice(property.priceAmount, property.transactionType)}</p>
-              <div className="mt-3 flex flex-wrap items-center gap-2 sm:justify-end">
+              <div className="mt-4 flex flex-wrap items-center gap-2 sm:mt-3 sm:justify-end">
                 {property.status === "active" && property.transactionType === "vente" && (
                   <PropertyCompareToggle propertyId={property.id} />
                 )}
@@ -512,7 +526,7 @@ export default function ListingDetailPage({
             </div>
           </div>
 
-          <div className="mt-6 grid gap-3 rounded-2xl border border-border bg-card p-4 sm:grid-cols-4">
+          <div className="mt-8 grid gap-3 rounded-2xl border border-border bg-card p-4 sm:grid-cols-4">
             {quickFacts.map((fact) => (
               <div key={fact.label} className="rounded-xl border border-border p-3 text-center">
                 <fact.icon className="mx-auto h-4 w-4" />
@@ -522,7 +536,7 @@ export default function ListingDetailPage({
             ))}
           </div>
 
-          <article className="mt-8 rounded-2xl border border-border bg-card p-6">
+          <article className="mt-9 rounded-2xl border border-border bg-card p-6">
             <h2 className="font-display text-2xl">Description</h2>
             <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">{property.description}</p>
           </article>
@@ -600,11 +614,11 @@ export default function ListingDetailPage({
       </div>
 
       {nextPropertyToDiscover && (
-        <section className="mt-12">
+        <section className="mt-16">
           <h2 className="font-display text-3xl">Prochain bien à découvrir</h2>
           <PropertyPreviewLink
             item={nextPropertyToDiscover}
-            browseItems={similarItems}
+            browseItems={discoveryBrowseItems}
             className="group relative mt-4 flex min-h-[18rem] flex-col justify-end overflow-hidden rounded-2xl bg-neutral-950 p-6 text-white shadow-sm transition-shadow duration-500 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:min-h-[22rem] sm:p-9"
             aria-label={`Découvrir le bien suivant : ${nextPropertyToDiscover.title}, ${getRecommendationLocation(nextPropertyToDiscover)}, ${formatPrice(nextPropertyToDiscover.priceAmount, nextPropertyToDiscover.transaction)}`}
           >
@@ -635,7 +649,7 @@ export default function ListingDetailPage({
         </section>
       )}
       {secondarySimilarItems.length > 0 && (
-        <section className="mt-10 sm:mt-12" aria-labelledby="similar-properties-heading">
+        <section className="mt-14" aria-labelledby="similar-properties-heading">
           <h2 id="similar-properties-heading" className="font-display text-2xl sm:text-3xl">Biens similaires</h2>
           <div className="mt-4 grid grid-flow-col auto-cols-[84%] snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain pb-2 pr-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:auto-cols-[46%] lg:auto-cols-[32%] lg:justify-center lg:overflow-visible lg:pb-0 lg:pr-0">
             {secondarySimilarItems.map((item) => {
@@ -646,7 +660,7 @@ export default function ListingDetailPage({
                 <article key={item.id} className="group relative min-w-0 snap-start">
                   <PropertyPreviewLink
                     item={item}
-                    browseItems={similarItems}
+                    browseItems={similarBrowseItems}
                     className="block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4"
                     aria-label={`Voir ${item.title}, ${getRecommendationLocation(item)}, ${formatPrice(item.priceAmount, item.transaction)}${roomAndSurface ? `, ${roomAndSurface}` : ""}`}
                   >

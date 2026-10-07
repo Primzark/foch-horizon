@@ -35,14 +35,13 @@ const serviceCards = [
   },
 ];
 
-const HERO_IMAGE_URL = "/images/dufy-final-pick.jpg";
+const HERO_IMAGE_URL = "/images/sainte-adresse-beach.jpg";
 const HERO_IMAGE_CREDIT: PhotoAttributionCredit = {
-  title: "La Plage du Havre et la villa maritime — œuvre de Raoul Dufy photographiée par Martpan",
-  creator: "Raoul Dufy (œuvre), Martpan (photographie)",
-  sourceUrl: "https://www.revuedesdeuxmondes.fr/le-havre-de-lart-2/",
-  license: "CC BY-SA 4.0",
-  licenseUrl: "https://creativecommons.org/licenses/by-sa/4.0/deed.fr",
-  modification: "Fichier redimensionné et recadré pour la bannière",
+  title: "La plage de Sainte-Adresse — image fournie par Foch Immobilier",
+  creator: "Fichier fourni par Foch Immobilier",
+  sourceUrl: HERO_IMAGE_URL,
+  license: "Image fournie pour le site Foch Immobilier",
+  modification: "Recadrage adapté à la bannière d’accueil",
 };
 
 export default function HomePage() {
@@ -86,13 +85,13 @@ export default function HomePage() {
     <div className="homepage-page w-full min-w-0 overflow-x-clip">
       <section className="relative z-20 overflow-visible">
         <picture className="absolute inset-0">
-          <source srcSet="/images/dufy-final-pick.webp" type="image/webp" />
+          <source srcSet="/images/sainte-adresse-beach.webp" type="image/webp" />
           <img
             src={HERO_IMAGE_URL}
-            alt="Scène de plage au Havre, peinture de Raoul Dufy"
-            width={870}
-            height={647}
-            className="h-full w-full object-cover object-[center_8%]"
+            alt="Peinture de la plage de Sainte-Adresse, avec villas en bord de mer et baigneurs"
+            width={955}
+            height={447}
+            className="h-full w-full object-cover object-[center_70%]"
             loading="eager"
             decoding="async"
             fetchPriority="high"

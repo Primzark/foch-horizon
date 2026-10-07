@@ -310,7 +310,7 @@ export function LeadForm({
                     <SelectTrigger id="lead-callback-window" aria-labelledby="lead-callback-window-label">
                       <SelectValue placeholder="Sélectionnez" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="z-[250]">
                       <SelectItem value="none">Sans préférence</SelectItem>
                       <SelectItem value="matin">Matin</SelectItem>
                       <SelectItem value="apres-midi">Après-midi</SelectItem>
@@ -327,7 +327,7 @@ export function LeadForm({
                     <SelectTrigger id="lead-financing-status" aria-labelledby="lead-financing-status-label">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="z-[250]">
                       <SelectItem value="not_defined">Non renseigné</SelectItem>
                       <SelectItem value="cash">Achat comptant</SelectItem>
                       <SelectItem value="mortgage_in_progress">Crédit en cours</SelectItem>

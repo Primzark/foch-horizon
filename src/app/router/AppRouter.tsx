@@ -108,7 +108,7 @@ function PropertyDetailRouteModal() {
     </span>
   ) : null;
   const announcementNavigationControls = canBrowseAnnouncements ? (
-    <div className="hidden justify-end lg:flex">
+    <div className="mt-4 hidden justify-end lg:flex">
       <div className="flex items-center gap-2" role="group" aria-label="Navigation entre les annonces">
         {previousProperty && (
           <Button
@@ -289,7 +289,7 @@ function PropertyDetailRouteModal() {
                     <div className="mb-4 h-4 w-44 rounded bg-muted" aria-hidden="true" />
                     <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
                       <div>
-                        <div className="aspect-[16/10] rounded-2xl bg-muted" aria-hidden="true" />
+                        <div className="aspect-[16/9] rounded-2xl bg-muted" aria-hidden="true" />
                         <div className="mt-6 h-8 w-2/3 rounded bg-muted" aria-hidden="true" />
                         <div className="mt-3 h-5 w-1/3 rounded bg-muted" aria-hidden="true" />
                       </div>
