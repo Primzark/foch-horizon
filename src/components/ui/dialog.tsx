@@ -45,7 +45,7 @@ const DialogContent = React.forwardRef<
       <DialogPrimitive.Close
         className={cn(
           "absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity data-[state=open]:bg-accent data-[state=open]:text-muted-foreground hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none",
-          largeCloseButton && "top-3 flex h-12 w-12 items-center justify-center rounded-full border border-border bg-background text-foreground opacity-100 shadow-md hover:bg-muted sm:top-4",
+          largeCloseButton && "top-2 flex h-12 w-12 items-center justify-center rounded-full border border-border bg-background text-foreground opacity-100 shadow-md hover:bg-muted",
         )}
       >
         <X className={largeCloseButton ? "h-6 w-6" : "h-4 w-4"} />
