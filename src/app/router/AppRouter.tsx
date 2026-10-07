@@ -229,12 +229,23 @@ function PropertyDetailRouteModal() {
         }}
         className="left-0 top-0 flex h-[100dvh] w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 p-0 sm:left-[50%] sm:top-[50%] sm:h-[min(92dvh,60rem)] sm:max-h-[92dvh] sm:w-[calc(100%-2rem)] sm:max-w-none sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-2xl sm:border"
       >
-        <div className="flex h-16 shrink-0 items-center justify-between gap-2 border-b border-border bg-background px-4 pr-16 sm:gap-3 sm:px-6 sm:pr-20">
-          <DialogHeader className="min-w-0 space-y-0 text-left">
+        <div className="relative flex h-16 shrink-0 items-center justify-between gap-2 border-b border-border bg-background px-4 pr-16 sm:gap-3 sm:px-6 sm:pr-20">
+          <DialogHeader className="min-w-0 max-w-[50%] space-y-0 text-left sm:max-w-none">
             <DialogTitle className="truncate font-display text-lg font-normal sm:text-xl max-[360px]:text-base">Aperçu de l’annonce</DialogTitle>
             <DialogDescription className="sr-only">Fiche complète du bien. Ouvrez-la en plein écran pour accéder à toute la page.</DialogDescription>
           </DialogHeader>
-          <div className="flex shrink-0 items-center gap-1.5">
+          <Button variant="outline" size="sm" className="absolute left-1/2 top-1/2 z-[1] shrink-0 -translate-x-1/2 -translate-y-1/2" asChild>
+            <Link
+              to={`${location.pathname}${location.search}`}
+              replace
+              state={routeState?.propertyPreview ? { propertyPreview: routeState.propertyPreview } : null}
+              aria-label="Ouvrir l’annonce en plein écran"
+            >
+              <Maximize2 aria-hidden="true" className="h-4 w-4 sm:mr-1.5" />
+              <span className="hidden sm:inline">Plein écran</span>
+            </Link>
+          </Button>
+          <div className="ml-auto flex shrink-0 items-center">
             {hasPreviousPropertyModal && (
               <Button
                 type="button"
@@ -249,17 +260,6 @@ function PropertyDetailRouteModal() {
                 <span className="hidden sm:inline">Retour</span>
               </Button>
             )}
-            <Button variant="outline" size="sm" className="shrink-0" asChild>
-              <Link
-                to={`${location.pathname}${location.search}`}
-                replace
-                state={routeState?.propertyPreview ? { propertyPreview: routeState.propertyPreview } : null}
-                aria-label="Ouvrir l’annonce en plein écran"
-              >
-                <Maximize2 aria-hidden="true" className="h-4 w-4 sm:mr-1.5" />
-                <span className="hidden sm:inline">Plein écran</span>
-              </Link>
-            </Button>
           </div>
         </div>
         <div ref={setStickySummaryPortalElement} className="pointer-events-none absolute inset-0 z-50" />
