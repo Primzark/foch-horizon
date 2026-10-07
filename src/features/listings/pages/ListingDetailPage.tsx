@@ -628,24 +628,26 @@ export default function ListingDetailPage({
         </div>
       </div>
 
-      <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2">
-        {!previewLayout && routeState?.backgroundLocation && (
-          <Button type="button" variant="ghost" size="sm" className="-ml-2 h-9 shrink-0 px-2 text-brand-strong" onClick={() => navigate(-1)}>
-            <ChevronLeft aria-hidden="true" className="mr-1 h-4 w-4" />
-            {routeState.backgroundLocation.pathname === "/biens" ? "Retour aux résultats" : "Retour"}
-          </Button>
-        )}
-        <nav className="text-sm text-muted-foreground">
-          <Link to="/" className="hover:underline">
-            Accueil
-          </Link>{" "}
-          /{" "}
-          <Link to="/biens" className="hover:underline">
-            Biens
-          </Link>{" "}
-          / <span className="text-foreground">Réf {property.id}</span>
-        </nav>
-      </div>
+      {!previewLayout && (
+        <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+          {routeState?.backgroundLocation && (
+            <Button type="button" variant="ghost" size="sm" className="-ml-2 h-9 shrink-0 px-2 text-brand-strong" onClick={() => navigate(-1)}>
+              <ChevronLeft aria-hidden="true" className="mr-1 h-4 w-4" />
+              {routeState.backgroundLocation.pathname === "/biens" ? "Retour aux résultats" : "Retour"}
+            </Button>
+          )}
+          <nav aria-label="Fil d’Ariane" className="text-sm text-muted-foreground">
+            <Link to="/" className="hover:underline">
+              Accueil
+            </Link>{" "}
+            /{" "}
+            <Link to="/biens" className="hover:underline">
+              Biens
+            </Link>{" "}
+            / <span className="text-foreground" aria-current="page">Réf {property.id}</span>
+          </nav>
+        </div>
+      )}
 
       <div ref={contentRef} className="grid gap-7 lg:grid-cols-[1fr_340px] lg:gap-8">
         <div>

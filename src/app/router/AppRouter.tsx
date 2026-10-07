@@ -85,6 +85,7 @@ function PropertyDetailRouteModal() {
   const propertyModalDepth = routeState?.propertyModalDepth ?? 0;
   const hasPreviousPropertyModal = propertyModalDepth > 0;
   const propertyId = Number(routeParams.idSlug?.split("-")[0]);
+  const propertyReference = Number.isInteger(propertyId) && propertyId > 0 ? propertyId : null;
   const budgetItems = routeState?.budgetFinderFilters
     ? queryClient.getQueryData<PropertySearchResponse>(["budget-finder", routeState.budgetFinderFilters])?.items ?? null
     : null;
@@ -236,8 +237,23 @@ function PropertyDetailRouteModal() {
       >
         <div className="relative flex h-16 shrink-0 items-center justify-between gap-2 border-b border-border bg-background px-4 pr-16 sm:gap-3 sm:px-6 sm:pr-20">
           <DialogHeader className="min-w-0 max-w-[50%] space-y-0 text-left sm:max-w-none">
-            <DialogTitle className="truncate font-display text-lg font-normal sm:text-xl max-[360px]:text-base">Aperçu de l’annonce</DialogTitle>
+            <DialogTitle className="sr-only">
+              Annonce immobilière{propertyReference ? ` – Réf ${propertyReference}` : ""}
+            </DialogTitle>
             <DialogDescription className="sr-only">Fiche complète du bien. Ouvrez-la en plein écran pour accéder à toute la page.</DialogDescription>
+            <nav aria-label="Fil d’Ariane" className="flex min-w-0 items-center whitespace-nowrap text-xs text-muted-foreground sm:text-sm">
+              <Link to="/" className="shrink-0 hover:underline">
+                Accueil
+              </Link>
+              <span className="mx-1" aria-hidden="true">/</span>
+              <Link to="/biens" className="shrink-0 hover:underline">
+                Biens
+              </Link>
+              <span className="mx-1" aria-hidden="true">/</span>
+              <span className="truncate text-foreground" aria-current="page">
+                Réf {propertyReference ?? "—"}
+              </span>
+            </nav>
           </DialogHeader>
           <Button variant="outline" size="sm" className="absolute left-1/2 top-1/2 z-[1] shrink-0 -translate-x-1/2 -translate-y-1/2" asChild>
             <Link
