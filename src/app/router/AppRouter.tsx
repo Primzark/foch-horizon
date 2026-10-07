@@ -212,6 +212,7 @@ function PropertyDetailRouteModal() {
     }}>
       <DialogContent
         ref={dialogContentRef}
+        largeCloseButton
         data-menu-swipe-ignore
         onKeyDown={(event) => {
           if (!(event.target instanceof Node) || !dialogContentRef.current?.contains(event.target)) return;
@@ -226,7 +227,7 @@ function PropertyDetailRouteModal() {
             openProperty(nextProperty, 1);
           }
         }}
-        className="left-0 top-0 flex h-[100dvh] w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 p-0 [&>button]:flex [&>button]:h-11 [&>button]:w-11 [&>button]:items-center [&>button]:justify-center [&>button]:rounded-full [&>button]:bg-background [&>button]:shadow-sm [&>button>svg]:h-5 [&>button>svg]:w-5 sm:left-[50%] sm:top-[50%] sm:h-[min(92dvh,60rem)] sm:max-h-[92dvh] sm:w-[calc(100%-2rem)] sm:max-w-none sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-2xl sm:border"
+        className="left-0 top-0 flex h-[100dvh] w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 p-0 sm:left-[50%] sm:top-[50%] sm:h-[min(92dvh,60rem)] sm:max-h-[92dvh] sm:w-[calc(100%-2rem)] sm:max-w-none sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-2xl sm:border"
       >
         <div className="flex h-16 shrink-0 items-center justify-between gap-2 border-b border-border bg-background px-4 pr-16 sm:gap-3 sm:px-6 sm:pr-20">
           <DialogHeader className="min-w-0 space-y-0 text-left">
@@ -285,7 +286,7 @@ function PropertyDetailRouteModal() {
             >
               <Suspense
                 fallback={(
-                  <section className="container mx-auto min-h-[60vh] px-4 py-8" aria-busy="true" aria-label="Chargement de l’annonce">
+                  <section className="container mx-auto min-h-[60vh] px-4 pt-4 pb-8" aria-busy="true" aria-label="Chargement de l’annonce">
                     <div className="mb-4 h-4 w-44 rounded bg-muted" aria-hidden="true" />
                     <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
                       <div>
@@ -304,6 +305,7 @@ function PropertyDetailRouteModal() {
                   announcementNavigationControls={announcementNavigationControls}
                   stickySummaryPortalElement={stickySummaryPortalElement}
                   stickySummaryTop={64}
+                  compactTop
                 />
               </Suspense>
             </motion.div>

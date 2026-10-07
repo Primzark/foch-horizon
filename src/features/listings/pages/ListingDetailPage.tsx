@@ -166,11 +166,13 @@ export default function ListingDetailPage({
   announcementNavigationControls,
   stickySummaryPortalElement = null,
   stickySummaryTop = 88,
+  compactTop = false,
 }: {
   announcementSwipeHint?: ReactNode;
   announcementNavigationControls?: ReactNode;
   stickySummaryPortalElement?: HTMLElement | null;
   stickySummaryTop?: number;
+  compactTop?: boolean;
 } = {}) {
   const contentRef = useRef<HTMLDivElement | null>(null);
   const summaryRef = useRef<HTMLDivElement | null>(null);
@@ -439,7 +441,7 @@ export default function ListingDetailPage({
   ];
 
   return (
-    <section className="container mx-auto px-4 py-8 pb-28 lg:pb-8">
+    <section className={`container mx-auto px-4 ${compactTop ? "pt-4" : "pt-8"} pb-28 lg:pb-8`}>
       <div className="pointer-events-none fixed right-5 top-1/2 z-20 hidden h-36 -translate-y-1/2 lg:block">
         <div className="h-full w-1 rounded-full bg-border/70">
           <motion.span
@@ -468,8 +470,8 @@ export default function ListingDetailPage({
             <div className="mt-1 flex justify-end pr-1 lg:hidden">{announcementSwipeHint}</div>
           )}
 
-          <div ref={summaryRef} className={`${announcementSwipeHint ? "mt-2 lg:mt-5" : "mt-5"} flex flex-wrap items-start justify-between gap-x-6 gap-y-6`}>
-            <div>
+          <div ref={summaryRef} className={`${announcementSwipeHint ? "mt-2 lg:mt-5" : "mt-5"} grid grid-cols-1 items-start gap-x-6 gap-y-4 lg:grid-cols-[minmax(0,1fr)_auto]`}>
+            <div className="min-w-0">
               <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Réf du bien {property.id}</p>
               <h1 className="mt-1 font-display text-4xl leading-[1.08]">{property.title}</h1>
               <div className="mt-2 flex flex-wrap gap-2">
@@ -486,7 +488,7 @@ export default function ListingDetailPage({
               </p>
             </div>
 
-            <div className="w-full text-left sm:ml-auto sm:w-auto sm:min-w-[18rem] sm:text-right">
+            <div className="min-w-0 text-left lg:w-auto lg:min-w-[16rem] lg:text-right">
               <p className="font-display text-5xl leading-tight tracking-tight text-brand-strong sm:text-6xl">{formatPrice(property.priceAmount, property.transactionType)}</p>
               <div className="mt-4 flex flex-wrap items-center gap-2 sm:mt-3 sm:justify-end">
                 {property.status === "active" && property.transactionType === "vente" && (
