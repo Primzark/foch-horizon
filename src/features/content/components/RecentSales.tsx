@@ -38,10 +38,12 @@ export function RecentSales({ compact = false }: { compact?: boolean }) {
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-brand-strong">
-                {!compact && query.data?.length === 0 ? "À découvrir au Havre et alentours" : "Des projets accompagnés"}
+                {!compact && query.data?.length === 0
+                  ? "Aucune vente enregistrée n’est publiée pour le moment"
+                  : "Des projets accompagnés"}
               </p>
               <h2 className="mt-2 font-display text-3xl md:text-4xl">
-                Nos dernières ventes
+                {carouselShowsSales ? "Nos dernières ventes" : "Biens actuellement à vendre"}
               </h2>
             </div>
             {compact && <Link to="/nos-dernieres-ventes" className="inline-flex items-center gap-2 text-sm hover:underline">Nos dernières ventes <ArrowRight className="h-4 w-4" /></Link>}

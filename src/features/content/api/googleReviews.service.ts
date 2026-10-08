@@ -55,32 +55,10 @@ export const agencyReviewsFallbackSnapshot: AgencyReviewsResponse = {
   source: "fallback",
   live: false,
   placeName: "Foch Immobilier Le Havre",
-  rating: 4.8,
-  userRatingCount: 87,
-  fetchedAt: new Date().toISOString(),
-  reviews: [
-    {
-      id: "fallback-1",
-      authorName: "Client transaction",
-      rating: 5,
-      text: "Accompagnement tres precis sur notre achat appartement au Havre. Dossier clair du compromis a l'acte.",
-      relativePublishTimeDescription: "recent",
-    },
-    {
-      id: "fallback-2",
-      authorName: "Vendeur",
-      rating: 4,
-      text: "Estimation immobiliere Le Havre coherente avec le marche et vente menee dans un delai raisonnable.",
-      relativePublishTimeDescription: "recent",
-    },
-    {
-      id: "fallback-3",
-      authorName: "Acquereur",
-      rating: 5,
-      text: "Equipe reactive sur la recherche de maison au Havre, avec un vrai conseil quartier par quartier.",
-      relativePublishTimeDescription: "recent",
-    },
-  ],
+  rating: 0,
+  userRatingCount: 0,
+  fetchedAt: "",
+  reviews: [],
 };
 
 function normalizeDirectPlaceResponse(payload: GooglePlaceDetailsResponse): AgencyReviewsResponse {

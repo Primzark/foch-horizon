@@ -41,6 +41,46 @@ export const cities: City[] = [
     isActive: true,
     heroImageUrl: "/images/geography/pays-de-caux-original.svg",
   },
+  {
+    id: "city-harfleur",
+    name: "Harfleur",
+    slug: "harfleur",
+    postalCodes: ["76700"],
+    isActive: true,
+    heroImageUrl: "/images/geography/pays-de-caux-original.svg",
+  },
+  {
+    id: "city-octeville-sur-mer",
+    name: "Octeville-sur-Mer",
+    slug: "octeville-sur-mer",
+    postalCodes: ["76930"],
+    isActive: true,
+    heroImageUrl: "/images/geography/pays-de-caux-original.svg",
+  },
+  {
+    id: "city-fontaine-la-mallet",
+    name: "Fontaine-la-Mallet",
+    slug: "fontaine-la-mallet",
+    postalCodes: ["76290"],
+    isActive: true,
+    heroImageUrl: "/images/geography/pays-de-caux-original.svg",
+  },
+  {
+    id: "city-honfleur",
+    name: "Honfleur",
+    slug: "honfleur",
+    postalCodes: ["14600"],
+    isActive: true,
+    heroImageUrl: "/images/geography/pays-de-caux-original.svg",
+  },
+  {
+    id: "city-saint-romain-de-colbosc",
+    name: "Saint-Romain-de-Colbosc",
+    slug: "saint-romain-de-colbosc",
+    postalCodes: ["76430"],
+    isActive: true,
+    heroImageUrl: "/images/geography/pays-de-caux-original.svg",
+  },
 ];
 
 export const cityBySlug = new Map(cities.map((city) => [city.slug, city]));

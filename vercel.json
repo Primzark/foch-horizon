@@ -58,6 +58,22 @@
       "destination": "/:page/index.html"
     },
     {
+      "source": "/biens",
+      "destination": "/biens/index.html"
+    },
+    {
+      "source": "/avis",
+      "destination": "/avis/index.html"
+    },
+    {
+      "source": "/nos-dernieres-ventes",
+      "destination": "/nos-dernieres-ventes/index.html"
+    },
+    {
+      "source": "/biens/:idSlug([0-9]+-[a-z0-9-]+)",
+      "destination": "/biens/:idSlug/index.html"
+    },
+    {
       "source": "/immobilier/:ville(le-havre|sainte-adresse|la-plage|gobelins|saint-michel|octeville-sur-mer|montivilliers|maneglise|gainneville|saint-romain|etretat|deauville|trouville|halles-centrales|hotel-de-ville|notre-dame|saint-francois|perrey|danton|bleville|centre-ville|harfleur|gonfreville-l-orcher|rogerville|saint-laurent-de-brevedent|etainhus|epretot|saint-aubin-routot|la-remuee|gommerville|la-cerlangue|les-trois-pierres)",
       "destination": "/immobilier/:ville/index.html"
     },

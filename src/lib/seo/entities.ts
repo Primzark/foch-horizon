@@ -7,7 +7,9 @@ export const communeByGuideId = new Map(Object.entries(communeLocations));
 
 export const agency = {
   name: "Foch Immobilier",
-  streetAddress: "109 Av. Foch",
+  legalName: "FOCH IMMOBILIER",
+  siren: "911561504",
+  streetAddress: "109 avenue Foch",
   postalCode: "76600",
   city: "Le Havre",
   telephone: "+33235425176",
@@ -42,6 +44,9 @@ export function siteEntities(siteUrl: string) {
       "@type": "RealEstateAgent",
       "@id": `${siteUrl}/#agency`,
       name: agency.name,
+      legalName: agency.legalName,
+      identifier: { "@type": "PropertyValue", propertyID: "SIREN", value: agency.siren },
+      sameAs: [`https://annuaire-entreprises.data.gouv.fr/entreprise/${agency.siren}`],
       url: `${siteUrl}/`,
       image: `${siteUrl}/images/agence-foch.jpg`,
       foundingDate: "1972",

@@ -15,7 +15,7 @@ export const properties: Property[] = [
     "priceAmount": 240000,
     "priceCurrency": "EUR",
     "surfaceM2": 110,
-    "terrainM2": null,
+    "terrainM2": 500,
     "rooms": 5,
     "bedrooms": 3,
     "bathrooms": 0,
@@ -25,14 +25,14 @@ export const properties: Property[] = [
     "dpeValue": 225,
     "gesLabel": "E",
     "gesValue": 46,
-    "description": "Au calme, sur une parcelle d'environ 500m2, maison offrant une entrée, une cuisine am?nagé, un séjour salon avec accès à une terrasse exposée Sud, 3 chambres (possibilité 4), une buanderie. Un garage. Agent co Emma Vasselin",
-    "cityId": "city-le-havre",
+    "description": "Au calme, sur une parcelle d'environ 500m2, maison offrant une entrée, une cuisine aménagée, un séjour salon avec accès à une terrasse exposée Sud, 3 chambres (possibilité 4), une buanderie. Un garage. Agent co Emma Vasselin",
+    "cityId": "city-harfleur",
     "postalCode": "76700",
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-09-30T16:45:54.781Z",
-    "updatedAt": "2026-09-30T16:45:54.781Z",
+    "publishedAt": "2026-10-08T15:31:42.086Z",
+    "updatedAt": "2026-10-08T15:31:42.086Z",
     "isFeatured": true,
     "images": [
       {
@@ -66,6 +66,245 @@ export const properties: Property[] = [
     ]
   },
   {
+    "id": 5213,
+    "title": "Nouveauté, Dollemard limite Sainte Adresse",
+    "slug": "nouveaute-dollemard-limite-sainte-adresse",
+    "transactionType": "vente",
+    "propertyType": "maison_villa",
+    "status": "active",
+    "sourceStatus": "Vente",
+    "priceAmount": 375000,
+    "priceCurrency": "EUR",
+    "surfaceM2": 125,
+    "terrainM2": 350,
+    "rooms": 6,
+    "bedrooms": 4,
+    "bathrooms": 1,
+    "parkingCount": 0,
+    "garageCount": 2,
+    "dpeLabel": null,
+    "dpeValue": null,
+    "gesLabel": "A",
+    "gesValue": 0,
+    "description": "Jolie maison en excellent état édifiée sur un sous-sol complet offrant une entrée, une cuisine aménagée ouverte sur un séjour salon avec un poêle et un accès à une terrasse exposé Sud, deux chambres, une salle de bains, à l'étage, deux chambres, une salle de douche. Un garage en sous sol et un jardin complètent ce bien . DPE en cours. Agent co Emma Vasselin",
+    "cityId": "city-le-havre",
+    "postalCode": "76620",
+    "lat": null,
+    "lng": null,
+    "agentId": "agent-lucas-bernard",
+    "publishedAt": "2026-10-08T15:30:42.149Z",
+    "updatedAt": "2026-10-08T15:30:42.149Z",
+    "isFeatured": true,
+    "images": [
+      {
+        "id": "5213-1",
+        "propertyId": 5213,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/042e21eecc694e6ac46100cdfe646ee9/photo_b4805fa0e3fec9716689c2c0e3de7411.jpg",
+        "sortOrder": 0,
+        "altText": "Nouveauté, Dollemard limite Sainte Adresse - photo 1"
+      },
+      {
+        "id": "5213-2",
+        "propertyId": 5213,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/042e21eecc694e6ac46100cdfe646ee9/photo_9d7a3e1959301c3e9e0c19d99fded0a1.jpg",
+        "sortOrder": 1,
+        "altText": "Nouveauté, Dollemard limite Sainte Adresse - photo 2"
+      },
+      {
+        "id": "5213-3",
+        "propertyId": 5213,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/042e21eecc694e6ac46100cdfe646ee9/photo_3f779230b657330c6b184b9f5ff3484b.jpg",
+        "sortOrder": 2,
+        "altText": "Nouveauté, Dollemard limite Sainte Adresse - photo 3"
+      },
+      {
+        "id": "5213-4",
+        "propertyId": 5213,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/042e21eecc694e6ac46100cdfe646ee9/photo_9e8903530350b3ef0736510439792e84.jpg",
+        "sortOrder": 3,
+        "altText": "Nouveauté, Dollemard limite Sainte Adresse - photo 4"
+      },
+      {
+        "id": "5213-5",
+        "propertyId": 5213,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/042e21eecc694e6ac46100cdfe646ee9/photo_a18686405391f49e8ccec4d721dbc043.jpg",
+        "sortOrder": 4,
+        "altText": "Nouveauté, Dollemard limite Sainte Adresse - photo 5"
+      }
+    ],
+    "features": [
+      {
+        "propertyId": 5213,
+        "featureKey": "maison",
+        "labelFr": "Maison"
+      }
+    ]
+  },
+  {
+    "id": 5212,
+    "title": "SAINTE ADRESSE",
+    "slug": "sainte-adresse",
+    "transactionType": "vente",
+    "propertyType": "maison_villa",
+    "status": "active",
+    "sourceStatus": "Vente",
+    "priceAmount": 370000,
+    "priceCurrency": "EUR",
+    "surfaceM2": 91,
+    "terrainM2": 270,
+    "rooms": 6,
+    "bedrooms": 4,
+    "bathrooms": 1,
+    "parkingCount": 1,
+    "garageCount": 0,
+    "dpeLabel": "D",
+    "dpeValue": 248,
+    "gesLabel": "D",
+    "gesValue": 42,
+    "description": "Beaucoup de charme pour cette maison située proche des écoles et commerces de Sainte Adresse offrant une entrée, une cuisine aménagée et équipée, un séjour salon avec un poêle, le tout donnant sur une grande terrasse exposée Sud, au 1er étage une chambre avec sa salle de douche et toilettes, une deuxième chambre, une salle de bains, au 2ème étage, deux chambres mansardées.Un jardin, un parking couvert et une cave complètent ce bien.Agent co Emma Vasselin",
+    "cityId": "city-sainte-adresse",
+    "postalCode": "76310",
+    "lat": null,
+    "lng": null,
+    "agentId": "agent-lucas-bernard",
+    "publishedAt": "2026-10-08T15:29:42.189Z",
+    "updatedAt": "2026-10-08T15:29:42.189Z",
+    "isFeatured": true,
+    "images": [
+      {
+        "id": "5212-1",
+        "propertyId": 5212,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/2a705b0f04d3caa97544940f7a2c3a73/photo_9c5a7cb08766e0c81c1e35f6e2932134.jpg",
+        "sortOrder": 0,
+        "altText": "SAINTE ADRESSE - photo 1"
+      },
+      {
+        "id": "5212-2",
+        "propertyId": 5212,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/2a705b0f04d3caa97544940f7a2c3a73/photo_15a764d4aa0be6e2f30bf7a3a0ce5b36.jpg",
+        "sortOrder": 1,
+        "altText": "SAINTE ADRESSE - photo 2"
+      },
+      {
+        "id": "5212-3",
+        "propertyId": 5212,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/2a705b0f04d3caa97544940f7a2c3a73/photo_021ffe77fe6752219a8e119a247ce3cd.jpg",
+        "sortOrder": 2,
+        "altText": "SAINTE ADRESSE - photo 3"
+      },
+      {
+        "id": "5212-4",
+        "propertyId": 5212,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/2a705b0f04d3caa97544940f7a2c3a73/photo_77f23faea0f938a62b16f09b36e87af2.jpg",
+        "sortOrder": 3,
+        "altText": "SAINTE ADRESSE - photo 4"
+      }
+    ],
+    "features": [
+      {
+        "propertyId": 5212,
+        "featureKey": "maison",
+        "labelFr": "Maison"
+      }
+    ]
+  },
+  {
+    "id": 5211,
+    "title": "GOLF D'OCTEVILLE-SUR-MER, EXCLUSIVITE",
+    "slug": "golf-d-octeville-sur-mer-exclusivite",
+    "transactionType": "vente",
+    "propertyType": "appartement",
+    "status": "active",
+    "sourceStatus": "Vente",
+    "priceAmount": 347000,
+    "priceCurrency": "EUR",
+    "surfaceM2": 82,
+    "terrainM2": null,
+    "rooms": 4,
+    "bedrooms": 3,
+    "bathrooms": 1,
+    "parkingCount": 0,
+    "garageCount": 1,
+    "dpeLabel": "E",
+    "dpeValue": 236,
+    "gesLabel": "B",
+    "gesValue": 8,
+    "description": "Dans un secteur priviligié , rare, au coeur du golf. Maison de cinq pieces principales édifiée sur une belle parcelle de 1003m2 comprenant au RDC , cuisine , séjour/salon , chambre , salle de bain et wc , à l'etage pallier , 2 chambres , bureau , salle de douche et wc. A cela s'ajoute un grand double garage aménageable avec un coin laverie. L'ensemble est au calme.",
+    "cityId": "city-octeville-sur-mer",
+    "postalCode": "76930",
+    "lat": null,
+    "lng": null,
+    "agentId": "agent-jeanne-morel",
+    "publishedAt": "2026-10-08T15:28:42.312Z",
+    "updatedAt": "2026-10-08T15:28:42.312Z",
+    "isFeatured": true,
+    "images": [
+      {
+        "id": "5211-1",
+        "propertyId": 5211,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/e36a814f9d5d949bfb123b38d3958c35/photo_2abdc5867f5aa1bdc941f39afcbc98b2.jpg",
+        "sortOrder": 0,
+        "altText": "GOLF D'OCTEVILLE-SUR-MER, EXCLUSIVITE - photo 1"
+      },
+      {
+        "id": "5211-2",
+        "propertyId": 5211,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/e36a814f9d5d949bfb123b38d3958c35/photo_a1e2410f530befac991e4aba1672c852.jpg",
+        "sortOrder": 1,
+        "altText": "GOLF D'OCTEVILLE-SUR-MER, EXCLUSIVITE - photo 2"
+      },
+      {
+        "id": "5211-3",
+        "propertyId": 5211,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/e36a814f9d5d949bfb123b38d3958c35/photo_c63ea9c8bee27a8799013b49b652141d.jpg",
+        "sortOrder": 2,
+        "altText": "GOLF D'OCTEVILLE-SUR-MER, EXCLUSIVITE - photo 3"
+      },
+      {
+        "id": "5211-4",
+        "propertyId": 5211,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/e36a814f9d5d949bfb123b38d3958c35/photo_a78b2838ab925bd5da3b46fa3d531475.jpg",
+        "sortOrder": 3,
+        "altText": "GOLF D'OCTEVILLE-SUR-MER, EXCLUSIVITE - photo 4"
+      },
+      {
+        "id": "5211-5",
+        "propertyId": 5211,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/e36a814f9d5d949bfb123b38d3958c35/photo_da6e5fc48e7042e368cd1ab63e9a1467.jpg",
+        "sortOrder": 4,
+        "altText": "GOLF D'OCTEVILLE-SUR-MER, EXCLUSIVITE - photo 5"
+      },
+      {
+        "id": "5211-6",
+        "propertyId": 5211,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/e36a814f9d5d949bfb123b38d3958c35/photo_eb9d1aa0134b9814b70faba007eb3fc9.jpg",
+        "sortOrder": 5,
+        "altText": "GOLF D'OCTEVILLE-SUR-MER, EXCLUSIVITE - photo 6"
+      },
+      {
+        "id": "5211-7",
+        "propertyId": 5211,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/e36a814f9d5d949bfb123b38d3958c35/photo_7c026ca190b3ed92dfaf1c001e88860c.jpg",
+        "sortOrder": 6,
+        "altText": "GOLF D'OCTEVILLE-SUR-MER, EXCLUSIVITE - photo 7"
+      },
+      {
+        "id": "5211-8",
+        "propertyId": 5211,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/e36a814f9d5d949bfb123b38d3958c35/photo_4297a8464f8b21fbfc25070a1be64379.jpg",
+        "sortOrder": 7,
+        "altText": "GOLF D'OCTEVILLE-SUR-MER, EXCLUSIVITE - photo 8"
+      }
+    ],
+    "features": [
+      {
+        "propertyId": 5211,
+        "featureKey": "appartement",
+        "labelFr": "Appartement"
+      }
+    ]
+  },
+  {
     "id": 5209,
     "title": "EXCLUSIVITE SAINT VINCENT",
     "slug": "exclusivite-saint-vincent",
@@ -92,8 +331,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-clara-durand",
-    "publishedAt": "2026-09-30T16:44:55.385Z",
-    "updatedAt": "2026-09-30T16:44:55.385Z",
+    "publishedAt": "2026-10-08T15:27:42.310Z",
+    "updatedAt": "2026-10-08T15:27:42.310Z",
     "isFeatured": true,
     "images": [
       {
@@ -160,8 +399,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-09-30T16:43:54.972Z",
-    "updatedAt": "2026-09-30T16:43:54.972Z",
+    "publishedAt": "2026-10-08T15:26:42.604Z",
+    "updatedAt": "2026-10-08T15:26:42.604Z",
     "isFeatured": true,
     "images": [
       {
@@ -257,14 +496,14 @@ export const properties: Property[] = [
     "dpeValue": 168,
     "gesLabel": "D",
     "gesValue": 32,
-    "description": "VUE DEGAGEE POUR CET APPARTEMENT DE TYPE T2 EN PARFAIT ETAT D'UNE SURFACE DE 55 M2 OFFRANT : UNE CUISINE AMENAGEE - UN SEJOUR/SALON - UNE CHAMBRE - DRESSING - SDBAINS - WC SEPARE. UNE PLACE DE PARKING ATTITREE AU SEIN DE LA COPRO COMPLETE CE BIEN FAIBLES CHARGES ET BONNE ISOLATION DPE D IDEAL POUR UNE PREMIERE ACQUISITION OU INVESTISSEMENT LOCATIF. Agent Co VéronIque FOGT",
-    "cityId": "city-le-havre",
+    "description": "VUE DEGAGEE POUR CET APPARTEMENT DE TYPE T2 EN PARFAIT ETAT D'UNE SURFACE DE 55 M2 OFFRANT : UNE CUISINE AMENAGEE - UN SEJOUR/SALON - UNE CHAMBRE - DRESSING - SDBAINS - WC SEPARE. UNE PLACE DE PARKING ATTITREE AU SEIN DE LA COPRO COMPLETE CE BIEN FAIBLES CHARGES ET BONNE ISOLATION DPE D IDEAL POUR UNE PREMIERE ACQUISITION OU INVESTISSEMENT LOCATIF. Agent Co VéronIque FOGT SOUS COMPROMIS",
+    "cityId": "city-harfleur",
     "postalCode": "76700",
     "lat": null,
     "lng": null,
     "agentId": "agent-clara-durand",
-    "publishedAt": "2026-09-30T16:42:55.100Z",
-    "updatedAt": "2026-09-30T16:42:55.100Z",
+    "publishedAt": "2026-10-08T15:25:42.608Z",
+    "updatedAt": "2026-10-08T15:25:42.608Z",
     "isFeatured": true,
     "images": [
       {
@@ -345,8 +584,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-09-30T16:41:55.593Z",
-    "updatedAt": "2026-09-30T16:41:55.593Z",
+    "publishedAt": "2026-10-08T15:24:42.221Z",
+    "updatedAt": "2026-10-08T15:24:42.221Z",
     "isFeatured": true,
     "images": [
       {
@@ -436,27 +675,27 @@ export const properties: Property[] = [
     "dpeValue": 171,
     "gesLabel": "B",
     "gesValue": 6,
-    "description": "Proche des commerces et écoles, au 4ème et dernier étage, bel appartement lumineux offrant une entrée avec rangement, une cuisine ouverte sur un séjour salon avec accès à une loggia, deux chambres, une salle de douche. Un grand garage complète ce bien. Agent co Emma Vasselin",
+    "description": "Proche des commerces et des écoles, au 4ème et dernier étage, bel appartement lumineux offrant une entrée avec rangement, une cuisine ouverte sur un séjour salon avec accès à une loggia, deux chambres, une salle de douche. Un grand garage complète ce bien. Agent co Emma Vasselin",
     "cityId": "city-le-havre",
     "postalCode": "76600",
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-09-30T16:40:55.465Z",
-    "updatedAt": "2026-09-30T16:40:55.465Z",
+    "publishedAt": "2026-10-08T15:23:42.288Z",
+    "updatedAt": "2026-10-08T15:23:42.288Z",
     "isFeatured": true,
     "images": [
       {
         "id": "5205-1",
         "propertyId": 5205,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/ed79f91741fae32ef3d0093fbce3a8b8/photo_d91f52caa88fe1485cbfc7fda384a752.jpg",
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/ed79f91741fae32ef3d0093fbce3a8b8/photo_c5c9a7818cf1b0a4987f8dcc1ae35d98.jpg",
         "sortOrder": 0,
         "altText": "Les docks, dernier étage - photo 1"
       },
       {
         "id": "5205-2",
         "propertyId": 5205,
-        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/ed79f91741fae32ef3d0093fbce3a8b8/photo_c5c9a7818cf1b0a4987f8dcc1ae35d98.jpg",
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/ed79f91741fae32ef3d0093fbce3a8b8/photo_d91f52caa88fe1485cbfc7fda384a752_Inc_0.jpg",
         "sortOrder": 1,
         "altText": "Les docks, dernier étage - photo 2"
       },
@@ -524,9 +763,9 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-09-30T16:39:55.587Z",
-    "updatedAt": "2026-09-30T16:39:55.587Z",
-    "isFeatured": true,
+    "publishedAt": "2026-10-08T15:22:42.307Z",
+    "updatedAt": "2026-10-08T15:22:42.307Z",
+    "isFeatured": false,
     "images": [
       {
         "id": "5203-1",
@@ -609,9 +848,9 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-09-30T16:38:55.801Z",
-    "updatedAt": "2026-09-30T16:38:55.801Z",
-    "isFeatured": true,
+    "publishedAt": "2026-10-08T15:21:42.393Z",
+    "updatedAt": "2026-10-08T15:21:42.393Z",
+    "isFeatured": false,
     "images": [
       {
         "id": "5202-1",
@@ -698,9 +937,9 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-09-30T16:37:55.687Z",
-    "updatedAt": "2026-09-30T16:37:55.687Z",
-    "isFeatured": true,
+    "publishedAt": "2026-10-08T15:20:42.487Z",
+    "updatedAt": "2026-10-08T15:20:42.487Z",
+    "isFeatured": false,
     "images": [
       {
         "id": "5200-1",
@@ -708,6 +947,41 @@ export const properties: Property[] = [
         "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/9d1d807d74793210314c1d8fc1c2acec/photo_b781b12b4a10b2a6669e729609065088_Inc_0.jpg",
         "sortOrder": 0,
         "altText": "TRIPLE EXPOSITION VUE MER - photo 1"
+      },
+      {
+        "id": "5200-2",
+        "propertyId": 5200,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/9d1d807d74793210314c1d8fc1c2acec/photo_1e4beed750928b4f6b1d59146b1f76d1.jpg",
+        "sortOrder": 1,
+        "altText": "TRIPLE EXPOSITION VUE MER - photo 2"
+      },
+      {
+        "id": "5200-3",
+        "propertyId": 5200,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/9d1d807d74793210314c1d8fc1c2acec/photo_69db73dd2cd21f2cd87dd4c804f72d43.jpg",
+        "sortOrder": 2,
+        "altText": "TRIPLE EXPOSITION VUE MER - photo 3"
+      },
+      {
+        "id": "5200-4",
+        "propertyId": 5200,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/9d1d807d74793210314c1d8fc1c2acec/photo_7c4944ae339446a021a521e21727ed68.jpg",
+        "sortOrder": 3,
+        "altText": "TRIPLE EXPOSITION VUE MER - photo 4"
+      },
+      {
+        "id": "5200-5",
+        "propertyId": 5200,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/9d1d807d74793210314c1d8fc1c2acec/photo_11f32684990e6ae986fb8a37fd8583c4.jpg",
+        "sortOrder": 4,
+        "altText": "TRIPLE EXPOSITION VUE MER - photo 5"
+      },
+      {
+        "id": "5200-6",
+        "propertyId": 5200,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/9d1d807d74793210314c1d8fc1c2acec/photo_2a28119a50e40e616bd46045033198e2.jpg",
+        "sortOrder": 5,
+        "altText": "TRIPLE EXPOSITION VUE MER - photo 6"
       }
     ],
     "features": [
@@ -750,8 +1024,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-09-30T16:36:55.872Z",
-    "updatedAt": "2026-09-30T16:36:55.872Z",
+    "publishedAt": "2026-10-08T15:19:42.488Z",
+    "updatedAt": "2026-10-08T15:19:42.488Z",
     "isFeatured": false,
     "images": [
       {
@@ -858,8 +1132,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-09-30T16:35:55.821Z",
-    "updatedAt": "2026-09-30T16:35:55.821Z",
+    "publishedAt": "2026-10-08T15:18:42.532Z",
+    "updatedAt": "2026-10-08T15:18:42.532Z",
     "isFeatured": false,
     "images": [
       {
@@ -945,7 +1219,7 @@ export const properties: Property[] = [
     "priceAmount": 519000,
     "priceCurrency": "EUR",
     "surfaceM2": 145,
-    "terrainM2": null,
+    "terrainM2": 508,
     "rooms": 7,
     "bedrooms": 5,
     "bathrooms": 0,
@@ -961,8 +1235,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-09-30T16:34:56.396Z",
-    "updatedAt": "2026-09-30T16:34:56.396Z",
+    "publishedAt": "2026-10-08T15:17:42.530Z",
+    "updatedAt": "2026-10-08T15:17:42.530Z",
     "isFeatured": false,
     "images": [
       {
@@ -1064,8 +1338,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-09-30T16:33:56.528Z",
-    "updatedAt": "2026-09-30T16:33:56.528Z",
+    "publishedAt": "2026-10-08T15:16:42.617Z",
+    "updatedAt": "2026-10-08T15:16:42.617Z",
     "isFeatured": false,
     "images": [
       {
@@ -1146,8 +1420,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-clara-durand",
-    "publishedAt": "2026-09-30T16:32:56.476Z",
-    "updatedAt": "2026-09-30T16:32:56.476Z",
+    "publishedAt": "2026-10-08T15:15:42.602Z",
+    "updatedAt": "2026-10-08T15:15:42.602Z",
     "isFeatured": false,
     "images": [
       {
@@ -1210,7 +1484,7 @@ export const properties: Property[] = [
     "priceAmount": 298000,
     "priceCurrency": "EUR",
     "surfaceM2": 149,
-    "terrainM2": null,
+    "terrainM2": 187,
     "rooms": 7,
     "bedrooms": 5,
     "bathrooms": 0,
@@ -1226,8 +1500,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-clara-durand",
-    "publishedAt": "2026-09-30T16:31:56.271Z",
-    "updatedAt": "2026-09-30T16:31:56.271Z",
+    "publishedAt": "2026-10-08T15:14:42.691Z",
+    "updatedAt": "2026-10-08T15:14:42.691Z",
     "isFeatured": false,
     "images": [
       {
@@ -1287,8 +1561,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-09-30T16:30:56.358Z",
-    "updatedAt": "2026-09-30T16:30:56.358Z",
+    "publishedAt": "2026-10-08T15:13:42.625Z",
+    "updatedAt": "2026-10-08T15:13:42.625Z",
     "isFeatured": false,
     "images": [
       {
@@ -1395,8 +1669,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-09-30T16:29:56.223Z",
-    "updatedAt": "2026-09-30T16:29:56.223Z",
+    "publishedAt": "2026-10-08T15:12:42.795Z",
+    "updatedAt": "2026-10-08T15:12:42.795Z",
     "isFeatured": false,
     "images": [
       {
@@ -1487,8 +1761,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-09-30T16:28:57.161Z",
-    "updatedAt": "2026-09-30T16:28:57.161Z",
+    "publishedAt": "2026-10-08T15:11:42.748Z",
+    "updatedAt": "2026-10-08T15:11:42.748Z",
     "isFeatured": false,
     "images": [
       {
@@ -1572,8 +1846,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-09-30T16:27:56.755Z",
-    "updatedAt": "2026-09-30T16:27:56.755Z",
+    "publishedAt": "2026-10-08T15:10:42.805Z",
+    "updatedAt": "2026-10-08T15:10:42.805Z",
     "isFeatured": false,
     "images": [
       {
@@ -1633,8 +1907,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-09-30T16:26:56.716Z",
-    "updatedAt": "2026-09-30T16:26:56.716Z",
+    "publishedAt": "2026-10-08T15:09:42.752Z",
+    "updatedAt": "2026-10-08T15:09:42.752Z",
     "isFeatured": false,
     "images": [
       {
@@ -1713,8 +1987,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-09-30T16:25:56.772Z",
-    "updatedAt": "2026-09-30T16:25:56.772Z",
+    "publishedAt": "2026-10-08T15:08:42.890Z",
+    "updatedAt": "2026-10-08T15:08:42.890Z",
     "isFeatured": false,
     "images": [
       {
@@ -1807,8 +2081,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-09-30T16:24:57.303Z",
-    "updatedAt": "2026-09-30T16:24:57.303Z",
+    "publishedAt": "2026-10-08T15:07:42.894Z",
+    "updatedAt": "2026-10-08T15:07:42.894Z",
     "isFeatured": false,
     "images": [
       {
@@ -1894,7 +2168,7 @@ export const properties: Property[] = [
     "priceAmount": 495000,
     "priceCurrency": "EUR",
     "surfaceM2": 212,
-    "terrainM2": null,
+    "terrainM2": 1635,
     "rooms": 5,
     "bedrooms": 4,
     "bathrooms": 1,
@@ -1905,13 +2179,13 @@ export const properties: Property[] = [
     "gesLabel": "E",
     "gesValue": 62,
     "description": "Grande et belle maison édifiée sur un sous-sol total sise sur une parcelle arborée (environ 1600m2) comprenant : En rez-de-chaussée : un hall d'entrée, un séjour et un salon avec cheminée donnant sur une terrasse exposée Sud, une cuisine aménagée, une suite parentale avec sa salle de douche, un toilette indépendant; Au premier étage : une grande pièce palière (bureau), trois chambres, une salle de bain, un toilette; Un sous-sol total avec une buanderie, une chaufferie, un espace détente avec un sauna et une douche, un double garage. Un joli jardin arboré. Un bâtiment extérieur. La maison est en parfait état.",
-    "cityId": "city-le-havre",
+    "cityId": "city-fontaine-la-mallet",
     "postalCode": "76290",
     "lat": null,
     "lng": null,
     "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-09-30T16:23:57.438Z",
-    "updatedAt": "2026-09-30T16:23:57.438Z",
+    "publishedAt": "2026-10-08T15:06:42.819Z",
+    "updatedAt": "2026-10-08T15:06:42.819Z",
     "isFeatured": false,
     "images": [
       {
@@ -2013,8 +2287,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-clara-durand",
-    "publishedAt": "2026-09-30T16:22:57.516Z",
-    "updatedAt": "2026-09-30T16:22:57.516Z",
+    "publishedAt": "2026-10-08T15:05:42.993Z",
+    "updatedAt": "2026-10-08T15:05:42.993Z",
     "isFeatured": false,
     "images": [
       {
@@ -2062,13 +2336,13 @@ export const properties: Property[] = [
     "gesLabel": "F",
     "gesValue": 70,
     "description": "APPARTEMENT DE TYPE T1 SITUE AU 3EME ETAGE OFFRANT CUISINE SIMPLE - PIECE DE VIE ACCES BALCON - SDDCHES - WC SEPARE UNE CAVE ET UN PARKING ATTITRE EXTERIEUR COMPLETENT CE BIEN. PROCHE COMMERCES ET ECOLES Agent Co Véronique FOGT",
-    "cityId": "city-le-havre",
+    "cityId": "city-harfleur",
     "postalCode": "76700",
     "lat": null,
     "lng": null,
     "agentId": "agent-clara-durand",
-    "publishedAt": "2026-09-30T16:21:57.304Z",
-    "updatedAt": "2026-09-30T16:21:57.304Z",
+    "publishedAt": "2026-10-08T15:04:42.994Z",
+    "updatedAt": "2026-10-08T15:04:42.994Z",
     "isFeatured": false,
     "images": [
       {
@@ -2126,7 +2400,7 @@ export const properties: Property[] = [
     "priceAmount": 129500,
     "priceCurrency": "EUR",
     "surfaceM2": 55,
-    "terrainM2": null,
+    "terrainM2": 100,
     "rooms": 3,
     "bedrooms": 2,
     "bathrooms": 0,
@@ -2142,8 +2416,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-clara-durand",
-    "publishedAt": "2026-09-30T16:20:57.305Z",
-    "updatedAt": "2026-09-30T16:20:57.305Z",
+    "publishedAt": "2026-10-08T15:03:42.919Z",
+    "updatedAt": "2026-10-08T15:03:42.919Z",
     "isFeatured": false,
     "images": [
       {
@@ -2210,8 +2484,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-clara-durand",
-    "publishedAt": "2026-09-30T16:19:57.957Z",
-    "updatedAt": "2026-09-30T16:19:57.957Z",
+    "publishedAt": "2026-10-08T15:02:42.916Z",
+    "updatedAt": "2026-10-08T15:02:42.916Z",
     "isFeatured": false,
     "images": [
       {
@@ -2276,7 +2550,7 @@ export const properties: Property[] = [
     "priceAmount": 295000,
     "priceCurrency": "EUR",
     "surfaceM2": 180,
-    "terrainM2": null,
+    "terrainM2": 550,
     "rooms": 5,
     "bedrooms": 4,
     "bathrooms": 1,
@@ -2292,8 +2566,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-09-30T16:18:57.653Z",
-    "updatedAt": "2026-09-30T16:18:57.653Z",
+    "publishedAt": "2026-10-08T15:01:49.562Z",
+    "updatedAt": "2026-10-08T15:01:49.562Z",
     "isFeatured": false,
     "images": [
       {
@@ -2358,7 +2632,7 @@ export const properties: Property[] = [
     "priceAmount": 299000,
     "priceCurrency": "EUR",
     "surfaceM2": 143,
-    "terrainM2": null,
+    "terrainM2": 753,
     "rooms": 6,
     "bedrooms": 4,
     "bathrooms": 1,
@@ -2374,8 +2648,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-09-30T16:17:58.220Z",
-    "updatedAt": "2026-09-30T16:17:58.220Z",
+    "publishedAt": "2026-10-08T15:00:43.341Z",
+    "updatedAt": "2026-10-08T15:00:43.341Z",
     "isFeatured": false,
     "images": [
       {
@@ -2463,8 +2737,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-09-30T16:16:58.097Z",
-    "updatedAt": "2026-09-30T16:16:58.097Z",
+    "publishedAt": "2026-10-08T14:59:43.085Z",
+    "updatedAt": "2026-10-08T14:59:43.085Z",
     "isFeatured": false,
     "images": [
       {
@@ -2543,13 +2817,13 @@ export const properties: Property[] = [
     "gesLabel": "D",
     "gesValue": 31,
     "description": "BELLE PROPRIETE FAMILIALE de 176 m2 sur un GRAND JARDIN ARBORE de 1600 m2 Avec Vie de Plain-pied Offrant Au RDC une Cuisine Aménagée et équipée - Une Arrière Cuisine avec Placards - Un Séjour/salon Poêle à bois - 1 Suite Parentale avec Sddches à l'italienne - Wc A l'étage 5 Chambres - 1 sdbains - 1 sddches - Wc - Grands Placards dans le couloir. Sous-sol Complet avec garage 2 voitures - Cave à Vins - Laverie - Chaufferie - buanderie. GARAGE EXTERIEUR pour une voiture avec abri bois. La Situation est Idéale Proche de toutes Commodités Ecoles Commerces et Transports..... Une Visite S'Impose... Agent Co Véronique FOGT",
-    "cityId": "city-le-havre",
+    "cityId": "city-saint-romain-de-colbosc",
     "postalCode": "76430",
     "lat": null,
     "lng": null,
     "agentId": "agent-clara-durand",
-    "publishedAt": "2026-09-30T16:15:58.356Z",
-    "updatedAt": "2026-09-30T16:15:58.356Z",
+    "publishedAt": "2026-10-08T14:58:43.008Z",
+    "updatedAt": "2026-10-08T14:58:43.008Z",
     "isFeatured": false,
     "images": [
       {
@@ -2630,8 +2904,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-09-30T16:14:58.322Z",
-    "updatedAt": "2026-09-30T16:14:58.322Z",
+    "publishedAt": "2026-10-08T14:57:43.195Z",
+    "updatedAt": "2026-10-08T14:57:43.195Z",
     "isFeatured": false,
     "images": [
       {
@@ -2693,9 +2967,105 @@ export const properties: Property[] = [
     ]
   },
   {
+    "id": 5151,
+    "title": "NOUVEAUTE QUARTIER SAINTE-ANNE",
+    "slug": "nouveaute-quartier-sainte-anne",
+    "transactionType": "vente",
+    "propertyType": "autre",
+    "status": "active",
+    "sourceStatus": "Vente",
+    "priceAmount": 485000,
+    "priceCurrency": "EUR",
+    "surfaceM2": 46,
+    "terrainM2": null,
+    "rooms": null,
+    "bedrooms": 0,
+    "bathrooms": 0,
+    "parkingCount": 0,
+    "garageCount": 0,
+    "dpeLabel": "E",
+    "dpeValue": 281,
+    "gesLabel": "C",
+    "gesValue": 20,
+    "description": "IMMEUBLE DE RAPPORT COMPRENANT AU RDC : UN STUDIO DE 22 M2 LOUE 285 EUROS HC A L'ENTRESOL : 2 APPARTEMENTS DE TYPE T2 D'UNE SURFACE DE 46 M2 LOUE 385 EUROS HC ET 40 M2 LOUE 470 EUROS HC AU PREMIER : 2 APPARTEMENTS DE TYPE T2 D'UNE SURFACE DE 51 M2 LOUE 429 EUROS HC ET 44 M2 LOUE 341 EUROS HC AU DEUXIEME : 2 APPARTEMENTS DE TYPE T2 D'UNE SURFACE DE 44 M2 LOUE 444 EUROS HC ET 51 M2 LOUE 527 EUROS HC AU TROISIEME : 2 APPARTEMENTS DE TYPE T2 D'UNE SURFACE DE 51 M2 LOUE 435 EUROS HC ET 44 M2 LOUE 410 EUROS HC LE RAPPORT EST DE 45 000 EUROS HC ANNUEL ET LE FONCIER DE 8500 EUROS. A DECOUVRIR RAPIDEMENT Agent Co Véronique FOGT",
+    "cityId": "city-le-havre",
+    "postalCode": "76600",
+    "lat": null,
+    "lng": null,
+    "agentId": "agent-clara-durand",
+    "publishedAt": "2026-10-08T14:56:43.109Z",
+    "updatedAt": "2026-10-08T14:56:43.109Z",
+    "isFeatured": false,
+    "images": [
+      {
+        "id": "5151-1",
+        "propertyId": 5151,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/43a2d3c83a04c3e25c5705b5fc4c40ef/photo_08ebc27bcb0d8e229fc92b8e723b80bc.jpg",
+        "sortOrder": 0,
+        "altText": "NOUVEAUTE QUARTIER SAINTE-ANNE - photo 1"
+      },
+      {
+        "id": "5151-2",
+        "propertyId": 5151,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/43a2d3c83a04c3e25c5705b5fc4c40ef/photo_3d2d23d3ab64b87ed412116b4cc35ab1.jpg",
+        "sortOrder": 1,
+        "altText": "NOUVEAUTE QUARTIER SAINTE-ANNE - photo 2"
+      },
+      {
+        "id": "5151-3",
+        "propertyId": 5151,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/43a2d3c83a04c3e25c5705b5fc4c40ef/photo_c56c92668679b32de38e4c2c5bf6b8a1.jpg",
+        "sortOrder": 2,
+        "altText": "NOUVEAUTE QUARTIER SAINTE-ANNE - photo 3"
+      },
+      {
+        "id": "5151-4",
+        "propertyId": 5151,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/43a2d3c83a04c3e25c5705b5fc4c40ef/photo_9c84b2a3a0a41f5bbfa770577a5370f2.jpg",
+        "sortOrder": 3,
+        "altText": "NOUVEAUTE QUARTIER SAINTE-ANNE - photo 4"
+      },
+      {
+        "id": "5151-5",
+        "propertyId": 5151,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/43a2d3c83a04c3e25c5705b5fc4c40ef/photo_fc88d8dfbc185061e3bd8ac5bdd8726d.jpg",
+        "sortOrder": 4,
+        "altText": "NOUVEAUTE QUARTIER SAINTE-ANNE - photo 5"
+      },
+      {
+        "id": "5151-6",
+        "propertyId": 5151,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/43a2d3c83a04c3e25c5705b5fc4c40ef/photo_b33d61fd903ecd74ec7aebadf034e5b4.jpg",
+        "sortOrder": 5,
+        "altText": "NOUVEAUTE QUARTIER SAINTE-ANNE - photo 6"
+      },
+      {
+        "id": "5151-7",
+        "propertyId": 5151,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/43a2d3c83a04c3e25c5705b5fc4c40ef/photo_94c8f0d1f1962a19551c61435fb9f304.jpg",
+        "sortOrder": 6,
+        "altText": "NOUVEAUTE QUARTIER SAINTE-ANNE - photo 7"
+      },
+      {
+        "id": "5151-8",
+        "propertyId": 5151,
+        "sourceUrl": "https://fochimmobilierlehavre.staticlbi.com/wa/images/biens/1/43a2d3c83a04c3e25c5705b5fc4c40ef/photo_b59341981d49c18b6f1bbcf2de1ec8db.jpg",
+        "sortOrder": 7,
+        "altText": "NOUVEAUTE QUARTIER SAINTE-ANNE - photo 8"
+      }
+    ],
+    "features": [
+      {
+        "propertyId": 5151,
+        "featureKey": "maison",
+        "labelFr": "Maison"
+      }
+    ]
+  },
+  {
     "id": 5150,
     "title": "SAINTE ADRESSE",
-    "slug": "sainte-adresse",
+    "slug": "sainte-adresse-5150",
     "transactionType": "vente",
     "propertyType": "maison_villa",
     "status": "active",
@@ -2703,7 +3073,7 @@ export const properties: Property[] = [
     "priceAmount": 433000,
     "priceCurrency": "EUR",
     "surfaceM2": 117,
-    "terrainM2": null,
+    "terrainM2": 592,
     "rooms": 6,
     "bedrooms": 4,
     "bathrooms": 1,
@@ -2719,8 +3089,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-09-30T16:13:58.586Z",
-    "updatedAt": "2026-09-30T16:13:58.586Z",
+    "publishedAt": "2026-10-08T14:55:43.089Z",
+    "updatedAt": "2026-10-08T14:55:43.089Z",
     "isFeatured": false,
     "images": [
       {
@@ -2822,8 +3192,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-clara-durand",
-    "publishedAt": "2026-09-30T16:12:58.343Z",
-    "updatedAt": "2026-09-30T16:12:58.343Z",
+    "publishedAt": "2026-10-08T14:54:43.304Z",
+    "updatedAt": "2026-10-08T14:54:43.304Z",
     "isFeatured": false,
     "images": [
       {
@@ -2904,8 +3274,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-clara-durand",
-    "publishedAt": "2026-09-30T16:11:58.584Z",
-    "updatedAt": "2026-09-30T16:11:58.584Z",
+    "publishedAt": "2026-10-08T14:53:43.288Z",
+    "updatedAt": "2026-10-08T14:53:43.288Z",
     "isFeatured": false,
     "images": [
       {
@@ -2993,8 +3363,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-09-30T16:10:59.129Z",
-    "updatedAt": "2026-09-30T16:10:59.129Z",
+    "publishedAt": "2026-10-08T14:52:43.305Z",
+    "updatedAt": "2026-10-08T14:52:43.305Z",
     "isFeatured": false,
     "images": [
       {
@@ -3089,8 +3459,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-09-30T16:09:59.325Z",
-    "updatedAt": "2026-09-30T16:09:59.325Z",
+    "publishedAt": "2026-10-08T14:51:43.257Z",
+    "updatedAt": "2026-10-08T14:51:43.257Z",
     "isFeatured": false,
     "images": [
       {
@@ -3155,8 +3525,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-clara-durand",
-    "publishedAt": "2026-09-30T16:08:59.294Z",
-    "updatedAt": "2026-09-30T16:08:59.294Z",
+    "publishedAt": "2026-10-08T14:50:43.489Z",
+    "updatedAt": "2026-10-08T14:50:43.489Z",
     "isFeatured": false,
     "images": [
       {
@@ -3193,7 +3563,7 @@ export const properties: Property[] = [
     "priceAmount": 545000,
     "priceCurrency": "EUR",
     "surfaceM2": 220,
-    "terrainM2": null,
+    "terrainM2": 6800,
     "rooms": 7,
     "bedrooms": 4,
     "bathrooms": 1,
@@ -3209,8 +3579,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-09-30T16:07:58.894Z",
-    "updatedAt": "2026-09-30T16:07:58.894Z",
+    "publishedAt": "2026-10-08T14:49:43.490Z",
+    "updatedAt": "2026-10-08T14:49:43.490Z",
     "isFeatured": false,
     "images": [
       {
@@ -3268,7 +3638,7 @@ export const properties: Property[] = [
     "priceAmount": 439000,
     "priceCurrency": "EUR",
     "surfaceM2": 140,
-    "terrainM2": null,
+    "terrainM2": 500,
     "rooms": 7,
     "bedrooms": 5,
     "bathrooms": 0,
@@ -3284,8 +3654,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-09-30T16:06:59.401Z",
-    "updatedAt": "2026-09-30T16:06:59.401Z",
+    "publishedAt": "2026-10-08T14:48:43.492Z",
+    "updatedAt": "2026-10-08T14:48:43.492Z",
     "isFeatured": false,
     "images": [
       {
@@ -3343,7 +3713,7 @@ export const properties: Property[] = [
     "priceAmount": 349000,
     "priceCurrency": "EUR",
     "surfaceM2": 110,
-    "terrainM2": null,
+    "terrainM2": 190,
     "rooms": 4,
     "bedrooms": 3,
     "bathrooms": 1,
@@ -3359,8 +3729,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-09-30T16:05:58.949Z",
-    "updatedAt": "2026-09-30T16:05:58.949Z",
+    "publishedAt": "2026-10-08T14:47:43.367Z",
+    "updatedAt": "2026-10-08T14:47:43.367Z",
     "isFeatured": false,
     "images": [
       {
@@ -3439,7 +3809,7 @@ export const properties: Property[] = [
     "priceAmount": 210000,
     "priceCurrency": "EUR",
     "surfaceM2": 228,
-    "terrainM2": null,
+    "terrainM2": 1200,
     "rooms": 8,
     "bedrooms": 6,
     "bathrooms": 1,
@@ -3455,8 +3825,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-09-30T16:04:59.689Z",
-    "updatedAt": "2026-09-30T16:04:59.689Z",
+    "publishedAt": "2026-10-08T14:46:43.416Z",
+    "updatedAt": "2026-10-08T14:46:43.416Z",
     "isFeatured": false,
     "images": [
       {
@@ -3500,7 +3870,7 @@ export const properties: Property[] = [
     "priceAmount": 699000,
     "priceCurrency": "EUR",
     "surfaceM2": 250,
-    "terrainM2": null,
+    "terrainM2": 4500,
     "rooms": 9,
     "bedrooms": 5,
     "bathrooms": 2,
@@ -3516,8 +3886,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-09-30T16:03:59.303Z",
-    "updatedAt": "2026-09-30T16:03:59.303Z",
+    "publishedAt": "2026-10-08T14:45:43.430Z",
+    "updatedAt": "2026-10-08T14:45:43.430Z",
     "isFeatured": false,
     "images": [
       {
@@ -3598,8 +3968,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-clara-durand",
-    "publishedAt": "2026-09-30T16:02:59.613Z",
-    "updatedAt": "2026-09-30T16:02:59.613Z",
+    "publishedAt": "2026-10-08T14:44:43.516Z",
+    "updatedAt": "2026-10-08T14:44:43.516Z",
     "isFeatured": false,
     "images": [
       {
@@ -3629,7 +3999,7 @@ export const properties: Property[] = [
     "priceAmount": 835000,
     "priceCurrency": "EUR",
     "surfaceM2": 175,
-    "terrainM2": null,
+    "terrainM2": 4800,
     "rooms": 7,
     "bedrooms": 4,
     "bathrooms": 1,
@@ -3640,13 +4010,13 @@ export const properties: Property[] = [
     "gesLabel": "E",
     "gesValue": 50,
     "description": "jolie maison contemporaine au coeur de la nature, au calme, à proximité des chemins de randonnés et du Centre de HONFLEUR. Cette maison d'architecte, vous surprendra par sa vue exceptionnelle sur HONFLEUR et la baie de SEINE. Elle est composée d'une entrée, d'une spacieuse pièce de réception baignée par le soleil et offrant une vue panoramique, une cuisine aménagée avec son coin repas et un bureau. A l'étage, une pièce palière, quatre chambres, une salle de bains et un dressing. Elevée sur un sous-sol complet, distribué en :atelier, cave à vins, salle de douche et buanderie.une pièce d'eau.DPE E .Pour les petits et les grands très belle piscine couverte et chauffée. En dépendance: une pièce(bureau/atelier) et un garage,",
-    "cityId": "city-le-havre",
+    "cityId": "city-honfleur",
     "postalCode": "14600",
     "lat": null,
     "lng": null,
     "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-09-30T16:02:00.229Z",
-    "updatedAt": "2026-09-30T16:02:00.229Z",
+    "publishedAt": "2026-10-08T14:43:43.528Z",
+    "updatedAt": "2026-10-08T14:43:43.528Z",
     "isFeatured": false,
     "images": [
       {
@@ -3734,8 +4104,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-09-30T16:00:59.770Z",
-    "updatedAt": "2026-09-30T16:00:59.770Z",
+    "publishedAt": "2026-10-08T14:42:43.597Z",
+    "updatedAt": "2026-10-08T14:42:43.597Z",
     "isFeatured": false,
     "images": [
       {
@@ -3795,7 +4165,7 @@ export const properties: Property[] = [
     "propertyType": "appartement",
     "status": "active",
     "sourceStatus": "Vente",
-    "priceAmount": 448000,
+    "priceAmount": 420000,
     "priceCurrency": "EUR",
     "surfaceM2": 107,
     "terrainM2": null,
@@ -3814,8 +4184,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-09-30T16:00:00.180Z",
-    "updatedAt": "2026-09-30T16:00:00.180Z",
+    "publishedAt": "2026-10-08T14:41:43.618Z",
+    "updatedAt": "2026-10-08T14:41:43.618Z",
     "isFeatured": false,
     "images": [
       {
@@ -3894,8 +4264,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-jeanne-morel",
-    "publishedAt": "2026-09-30T15:59:00.314Z",
-    "updatedAt": "2026-09-30T15:59:00.314Z",
+    "publishedAt": "2026-10-08T14:40:43.555Z",
+    "updatedAt": "2026-10-08T14:40:43.555Z",
     "isFeatured": false,
     "images": [
       {
@@ -3996,7 +4366,7 @@ export const properties: Property[] = [
     "priceAmount": 595000,
     "priceCurrency": "EUR",
     "surfaceM2": 220,
-    "terrainM2": null,
+    "terrainM2": 3624,
     "rooms": 8,
     "bedrooms": 4,
     "bathrooms": 2,
@@ -4012,8 +4382,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-lucas-bernard",
-    "publishedAt": "2026-09-30T15:58:00.398Z",
-    "updatedAt": "2026-09-30T15:58:00.398Z",
+    "publishedAt": "2026-10-08T14:39:43.688Z",
+    "updatedAt": "2026-10-08T14:39:43.688Z",
     "isFeatured": false,
     "images": [
       {
@@ -4099,7 +4469,7 @@ export const properties: Property[] = [
     "priceAmount": 487000,
     "priceCurrency": "EUR",
     "surfaceM2": 220,
-    "terrainM2": null,
+    "terrainM2": 2200,
     "rooms": 8,
     "bedrooms": 6,
     "bathrooms": 1,
@@ -4115,8 +4485,8 @@ export const properties: Property[] = [
     "lat": null,
     "lng": null,
     "agentId": "agent-clara-durand",
-    "publishedAt": "2026-09-30T15:57:00.053Z",
-    "updatedAt": "2026-09-30T15:57:00.053Z",
+    "publishedAt": "2026-10-08T14:38:43.692Z",
+    "updatedAt": "2026-10-08T14:38:43.692Z",
     "isFeatured": false,
     "images": [
       {

@@ -1,24 +1,30 @@
+import type { ReactNode } from "react";
 import { useSeo } from "@/lib/seo/useSeo";
 
 export type LegalPageKey = "mentions-legales" | "confidentialite" | "cookies" | "accessibilite";
 
-const legalContent: Record<LegalPageKey, { title: string; description: string; sections: Array<{ heading: string; body: string[] }> }> = {
+const legalContent: Record<LegalPageKey, { title: string; description: string; sections: Array<{ heading: string; body: ReactNode[] }> }> = {
   "mentions-legales": {
     title: "Mentions légales",
     description: "Informations légales de l'éditeur du site Foch Immobilier.",
     sections: [
       {
         heading: "Éditeur",
-        body: ["Foch Immobilier", "109 Av. Foch, 76600 Le Havre", "RCS et informations d'immatriculation sur demande."],
+        body: [
+          "FOCH IMMOBILIER, société par actions simplifiée (SAS).",
+          "Siège social : 109 avenue Foch, 76600 Le Havre, France.",
+          <>SIREN : 911 561 504 · SIRET du siège : 911 561 504 00034 · RCS Le Havre : 911 561 504. <a className="underline underline-offset-4" href="https://annuaire-entreprises.data.gouv.fr/entreprise/911561504" target="_blank" rel="noreferrer">Consulter l’Annuaire des Entreprises</a>.</>,
+          "Contact : vendre@fochimmobilier.com · +33 2 35 42 51 76.",
+        ],
       },
       {
         heading: "Carte professionnelle",
-        body: ["Carte CPI - Transaction et Gestion immobilière.", "Détails disponibles à l'agence."],
+        body: ["Carte professionnelle CPI 7605 2023 000 000 010 pour les activités Transaction et Syndic, enregistrée auprès de la CCI Seine Estuaire."],
       },
       {
         heading: "Hébergement",
         body: [
-          "Hébergement en cours de finalisation (déploiement Vercel). Les informations définitives de l'hébergeur seront publiées avant la mise en production.",
+          <>Vercel Inc., 440 N Barranca Avenue #4133, Covina, CA 91723, États-Unis. <a className="underline underline-offset-4" href="https://vercel.com/legal/privacy-notice" target="_blank" rel="noreferrer">Coordonnées légales de Vercel</a>.</>,
         ],
       },
     ],
@@ -107,8 +113,8 @@ export default function LegalTextPage({ page }: LegalTextPageProps) {
           <article key={section.heading}>
             <h2 className="font-display text-2xl">{section.heading}</h2>
             <div className="mt-2 space-y-2 text-sm text-muted-foreground">
-              {section.body.map((line) => (
-                <p key={line}>{line}</p>
+            {section.body.map((line, index) => (
+              <p key={`${section.heading}-${index}`}>{line}</p>
               ))}
             </div>
           </article>

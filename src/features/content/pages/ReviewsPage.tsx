@@ -167,6 +167,7 @@ export default function ReviewsPage() {
   const [expandedReviewIds, setExpandedReviewIds] = useState<Record<string, boolean>>({});
 
   const payload = reviewsQuery.data;
+  const hasRating = Boolean(payload && payload.rating > 0 && payload.userRatingCount > 0);
 
   const toggleReviewExpanded = (reviewId: string) => {
     setExpandedReviewIds((current) => ({
@@ -230,7 +231,7 @@ export default function ReviewsPage() {
           <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background/85 shadow-sm">
             <GoogleGIcon size={18} decorative />
           </span>
-          <h1 className="font-display text-4xl">Avis clients Foch Immobilier</h1>
+          <h1 className="font-display text-4xl">Avis clients Foch Immobilier au Havre</h1>
         </div>
         <p className="mt-3 text-sm text-muted-foreground">
           Notes et commentaires publiés sur la fiche Google de l'agence au Havre.
@@ -273,11 +274,15 @@ export default function ReviewsPage() {
                   </div>
 
                   <div className="min-w-[170px] rounded-2xl border border-border bg-background/80 p-4 text-right shadow-[0_12px_24px_-18px_hsl(var(--foreground)/0.18)] backdrop-blur-sm">
-                    <p className="font-display text-5xl leading-none">{payload.rating.toFixed(1)}</p>
-                    <div className="mt-2">
-                      <StarRating rating={payload.rating} />
-                    </div>
-                    <p className="mt-2 text-sm text-muted-foreground">{payload.userRatingCount} avis Google</p>
+                    {hasRating ? (
+                      <>
+                        <p className="font-display text-5xl leading-none">{payload.rating.toFixed(1)}</p>
+                        <div className="mt-2"><StarRating rating={payload.rating} /></div>
+                        <p className="mt-2 text-sm text-muted-foreground">{payload.userRatingCount} avis Google</p>
+                      </>
+                    ) : (
+                      <p className="font-medium">Note Google non disponible</p>
+                    )}
                   </div>
                 </div>
 
@@ -388,7 +393,9 @@ export default function ReviewsPage() {
                   <p className="mt-2 text-sm text-muted-foreground">
                     {payload.reviews.length > 0
                       ? "Commentaires sélectionnés par Google sur la fiche de l'agence au Havre."
-                      : "La note Google est disponible, mais aucun commentaire n'a été transmis pour cette fiche."}
+                      : hasRating
+                        ? "La note Google est disponible, mais aucun commentaire n'a été transmis pour cette fiche."
+                        : "Les avis et la note ne sont pas disponibles sur cette page. Consultez directement la fiche Google."}
                   </p>
                 </div>
 
@@ -408,13 +415,13 @@ export default function ReviewsPage() {
                 <div className="rounded-2xl border border-border bg-background/80 p-4">
                   <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Note moyenne</p>
                   <div className="mt-2 flex items-center gap-2">
-                    <p className="text-2xl font-semibold leading-none">{payload.rating.toFixed(1)}</p>
-                    <StarRating rating={payload.rating} />
+                    <p className="text-2xl font-semibold leading-none">{hasRating ? payload.rating.toFixed(1) : "—"}</p>
+                    {hasRating && <StarRating rating={payload.rating} />}
                   </div>
                 </div>
                 <div className="rounded-2xl border border-border bg-background/80 p-4">
                   <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Volume Google</p>
-                  <p className="mt-2 text-2xl font-semibold leading-none">{payload.userRatingCount}</p>
+                  <p className="mt-2 text-2xl font-semibold leading-none">{payload.userRatingCount > 0 ? payload.userRatingCount : "—"}</p>
                   <p className="mt-1 text-xs text-muted-foreground">Avis totaux sur la fiche agence</p>
                 </div>
                 <div className="rounded-2xl border border-border bg-background/80 p-4">
@@ -429,7 +436,7 @@ export default function ReviewsPage() {
 
             {payload.reviews.length === 0 && (
               <div className="mt-5 rounded-2xl border border-border bg-background/70 p-5 text-sm text-muted-foreground">
-                <p>Google ne fournit actuellement aucun commentaire à afficher sur cette page.</p>
+                <p>Aucun commentaire n’a été récupéré pour cette page. Consultez la fiche Google pour lire les avis à jour.</p>
                 <a
                   href={AGENCY_GOOGLE_MAPS_URL}
                   target="_blank"

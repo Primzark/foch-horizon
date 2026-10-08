@@ -71,6 +71,14 @@ function upsertRobots(noIndex: boolean): void {
   upsertMeta("robots", value);
 }
 
+function isVercelHostname(siteUrl: string): boolean {
+  try {
+    return new URL(siteUrl).hostname.toLowerCase().endsWith(".vercel.app");
+  } catch {
+    return false;
+  }
+}
+
 function removeJsonLdNodes(): void {
   document.querySelectorAll("script[data-foch-jsonld='true']").forEach((node) => node.remove());
 }
@@ -123,7 +131,9 @@ export function useSeo(options: SeoOptions): void {
       removePropertyMeta("og:url");
     }
 
-    upsertRobots(Boolean(options.noIndex));
+    // The Vercel hostname is the pre-launch environment. It stays crawlable for
+    // review, but only the final public domain should be eligible for indexing.
+    upsertRobots(Boolean(options.noIndex) || isVercelHostname(siteUrl));
 
     const supplied = options.jsonLd ? (Array.isArray(options.jsonLd) ? options.jsonLd : [options.jsonLd]) : [];
     const pageUrl = toAbsoluteUrl(canonicalPath, siteUrl);

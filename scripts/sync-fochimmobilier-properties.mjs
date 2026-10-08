@@ -17,15 +17,6 @@ const AGENT_FROM_CONTACT = {
   dries: "agent-dries-hubert",
 };
 
-const CITY_ID_FROM_NAME = {
-  "le havre": "city-le-havre",
-  "sainte adresse": "city-sainte-adresse",
-  "sainte-adresse": "city-sainte-adresse",
-  montivilliers: "city-montivilliers",
-  maneglise: "city-maneglise",
-  gainneville: "city-gainneville",
-};
-
 const FEATURE_FALLBACK = ["Appartement", "Maison", "Terrasse", "Balcon", "Cave", "Garage", "Parking", "Vue mer", "Jardin", "Ascenseur"];
 
 function decodeHtml(value) {
@@ -73,7 +64,8 @@ function normalizeSpace(value) {
 }
 
 function cleanText(value) {
-  return normalizeSpace(stripTags(value).replace(/\u00a0/g, " "));
+  return normalizeSpace(stripTags(value).replace(/\u00a0/g, " "))
+    .replace(/cuisine\s+am\?nag[ée]e?/gi, "cuisine aménagée");
 }
 
 function normalizeKey(value) {
@@ -138,8 +130,8 @@ function extractKeywordsValue(keywords, key) {
 }
 
 function mapCityId(cityName) {
-  const normalized = normalizeKey(cityName).replace(/-/g, " ");
-  return CITY_ID_FROM_NAME[normalized] ?? "city-le-havre";
+  const slug = toSlug(cityName);
+  return slug === "annonce" ? "city-le-havre" : `city-${slug}`;
 }
 
 function mapPropertyType(rawType) {
@@ -272,6 +264,9 @@ function parsePropertyDetail(id, html, orderIndex) {
     toNumber(extractKeywordsValue(keywords, "SurfaceHab")) ??
     extractFirstNumber(summary.get("surface") || "") ??
     0;
+  const terrainM2 =
+    toNumber(extractKeywordsValue(keywords, "SurfaceTerrain")) ??
+    extractFirstNumber(summary.get("surface terrain") || summary.get("terrain") || "");
 
   const rooms = toNumber(extractKeywordsValue(keywords, "Pieces"));
   const bedrooms = toNumber(summary.get("chambre(s)") || extractKeywordsValue(keywords, "Chambres"));
@@ -300,6 +295,7 @@ function parsePropertyDetail(id, html, orderIndex) {
     labelFr: label,
   }));
 
+  // The source does not expose publication dates; use feed order for local sorting.
   const now = new Date(Date.now() - orderIndex * 60_000).toISOString();
 
   return {
@@ -313,7 +309,7 @@ function parsePropertyDetail(id, html, orderIndex) {
     priceAmount,
     priceCurrency: "EUR",
     surfaceM2,
-    terrainM2: null,
+    terrainM2,
     rooms,
     bedrooms,
     bathrooms,

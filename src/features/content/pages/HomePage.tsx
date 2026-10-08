@@ -101,7 +101,8 @@ export default function HomePage() {
         <PhotoAttribution credit={HERO_IMAGE_CREDIT} />
         <div className="page-banner homepage-hero-content container relative z-[5] mx-auto flex flex-col justify-center px-4 py-5 md:py-8">
           <h1 className="max-w-4xl font-display text-3xl text-white md:text-5xl">
-            <span className="block text-4xl font-semibold sm:text-5xl md:text-7xl">Depuis 1972</span>
+            <span className="block text-3xl font-semibold leading-tight sm:text-5xl md:text-7xl">Agence immobilière au Havre</span>
+            <span className="mt-1 block text-xl font-semibold sm:text-3xl md:text-4xl">Foch Immobilier depuis 1972</span>
           </h1>
           <p className="mt-3 max-w-2xl text-base text-white drop-shadow-sm md:text-lg">
             Notre cabinet accompagne vendeurs et acquéreurs avec une approche sur mesure.
@@ -116,7 +117,7 @@ export default function HomePage() {
         <ScrollReveal mood={heroMood}>
           <div className="mb-6 flex items-end justify-between gap-4">
             <div>
-              <h2 className="font-display text-3xl">Nos dernières ventes</h2>
+              <h2 className="font-display text-3xl">Biens actuellement à vendre</h2>
             </div>
             <Link to="/biens" className="inline-flex items-center gap-1 text-sm hover:underline">
               Découvrir tous les biens
@@ -213,7 +214,9 @@ export default function HomePage() {
                   <h2 className="font-display text-3xl">Avis Google</h2>
                 </div>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Note moyenne {reviewsQuery.data.rating.toFixed(1)} / 5 ({reviewsQuery.data.userRatingCount} avis).
+                  {reviewsQuery.data.rating > 0 && reviewsQuery.data.userRatingCount > 0
+                    ? `Note moyenne ${reviewsQuery.data.rating.toFixed(1)} / 5 (${reviewsQuery.data.userRatingCount} avis).`
+                    : "La note et les avis sont à consulter sur la fiche Google de l’agence."}
                 </p>
               </div>
               <Link to="/avis" className="inline-flex items-center gap-1.5 text-sm hover:underline">
@@ -226,7 +229,7 @@ export default function HomePage() {
 
           {reviewsQuery.data.reviews.length === 0 && (
             <p className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">
-              Aucun commentaire n'est actuellement fourni par Google pour cette fiche. La note reste disponible.
+              Les commentaires ne sont pas disponibles sur cette page. Consultez la fiche Google pour voir les avis et la note à jour.
             </p>
           )}
 

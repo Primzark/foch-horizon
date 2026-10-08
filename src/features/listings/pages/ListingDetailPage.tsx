@@ -14,6 +14,7 @@ import { PropertyCompareToggle } from "@/features/listings/components/PropertyCo
 import DpeBadge from "@/components/property/DpeBadge";
 import { agentById } from "@/features/listings/data/agents";
 import { geographyGuideOptions } from "@/features/content/data/geographyGuideOptions";
+import { geographyGuideIndex } from "@/features/content/data/geographyGuideIndex";
 import { toSearchItem } from "@/features/listings/utils/mappers";
 import { LeadForm } from "@/features/leads/components/LeadForm";
 import {
@@ -34,6 +35,8 @@ import { buildSearchParams, parseSearchParams } from "@/features/listings/utils/
 import type { PropertySearchItem } from "@/types/api";
 import type { Property } from "@/types/domain";
 import type { PropertyModalRouteState } from "@/features/listings/navigation/propertyModalNavigation";
+
+const geographyGuideIds = new Set(geographyGuideIndex.map((guide) => guide.id));
 
 function parseRouteIdAndSlug(rawIdSlug?: string): { id: number; slug: string | null } | null {
   if (!rawIdSlug) {
@@ -511,15 +514,16 @@ export default function ListingDetailPage({
             identifier: String(property.id),
             image: property.images.map((image) => image.sourceUrl),
             description: property.description,
-            datePosted: property.publishedAt,
-            dateModified: property.updatedAt,
             publisher: { "@id": `${siteUrl}/#agency` },
-            about: cityById.get(property.cityId) ? { "@id": `${siteUrl}/immobilier/${cityById.get(property.cityId)!.slug}#place`, "@type": "City", name: cityById.get(property.cityId)!.name } : undefined,
+            about: cityById.get(property.cityId) && geographyGuideIds.has(cityById.get(property.cityId)!.slug)
+              ? { "@id": `${siteUrl}/immobilier/${cityById.get(property.cityId)!.slug}#place`, "@type": "City", name: cityById.get(property.cityId)!.name }
+              : undefined,
             mainEntity: {
               "@type": property.propertyType === "appartement" ? "Apartment" : property.propertyType === "maison_villa" ? "House" : "Accommodation",
               "@id": `${siteUrl}${canonicalPath}#property`,
               name: property.title,
               floorSize: { "@type": "QuantitativeValue", value: property.surfaceM2, unitCode: "MTK" },
+              ...(property.terrainM2 != null ? { additionalProperty: { "@type": "PropertyValue", name: "Surface du terrain", value: property.terrainM2, unitCode: "MTK" } } : {}),
               numberOfRooms: property.rooms ?? undefined,
               numberOfBedrooms: property.bedrooms ?? undefined,
               address: {
@@ -611,6 +615,7 @@ export default function ListingDetailPage({
   const statusLabel = getPropertyStatusLabel(property.status) ?? "À vendre";
   const quickFacts = [
     { icon: Maximize, label: "Surface", value: `${property.surfaceM2} m²` },
+    ...(property.terrainM2 != null ? [{ icon: Maximize, label: "Terrain", value: `${property.terrainM2} m²` }] : []),
     { icon: BedDouble, label: "Chambres", value: `${property.bedrooms ?? "-"}` },
     { icon: Bath, label: "Sdb", value: `${property.bathrooms ?? "-"}` },
     { icon: Car, label: "Garage", value: `${property.garageCount ?? 0}` },
