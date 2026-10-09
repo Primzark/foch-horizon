@@ -1,11 +1,21 @@
 import { useRef, useState, type TouchEvent } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Images, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import type { PropertyImage } from "@/types/domain";
+import { trackEvent } from "@/lib/analytics/events";
 import { inferPlaceImageMood } from "@/lib/visuals/placeImageMotion";
 import { PlaceAtmosphereLayer } from "@/components/visuals/PlaceAtmosphereLayer";
 import { ContextAwareParallax } from "@/components/visuals/ContextAwareParallax";
 import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
+import { getMotionDirectorProfile } from "@/lib/visuals/motionDirector";
 import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
 
 const galleryImageVariants = {
@@ -14,8 +24,10 @@ const galleryImageVariants = {
   exit: { opacity: 0, scale: 0.99 },
 };
 
-export function ListingGallery({ images, title }: { images: PropertyImage[]; title: string }) {
+export function ListingGallery({ images, title, propertyId }: { images: PropertyImage[]; title: string; propertyId: number }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [zoomedImageIndex, setZoomedImageIndex] = useState<number | null>(null);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const warmedImageUrlsRef = useRef(new Map<string, HTMLImageElement>());
   const { reducedMotion } = useMotionPreference();
@@ -31,6 +43,7 @@ export function ListingGallery({ images, title }: { images: PropertyImage[]; tit
   const activeIndex = Math.min(selectedIndex, images.length - 1);
   const activeImage = images[activeIndex];
   const imageMood = inferPlaceImageMood(title, activeImage.altText);
+  const motionDirector = getMotionDirectorProfile(imageMood);
 
   const navigateImage = (direction: -1 | 1) => {
     setSelectedIndex((current) => (current + direction + images.length) % images.length);
@@ -74,7 +87,13 @@ export function ListingGallery({ images, title }: { images: PropertyImage[]; tit
   };
 
   return (
-    <>
+    <Dialog
+      open={galleryOpen}
+      onOpenChange={(open) => {
+        setGalleryOpen(open);
+        if (!open) setZoomedImageIndex(null);
+      }}
+    >
       <div data-property-gallery>
         <div
           className="relative touch-pan-y overflow-hidden rounded-2xl border border-border"
@@ -136,8 +155,91 @@ export function ListingGallery({ images, title }: { images: PropertyImage[]; tit
               </button>
             </>
           )}
+          <DialogTrigger asChild>
+            <button
+              type="button"
+              className="absolute right-3 top-3 z-[4] inline-flex min-h-10 items-center gap-2 rounded-full border border-white/70 bg-background/95 px-3.5 text-sm font-medium shadow-sm backdrop-blur-sm transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              aria-label="Voir toutes les photos"
+              title="Voir toutes les photos"
+              onClick={() => trackEvent("gallery_opened", { property_id: propertyId })}
+            >
+              <Images className="h-4 w-4" aria-hidden="true" />
+              Voir toutes les photos
+            </button>
+          </DialogTrigger>
         </div>
       </div>
-    </>
+      <DialogContent
+        data-property-gallery
+        data-menu-swipe-ignore
+        hideCloseButton={zoomedImageIndex !== null}
+        className="max-h-[90dvh] overflow-y-auto sm:max-w-5xl"
+      >
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>
+            {zoomedImageIndex === null
+              ? `Toutes les photos du bien (${images.length})`
+              : `Photo ${zoomedImageIndex + 1} sur ${images.length}`}
+          </DialogDescription>
+        </DialogHeader>
+        {zoomedImageIndex === null ? (
+          <div className="grid gap-3 md:grid-cols-2">
+            {images.map((image, index) => (
+              <button
+                key={image.id}
+                type="button"
+                className="group relative overflow-hidden rounded-xl bg-muted text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                aria-label={`Agrandir la photo ${index + 1}`}
+                onClick={() => setZoomedImageIndex(index)}
+              >
+                <motion.img
+                  src={getPropertyImageUrl(image.sourceUrl, 400)}
+                  srcSet={getPropertyImageSrcSet(image.sourceUrl)}
+                  sizes="(max-width: 767px) 90vw, 44vw"
+                  alt={image.altText}
+                  className="aspect-[4/3] w-full object-cover transition-transform duration-700 group-hover:scale-[1.02] motion-reduce:transition-none"
+                  loading="lazy"
+                  decoding="async"
+                  initial={reducedMotion ? { opacity: 1 } : { opacity: 0, y: 16 }}
+                  whileInView={reducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.24 }}
+                  transition={{
+                    duration: motionDirector.revealDuration * 0.78,
+                    delay: Math.min(index * motionDirector.revealStagger, 0.2),
+                    ease: "easeOut",
+                  }}
+                />
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="relative flex h-[min(72dvh,52rem)] min-h-[16rem] items-center justify-center overflow-hidden rounded-xl bg-neutral-950">
+            <motion.img
+              key={images[zoomedImageIndex].id}
+              src={getPropertyImageUrl(images[zoomedImageIndex].sourceUrl, 1200)}
+              srcSet={getPropertyImageSrcSet(images[zoomedImageIndex].sourceUrl)}
+              sizes="(max-width: 767px) 90vw, 80vw"
+              alt={images[zoomedImageIndex].altText}
+              className="h-full w-full object-contain"
+              loading="eager"
+              decoding="async"
+              initial={reducedMotion ? false : { opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: reducedMotion ? 0 : 0.22, ease: "easeOut" }}
+            />
+            <button
+              type="button"
+              aria-label="Fermer l’agrandissement et revenir aux photos"
+              title="Retour aux photos"
+              onClick={() => setZoomedImageIndex(null)}
+              className="absolute right-3 top-3 z-10 inline-flex h-11 w-11 items-center justify-center rounded-full bg-background/95 shadow-md transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              <X className="h-5 w-5" aria-hidden="true" />
+            </button>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }

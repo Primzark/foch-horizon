@@ -656,7 +656,7 @@ export default function ListingDetailPage({
 
       <div ref={contentRef} className="grid min-w-0 grid-cols-1 gap-7 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-8">
         <div className="min-w-0">
-          <ListingGallery images={property.images} title={property.title} />
+          <ListingGallery images={property.images} title={property.title} propertyId={property.id} />
           {announcementSwipeHint && (
             <div className="mt-1 flex justify-end pr-1 lg:hidden">{announcementSwipeHint}</div>
           )}
