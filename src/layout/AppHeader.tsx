@@ -214,13 +214,13 @@ export function AppHeader() {
     <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
       <header className="sticky top-0 z-50 touch-pan-y border-b border-border bg-background/95 backdrop-blur-md [padding-top:env(safe-area-inset-top)]">
         <div className="container mx-auto px-3 sm:px-4">
-          <div className="flex min-h-20 items-center justify-between gap-2 lg:min-h-[72px]">
+          <div className="relative flex min-h-20 items-center justify-between gap-2 lg:min-h-[72px]">
             <SheetTrigger asChild>
               <button type="button" className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-border lg:hidden" aria-label="Ouvrir le menu" aria-expanded={mobileOpen}>
                 <Menu className="h-5 w-5" />
               </button>
             </SheetTrigger>
-            <Link to="/" onClick={handleLogoClick} className="flex min-w-0 items-center gap-2" aria-label="Foch Immobilier — Accueil">
+            <Link to="/" onClick={handleLogoClick} className="absolute left-1/2 top-1/2 flex min-w-0 -translate-x-1/2 -translate-y-1/2 items-center gap-2 lg:static lg:translate-x-0 lg:translate-y-0" aria-label="Foch Immobilier — Accueil">
               <picture>
                 <source srcSet="/images/foch-immobilier-logo.webp" type="image/webp" />
                 <img
@@ -228,7 +228,7 @@ export function AppHeader() {
                   alt="Foch Immobilier"
                   width={772}
                   height={150}
-                  className="h-auto w-[170px] max-[359px]:w-[144px] mix-blend-multiply sm:w-[200px] lg:w-[220px]"
+                  className="h-auto w-[144px] max-[359px]:w-[120px] min-[400px]:w-[170px] mix-blend-multiply sm:w-[200px] lg:w-[220px]"
                   decoding="async"
                 />
               </picture>
