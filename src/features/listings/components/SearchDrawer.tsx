@@ -379,7 +379,7 @@ export function SearchDrawer() {
                 setSearchDrawerOpen(false);
               }}
             >
-              Fermer
+              Voir les résultats
             </Button>
           )}
         </div>
