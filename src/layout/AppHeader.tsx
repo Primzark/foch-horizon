@@ -226,8 +226,8 @@ export function AppHeader() {
                 <img
                   src="/images/foch-immobilier-logo.jpg"
                   alt="Foch Immobilier"
-                  width={500}
-                  height={146}
+                  width={772}
+                  height={150}
                   className="h-auto w-[170px] max-[359px]:w-[144px] mix-blend-multiply sm:w-[200px] lg:w-[220px]"
                   decoding="async"
                 />
