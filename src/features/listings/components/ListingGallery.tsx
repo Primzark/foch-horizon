@@ -1,21 +1,11 @@
 import { useRef, useState, type TouchEvent } from "react";
-import { ChevronLeft, ChevronRight, Images } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import type { PropertyImage } from "@/types/domain";
-import { trackEvent } from "@/lib/analytics/events";
 import { inferPlaceImageMood } from "@/lib/visuals/placeImageMotion";
 import { PlaceAtmosphereLayer } from "@/components/visuals/PlaceAtmosphereLayer";
 import { ContextAwareParallax } from "@/components/visuals/ContextAwareParallax";
 import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
-import { getMotionDirectorProfile } from "@/lib/visuals/motionDirector";
 import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
 
 const galleryImageVariants = {
@@ -24,10 +14,8 @@ const galleryImageVariants = {
   exit: { opacity: 0, scale: 0.99 },
 };
 
-export function ListingGallery({ images, title, propertyId }: { images: PropertyImage[]; title: string; propertyId: number }) {
+export function ListingGallery({ images, title }: { images: PropertyImage[]; title: string }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [galleryOpen, setGalleryOpen] = useState(false);
-  const [showAllPhotos, setShowAllPhotos] = useState(false);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const warmedImageUrlsRef = useRef(new Map<string, HTMLImageElement>());
   const { reducedMotion } = useMotionPreference();
@@ -42,17 +30,10 @@ export function ListingGallery({ images, title, propertyId }: { images: Property
 
   const activeIndex = Math.min(selectedIndex, images.length - 1);
   const activeImage = images[activeIndex];
-  const galleryButtonLabel = images.length === 1 ? "Voir la photo" : `Voir les ${images.length} photos`;
   const imageMood = inferPlaceImageMood(title, activeImage.altText);
-  const motionDirector = getMotionDirectorProfile(imageMood);
 
   const navigateImage = (direction: -1 | 1) => {
     setSelectedIndex((current) => (current + direction + images.length) % images.length);
-  };
-
-  const selectImage = (index: number) => {
-    if (index === activeIndex) return;
-    setSelectedIndex(index);
   };
 
   const preloadAdjacentImages = () => {
@@ -93,13 +74,7 @@ export function ListingGallery({ images, title, propertyId }: { images: Property
   };
 
   return (
-    <Dialog
-      open={galleryOpen}
-      onOpenChange={(open) => {
-        setGalleryOpen(open);
-        if (!open) setShowAllPhotos(false);
-      }}
-    >
+    <>
       <div data-property-gallery>
         <div
           className="relative touch-pan-y overflow-hidden rounded-2xl border border-border"
@@ -161,136 +136,8 @@ export function ListingGallery({ images, title, propertyId }: { images: Property
               </button>
             </>
           )}
-
-          <DialogTrigger asChild>
-            <button
-              type="button"
-              className="absolute right-3 top-3 z-[4] inline-flex min-h-10 items-center gap-2 rounded-full border border-white/70 bg-background/95 px-3.5 text-sm font-medium shadow-sm backdrop-blur-sm transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              aria-label={galleryButtonLabel}
-              title={galleryButtonLabel}
-              onClick={() => {
-                setShowAllPhotos(true);
-                trackEvent("gallery_opened", { property_id: propertyId });
-              }}
-            >
-              <Images className="h-4 w-4" aria-hidden="true" />
-              {galleryButtonLabel}
-            </button>
-          </DialogTrigger>
         </div>
-
-        <DialogContent data-property-gallery data-menu-swipe-ignore className="max-h-[90dvh] overflow-y-auto sm:max-w-5xl">
-          <DialogHeader>
-            <DialogTitle>{title}</DialogTitle>
-            <DialogDescription>
-              {showAllPhotos ? `Toutes les photos du bien (${images.length})` : `Photo ${activeIndex + 1} sur ${images.length}`}
-            </DialogDescription>
-          </DialogHeader>
-          {showAllPhotos ? (
-            <div>
-              <button
-                type="button"
-                className="mb-4 inline-flex min-h-10 items-center rounded-full border border-border px-4 text-sm font-medium transition-colors hover:bg-muted"
-                onClick={() => setShowAllPhotos(false)}
-              >
-                Revenir à la photo principale
-              </button>
-              <div className="grid gap-3 md:grid-cols-2">
-                {images.map((image, index) => (
-                  <button
-                    key={image.id}
-                    type="button"
-                    className="group relative overflow-hidden rounded-xl bg-muted text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    aria-label={`Afficher la photo ${index + 1} en grand`}
-                    onClick={() => {
-                      selectImage(index);
-                      setShowAllPhotos(false);
-                    }}
-                  >
-                    <motion.img
-                      src={getPropertyImageUrl(image.sourceUrl, 400)}
-                      srcSet={getPropertyImageSrcSet(image.sourceUrl)}
-                      sizes="(max-width: 767px) 90vw, 44vw"
-                      alt={image.altText}
-                      className="aspect-[4/3] w-full object-cover transition-transform duration-700 group-hover:scale-[1.02] motion-reduce:transition-none"
-                      loading="lazy"
-                      decoding="async"
-                      initial={reducedMotion ? { opacity: 1 } : { opacity: 0, y: 16 }}
-                      whileInView={reducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
-                      viewport={{ once: true, amount: 0.24 }}
-                      transition={{
-                        duration: motionDirector.revealDuration * 0.78,
-                        delay: Math.min(index * motionDirector.revealStagger, 0.2),
-                        ease: "easeOut",
-                      }}
-                    />
-                  </button>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div
-              className="relative isolate flex h-[min(68dvh,48rem)] min-h-[16rem] touch-pan-y items-center justify-center overflow-hidden rounded-xl bg-neutral-950"
-              onTouchStart={handleTouchStart}
-              onTouchEnd={handleTouchEnd}
-              onTouchCancel={() => {
-                touchStartRef.current = null;
-              }}
-            >
-              <div className="absolute left-3 top-3 z-10 rounded-full bg-background/90 px-3 py-1.5 text-xs font-medium">
-                {activeIndex + 1} / {images.length}
-              </div>
-              {images.length > 1 && (
-                <button
-                  type="button"
-                  className="absolute bottom-3 right-3 z-10 inline-flex min-h-10 items-center gap-2 rounded-full bg-background/90 px-4 text-sm font-medium shadow-sm"
-                  onClick={() => setShowAllPhotos(true)}
-                >
-                  <Images className="h-4 w-4" aria-hidden="true" />
-                  Voir toutes les photos
-                </button>
-              )}
-              {images.length > 1 && (
-                <>
-                  <button
-                    type="button"
-                    aria-label="Photo précédente"
-                    className="absolute left-3 top-1/2 z-10 -translate-y-1/2 rounded-full bg-background/90 p-2.5 shadow-md"
-                    onClick={() => navigateImage(-1)}
-                  >
-                    <ChevronLeft className="h-5 w-5" aria-hidden="true" />
-                  </button>
-                  <button
-                    type="button"
-                    aria-label="Photo suivante"
-                    className="absolute right-3 top-1/2 z-10 -translate-y-1/2 rounded-full bg-background/90 p-2.5 shadow-md"
-                    onClick={() => navigateImage(1)}
-                  >
-                    <ChevronRight className="h-5 w-5" aria-hidden="true" />
-                  </button>
-                </>
-              )}
-              <AnimatePresence mode="wait" initial={!reducedMotion}>
-                <motion.img
-                  key={activeImage.id}
-                  src={getPropertyImageUrl(activeImage.sourceUrl, 1200)}
-                  srcSet={getPropertyImageSrcSet(activeImage.sourceUrl)}
-                  sizes="(max-width: 767px) 90vw, 80vw"
-                  alt={activeImage.altText}
-                  className="h-full w-full object-contain"
-                  loading="eager"
-                  decoding="async"
-                  initial={reducedMotion ? false : "enter"}
-                  animate="center"
-                  exit={reducedMotion ? { opacity: 0 } : "exit"}
-                  variants={galleryImageVariants}
-                  transition={{ duration: reducedMotion ? 0 : 0.52, ease: [0.22, 1, 0.36, 1] }}
-                />
-              </AnimatePresence>
-            </div>
-          )}
-        </DialogContent>
       </div>
-    </Dialog>
+    </>
   );
 }

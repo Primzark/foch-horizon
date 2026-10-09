@@ -5,7 +5,6 @@ export type AnalyticsEventName =
   | "filter_applied"
   | "property_view"
   | "listing_viewed"
-  | "gallery_opened"
   | "lead_submitted"
   | "phone_clicked"
   | "extranet_clicked"
