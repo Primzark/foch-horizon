@@ -83,7 +83,7 @@ function PropertyDetailRouteModal() {
       if (!open) navigate(-(propertyModalDepth + 1));
     }}>
       <DialogContent
-        largeCloseButton
+        hideCloseButton
         overlayClassName="bg-black/45"
         data-menu-swipe-ignore
         className="left-0 top-0 flex h-[100dvh] w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 p-0 sm:left-[50%] sm:top-[50%] sm:h-[min(92dvh,64rem)] sm:max-h-[92dvh] sm:w-[calc(100%-1rem)] sm:max-w-none lg:w-[min(92vw,88rem)] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-2xl sm:border"

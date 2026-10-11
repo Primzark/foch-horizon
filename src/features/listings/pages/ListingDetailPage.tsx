@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { motion, useScroll } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { ArrowRight, Bath, BedDouble, Car, ChevronLeft, Copy, Heart, MapPin, Maximize, Maximize2, Phone } from "lucide-react";
+import { ArrowRight, Bath, BedDouble, Car, ChevronLeft, Copy, Heart, MapPin, Maximize, Maximize2, Phone, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cityById, cityBySlug } from "@/features/cities/data/cities";
 import { getPropertyById, getSimilarProperties, searchProperties } from "@/features/listings/api/properties.service";
@@ -670,22 +670,35 @@ export default function ListingDetailPage({
             propertyId={property.id}
             variant="modal"
             overlayActions={(
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-11 rounded-full border-white/35 bg-black/45 px-3 text-white shadow-md backdrop-blur-md hover:bg-black/65 hover:text-white"
-                asChild
-              >
-                <Link
-                  to={`${location.pathname}${location.search}`}
-                  replace
-                  state={routeState ? { ...routeState, propertyModal: false } : null}
-                  aria-label="Ouvrir l’annonce en plein écran"
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-11 w-11 rounded-full border-white/35 bg-black/45 text-white shadow-md backdrop-blur-md hover:bg-black/65 hover:text-white"
+                  aria-label="Fermer l’annonce"
+                  title="Fermer"
+                  onClick={() => navigate(-((routeState?.propertyModalDepth ?? 0) + 1))}
                 >
-                  <Maximize2 aria-hidden="true" className="h-4 w-4 sm:mr-1.5" />
-                  <span>Plein écran</span>
-                </Link>
-              </Button>
+                  <X aria-hidden="true" className="h-5 w-5" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-11 rounded-full border-white/35 bg-black/45 px-3 text-white shadow-md backdrop-blur-md hover:bg-black/65 hover:text-white"
+                  asChild
+                >
+                  <Link
+                    to={`${location.pathname}${location.search}`}
+                    replace
+                    state={routeState ? { ...routeState, propertyModal: false } : null}
+                    aria-label="Ouvrir l’annonce en plein écran"
+                  >
+                    <Maximize2 aria-hidden="true" className="h-4 w-4 sm:mr-1.5" />
+                    <span>Plein écran</span>
+                  </Link>
+                </Button>
+              </>
             )}
           />
         )}
