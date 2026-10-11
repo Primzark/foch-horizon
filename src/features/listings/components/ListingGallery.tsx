@@ -265,7 +265,10 @@ export function ListingGallery({
             <span className="hidden sm:inline">Retour à l’annonce</span>
             <span className="sm:hidden">Retour</span>
           </button>
-          <span className="inline-flex h-9 items-center rounded-full bg-foreground px-4 text-sm font-medium text-background">
+          <span
+            aria-current="page"
+            className="relative inline-flex h-full items-center px-3 text-sm font-semibold text-foreground after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:rounded-full after:bg-foreground"
+          >
             Photos
           </span>
           <span className="ml-auto text-sm font-medium text-muted-foreground md:hidden" aria-live="polite">
