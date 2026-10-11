@@ -1,7 +1,7 @@
 import { Suspense, lazy, useEffect, useLayoutEffect, useRef, useState, type MouseEvent, type TouchEvent } from "react";
 import { Building2, ChevronLeft, Hand, Maximize2 } from "lucide-react";
 import { BrowserRouter, Link, Navigate, Outlet, Route, Routes, useLocation, useNavigate, useNavigationType, useParams } from "react-router-dom";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -85,6 +85,7 @@ function PropertyDetailRouteModal() {
   const routeState = location.state as PropertyModalRouteState | null;
   const detailsScrollRef = useRef<HTMLDivElement>(null);
   const dialogContentRef = useRef<HTMLDivElement>(null);
+  const previousPropertyPathRef = useRef(location.pathname);
   const touchStartRef = useRef<PropertySwipeGesture | null>(null);
   const suppressSwipeClickUntilRef = useRef(0);
   const [navigationDirection, setNavigationDirection] = useState<-1 | 1>(1);
@@ -188,8 +189,11 @@ function PropertyDetailRouteModal() {
     });
   };
 
+  const isPropertyRouteChange = previousPropertyPathRef.current !== location.pathname;
+
   useEffect(() => {
     if (detailsScrollRef.current) detailsScrollRef.current.scrollTop = 0;
+    previousPropertyPathRef.current = location.pathname;
   }, [location.pathname]);
 
   const handleTouchStart = (event: TouchEvent<HTMLDivElement>) => {
@@ -319,46 +323,43 @@ function PropertyDetailRouteModal() {
           onClickCapture={handleSwipeClickCapture}
           onTouchCancel={() => { touchStartRef.current = null; }}
         >
-          <AnimatePresence mode="wait" initial={false} custom={navigationDirection}>
-            <motion.div
-              key={location.pathname}
-              custom={navigationDirection}
-              variants={{
-                enter: (direction: number) => ({ opacity: 0, x: direction * 36 }),
-                center: { opacity: 1, x: 0 },
-                exit: (direction: number) => ({ opacity: 0, x: direction * -36 }),
-              }}
-              initial={prefersReducedMotion ? "center" : "enter"}
-              animate="center"
-              exit={prefersReducedMotion ? "center" : "exit"}
-              transition={{ duration: prefersReducedMotion ? 0 : 0.26, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <Suspense
-                fallback={(
-                  <section className="container mx-auto min-h-[60vh] px-4 pt-4 pb-8" aria-busy="true" aria-label="Chargement de l’annonce">
-                    <div className="mb-4 h-4 w-44 rounded bg-muted" aria-hidden="true" />
-                    <div className="grid min-w-0 grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
-                      <div className="min-w-0">
-                        <div className="aspect-[16/9] rounded-2xl bg-muted" aria-hidden="true" />
-                        <div className="mt-6 h-8 w-2/3 rounded bg-muted" aria-hidden="true" />
-                        <div className="mt-3 h-5 w-1/3 rounded bg-muted" aria-hidden="true" />
-                      </div>
-                      <div className="h-56 min-w-0 rounded-2xl bg-muted" aria-hidden="true" />
+          {/* Animate only the incoming property. An exiting panel would read the updated router context and animate the new property out before it enters again. */}
+          <motion.div
+            key={location.pathname}
+            custom={navigationDirection}
+            variants={{
+              enter: (direction: number) => ({ opacity: 0, x: direction * 36 }),
+              center: { opacity: 1, x: 0 },
+            }}
+            initial={prefersReducedMotion || !isPropertyRouteChange ? "center" : "enter"}
+            animate="center"
+            transition={{ duration: prefersReducedMotion ? 0 : 0.26, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <Suspense
+              fallback={(
+                <section className="container mx-auto min-h-[60vh] px-4 pt-4 pb-8" aria-busy="true" aria-label="Chargement de l’annonce">
+                  <div className="mb-4 h-4 w-44 rounded bg-muted" aria-hidden="true" />
+                  <div className="grid min-w-0 grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
+                    <div className="min-w-0">
+                      <div className="aspect-[16/9] rounded-2xl bg-muted" aria-hidden="true" />
+                      <div className="mt-6 h-8 w-2/3 rounded bg-muted" aria-hidden="true" />
+                      <div className="mt-3 h-5 w-1/3 rounded bg-muted" aria-hidden="true" />
                     </div>
-                    <span className="sr-only">Chargement de l’annonce…</span>
-                  </section>
-                )}
-              >
-                <ListingDetailPage
-                  announcementSwipeHint={announcementSwipeHint}
-                  announcementNavigationControls={announcementNavigationControls}
-                  stickySummaryPortalElement={stickySummaryPortalElement}
-                  stickySummaryTop={64}
-                  previewLayout
-                />
-              </Suspense>
-            </motion.div>
-          </AnimatePresence>
+                    <div className="h-56 min-w-0 rounded-2xl bg-muted" aria-hidden="true" />
+                  </div>
+                  <span className="sr-only">Chargement de l’annonce…</span>
+                </section>
+              )}
+            >
+              <ListingDetailPage
+                announcementSwipeHint={announcementSwipeHint}
+                announcementNavigationControls={announcementNavigationControls}
+                stickySummaryPortalElement={stickySummaryPortalElement}
+                stickySummaryTop={64}
+                previewLayout
+              />
+            </Suspense>
+          </motion.div>
         </div>
       </DialogContent>
     </Dialog>
