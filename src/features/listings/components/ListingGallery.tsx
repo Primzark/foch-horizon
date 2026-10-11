@@ -1,4 +1,4 @@
-import { useRef, useState, type TouchEvent } from "react";
+import { useRef, useState, type MouseEvent, type TouchEvent } from "react";
 import { ChevronLeft, ChevronRight, Images, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -29,6 +29,7 @@ export function ListingGallery({ images, title, propertyId }: { images: Property
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [zoomedImageIndex, setZoomedImageIndex] = useState<number | null>(null);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const suppressClickUntilRef = useRef(0);
   const warmedImageUrlsRef = useRef(new Map<string, HTMLImageElement>());
   const { reducedMotion } = useMotionPreference();
 
@@ -68,12 +69,15 @@ export function ListingGallery({ images, title, propertyId }: { images: Property
   };
 
   const handleTouchStart = (event: TouchEvent<HTMLDivElement>) => {
+    event.stopPropagation();
+    suppressClickUntilRef.current = 0;
     const touch = event.changedTouches[0];
     touchStartRef.current = { x: touch.clientX, y: touch.clientY };
     preloadAdjacentImages();
   };
 
   const handleTouchEnd = (event: TouchEvent<HTMLDivElement>) => {
+    event.stopPropagation();
     const start = touchStartRef.current;
     touchStartRef.current = null;
     if (!start || images.length < 2) return;
@@ -83,7 +87,17 @@ export function ListingGallery({ images, title, propertyId }: { images: Property
     const deltaY = touch.clientY - start.y;
     if (Math.abs(deltaX) < 48 || Math.abs(deltaX) < Math.abs(deltaY) * 1.2) return;
 
+    suppressClickUntilRef.current = Date.now() + 400;
     navigateImage(deltaX < 0 ? 1 : -1);
+  };
+
+  const handleClickCapture = (event: MouseEvent<HTMLDivElement>) => {
+    if (event.detail === 0 || Date.now() > suppressClickUntilRef.current) return;
+    if (!(event.target instanceof Element) || !event.target.closest("button, a, [role='button']")) return;
+
+    suppressClickUntilRef.current = 0;
+    event.preventDefault();
+    event.stopPropagation();
   };
 
   return (
@@ -99,6 +113,7 @@ export function ListingGallery({ images, title, propertyId }: { images: Property
           className="relative touch-pan-y overflow-hidden rounded-2xl border border-border"
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
+          onClickCapture={handleClickCapture}
           onTouchCancel={() => {
             touchStartRef.current = null;
           }}
