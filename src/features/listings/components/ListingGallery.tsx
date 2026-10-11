@@ -143,6 +143,7 @@ export function ListingGallery({
                 event.stopPropagation();
                 return;
               }
+              setZoomedImageIndex(safeActiveImageIndex);
               trackEvent("gallery_opened", { property_id: propertyId });
             }}
           >
@@ -192,7 +193,7 @@ export function ListingGallery({
                 event.stopPropagation();
                 moveImage(-1);
               }}
-              className="absolute left-3 top-1/2 z-[4] inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-black/45 text-white shadow-md backdrop-blur-md transition-colors hover:bg-black/65 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:left-5"
+              className="absolute left-3 top-1/2 z-[4] hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-black/45 text-white shadow-md backdrop-blur-md transition-colors hover:bg-black/65 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black md:inline-flex md:left-5"
             >
               <ChevronLeft className="h-5 w-5" aria-hidden="true" />
             </button>
@@ -205,7 +206,7 @@ export function ListingGallery({
                 event.stopPropagation();
                 moveImage(1);
               }}
-              className="absolute right-3 top-1/2 z-[4] inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-black/45 text-white shadow-md backdrop-blur-md transition-colors hover:bg-black/65 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:right-5"
+              className="absolute right-3 top-1/2 z-[4] hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-black/45 text-white shadow-md backdrop-blur-md transition-colors hover:bg-black/65 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black md:inline-flex md:right-5"
             >
               <ChevronRight className="h-5 w-5" aria-hidden="true" />
             </button>
