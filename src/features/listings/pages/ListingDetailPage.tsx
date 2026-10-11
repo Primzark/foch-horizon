@@ -605,7 +605,8 @@ export default function ListingDetailPage({
   const canonicalSlug = sanitizePropertySlug(property.slug);
   const routeSlug = parsedRoute?.slug ? sanitizePropertySlug(parsedRoute.slug) : null;
 
-  if (routeSlug !== canonicalSlug) {
+  // Result slugs can differ from detail slugs; correcting one inside the modal causes a second update for the same property.
+  if (routeSlug !== canonicalSlug && !routeState?.propertyModal) {
     return <Navigate to={canonicalPath!} replace state={location.state} />;
   }
 

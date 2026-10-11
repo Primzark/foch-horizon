@@ -1,18 +1,11 @@
-import { Suspense, lazy, useEffect, useLayoutEffect, useRef, useState, type MouseEvent, type TouchEvent } from "react";
+import { Suspense, lazy, useEffect, useLayoutEffect, useRef, useState, type TouchEvent } from "react";
 import { Building2, ChevronLeft, Hand, Maximize2 } from "lucide-react";
 import { BrowserRouter, Link, Navigate, Outlet, Route, Routes, useLocation, useNavigate, useNavigationType, useParams } from "react-router-dom";
-import { motion, useReducedMotion } from "framer-motion";
+import { useReducedMotion } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { PropertyModalRouteState } from "@/features/listings/navigation/propertyModalNavigation";
-import {
-  beginPropertySwipe,
-  resolvePropertySwipeDirection,
-  shouldSuppressPostSwipeClick,
-  trackPropertySwipeMove,
-  type PropertySwipeGesture,
-} from "@/features/listings/navigation/propertySwipeGesture";
 import { formatPrice, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
 import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
 import { AppLayout } from "@/layout/AppLayout";
@@ -85,10 +78,7 @@ function PropertyDetailRouteModal() {
   const routeState = location.state as PropertyModalRouteState | null;
   const detailsScrollRef = useRef<HTMLDivElement>(null);
   const dialogContentRef = useRef<HTMLDivElement>(null);
-  const previousPropertyPathRef = useRef(location.pathname);
-  const touchStartRef = useRef<PropertySwipeGesture | null>(null);
-  const suppressSwipeClickUntilRef = useRef(0);
-  const [navigationDirection, setNavigationDirection] = useState<-1 | 1>(1);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const [stickySummaryPortalElement, setStickySummaryPortalElement] = useState<HTMLDivElement | null>(null);
   const prefersReducedMotion = useReducedMotion();
   const propertyModalDepth = routeState?.propertyModalDepth ?? 0;
@@ -128,7 +118,7 @@ function PropertyDetailRouteModal() {
             className="h-10 w-10 rounded-full border-border bg-background/90 p-0 shadow-sm"
             aria-label="Annonce précédente"
             title="Annonce précédente"
-            onClick={() => openProperty(previousProperty, -1)}
+            onClick={() => openProperty(previousProperty)}
           >
             <ChevronLeft aria-hidden="true" className="h-5 w-5" />
           </Button>
@@ -138,7 +128,7 @@ function PropertyDetailRouteModal() {
             type="button"
             aria-label={`Annonce suivante : ${nextProperty.title}, ${nextProperty.city.name}, ${formatPrice(nextProperty.priceAmount, nextProperty.transaction)}`}
             title="Découvrir l’annonce suivante"
-            onClick={() => openProperty(nextProperty, 1)}
+            onClick={() => openProperty(nextProperty)}
             className="flex h-[3.75rem] w-64 items-center gap-2 rounded-xl border border-border bg-background/90 p-1.5 text-left shadow-sm transition-[border-color,background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-brand-border hover:bg-brand-soft/30 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
             {nextProperty.coverImageUrl ? (
@@ -169,8 +159,7 @@ function PropertyDetailRouteModal() {
     </div>
   ) : null;
 
-  const openProperty = (item: PropertySearchItem, direction: -1 | 1) => {
-    setNavigationDirection(direction);
+  const openProperty = (item: PropertySearchItem) => {
     navigate(toCanonicalPropertyPath(item), {
       replace: true,
       state: {
@@ -189,56 +178,36 @@ function PropertyDetailRouteModal() {
     });
   };
 
-  const isPropertyRouteChange = previousPropertyPathRef.current !== location.pathname;
-
   useEffect(() => {
     if (detailsScrollRef.current) detailsScrollRef.current.scrollTop = 0;
-    previousPropertyPathRef.current = location.pathname;
   }, [location.pathname]);
 
   const handleTouchStart = (event: TouchEvent<HTMLDivElement>) => {
-    suppressSwipeClickUntilRef.current = 0;
-    if (event.touches.length !== 1) {
+    const target = event.target;
+    if (
+      target instanceof Element &&
+      target.closest("[data-property-gallery], button, a, input, textarea, select, [contenteditable='true'], [role='button']")
+    ) {
       touchStartRef.current = null;
       return;
     }
 
-    const touch = event.touches[0];
-    touchStartRef.current = beginPropertySwipe(event.target, { x: touch.clientX, y: touch.clientY });
-  };
-
-  const handleTouchMove = (event: TouchEvent<HTMLDivElement>) => {
-    if (event.touches.length !== 1) {
-      touchStartRef.current = null;
-      return;
-    }
-
-    const touch = event.touches[0];
-    touchStartRef.current = trackPropertySwipeMove(touchStartRef.current, { x: touch.clientX, y: touch.clientY });
+    const touch = event.changedTouches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
   };
 
   const handleTouchEnd = (event: TouchEvent<HTMLDivElement>) => {
     const start = touchStartRef.current;
     touchStartRef.current = null;
-    if (!start || event.touches.length > 0 || event.changedTouches.length === 0) return;
+    if (!start) return;
 
     const touch = event.changedTouches[0];
-    const direction = resolvePropertySwipeDirection(start, { x: touch.clientX, y: touch.clientY });
-    if (direction === null) return;
+    const deltaX = touch.clientX - start.x;
+    const deltaY = touch.clientY - start.y;
+    if (Math.abs(deltaX) < 56 || Math.abs(deltaX) < Math.abs(deltaY) * 1.25) return;
 
-    const property = direction > 0 ? nextProperty : previousProperty;
-    if (!property) return;
-
-    suppressSwipeClickUntilRef.current = Date.now() + 400;
-    openProperty(property, direction);
-  };
-
-  const handleSwipeClickCapture = (event: MouseEvent<HTMLDivElement>) => {
-    if (!shouldSuppressPostSwipeClick(suppressSwipeClickUntilRef.current, Date.now(), event.detail)) return;
-
-    suppressSwipeClickUntilRef.current = 0;
-    event.preventDefault();
-    event.stopPropagation();
+    if (deltaX < 0 && nextProperty) openProperty(nextProperty);
+    if (deltaX > 0 && previousProperty) openProperty(previousProperty);
   };
 
   return (
@@ -257,10 +226,10 @@ function PropertyDetailRouteModal() {
 
           if (event.key === "ArrowLeft" && previousProperty) {
             event.preventDefault();
-            openProperty(previousProperty, -1);
+            openProperty(previousProperty);
           } else if (event.key === "ArrowRight" && nextProperty) {
             event.preventDefault();
-            openProperty(nextProperty, 1);
+            openProperty(nextProperty);
           }
         }}
         className="left-0 top-0 flex h-[100dvh] w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 p-0 sm:left-[50%] sm:top-[50%] sm:h-[min(92dvh,60rem)] sm:max-h-[92dvh] sm:w-[calc(100%-1rem)] sm:max-w-none lg:w-[86vw] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-2xl sm:border"
@@ -318,48 +287,34 @@ function PropertyDetailRouteModal() {
           ref={detailsScrollRef}
           className="min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain"
           onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
-          onClickCapture={handleSwipeClickCapture}
           onTouchCancel={() => { touchStartRef.current = null; }}
         >
-          {/* Animate only the incoming property. An exiting panel would read the updated router context and animate the new property out before it enters again. */}
-          <motion.div
-            key={location.pathname}
-            custom={navigationDirection}
-            variants={{
-              enter: (direction: number) => ({ opacity: 0, x: direction * 36 }),
-              center: { opacity: 1, x: 0 },
-            }}
-            initial={prefersReducedMotion || !isPropertyRouteChange ? "center" : "enter"}
-            animate="center"
-            transition={{ duration: prefersReducedMotion ? 0 : 0.26, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <Suspense
-              fallback={(
-                <section className="container mx-auto min-h-[60vh] px-4 pt-4 pb-8" aria-busy="true" aria-label="Chargement de l’annonce">
-                  <div className="mb-4 h-4 w-44 rounded bg-muted" aria-hidden="true" />
-                  <div className="grid min-w-0 grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
-                    <div className="min-w-0">
-                      <div className="aspect-[16/9] rounded-2xl bg-muted" aria-hidden="true" />
-                      <div className="mt-6 h-8 w-2/3 rounded bg-muted" aria-hidden="true" />
-                      <div className="mt-3 h-5 w-1/3 rounded bg-muted" aria-hidden="true" />
-                    </div>
-                    <div className="h-56 min-w-0 rounded-2xl bg-muted" aria-hidden="true" />
+          <Suspense
+            key={propertyReference}
+            fallback={(
+              <section className="container mx-auto min-h-[60vh] px-4 pt-4 pb-8" aria-busy="true" aria-label="Chargement de l’annonce">
+                <div className="mb-4 h-4 w-44 rounded bg-muted" aria-hidden="true" />
+                <div className="grid min-w-0 grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
+                  <div className="min-w-0">
+                    <div className="aspect-[16/9] rounded-2xl bg-muted" aria-hidden="true" />
+                    <div className="mt-6 h-8 w-2/3 rounded bg-muted" aria-hidden="true" />
+                    <div className="mt-3 h-5 w-1/3 rounded bg-muted" aria-hidden="true" />
                   </div>
-                  <span className="sr-only">Chargement de l’annonce…</span>
-                </section>
-              )}
-            >
-              <ListingDetailPage
-                announcementSwipeHint={announcementSwipeHint}
-                announcementNavigationControls={announcementNavigationControls}
-                stickySummaryPortalElement={stickySummaryPortalElement}
-                stickySummaryTop={64}
-                previewLayout
-              />
-            </Suspense>
-          </motion.div>
+                  <div className="h-56 min-w-0 rounded-2xl bg-muted" aria-hidden="true" />
+                </div>
+                <span className="sr-only">Chargement de l’annonce…</span>
+              </section>
+            )}
+          >
+            <ListingDetailPage
+              announcementSwipeHint={announcementSwipeHint}
+              announcementNavigationControls={announcementNavigationControls}
+              stickySummaryPortalElement={stickySummaryPortalElement}
+              stickySummaryTop={64}
+              previewLayout
+            />
+          </Suspense>
         </div>
       </DialogContent>
     </Dialog>
