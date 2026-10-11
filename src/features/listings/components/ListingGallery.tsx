@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import type { ReactNode } from "react";
 import { Images, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -29,11 +30,13 @@ export function ListingGallery({
   title,
   propertyId,
   variant = "page",
+  overlayActions,
 }: {
   images: PropertyImage[];
   title: string;
   propertyId: number;
   variant?: "page" | "modal";
+  overlayActions?: ReactNode;
 }) {
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [zoomedImageIndex, setZoomedImageIndex] = useState<number | null>(null);
@@ -77,7 +80,7 @@ export function ListingGallery({
         if (!open) setZoomedImageIndex(null);
       }}
     >
-      <div id={variant === "modal" ? "property-photos" : undefined} data-property-gallery>
+      <div id={variant === "modal" ? "property-photos" : undefined} data-property-gallery className="relative">
         <DialogTrigger asChild>
           <button
             type="button"
@@ -120,6 +123,11 @@ export function ListingGallery({
             </span>
           </button>
         </DialogTrigger>
+        {variant === "modal" && overlayActions && (
+          <div className="pointer-events-none absolute left-3 top-3 z-[4] sm:left-5 sm:top-5 [&>*]:pointer-events-auto">
+            {overlayActions}
+          </div>
+        )}
       </div>
       <DialogContent
         data-property-gallery

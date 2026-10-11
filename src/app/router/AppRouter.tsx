@@ -1,8 +1,6 @@
 import { Suspense, lazy, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Maximize2 } from "lucide-react";
-import { BrowserRouter, Link, Navigate, Outlet, Route, Routes, useLocation, useNavigate, useNavigationType, useParams } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation, useNavigate, useNavigationType, useParams } from "react-router-dom";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import type { PropertyModalRouteState } from "@/features/listings/navigation/propertyModalNavigation";
 import { AppLayout } from "@/layout/AppLayout";
 import { CookieConsentManager } from "@/layout/CookieConsentManager";
@@ -90,28 +88,10 @@ function PropertyDetailRouteModal() {
         data-menu-swipe-ignore
         className="left-0 top-0 flex h-[100dvh] w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 p-0 sm:left-[50%] sm:top-[50%] sm:h-[min(92dvh,64rem)] sm:max-h-[92dvh] sm:w-[calc(100%-1rem)] sm:max-w-none lg:w-[min(92vw,88rem)] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-2xl sm:border"
       >
-        <div className="relative flex h-16 shrink-0 items-center justify-between gap-2 border-b border-border bg-background px-4 pr-16 sm:gap-3 sm:px-6 sm:pr-20">
-          <DialogHeader className="min-w-0 space-y-0 text-left">
-            <DialogTitle className="text-sm font-medium leading-tight sm:text-base">
-              Annonce <span className="mx-1 text-muted-foreground" aria-hidden="true">·</span>
-              <span className="text-muted-foreground">Réf {propertyReference ?? "—"}</span>
-            </DialogTitle>
-            <DialogDescription className="sr-only">
-              Fiche annonce avec photos, description, caractéristiques et contact agence.
-            </DialogDescription>
-          </DialogHeader>
-          <Button variant="outline" size="sm" className="absolute left-1/2 top-1/2 z-[1] shrink-0 -translate-x-1/2 -translate-y-1/2" asChild>
-            <Link
-              to={`${location.pathname}${location.search}`}
-              replace
-              state={routeState ? { ...routeState, propertyModal: false } : null}
-              aria-label="Ouvrir l’annonce en plein écran"
-            >
-              <Maximize2 aria-hidden="true" className="h-4 w-4 sm:mr-1.5" />
-              <span className="hidden sm:inline">Plein écran</span>
-            </Link>
-          </Button>
-        </div>
+        <DialogTitle className="sr-only">Annonce · Réf {propertyReference ?? "—"}</DialogTitle>
+        <DialogDescription className="sr-only">
+          Fiche annonce avec photos, description, caractéristiques et contact agence.
+        </DialogDescription>
         <div ref={setStickySummaryPortalElement} className="pointer-events-none absolute inset-0 z-50" />
         <div
           ref={detailsScrollRef}
@@ -136,7 +116,7 @@ function PropertyDetailRouteModal() {
           >
             <ListingDetailPage
               stickySummaryPortalElement={stickySummaryPortalElement}
-              stickySummaryTop={64}
+              stickySummaryTop={0}
               previewLayout
             />
           </Suspense>
