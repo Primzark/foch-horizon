@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useLayoutEffect, useRef, useState, type TouchEvent } from "react";
+import { Suspense, lazy, useEffect, useLayoutEffect, useRef, useState, type MouseEvent, type TouchEvent } from "react";
 import { Building2, ChevronLeft, Hand, Maximize2 } from "lucide-react";
 import { BrowserRouter, Link, Navigate, Outlet, Route, Routes, useLocation, useNavigate, useNavigationType, useParams } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
@@ -6,6 +6,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { PropertyModalRouteState } from "@/features/listings/navigation/propertyModalNavigation";
+import {
+  beginPropertySwipe,
+  resolvePropertySwipeDirection,
+  shouldSuppressPostSwipeClick,
+  trackPropertySwipeMove,
+  type PropertySwipeGesture,
+} from "@/features/listings/navigation/propertySwipeGesture";
 import { formatPrice, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
 import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
 import { AppLayout } from "@/layout/AppLayout";
@@ -78,7 +85,8 @@ function PropertyDetailRouteModal() {
   const routeState = location.state as PropertyModalRouteState | null;
   const detailsScrollRef = useRef<HTMLDivElement>(null);
   const dialogContentRef = useRef<HTMLDivElement>(null);
-  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const touchStartRef = useRef<PropertySwipeGesture | null>(null);
+  const suppressSwipeClickUntilRef = useRef(0);
   const [navigationDirection, setNavigationDirection] = useState<-1 | 1>(1);
   const [stickySummaryPortalElement, setStickySummaryPortalElement] = useState<HTMLDivElement | null>(null);
   const prefersReducedMotion = useReducedMotion();
@@ -185,31 +193,48 @@ function PropertyDetailRouteModal() {
   }, [location.pathname]);
 
   const handleTouchStart = (event: TouchEvent<HTMLDivElement>) => {
-    const target = event.target;
-    if (
-      target instanceof Element &&
-      target.closest("[data-property-gallery], button, a, input, textarea, select, [contenteditable='true'], [role='button']")
-    ) {
+    suppressSwipeClickUntilRef.current = 0;
+    if (event.touches.length !== 1) {
       touchStartRef.current = null;
       return;
     }
 
-    const touch = event.changedTouches[0];
-    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+    const touch = event.touches[0];
+    touchStartRef.current = beginPropertySwipe(event.target, { x: touch.clientX, y: touch.clientY });
+  };
+
+  const handleTouchMove = (event: TouchEvent<HTMLDivElement>) => {
+    if (event.touches.length !== 1) {
+      touchStartRef.current = null;
+      return;
+    }
+
+    const touch = event.touches[0];
+    touchStartRef.current = trackPropertySwipeMove(touchStartRef.current, { x: touch.clientX, y: touch.clientY });
   };
 
   const handleTouchEnd = (event: TouchEvent<HTMLDivElement>) => {
     const start = touchStartRef.current;
     touchStartRef.current = null;
-    if (!start) return;
+    if (!start || event.touches.length > 0 || event.changedTouches.length === 0) return;
 
     const touch = event.changedTouches[0];
-    const deltaX = touch.clientX - start.x;
-    const deltaY = touch.clientY - start.y;
-    if (Math.abs(deltaX) < 56 || Math.abs(deltaX) < Math.abs(deltaY) * 1.25) return;
+    const direction = resolvePropertySwipeDirection(start, { x: touch.clientX, y: touch.clientY });
+    if (direction === null) return;
 
-    if (deltaX < 0 && nextProperty) openProperty(nextProperty, 1);
-    if (deltaX > 0 && previousProperty) openProperty(previousProperty, -1);
+    const property = direction > 0 ? nextProperty : previousProperty;
+    if (!property) return;
+
+    suppressSwipeClickUntilRef.current = Date.now() + 400;
+    openProperty(property, direction);
+  };
+
+  const handleSwipeClickCapture = (event: MouseEvent<HTMLDivElement>) => {
+    if (!shouldSuppressPostSwipeClick(suppressSwipeClickUntilRef.current, Date.now(), event.detail)) return;
+
+    suppressSwipeClickUntilRef.current = 0;
+    event.preventDefault();
+    event.stopPropagation();
   };
 
   return (
@@ -289,7 +314,9 @@ function PropertyDetailRouteModal() {
           ref={detailsScrollRef}
           className="min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain"
           onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
+          onClickCapture={handleSwipeClickCapture}
           onTouchCancel={() => { touchStartRef.current = null; }}
         >
           <AnimatePresence mode="wait" initial={false} custom={navigationDirection}>
