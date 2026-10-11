@@ -118,6 +118,7 @@ function PropertyDetailRouteModal() {
               stickySummaryPortalElement={stickySummaryPortalElement}
               stickySummaryTop={0}
               previewLayout
+              scrollContainerRef={detailsScrollRef}
             />
           </Suspense>
         </div>

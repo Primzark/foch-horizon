@@ -167,7 +167,7 @@ export function ListingGallery({
             }}
           >
             <ContextAwareParallax mood={imageMood} reducedMotion={reducedMotion} intensity="immersive" scrollReactive className="z-[0]">
-              <div className={`relative w-full overflow-hidden ${variant === "modal" ? "aspect-[16/8] max-h-[32rem] min-h-[14rem] sm:aspect-[16/7]" : "aspect-[16/9]"}`}>
+              <div className={`relative w-full overflow-hidden ${variant === "modal" ? "aspect-[16/8] max-h-[min(32rem,52dvh)] min-h-[14rem] sm:aspect-[16/7]" : "aspect-[16/9]"}`}>
                 <AnimatePresence initial={!reducedMotion} mode="sync">
                   <motion.img
                     key={activeImage.id}

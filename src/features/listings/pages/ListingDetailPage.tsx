@@ -1,7 +1,7 @@
 import { Link, Navigate, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion, useScroll } from "framer-motion";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import { ArrowRight, Bath, BedDouble, Car, ChevronLeft, Copy, Heart, MapPin, Maximize, Phone, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -37,6 +37,15 @@ import type { Property } from "@/types/domain";
 import type { PropertyModalRouteState } from "@/features/listings/navigation/propertyModalNavigation";
 
 const geographyGuideIds = new Set(geographyGuideIndex.map((guide) => guide.id));
+const previewSections = [
+  { id: "property-photos", label: "Photos" },
+  { id: "property-overview", label: "Aperçu" },
+  { id: "property-description", label: "Description" },
+  { id: "property-features", label: "Caractéristiques" },
+  { id: "property-energy", label: "Énergie" },
+  { id: "property-contact-form", label: "Contacter" },
+] as const;
+const previewContentSections = previewSections.slice(0, -1);
 
 function parseRouteIdAndSlug(rawIdSlug?: string): { id: number; slug: string | null } | null {
   if (!rawIdSlug) {
@@ -168,17 +177,24 @@ export default function ListingDetailPage({
   stickySummaryPortalElement = null,
   stickySummaryTop = 88,
   previewLayout = false,
+  scrollContainerRef,
 }: {
   stickySummaryPortalElement?: HTMLElement | null;
   stickySummaryTop?: number;
   previewLayout?: boolean;
+  scrollContainerRef?: RefObject<HTMLDivElement | null>;
 } = {}) {
   const contentRef = useRef<HTMLDivElement | null>(null);
+  const previewNavigationRef = useRef<HTMLElement | null>(null);
+  const previewNavigationScrollerRef = useRef<HTMLDivElement | null>(null);
+  const contactNavigationRequestedRef = useRef(false);
+  const contactNavigationReachedBottomRef = useRef(false);
   const summaryRef = useRef<HTMLDivElement | null>(null);
   const contactRef = useRef<HTMLDivElement | null>(null);
   const trackedPropertyViewId = useRef<number | null>(null);
   const [summaryVisible, setSummaryVisible] = useState(true);
   const [contactVisible, setContactVisible] = useState(false);
+  const [activePreviewSection, setActivePreviewSection] = useState<string>("property-photos");
   const cookieConsent = useUiStore((state) => state.cookieConsent);
   const location = useLocation();
   const navigate = useNavigate();
@@ -433,6 +449,142 @@ export default function ListingDetailPage({
     return () => observer.disconnect();
   }, [property?.id, previewLayout, stickySummaryTop]);
 
+  useEffect(() => {
+    if (!previewLayout) return;
+
+    const scrollContainer = scrollContainerRef?.current;
+    if (!scrollContainer) return;
+
+    const sectionElements = previewContentSections.map(({ id }) => ({
+      id,
+      element: contentRef.current?.querySelector<HTMLElement>(`#${id}`),
+    }));
+    const energySection = contentRef.current?.querySelector<HTMLElement>("#property-energy");
+    let animationFrame = 0;
+    const updateActiveSection = () => {
+      if (animationFrame) cancelAnimationFrame(animationFrame);
+      animationFrame = requestAnimationFrame(() => {
+        animationFrame = 0;
+
+        const containerRect = scrollContainer.getBoundingClientRect();
+        const navigationBottom = previewNavigationRef.current?.getBoundingClientRect().bottom
+          ?? containerRect.top + 48;
+        const navigationHeight = navigationBottom - containerRect.top;
+        const activationLine = navigationHeight + Math.min(64, scrollContainer.clientHeight * 0.1);
+        const isAtBottom = scrollContainer.scrollTop > 0
+          && scrollContainer.scrollTop + scrollContainer.clientHeight >= scrollContainer.scrollHeight - 4;
+
+        let nextActiveSection: string = previewSections[0].id;
+        if (isAtBottom) {
+          if (contactNavigationRequestedRef.current) contactNavigationReachedBottomRef.current = true;
+          const isDesktop = window.matchMedia("(min-width: 1024px)").matches;
+          const energyRect = energySection?.getBoundingClientRect();
+          const energyIsVisible = Boolean(
+            energyRect
+              && energyRect.top < containerRect.top + scrollContainer.clientHeight
+              && energyRect.bottom > containerRect.top + navigationHeight,
+          );
+          nextActiveSection = !isDesktop || contactNavigationRequestedRef.current || !energyIsVisible
+            ? "property-contact-form"
+            : "property-energy";
+        } else {
+          if (contactNavigationReachedBottomRef.current) {
+            contactNavigationRequestedRef.current = false;
+            contactNavigationReachedBottomRef.current = false;
+          }
+          let sectionAtActivationLine = false;
+          let nextVisibleSection: string | null = null;
+          let lastVisibleSection: string | null = null;
+          for (const section of sectionElements) {
+            const element = section.element;
+            if (!element) continue;
+
+            const sectionRect = element.getBoundingClientRect();
+            const sectionTop = sectionRect.top - containerRect.top;
+            const sectionBottom = sectionRect.bottom - containerRect.top;
+            const isVisible = sectionBottom > navigationHeight && sectionTop < scrollContainer.clientHeight;
+            if (!isVisible) continue;
+
+            lastVisibleSection = section.id;
+            if (sectionTop <= activationLine && sectionBottom > activationLine) {
+              nextActiveSection = section.id;
+              sectionAtActivationLine = true;
+              nextVisibleSection = null;
+            } else if (sectionTop > activationLine && nextVisibleSection == null) {
+              nextVisibleSection = section.id;
+            }
+          }
+          if (!sectionAtActivationLine) {
+            nextActiveSection = nextVisibleSection ?? lastVisibleSection ?? nextActiveSection;
+          }
+        }
+
+        setActivePreviewSection((current) => current === nextActiveSection ? current : nextActiveSection);
+      });
+    };
+
+    scrollContainer.addEventListener("scroll", updateActiveSection, { passive: true });
+    window.addEventListener("resize", updateActiveSection);
+
+    const resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(updateActiveSection) : null;
+    if (resizeObserver) {
+      resizeObserver.observe(scrollContainer);
+      if (contentRef.current) resizeObserver.observe(contentRef.current);
+    }
+
+    updateActiveSection();
+
+    return () => {
+      scrollContainer.removeEventListener("scroll", updateActiveSection);
+      window.removeEventListener("resize", updateActiveSection);
+      resizeObserver?.disconnect();
+      if (animationFrame) cancelAnimationFrame(animationFrame);
+    };
+  }, [previewLayout, property?.id, scrollContainerRef]);
+
+  useEffect(() => {
+    const scroller = previewNavigationScrollerRef.current;
+    if (!scroller) return;
+
+    const activeTab = Array.from(scroller.querySelectorAll<HTMLElement>("[data-property-section-tab]"))
+      .find((element) => element.dataset.propertySectionTab === activePreviewSection);
+    if (!activeTab) return;
+
+    const scrollerRect = scroller.getBoundingClientRect();
+    const activeTabRect = activeTab.getBoundingClientRect();
+    const behavior: ScrollBehavior = reducedMotion ? "auto" : "smooth";
+    if (activeTabRect.left < scrollerRect.left) {
+      scroller.scrollTo({ left: scroller.scrollLeft + activeTabRect.left - scrollerRect.left - 12, behavior });
+    } else if (activeTabRect.right > scrollerRect.right) {
+      scroller.scrollTo({ left: scroller.scrollLeft + activeTabRect.right - scrollerRect.right + 12, behavior });
+    }
+  }, [activePreviewSection, reducedMotion]);
+
+  const scrollToPreviewSection = (sectionId: string) => {
+    const target = contentRef.current?.querySelector<HTMLElement>(`#${sectionId}`);
+    if (!target) return;
+
+    const scrollContainer = scrollContainerRef?.current;
+    if (!scrollContainer) {
+      target.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
+      return;
+    }
+
+    const behavior: ScrollBehavior = reducedMotion ? "auto" : "smooth";
+    contactNavigationRequestedRef.current = sectionId === "property-contact-form";
+    contactNavigationReachedBottomRef.current = false;
+    if (sectionId === "property-contact-form") {
+      setActivePreviewSection(sectionId);
+      scrollContainer.scrollTo({ top: scrollContainer.scrollHeight, behavior });
+      return;
+    }
+
+    const containerTop = scrollContainer.getBoundingClientRect().top;
+    const navigationHeight = previewNavigationRef.current?.getBoundingClientRect().height ?? 48;
+    const targetTop = target.getBoundingClientRect().top - containerTop + scrollContainer.scrollTop;
+    scrollContainer.scrollTo({ top: Math.max(0, targetTop - navigationHeight - 12), behavior });
+  };
+
   const canonicalPath = property ? toCanonicalPropertyPath({ id: property.id, slug: property.slug }) : null;
   const showStickySummary = Boolean(property && !summaryVisible && !contactVisible);
 
@@ -620,15 +772,6 @@ export default function ListingDetailPage({
     ...(property.bathrooms != null ? [{ icon: Bath, label: "Salles de bains", value: `${property.bathrooms}` }] : []),
     ...(property.garageCount != null && property.garageCount > 0 ? [{ icon: Car, label: "Garage", value: `${property.garageCount}` }] : []),
   ];
-  const previewSections = [
-    { id: "property-photos", label: "Photos" },
-    { id: "property-overview", label: "Aperçu" },
-    { id: "property-description", label: "Description" },
-    { id: "property-features", label: "Caractéristiques" },
-    { id: "property-energy", label: "Énergie" },
-    { id: "property-contact-form", label: "Contacter" },
-  ];
-
   return (
     <section className={previewLayout ? "w-full pb-10" : "container mx-auto px-4 pt-8 pb-28 lg:pb-8"}>
       {!previewLayout && <div className="pointer-events-none fixed right-5 top-1/2 z-20 hidden h-36 -translate-y-1/2 lg:block">
@@ -664,6 +807,28 @@ export default function ListingDetailPage({
 
       <div ref={contentRef} className="min-w-0">
         {previewLayout && (
+          <nav ref={previewNavigationRef} aria-label="Navigation dans l’annonce" className="sticky top-0 z-40 border-y border-border/80 bg-background/95 shadow-sm backdrop-blur-md">
+            <div ref={previewNavigationScrollerRef} className="mx-auto flex min-h-12 max-w-7xl items-center gap-6 overflow-x-auto px-4 whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:px-6">
+              {previewSections.map((section) => (
+                <a
+                  key={section.id}
+                  href={`#${section.id}`}
+                  data-property-section-tab={section.id}
+                  aria-current={activePreviewSection === section.id ? "location" : undefined}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    scrollToPreviewSection(section.id);
+                  }}
+                  className={`inline-flex min-h-12 shrink-0 items-center border-b-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${activePreviewSection === section.id ? "border-brand text-brand-strong" : "border-transparent text-muted-foreground hover:border-brand hover:text-foreground"}`}
+                >
+                  {section.label}
+                </a>
+              ))}
+            </div>
+          </nav>
+        )}
+
+        {previewLayout && (
           <ListingGallery
             images={property.images}
             title={property.title}
@@ -685,29 +850,6 @@ export default function ListingDetailPage({
               </>
             )}
           />
-        )}
-
-        {previewLayout && (
-          <nav aria-label="Navigation dans l’annonce" className="sticky top-0 z-40 border-y border-border/80 bg-background/95 shadow-sm backdrop-blur-md">
-            <div className="mx-auto flex min-h-12 max-w-7xl items-center gap-6 overflow-x-auto px-4 whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:px-6">
-              {previewSections.map((section) => (
-                <a
-                  key={section.id}
-                  href={`#${section.id}`}
-                  onClick={(event) => {
-                    event.preventDefault();
-                    document.getElementById(section.id)?.scrollIntoView({
-                      behavior: reducedMotion ? "auto" : "smooth",
-                      block: "start",
-                    });
-                  }}
-                  className="inline-flex min-h-12 shrink-0 items-center border-b-2 border-transparent text-sm font-medium text-muted-foreground transition-colors hover:border-brand hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  {section.label}
-                </a>
-              ))}
-            </div>
-          </nav>
         )}
 
         <div className={`grid min-w-0 grid-cols-1 gap-7 lg:grid-cols-[minmax(0,1fr)_340px] ${previewLayout ? "mx-auto mt-5 max-w-7xl px-4 sm:mt-7 sm:px-6" : "lg:gap-8"}`}>
