@@ -1,18 +1,13 @@
-import { Suspense, lazy, useEffect, useLayoutEffect, useRef, useState, type TouchEvent } from "react";
-import { Building2, ChevronLeft, Hand, Maximize2 } from "lucide-react";
+import { Suspense, lazy, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Maximize2 } from "lucide-react";
 import { BrowserRouter, Link, Navigate, Outlet, Route, Routes, useLocation, useNavigate, useNavigationType, useParams } from "react-router-dom";
-import { useReducedMotion } from "framer-motion";
-import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { PropertyModalRouteState } from "@/features/listings/navigation/propertyModalNavigation";
-import { formatPrice, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
-import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
 import { AppLayout } from "@/layout/AppLayout";
 import { CookieConsentManager } from "@/layout/CookieConsentManager";
 import { routePageLoaders } from "@/app/router/routePageLoaders";
 import { RouteIntentPrefetcher } from "@/app/router/RouteIntentPrefetcher";
-import type { PropertySearchResponse, PropertySearchItem } from "@/types/api";
 
 const LegacyAnnonceRedirect = lazy(routePageLoaders.legacyAnnonce);
 const LegacyPropertySlugRedirect = lazy(routePageLoaders.legacyProperty);
@@ -73,186 +68,37 @@ function RouteScrollManager() {
 function PropertyDetailRouteModal() {
   const location = useLocation();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const routeParams = useParams();
   const routeState = location.state as PropertyModalRouteState | null;
   const detailsScrollRef = useRef<HTMLDivElement>(null);
-  const dialogContentRef = useRef<HTMLDivElement>(null);
-  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const [stickySummaryPortalElement, setStickySummaryPortalElement] = useState<HTMLDivElement | null>(null);
-  const prefersReducedMotion = useReducedMotion();
   const propertyModalDepth = routeState?.propertyModalDepth ?? 0;
-  const hasPreviousPropertyModal = propertyModalDepth > 0;
   const propertyId = Number(routeParams.idSlug?.split("-")[0]);
   const propertyReference = Number.isInteger(propertyId) && propertyId > 0 ? propertyId : null;
-  const budgetItems = routeState?.budgetFinderFilters
-    ? queryClient.getQueryData<PropertySearchResponse>(["budget-finder", routeState.budgetFinderFilters])?.items ?? null
-    : null;
-  const announcementItems = routeState?.announcementItems ?? budgetItems;
-  const propertyIndex = announcementItems?.findIndex((item) => item.id === propertyId) ?? -1;
-  const previousProperty = announcementItems && propertyIndex > 0 ? announcementItems[propertyIndex - 1] : null;
-  const nextProperty = announcementItems && propertyIndex >= 0 && propertyIndex < announcementItems.length - 1
-    ? announcementItems[propertyIndex + 1]
-    : null;
-  const canBrowseAnnouncements = Boolean(previousProperty || nextProperty);
-  const announcementSwipeHint = canBrowseAnnouncements ? (
-    <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground lg:hidden">
-      <span>Glissez à gauche ou à droite</span>
-      <span className="relative inline-flex h-9 w-14 shrink-0 items-center justify-center text-brand-strong/70" aria-hidden="true">
-        <span className={`absolute h-6 w-6 rounded-full bg-brand/10 blur-md${prefersReducedMotion ? "" : " announcement-swipe-glow"}`} />
-        <span className={`relative${prefersReducedMotion ? "" : " announcement-swipe-hand"}`}>
-          <Hand className="h-8 w-8" strokeWidth={1.7} />
-        </span>
-      </span>
-      <span className="sr-only">Vous pouvez aussi utiliser les flèches du clavier.</span>
-    </span>
-  ) : null;
-  const announcementNavigationControls = canBrowseAnnouncements ? (
-    <div className="mt-4 hidden justify-end lg:flex">
-      <div className="flex items-center gap-2" role="group" aria-label="Navigation entre les annonces">
-        {previousProperty && (
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            className="h-10 w-10 rounded-full border-border bg-background/90 p-0 shadow-sm"
-            aria-label="Annonce précédente"
-            title="Annonce précédente"
-            onClick={() => openProperty(previousProperty)}
-          >
-            <ChevronLeft aria-hidden="true" className="h-5 w-5" />
-          </Button>
-        )}
-        {nextProperty && (
-          <button
-            type="button"
-            aria-label={`Annonce suivante : ${nextProperty.title}, ${nextProperty.city.name}, ${formatPrice(nextProperty.priceAmount, nextProperty.transaction)}`}
-            title="Découvrir l’annonce suivante"
-            onClick={() => openProperty(nextProperty)}
-            className="flex h-[3.75rem] w-64 items-center gap-2 rounded-xl border border-border bg-background/90 p-1.5 text-left shadow-sm transition-[border-color,background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-brand-border hover:bg-brand-soft/30 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          >
-            {nextProperty.coverImageUrl ? (
-              <img
-                src={getPropertyImageUrl(nextProperty.coverImageUrl, 200)}
-                srcSet={getPropertyImageSrcSet(nextProperty.coverImageUrl, [200, 400])}
-                sizes="64px"
-                alt=""
-                className="h-12 w-16 shrink-0 rounded-lg object-cover"
-                loading="lazy"
-                decoding="async"
-              />
-            ) : (
-              <span aria-hidden="true" className="flex h-12 w-16 shrink-0 items-center justify-center rounded-lg bg-muted">
-                <Building2 className="h-5 w-5 text-muted-foreground" />
-              </span>
-            )}
-            <span className="min-w-0 flex-1">
-              <span className="block text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">À suivre</span>
-              <span className="block truncate text-xs font-semibold text-foreground">{nextProperty.title}</span>
-              <span className="block truncate text-[11px] text-muted-foreground">
-                {nextProperty.city.name} · {formatPrice(nextProperty.priceAmount, nextProperty.transaction)}
-              </span>
-            </span>
-          </button>
-        )}
-      </div>
-    </div>
-  ) : null;
-
-  const openProperty = (item: PropertySearchItem) => {
-    navigate(toCanonicalPropertyPath(item), {
-      replace: true,
-      state: {
-        propertyPreview: item,
-        propertyModal: true,
-        backgroundLocation: routeState?.backgroundLocation,
-        announcementItems,
-        announcementTotal: routeState?.announcementTotal,
-        announcementMode: routeState?.announcementMode,
-        announcementStartPage: routeState?.announcementStartPage,
-        announcementEndPage: routeState?.announcementEndPage,
-        announcementPageSize: routeState?.announcementPageSize,
-        budgetFinderFilters: routeState?.budgetFinderFilters,
-        propertyModalDepth,
-      },
-    });
-  };
 
   useEffect(() => {
     if (detailsScrollRef.current) detailsScrollRef.current.scrollTop = 0;
   }, [location.pathname]);
-
-  const handleTouchStart = (event: TouchEvent<HTMLDivElement>) => {
-    const target = event.target;
-    if (
-      target instanceof Element &&
-      target.closest("[data-property-gallery], button, a, input, textarea, select, [contenteditable='true'], [role='button']")
-    ) {
-      touchStartRef.current = null;
-      return;
-    }
-
-    const touch = event.changedTouches[0];
-    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
-  };
-
-  const handleTouchEnd = (event: TouchEvent<HTMLDivElement>) => {
-    const start = touchStartRef.current;
-    touchStartRef.current = null;
-    if (!start) return;
-
-    const touch = event.changedTouches[0];
-    const deltaX = touch.clientX - start.x;
-    const deltaY = touch.clientY - start.y;
-    if (Math.abs(deltaX) < 56 || Math.abs(deltaX) < Math.abs(deltaY) * 1.25) return;
-
-    if (deltaX < 0 && nextProperty) openProperty(nextProperty);
-    if (deltaX > 0 && previousProperty) openProperty(previousProperty);
-  };
 
   return (
     <Dialog open onOpenChange={(open) => {
       if (!open) navigate(-(propertyModalDepth + 1));
     }}>
       <DialogContent
-        ref={dialogContentRef}
         largeCloseButton
         overlayClassName="bg-black/45"
         data-menu-swipe-ignore
-        onKeyDown={(event) => {
-          if (!(event.target instanceof Node) || !dialogContentRef.current?.contains(event.target)) return;
-          if (event.altKey || event.ctrlKey || event.metaKey || event.defaultPrevented) return;
-          if (event.target instanceof HTMLElement && event.target.closest("input, textarea, select, [contenteditable='true']")) return;
-
-          if (event.key === "ArrowLeft" && previousProperty) {
-            event.preventDefault();
-            openProperty(previousProperty);
-          } else if (event.key === "ArrowRight" && nextProperty) {
-            event.preventDefault();
-            openProperty(nextProperty);
-          }
-        }}
-        className="left-0 top-0 flex h-[100dvh] w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 p-0 sm:left-[50%] sm:top-[50%] sm:h-[min(92dvh,60rem)] sm:max-h-[92dvh] sm:w-[calc(100%-1rem)] sm:max-w-none lg:w-[86vw] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-2xl sm:border"
+        className="left-0 top-0 flex h-[100dvh] w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 p-0 sm:left-[50%] sm:top-[50%] sm:h-[min(92dvh,64rem)] sm:max-h-[92dvh] sm:w-[calc(100%-1rem)] sm:max-w-none lg:w-[min(92vw,88rem)] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-2xl sm:border"
       >
         <div className="relative flex h-16 shrink-0 items-center justify-between gap-2 border-b border-border bg-background px-4 pr-16 sm:gap-3 sm:px-6 sm:pr-20">
-          <DialogHeader className="min-w-0 max-w-[50%] space-y-0 text-left sm:max-w-none">
-            <DialogTitle className="sr-only">
-              Annonce immobilière{propertyReference ? ` – Réf ${propertyReference}` : ""}
+          <DialogHeader className="min-w-0 space-y-0 text-left">
+            <DialogTitle className="text-sm font-medium leading-tight sm:text-base">
+              Annonce <span className="mx-1 text-muted-foreground" aria-hidden="true">·</span>
+              <span className="text-muted-foreground">Réf {propertyReference ?? "—"}</span>
             </DialogTitle>
-            <DialogDescription className="sr-only">Fiche complète du bien. Ouvrez-la en plein écran pour accéder à toute la page.</DialogDescription>
-            <nav aria-label="Fil d’Ariane" className="flex min-w-0 items-center whitespace-nowrap text-xs text-muted-foreground sm:text-sm">
-              <Link to="/" className="shrink-0 hover:underline">
-                Accueil
-              </Link>
-              <span className="mx-1" aria-hidden="true">/</span>
-              <Link to="/biens" className="shrink-0 hover:underline">
-                Biens
-              </Link>
-              <span className="mx-1" aria-hidden="true">/</span>
-              <span className="truncate text-foreground" aria-current="page">
-                Réf {propertyReference ?? "—"}
-              </span>
-            </nav>
+            <DialogDescription className="sr-only">
+              Fiche annonce avec photos, description, caractéristiques et contact agence.
+            </DialogDescription>
           </DialogHeader>
           <Button variant="outline" size="sm" className="absolute left-1/2 top-1/2 z-[1] shrink-0 -translate-x-1/2 -translate-y-1/2" asChild>
             <Link
@@ -265,30 +111,11 @@ function PropertyDetailRouteModal() {
               <span className="hidden sm:inline">Plein écran</span>
             </Link>
           </Button>
-          <div className="ml-auto flex shrink-0 items-center">
-            {hasPreviousPropertyModal && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="h-9 shrink-0 px-2 sm:px-3"
-                aria-label="Revenir à l’annonce précédente"
-                title="Revenir à l’annonce précédente"
-                onClick={() => navigate(-1)}
-              >
-                <ChevronLeft aria-hidden="true" className="h-4 w-4 sm:-ml-1" />
-                <span className="hidden sm:inline">Retour</span>
-              </Button>
-            )}
-          </div>
         </div>
         <div ref={setStickySummaryPortalElement} className="pointer-events-none absolute inset-0 z-50" />
         <div
           ref={detailsScrollRef}
           className="min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain"
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
-          onTouchCancel={() => { touchStartRef.current = null; }}
         >
           <Suspense
             key={propertyReference}
@@ -308,8 +135,6 @@ function PropertyDetailRouteModal() {
             )}
           >
             <ListingDetailPage
-              announcementSwipeHint={announcementSwipeHint}
-              announcementNavigationControls={announcementNavigationControls}
               stickySummaryPortalElement={stickySummaryPortalElement}
               stickySummaryTop={64}
               previewLayout

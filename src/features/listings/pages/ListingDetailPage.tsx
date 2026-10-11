@@ -1,7 +1,7 @@
 import { Link, Navigate, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion, useScroll } from "framer-motion";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ArrowRight, Bath, BedDouble, Car, ChevronLeft, Copy, Heart, MapPin, Maximize, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -165,14 +165,10 @@ function getRecommendationLocation(item: PropertySearchItem): string {
 }
 
 export default function ListingDetailPage({
-  announcementSwipeHint,
-  announcementNavigationControls,
   stickySummaryPortalElement = null,
   stickySummaryTop = 88,
   previewLayout = false,
 }: {
-  announcementSwipeHint?: ReactNode;
-  announcementNavigationControls?: ReactNode;
   stickySummaryPortalElement?: HTMLElement | null;
   stickySummaryTop?: number;
   previewLayout?: boolean;
@@ -225,7 +221,7 @@ export default function ListingDetailPage({
       propertyQuery.data && !propertyQuery.isPlaceholderData
         ? getSimilarProperties(propertyQuery.data, 3)
         : Promise.resolve([]),
-    enabled: Boolean(propertyQuery.data && !propertyQuery.isPlaceholderData),
+    enabled: Boolean(propertyQuery.data && !propertyQuery.isPlaceholderData && !previewLayout),
   });
   const similarItems = useMemo(
     () => (similarQuery.data ?? []).map(({ property: similarProperty }) => toSearchItem(similarProperty)),
@@ -407,6 +403,8 @@ export default function ListingDetailPage({
   const similarSearchHref = property ? getSimilarSearchHref(property) : null;
 
   useEffect(() => {
+    if (previewLayout) return;
+
     const summary = summaryRef.current;
     const contact = contactRef.current;
     if (!summary || !contact) return;
@@ -433,7 +431,7 @@ export default function ListingDetailPage({
     observer.observe(summary);
     observer.observe(contact);
     return () => observer.disconnect();
-  }, [property?.id, stickySummaryTop]);
+  }, [property?.id, previewLayout, stickySummaryTop]);
 
   const canonicalPath = property ? toCanonicalPropertyPath({ id: property.id, slug: property.slug }) : null;
   const showStickySummary = Boolean(property && !summaryVisible && !contactVisible);
@@ -466,7 +464,7 @@ export default function ListingDetailPage({
     </>
   ) : null;
 
-  const stickySummary = property && showStickySummary ? (
+  const stickySummary = property && showStickySummary && !previewLayout ? (
     <div className="pointer-events-auto fixed inset-x-3 bottom-[calc(4rem_+_env(safe-area-inset-bottom))] z-[105] mx-auto max-w-3xl lg:hidden">
       <div className="flex min-w-0 items-center gap-2 rounded-full border border-border/80 bg-background/95 p-1.5 pl-3 shadow-lg backdrop-blur-md">
         <p className="shrink-0 text-[13px] font-semibold tracking-tight text-brand-strong">
@@ -616,15 +614,24 @@ export default function ListingDetailPage({
   const statusLabel = getPropertyStatusLabel(property.status) ?? "À vendre";
   const quickFacts = [
     { icon: Maximize, label: "Surface", value: `${property.surfaceM2} m²` },
-    ...(property.terrainM2 != null ? [{ icon: Maximize, label: "Terrain", value: `${property.terrainM2} m²` }] : []),
-    { icon: BedDouble, label: "Chambres", value: `${property.bedrooms ?? "-"}` },
-    { icon: Bath, label: "Sdb", value: `${property.bathrooms ?? "-"}` },
-    { icon: Car, label: "Garage", value: `${property.garageCount ?? 0}` },
+    ...(property.terrainM2 != null && property.terrainM2 > 0 ? [{ icon: Maximize, label: "Terrain", value: `${property.terrainM2} m²` }] : []),
+    ...(property.rooms != null ? [{ icon: BedDouble, label: "Pièces", value: `${property.rooms}` }] : []),
+    ...(property.bedrooms != null ? [{ icon: BedDouble, label: "Chambres", value: `${property.bedrooms}` }] : []),
+    ...(property.bathrooms != null ? [{ icon: Bath, label: "Salles de bains", value: `${property.bathrooms}` }] : []),
+    ...(property.garageCount != null && property.garageCount > 0 ? [{ icon: Car, label: "Garage", value: `${property.garageCount}` }] : []),
+  ];
+  const previewSections = [
+    { id: "property-photos", label: "Photos" },
+    { id: "property-overview", label: "Aperçu" },
+    { id: "property-description", label: "Description" },
+    { id: "property-features", label: "Caractéristiques" },
+    { id: "property-energy", label: "Énergie" },
+    { id: "property-contact-form", label: "Contacter" },
   ];
 
   return (
-    <section className={`container mx-auto px-4 ${previewLayout ? "pt-4" : "pt-8"} pb-28 lg:pb-8`}>
-      <div className="pointer-events-none fixed right-5 top-1/2 z-20 hidden h-36 -translate-y-1/2 lg:block">
+    <section className={previewLayout ? "w-full pb-10" : "container mx-auto px-4 pt-8 pb-28 lg:pb-8"}>
+      {!previewLayout && <div className="pointer-events-none fixed right-5 top-1/2 z-20 hidden h-36 -translate-y-1/2 lg:block">
         <div className="h-full w-1 rounded-full bg-border/70">
           <motion.span
             className="block h-full w-full origin-top rounded-full bg-accent"
@@ -632,7 +639,7 @@ export default function ListingDetailPage({
             transition={{ duration: 0.15, ease: "easeOut" }}
           />
         </div>
-      </div>
+      </div>}
 
       {!previewLayout && (
         <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -655,25 +662,43 @@ export default function ListingDetailPage({
         </div>
       )}
 
-      <div ref={contentRef} className="grid min-w-0 grid-cols-1 gap-7 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-8">
-        <div className="min-w-0">
-          <ListingGallery images={property.images} title={property.title} propertyId={property.id} />
-          {announcementSwipeHint && (
-            <div className="mt-1 flex justify-end pr-1 lg:hidden">{announcementSwipeHint}</div>
-          )}
+      <div ref={contentRef} className="min-w-0">
+        {previewLayout && (
+          <ListingGallery images={property.images} title={property.title} propertyId={property.id} variant="modal" />
+        )}
 
-          <div ref={summaryRef} className={`${announcementSwipeHint ? "mt-2 lg:mt-5" : "mt-5"} grid grid-cols-1 items-start gap-x-6 gap-y-4 lg:grid-cols-[minmax(0,1fr)_auto]`}>
+        {previewLayout && (
+          <nav aria-label="Navigation dans l’annonce" className="sticky top-0 z-40 border-y border-border/80 bg-background/95 shadow-sm backdrop-blur-md">
+            <div className="mx-auto flex min-h-12 max-w-7xl items-center gap-6 overflow-x-auto px-4 whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:px-6">
+              {previewSections.map((section) => (
+                <a
+                  key={section.id}
+                  href={`#${section.id}`}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    document.getElementById(section.id)?.scrollIntoView({
+                      behavior: reducedMotion ? "auto" : "smooth",
+                      block: "start",
+                    });
+                  }}
+                  className="inline-flex min-h-12 shrink-0 items-center border-b-2 border-transparent text-sm font-medium text-muted-foreground transition-colors hover:border-brand hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  {section.label}
+                </a>
+              ))}
+            </div>
+          </nav>
+        )}
+
+        <div className={`grid min-w-0 grid-cols-1 gap-7 lg:grid-cols-[minmax(0,1fr)_340px] ${previewLayout ? "mx-auto mt-5 max-w-7xl px-4 sm:mt-7 sm:px-6" : "lg:gap-8"}`}>
+        <div className="min-w-0">
+          {!previewLayout && <ListingGallery images={property.images} title={property.title} propertyId={property.id} />}
+
+          <div id="property-overview" ref={summaryRef} className={`scroll-mt-16 grid grid-cols-1 items-start gap-x-6 gap-y-4 lg:grid-cols-[minmax(0,1fr)_auto] ${previewLayout ? "mb-6" : "mt-5"}`}>
             <div className="min-w-0">
-              <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Réf du bien {property.id}</p>
-              <h1 className="mt-1 font-display text-4xl leading-[1.08]">{property.title}</h1>
-              <div className="mt-2 flex flex-wrap gap-2">
-                <p className="inline-flex rounded-full border border-border px-3 py-1 text-xs font-medium text-foreground/90">
-                  Type : {propertyTypeLabel}
-                </p>
-                <p className="inline-flex rounded-full border border-brand-border bg-brand-soft px-3 py-1 text-xs font-medium text-brand-strong">
-                  {statusLabel}
-                </p>
-              </div>
+              {!previewLayout && <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Réf du bien {property.id}</p>}
+              <h1 className={`font-display leading-[1.08] ${previewLayout ? "text-3xl sm:text-4xl" : "mt-1 text-4xl"}`}>{property.title}</h1>
+              <p className="mt-3 text-sm font-medium text-muted-foreground">{propertyTypeLabel} <span aria-hidden="true">·</span> {statusLabel}</p>
               <p className="mt-2 inline-flex items-center gap-1 text-sm text-muted-foreground">
                 <MapPin className="h-4 w-4" />
                 {city ? <Link to={`/immobilier/${city.slug}`} className="underline underline-offset-4">{city.name}</Link> : "Localisation"} ({property.postalCode})
@@ -681,9 +706,9 @@ export default function ListingDetailPage({
             </div>
 
             <div className="min-w-0 text-left lg:w-auto lg:min-w-[16rem] lg:text-right">
-              <p className="font-display text-5xl leading-tight tracking-tight text-brand-strong sm:text-6xl">{formatPrice(property.priceAmount, property.transactionType)}</p>
-              <div className="mt-4 flex flex-wrap items-center gap-2 sm:mt-3 sm:justify-end">
-                {property.status === "active" && property.transactionType === "vente" && (
+              <p className={`font-display leading-tight tracking-tight text-brand-strong ${previewLayout ? "text-4xl sm:text-5xl" : "text-5xl sm:text-6xl"}`}>{formatPrice(property.priceAmount, property.transactionType)}</p>
+              <div className={`flex flex-wrap items-center gap-2 ${previewLayout ? "mt-3 lg:justify-end" : "mt-4 sm:mt-3 sm:justify-end"}`}>
+                {!previewLayout && property.status === "active" && property.transactionType === "vente" && (
                   <PropertyCompareToggle propertyId={property.id} />
                 )}
                 <Button
@@ -705,7 +730,7 @@ export default function ListingDetailPage({
                   {isFavorite ? "Sauvegardé" : "Sauvegarder"}
                 </Button>
                 <ListingShareButton key={property.id} propertyId={property.id} title={property.title} path={canonicalPath!} />
-                <Button
+                {!previewLayout && <Button
                   variant="outline"
                   size="sm"
                   onClick={() => {
@@ -714,16 +739,20 @@ export default function ListingDetailPage({
                   }}
                 >
                   <Copy className="mr-1 h-3.5 w-3.5" /> Réf
-                </Button>
+                </Button>}
               </div>
-              {announcementNavigationControls}
             </div>
           </div>
 
           {fullPageNavigationControls}
 
-          <div className="mt-8 grid gap-3 rounded-2xl border border-border bg-card p-4 sm:grid-cols-4">
-            {quickFacts.map((fact) => (
+          <div className={previewLayout ? "flex flex-wrap gap-x-7 gap-y-4 border-y border-border/80 py-5" : "mt-8 grid gap-3 rounded-2xl border border-border bg-card p-4 sm:grid-cols-4"}>
+            {quickFacts.map((fact) => previewLayout ? (
+              <div key={fact.label} className="inline-flex items-center gap-2.5">
+                <fact.icon className="h-4 w-4 text-brand-strong" />
+                <p className="text-sm"><span className="font-semibold">{fact.value}</span> <span className="text-muted-foreground">{fact.label}</span></p>
+              </div>
+            ) : (
               <div key={fact.label} className="rounded-xl border border-border p-3 text-center">
                 <fact.icon className="mx-auto h-4 w-4" />
                 <p className="mt-2 text-sm font-medium">{fact.value}</p>
@@ -732,12 +761,12 @@ export default function ListingDetailPage({
             ))}
           </div>
 
-          <article className="mt-9 rounded-2xl border border-border bg-card p-6">
+          <article id="property-description" className={previewLayout ? "scroll-mt-16 border-b border-border/80 py-7" : "mt-9 rounded-2xl border border-border bg-card p-6"}>
             <h2 className="font-display text-2xl">Description</h2>
             <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">{property.description}</p>
           </article>
 
-          <article className="mt-6 rounded-2xl border border-border bg-card p-6">
+          <article id="property-features" className={previewLayout ? "scroll-mt-16 border-b border-border/80 py-7" : "mt-6 rounded-2xl border border-border bg-card p-6"}>
             <h2 className="font-display text-2xl">Caractéristiques</h2>
             <ul className="mt-3 flex flex-wrap gap-2">
               {property.features.map((feature) => (
@@ -748,7 +777,7 @@ export default function ListingDetailPage({
             </ul>
           </article>
 
-          <article className="mt-6 rounded-2xl border border-border bg-card p-6">
+          <article id="property-energy" className={previewLayout ? "scroll-mt-16 border-b border-border/80 py-7" : "mt-6 rounded-2xl border border-border bg-card p-6"}>
             <h2 className="font-display text-2xl">Performance énergétique</h2>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <div className="rounded-xl border border-border p-4">
@@ -769,8 +798,8 @@ export default function ListingDetailPage({
           </article>
         </div>
 
-        <aside className={`min-w-0 space-y-4 lg:sticky ${previewLayout ? "lg:top-0" : "lg:top-[calc(145px+env(safe-area-inset-top))]"} lg:h-fit`}>
-          <section className="rounded-2xl border border-border bg-card p-5">
+        <aside className={`min-w-0 space-y-4 lg:sticky ${previewLayout ? "lg:top-14" : "lg:top-[calc(145px+env(safe-area-inset-top))]"} lg:h-fit`}>
+          <section className={previewLayout ? "border-b border-border/80 pb-5" : "rounded-2xl border border-border bg-card p-5"}>
             <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Votre interlocuteur</p>
             <p className="mt-2 font-display text-2xl">{agent?.fullName ?? "Foch Immobilier"}</p>
             <p className="text-sm text-muted-foreground">{agent?.role ?? "Transactions immobilières"}</p>
@@ -795,7 +824,7 @@ export default function ListingDetailPage({
             )}
           </section>
 
-          <div ref={contactRef} id="property-contact-form" className="scroll-mt-28">
+          <div ref={contactRef} id="property-contact-form" className={previewLayout ? "scroll-mt-16" : "scroll-mt-28"}>
             <LeadForm
               source="property_page"
               propertyId={property.id}
@@ -808,35 +837,23 @@ export default function ListingDetailPage({
           </div>
         </aside>
       </div>
+      </div>
 
-      {nextPropertyToDiscover && (
+      {!previewLayout && nextPropertyToDiscover && (
         <section className="mt-16">
           <h2 className="font-display text-3xl">Prochain bien à découvrir</h2>
-          {previewLayout ? (
-            <PropertyPreviewLink
-              item={nextPropertyToDiscover}
-              browseItems={discoveryBrowseItems}
-              browseTotal={navigationCount}
-              browseMode={navigationMode}
-              className="group relative mt-4 flex min-h-[18rem] flex-col justify-end overflow-hidden rounded-2xl bg-neutral-950 p-6 text-white shadow-sm transition-shadow duration-500 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:min-h-[22rem] sm:p-9"
-              aria-label={`Découvrir le bien suivant : ${nextPropertyToDiscover.title}, ${getRecommendationLocation(nextPropertyToDiscover)}, ${formatPrice(nextPropertyToDiscover.priceAmount, nextPropertyToDiscover.transaction)}`}
-            >
-              {discoveryCardContent}
-            </PropertyPreviewLink>
-          ) : (
-            <Link
-              to={toCanonicalPropertyPath(nextPropertyToDiscover)}
-              replace
-              state={getFullPageNavigationState(nextPropertyToDiscover)}
-              className="group relative mt-4 flex min-h-[18rem] flex-col justify-end overflow-hidden rounded-2xl bg-neutral-950 p-6 text-white shadow-sm transition-shadow duration-500 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:min-h-[22rem] sm:p-9"
-              aria-label={`Découvrir le bien suivant : ${nextPropertyToDiscover.title}, ${getRecommendationLocation(nextPropertyToDiscover)}, ${formatPrice(nextPropertyToDiscover.priceAmount, nextPropertyToDiscover.transaction)}`}
-            >
-              {discoveryCardContent}
-            </Link>
-          )}
+          <Link
+            to={toCanonicalPropertyPath(nextPropertyToDiscover)}
+            replace
+            state={getFullPageNavigationState(nextPropertyToDiscover)}
+            className="group relative mt-4 flex min-h-[18rem] flex-col justify-end overflow-hidden rounded-2xl bg-neutral-950 p-6 text-white shadow-sm transition-shadow duration-500 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:min-h-[22rem] sm:p-9"
+            aria-label={`Découvrir le bien suivant : ${nextPropertyToDiscover.title}, ${getRecommendationLocation(nextPropertyToDiscover)}, ${formatPrice(nextPropertyToDiscover.priceAmount, nextPropertyToDiscover.transaction)}`}
+          >
+            {discoveryCardContent}
+          </Link>
         </section>
       )}
-      {secondarySimilarItems.length > 0 && (
+      {!previewLayout && secondarySimilarItems.length > 0 && (
         <section className="mt-14" aria-labelledby="similar-properties-heading">
           <h2 id="similar-properties-heading" className="font-display text-2xl sm:text-3xl">Biens similaires</h2>
           <div className="mt-4 grid grid-flow-col auto-cols-[84%] snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain pb-2 pr-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:auto-cols-[46%] lg:auto-cols-[32%] lg:justify-center lg:overflow-visible lg:pb-0 lg:pr-0">
