@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import type { PointerEvent, ReactNode } from "react";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Dialog,
@@ -16,7 +16,6 @@ import { inferPlaceImageMood } from "@/lib/visuals/placeImageMotion";
 import { PlaceAtmosphereLayer } from "@/components/visuals/PlaceAtmosphereLayer";
 import { ContextAwareParallax } from "@/components/visuals/ContextAwareParallax";
 import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
-import { getMotionDirectorProfile } from "@/lib/visuals/motionDirector";
 import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
 
 const galleryImageVariants = {
@@ -39,10 +38,11 @@ export function ListingGallery({
   overlayActions?: ReactNode;
 }) {
   const [galleryOpen, setGalleryOpen] = useState(false);
-  const [zoomedImageIndex, setZoomedImageIndex] = useState<number | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [galleryImageIndex, setGalleryImageIndex] = useState(0);
   const warmedImageUrlsRef = useRef(new Map<string, HTMLImageElement>());
   const swipeStartRef = useRef<{ x: number; y: number } | null>(null);
+  const gallerySwipeStartRef = useRef<{ x: number; y: number } | null>(null);
   const swipeHandledRef = useRef(false);
   const { reducedMotion } = useMotionPreference();
 
@@ -57,7 +57,6 @@ export function ListingGallery({
   const safeActiveImageIndex = Math.min(activeImageIndex, images.length - 1);
   const activeImage = images[safeActiveImageIndex];
   const imageMood = inferPlaceImageMood(title, activeImage.altText);
-  const motionDirector = getMotionDirectorProfile(imageMood);
 
   const preloadAdjacentImages = (currentIndex: number) => {
     if (images.length < 2) return;
@@ -86,6 +85,10 @@ export function ListingGallery({
     setActiveImageIndex((index) => (index + direction + images.length) % images.length);
   };
 
+  const moveGalleryImage = (direction: -1 | 1) => {
+    setGalleryImageIndex((index) => Math.max(0, Math.min(images.length - 1, index + direction)));
+  };
+
   const handlePhotoPointerDown = (event: PointerEvent<HTMLButtonElement>) => {
     if (event.pointerType === "mouse") return;
     swipeHandledRef.current = false;
@@ -107,12 +110,28 @@ export function ListingGallery({
     moveImage(deltaX < 0 ? 1 : -1);
   };
 
+  const handleGalleryPointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === "mouse") return;
+    gallerySwipeStartRef.current = { x: event.clientX, y: event.clientY };
+  };
+
+  const handleGalleryPointerUp = (event: PointerEvent<HTMLDivElement>) => {
+    const start = gallerySwipeStartRef.current;
+    gallerySwipeStartRef.current = null;
+    if (!start || images.length < 2) return;
+
+    const deltaX = event.clientX - start.x;
+    const deltaY = event.clientY - start.y;
+    if (Math.abs(deltaX) < 48 || Math.abs(deltaX) < Math.abs(deltaY) * 1.2) return;
+
+    moveGalleryImage(deltaX < 0 ? 1 : -1);
+  };
+
   return (
     <Dialog
       open={galleryOpen}
       onOpenChange={(open) => {
         setGalleryOpen(open);
-        if (!open) setZoomedImageIndex(null);
       }}
     >
       <div id={variant === "modal" ? "property-photos" : undefined} data-property-gallery className="relative">
@@ -143,7 +162,7 @@ export function ListingGallery({
                 event.stopPropagation();
                 return;
               }
-              setZoomedImageIndex(safeActiveImageIndex);
+              setGalleryImageIndex(safeActiveImageIndex);
               trackEvent("gallery_opened", { property_id: propertyId });
             }}
           >
@@ -216,73 +235,142 @@ export function ListingGallery({
       <DialogContent
         data-property-gallery
         data-menu-swipe-ignore
-        hideCloseButton={zoomedImageIndex !== null}
-        className="max-h-[90dvh] overflow-y-auto sm:max-w-5xl"
+        hideCloseButton
+        overlayClassName="bg-black/45 backdrop-blur-[2px]"
+        className="flex h-[min(94dvh,60rem)] w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] flex-col gap-0 overflow-hidden rounded-xl border-border bg-background p-0 shadow-2xl sm:h-[min(92dvh,56rem)] sm:max-w-7xl sm:rounded-2xl"
+        onKeyDown={(event) => {
+          if (event.key === "ArrowLeft" && galleryImageIndex > 0) {
+            event.preventDefault();
+            moveGalleryImage(-1);
+          } else if (event.key === "ArrowRight" && galleryImageIndex < images.length - 1) {
+            event.preventDefault();
+            moveGalleryImage(1);
+          }
+        }}
       >
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
+        <DialogHeader className="sr-only">
+          <DialogTitle>Photos de {title}</DialogTitle>
           <DialogDescription>
-            {zoomedImageIndex === null
-              ? `Toutes les photos du bien (${images.length})`
-              : `Photo ${zoomedImageIndex + 1} sur ${images.length}`}
+            Photo {galleryImageIndex + 1} sur {images.length}. Utilisez les vignettes, les flèches ou le balayage pour parcourir les photos.
           </DialogDescription>
         </DialogHeader>
-        {zoomedImageIndex === null ? (
-          <div className="grid gap-3 md:grid-cols-2">
-            {images.map((image, index) => (
-              <button
-                key={image.id}
-                type="button"
-                className="group relative overflow-hidden rounded-xl bg-muted text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                aria-label={`Agrandir la photo ${index + 1}`}
-                onClick={() => setZoomedImageIndex(index)}
-              >
-                <motion.img
-                  src={getPropertyImageUrl(image.sourceUrl, 400)}
-                  srcSet={getPropertyImageSrcSet(image.sourceUrl)}
-                  sizes="(max-width: 767px) 90vw, 44vw"
-                  alt={image.altText}
-                  className="aspect-[4/3] w-full object-cover transition-transform duration-700 group-hover:scale-[1.02] motion-reduce:transition-none"
-                  loading="lazy"
-                  decoding="async"
-                  initial={reducedMotion ? { opacity: 1 } : { opacity: 0, y: 16 }}
-                  whileInView={reducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.24 }}
-                  transition={{
-                    duration: motionDirector.revealDuration * 0.78,
-                    delay: Math.min(index * motionDirector.revealStagger, 0.2),
-                    ease: "easeOut",
-                  }}
-                />
-              </button>
-            ))}
-          </div>
-        ) : (
-          <div className="relative flex h-[min(72dvh,52rem)] min-h-[16rem] items-center justify-center overflow-hidden rounded-xl bg-neutral-950">
-            <motion.img
-              key={images[zoomedImageIndex].id}
-              src={getPropertyImageUrl(images[zoomedImageIndex].sourceUrl, 1200)}
-              srcSet={getPropertyImageSrcSet(images[zoomedImageIndex].sourceUrl)}
-              sizes="(max-width: 767px) 90vw, 80vw"
-              alt={images[zoomedImageIndex].altText}
-              className="h-full w-full object-contain"
-              loading="eager"
-              decoding="async"
-              initial={reducedMotion ? false : { opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: reducedMotion ? 0 : 0.22, ease: "easeOut" }}
-            />
-            <button
-              type="button"
-              aria-label="Fermer l’agrandissement et revenir aux photos"
-              title="Retour aux photos"
-              onClick={() => setZoomedImageIndex(null)}
-              className="absolute right-3 top-3 z-10 inline-flex h-11 w-11 items-center justify-center rounded-full bg-background/95 shadow-md transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        <div className="flex h-14 min-h-14 items-center gap-3 border-b border-border/80 px-3 sm:px-6">
+          <button
+            type="button"
+            aria-label="Retour à l’annonce"
+            onClick={() => setGalleryOpen(false)}
+            className="inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-full px-2 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:px-3"
+          >
+            <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+            <span className="hidden sm:inline">Retour à l’annonce</span>
+            <span className="sm:hidden">Retour</span>
+          </button>
+          <span className="inline-flex h-9 items-center rounded-full bg-foreground px-4 text-sm font-medium text-background">
+            Photos
+          </span>
+          <span className="ml-auto text-sm font-medium text-muted-foreground md:hidden" aria-live="polite">
+            {galleryImageIndex + 1} / {images.length}
+          </span>
+        </div>
+
+        <div className="flex min-h-0 flex-1 flex-col md:flex-row">
+          <aside className="hidden w-64 shrink-0 flex-col border-r border-border/70 bg-background p-4 md:flex lg:w-72">
+            <p className="mb-3 shrink-0 text-sm font-medium text-muted-foreground" aria-live="polite">
+              {galleryImageIndex + 1} / {images.length}
+            </p>
+            <div className="grid grid-cols-3 content-start gap-2 overflow-y-auto pr-1">
+              {images.map((image, index) => (
+                <button
+                  key={image.id}
+                  type="button"
+                  className={`group relative aspect-[4/3] overflow-hidden rounded-lg bg-muted text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${galleryImageIndex === index ? "ring-2 ring-foreground ring-offset-2" : "opacity-75 transition-opacity hover:opacity-100"}`}
+                  aria-label={`Afficher la photo ${index + 1}`}
+                  aria-current={galleryImageIndex === index ? "true" : undefined}
+                  onClick={() => setGalleryImageIndex(index)}
+                >
+                  <img
+                    src={getPropertyImageUrl(image.sourceUrl, 400)}
+                    srcSet={getPropertyImageSrcSet(image.sourceUrl)}
+                    sizes="96px"
+                    alt={image.altText}
+                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03] motion-reduce:transition-none"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </button>
+              ))}
+            </div>
+          </aside>
+
+          <div className="relative flex min-h-0 flex-1 flex-col">
+            <div
+              className="relative flex min-h-0 flex-1 touch-pan-y items-center justify-center overflow-hidden bg-background p-2 sm:p-5"
+              onPointerDown={handleGalleryPointerDown}
+              onPointerUp={handleGalleryPointerUp}
+              onPointerCancel={() => { gallerySwipeStartRef.current = null; }}
             >
-              <X className="h-5 w-5" aria-hidden="true" />
-            </button>
+              <motion.img
+                key={images[galleryImageIndex].id}
+                src={getPropertyImageUrl(images[galleryImageIndex].sourceUrl, 1200)}
+                srcSet={getPropertyImageSrcSet(images[galleryImageIndex].sourceUrl, [400, 700, 900, 1200])}
+                sizes="(max-width: 767px) 96vw, (max-width: 1279px) 72vw, 80vw"
+                alt={images[galleryImageIndex].altText}
+                className="h-full w-full select-none rounded-lg object-contain"
+                draggable={false}
+                loading="eager"
+                fetchPriority="high"
+                decoding="async"
+                initial={reducedMotion ? false : { opacity: 0, x: 12 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                transition={{ duration: reducedMotion ? 0 : 0.2, ease: "easeOut" }}
+              />
+
+              {galleryImageIndex > 0 && (
+                <button
+                  type="button"
+                  aria-label="Photo précédente"
+                  title="Photo précédente"
+                  onClick={() => moveGalleryImage(-1)}
+                  className="absolute left-4 top-1/2 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-background/95 text-foreground shadow-lg transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 md:inline-flex"
+                >
+                  <ChevronLeft className="h-6 w-6" aria-hidden="true" />
+                </button>
+              )}
+              {galleryImageIndex < images.length - 1 && (
+                <button
+                  type="button"
+                  aria-label="Photo suivante"
+                  title="Photo suivante"
+                  onClick={() => moveGalleryImage(1)}
+                  className="absolute right-4 top-1/2 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-background/95 text-foreground shadow-lg transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 md:inline-flex"
+                >
+                  <ChevronRight className="h-6 w-6" aria-hidden="true" />
+                </button>
+              )}
+            </div>
+
+            <div className="flex h-20 shrink-0 gap-2 overflow-x-auto border-t border-border/70 px-3 py-2 md:hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {images.map((image, index) => (
+                <button
+                  key={image.id}
+                  type="button"
+                  aria-label={`Afficher la photo ${index + 1}`}
+                  aria-current={galleryImageIndex === index ? "true" : undefined}
+                  onClick={() => setGalleryImageIndex(index)}
+                  className={`relative aspect-[4/3] h-full shrink-0 overflow-hidden rounded-md bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${galleryImageIndex === index ? "ring-2 ring-foreground ring-offset-1" : "opacity-75"}`}
+                >
+                  <img
+                    src={getPropertyImageUrl(image.sourceUrl, 200)}
+                    alt={image.altText}
+                    className="absolute inset-0 h-full w-full object-cover"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </button>
+              ))}
+            </div>
           </div>
-        )}
+        </div>
       </DialogContent>
     </Dialog>
   );
