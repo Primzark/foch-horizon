@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { motion, useScroll } from "framer-motion";
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { createPortal } from "react-dom";
-import { ArrowRight, Bath, BedDouble, Calculator, Car, ChevronLeft, ChevronRight, Copy, Flame, Heart, Mail, MapPin, Maximize, Phone, X } from "lucide-react";
+import { ArrowRight, Bath, BedDouble, Car, ChevronLeft, ChevronRight, Copy, Flame, Heart, Mail, MapPin, Maximize, Phone, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cityById, cityBySlug } from "@/features/cities/data/cities";
 import { getPropertyById, getSimilarProperties, searchProperties } from "@/features/listings/api/properties.service";
@@ -20,6 +20,7 @@ import { LeadForm } from "@/features/leads/components/LeadForm";
 import {
   formatPrice,
   formatPropertyTypeLabel,
+  getPropertyCardLabels,
   getPropertyStatusLabel,
   normalizeKeyword,
   sanitizePropertySlug,
@@ -674,11 +675,7 @@ export default function ListingDetailPage({
   const agent = agentById.get(property.agentId);
   const propertyTypeLabel = formatPropertyTypeLabel(property.propertyType);
   const statusLabel = getPropertyStatusLabel(property.status) ?? "À vendre";
-  const publishedAt = Date.parse(property.publishedAt);
-  const isNewListing = property.status === "active"
-    && Number.isFinite(publishedAt)
-    && publishedAt <= Date.now()
-    && Date.now() - publishedAt < 30 * 24 * 60 * 60 * 1_000;
+  const isNewListing = getPropertyCardLabels(property).includes("Nouveautés");
   const quickFacts = [
     { icon: Maximize, label: "Surface", value: `${property.surfaceM2} m²` },
     ...(property.terrainM2 != null && property.terrainM2 > 0 ? [{ icon: Maximize, label: "Terrain", value: `${property.terrainM2} m²` }] : []),
@@ -803,40 +800,42 @@ export default function ListingDetailPage({
                   </span>
                 )}
               </div>
-              <div className={`flex flex-wrap items-center gap-2 ${previewLayout ? "mt-3 lg:justify-end" : "mt-4 sm:mt-3 sm:justify-end"}`}>
-                {!previewLayout && property.status === "active" && property.transactionType === "vente" && (
-                  <PropertyCompareToggle propertyId={property.id} />
-                )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className={
-                    isFavorite
-                      ? "border-brand-border bg-brand-soft text-brand-strong hover:bg-brand-soft/70 hover:text-brand-strong"
-                      : undefined
-                  }
-                  onClick={() => {
-                    const action = isFavorite ? "favorite_removed" : "favorite_added";
-                    toggleFavorite(property.id);
-                    trackEvent("listing_viewed", { propertyId: property.id, action });
-                  }}
-                  aria-label={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
-                >
-                  <Heart className={isFavorite ? "fill-brand text-brand" : undefined} />
-                  {isFavorite ? "Sauvegardé" : "Sauvegarder"}
-                </Button>
-                <ListingShareButton key={property.id} propertyId={property.id} title={property.title} path={canonicalPath!} />
-                {!previewLayout && <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    navigator.clipboard.writeText(String(property.id));
-                    trackEvent("listing_viewed", { propertyId: property.id, action: "copy_reference" });
-                  }}
-                >
-                  <Copy className="mr-1 h-3.5 w-3.5" /> Réf
-                </Button>}
-              </div>
+              {!previewLayout && (
+                <div className="mt-4 flex flex-wrap items-center gap-2 sm:mt-3 sm:justify-end">
+                  {property.status === "active" && property.transactionType === "vente" && (
+                    <PropertyCompareToggle propertyId={property.id} />
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={
+                      isFavorite
+                        ? "border-brand-border bg-brand-soft text-brand-strong hover:bg-brand-soft/70 hover:text-brand-strong"
+                        : undefined
+                    }
+                    onClick={() => {
+                      const action = isFavorite ? "favorite_removed" : "favorite_added";
+                      toggleFavorite(property.id);
+                      trackEvent("listing_viewed", { propertyId: property.id, action });
+                    }}
+                    aria-label={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+                  >
+                    <Heart className={isFavorite ? "fill-brand text-brand" : undefined} />
+                    {isFavorite ? "Sauvegardé" : "Sauvegarder"}
+                  </Button>
+                  <ListingShareButton key={property.id} propertyId={property.id} title={property.title} path={canonicalPath!} />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      navigator.clipboard.writeText(String(property.id));
+                      trackEvent("listing_viewed", { propertyId: property.id, action: "copy_reference" });
+                    }}
+                  >
+                    <Copy className="mr-1 h-3.5 w-3.5" /> Réf
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -859,16 +858,6 @@ export default function ListingDetailPage({
               </div>
             ))}
           </div>
-
-          {previewLayout && (
-            <Link
-              to="/contact"
-              className="mt-6 inline-flex min-h-14 w-full items-center justify-center gap-3 rounded-2xl bg-[#3b0507] px-5 text-base font-semibold text-white transition-colors hover:bg-[#4c070a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-            >
-              <Calculator className="h-5 w-5" aria-hidden="true" />
-              <span className="underline underline-offset-4">Parler de mon financement</span>
-            </Link>
-          )}
 
           {previewLayout && (
             <Link to={city ? `/immobilier/${city.slug}` : "/biens"} className="flex min-h-[6.5rem] items-center gap-4 border-b border-border/80 py-5 text-left transition-colors hover:text-brand-strong">

@@ -24,11 +24,11 @@ import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings
 
 export function BudgetFinder() {
   const location = useLocation();
-  const [budgetText, setBudgetText] = useState("350000");
+  const [budgetText, setBudgetText] = useState("");
   const [isResultsDialogOpen, setIsResultsDialogOpen] = useState(false);
   const [propertyType, setPropertyType] = useState<PropertyType | "">("");
   const [areaId, setAreaId] = useState("");
-  const [settledBudget, setSettledBudget] = useState<number | null>(350000);
+  const [settledBudget, setSettledBudget] = useState<number | null>(null);
 
   const transaction = "vente" as const;
   const parsedBudget = budgetText.trim() ? Number(budgetText) : Number.NaN;
