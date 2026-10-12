@@ -9,9 +9,10 @@ interface ListingShareButtonProps {
   propertyId: number;
   title: string;
   path: string;
+  overlay?: boolean;
 }
 
-export function ListingShareButton({ propertyId, title, path }: ListingShareButtonProps) {
+export function ListingShareButton({ propertyId, title, path, overlay = false }: ListingShareButtonProps) {
   const [isSharing, setIsSharing] = useState(false);
   const [manualShareUrl, setManualShareUrl] = useState<string | null>(null);
 
@@ -46,8 +47,17 @@ export function ListingShareButton({ propertyId, title, path }: ListingShareButt
 
   return (
     <>
-      <Button variant="outline" size="sm" onClick={shareProperty} disabled={isSharing}>
-        <Share2 className="mr-1 h-3.5 w-3.5" aria-hidden="true" /> Partager
+      <Button
+        variant="outline"
+        size={overlay ? "icon" : "sm"}
+        className={overlay ? "h-11 w-11 rounded-full border-white/35 bg-black/45 text-white shadow-md backdrop-blur-md hover:bg-black/65 hover:text-white" : undefined}
+        onClick={shareProperty}
+        disabled={isSharing}
+        aria-label={overlay ? "Partager ce bien" : undefined}
+        title={overlay ? "Partager ce bien" : undefined}
+      >
+        <Share2 className={overlay ? "h-5 w-5" : "mr-1 h-3.5 w-3.5"} aria-hidden="true" />
+        {!overlay && "Partager"}
       </Button>
       <Dialog open={manualShareUrl !== null} onOpenChange={(open) => !open && setManualShareUrl(null)}>
         <DialogContent>

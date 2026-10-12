@@ -512,3 +512,22 @@
     text-shadow: 0 1px 10px rgb(2 6 23 / 0.65);
   }
 }
+
+/* The property preview follows the dark, full-bleed presentation used by the mobile listing reference. */
+.listing-preview-modal {
+  --background: 220 8% 10%;
+  --foreground: 0 0% 98%;
+  --card: 220 8% 14%;
+  --card-foreground: 0 0% 98%;
+  --popover: 220 8% 14%;
+  --popover-foreground: 0 0% 98%;
+  --secondary: 220 8% 20%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 220 8% 20%;
+  --muted-foreground: 215 10% 72%;
+  --border: 220 8% 28%;
+  --input: 220 8% 31%;
+  --brand-strong: 147 48% 67%;
+  --brand-soft: 147 34% 19%;
+  --brand-border: 148 24% 43%;
+}

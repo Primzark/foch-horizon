@@ -310,7 +310,7 @@ export function ListingGallery({
             }}
           >
             <ContextAwareParallax mood={imageMood} reducedMotion={reducedMotion} intensity="immersive" scrollReactive className="z-[0]">
-              <div className={`relative w-full overflow-hidden ${variant === "modal" ? "aspect-[16/8] max-h-[min(32rem,52dvh)] min-h-[14rem] sm:aspect-[16/7]" : "aspect-[16/9]"}`}>
+              <div className={`relative w-full overflow-hidden ${variant === "modal" ? "aspect-[4/3] max-h-[min(32rem,44dvh)] min-h-[16rem] sm:aspect-[16/7]" : "aspect-[16/9]"}`}>
                 <AnimatePresence initial={!reducedMotion} mode="sync">
                   <motion.img
                     key={activeImage.id}
@@ -333,7 +333,7 @@ export function ListingGallery({
             </ContextAwareParallax>
             <PlaceAtmosphereLayer mood={imageMood} animated={false} variant="gallery" className="z-[1]" />
             <div className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-t from-black/50 via-transparent to-black/5" />
-            <span className="pointer-events-none absolute bottom-4 left-4 z-[3] text-sm font-medium text-white drop-shadow sm:bottom-5 sm:left-6">
+            <span className={`pointer-events-none absolute bottom-4 z-[3] font-medium text-white drop-shadow sm:bottom-5 ${variant === "modal" ? "right-4 rounded-full bg-black/70 px-3 py-1.5 text-base sm:right-6" : "left-4 text-sm sm:left-6"}`}>
               {safeActiveImageIndex + 1} / {images.length}
             </span>
           </button>

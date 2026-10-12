@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { motion, useScroll } from "framer-motion";
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { createPortal } from "react-dom";
-import { ArrowRight, Bath, BedDouble, Car, ChevronLeft, Copy, Heart, MapPin, Maximize, Phone, X } from "lucide-react";
+import { ArrowRight, Bath, BedDouble, Calculator, Car, ChevronLeft, ChevronRight, Copy, Heart, Mail, MapPin, Maximize, Phone, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cityById, cityBySlug } from "@/features/cities/data/cities";
 import { getPropertyById, getSimilarProperties, searchProperties } from "@/features/listings/api/properties.service";
@@ -194,6 +194,7 @@ export default function ListingDetailPage({
   const trackedPropertyViewId = useRef<number | null>(null);
   const [summaryVisible, setSummaryVisible] = useState(true);
   const [contactVisible, setContactVisible] = useState(false);
+  const [previewContactBarVisible, setPreviewContactBarVisible] = useState(false);
   const [activePreviewSection, setActivePreviewSection] = useState<string>("property-photos");
   const cookieConsent = useUiStore((state) => state.cookieConsent);
   const location = useLocation();
@@ -467,9 +468,8 @@ export default function ListingDetailPage({
         animationFrame = 0;
 
         const containerRect = scrollContainer.getBoundingClientRect();
-        const navigationBottom = previewNavigationRef.current?.getBoundingClientRect().bottom
-          ?? containerRect.top + 48;
-        const navigationHeight = navigationBottom - containerRect.top;
+        const navigationRect = previewNavigationRef.current?.getBoundingClientRect();
+        const navigationHeight = navigationRect && navigationRect.height > 0 ? navigationRect.height : 0;
         const activationLine = navigationHeight + Math.min(64, scrollContainer.clientHeight * 0.1);
         const isAtBottom = scrollContainer.scrollTop > 0
           && scrollContainer.scrollTop + scrollContainer.clientHeight >= scrollContainer.scrollHeight - 4;
@@ -543,6 +543,29 @@ export default function ListingDetailPage({
   }, [previewLayout, property?.id, scrollContainerRef]);
 
   useEffect(() => {
+    if (!previewLayout) return;
+
+    const scrollContainer = scrollContainerRef?.current;
+    if (!scrollContainer) return;
+
+    const updateContactBarVisibility = () => {
+      const contactRect = contactRef.current?.getBoundingClientRect();
+      const containerRect = scrollContainer.getBoundingClientRect();
+      const contactIsVisible = Boolean(
+        contactRect
+          && contactRect.top < containerRect.bottom
+          && contactRect.bottom > containerRect.top,
+      );
+
+      setPreviewContactBarVisible(scrollContainer.scrollTop > 120 && !contactIsVisible);
+    };
+
+    scrollContainer.addEventListener("scroll", updateContactBarVisibility, { passive: true });
+    updateContactBarVisibility();
+    return () => scrollContainer.removeEventListener("scroll", updateContactBarVisibility);
+  }, [previewLayout, property?.id, scrollContainerRef]);
+
+  useEffect(() => {
     const scroller = previewNavigationScrollerRef.current;
     if (!scroller) return;
 
@@ -587,6 +610,7 @@ export default function ListingDetailPage({
 
   const canonicalPath = property ? toCanonicalPropertyPath({ id: property.id, slug: property.slug }) : null;
   const showStickySummary = Boolean(property && !summaryVisible && !contactVisible);
+  const contactPhone = agent?.phone ?? "02 35 42 51 76";
 
   const discoveryCardContent = nextPropertyToDiscover ? (
     <>
@@ -641,6 +665,36 @@ export default function ListingDetailPage({
           }}
         >
           Contacter
+        </Button>
+      </div>
+    </div>
+  ) : null;
+
+  const previewContactBar = property && previewContactBarVisible && previewLayout ? (
+    <div className="pointer-events-auto fixed inset-x-3 bottom-[calc(0.75rem_+_env(safe-area-inset-bottom))] z-[105] mx-auto max-w-xl lg:hidden">
+      <div className="grid grid-cols-2 gap-2 rounded-2xl border border-white/15 bg-[#15161a]/95 p-2 text-white shadow-2xl backdrop-blur-xl">
+        <Button
+          type="button"
+          variant="brand"
+          className="h-12 rounded-xl text-sm font-semibold"
+          onClick={() => {
+            contactRef.current?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "center" });
+            trackEvent("listing_viewed", { propertyId: property.id, action: "sticky_message" });
+            trackComparisonContactClick("sticky_contact");
+          }}
+        >
+          <Mail aria-hidden="true" className="h-4 w-4" /> Message
+        </Button>
+        <Button asChild variant="outline" className="h-12 rounded-xl border-white/30 bg-transparent text-sm font-semibold text-white hover:bg-white/10 hover:text-white">
+          <a
+            href={`tel:${contactPhone.replace(/\s+/g, "")}`}
+            onClick={() => {
+              trackEvent("phone_clicked", { source: "property_modal_sticky", propertyId: property.id });
+              trackComparisonContactClick("phone");
+            }}
+          >
+            <Phone aria-hidden="true" className="h-4 w-4" /> Appeler
+          </a>
         </Button>
       </div>
     </div>
@@ -773,7 +827,7 @@ export default function ListingDetailPage({
     ...(property.garageCount != null && property.garageCount > 0 ? [{ icon: Car, label: "Garage", value: `${property.garageCount}` }] : []),
   ];
   return (
-    <section className={previewLayout ? "w-full pb-10" : "container mx-auto px-4 pt-8 pb-28 lg:pb-8"}>
+    <section className={previewLayout ? "listing-preview-modal w-full bg-background pb-32 text-foreground" : "container mx-auto px-4 pt-8 pb-28 lg:pb-8"}>
       {!previewLayout && <div className="pointer-events-none fixed right-5 top-1/2 z-20 hidden h-36 -translate-y-1/2 lg:block">
         <div className="h-full w-1 rounded-full bg-border/70">
           <motion.span
@@ -807,7 +861,58 @@ export default function ListingDetailPage({
 
       <div ref={contentRef} className="min-w-0">
         {previewLayout && (
-          <nav ref={previewNavigationRef} aria-label="Navigation dans l’annonce" className="sticky top-0 z-40 border-y border-border/80 bg-background/95 shadow-sm backdrop-blur-md">
+          <ListingGallery
+            key={property.id}
+            images={property.images}
+            title={property.title}
+            propertyId={property.id}
+            variant="modal"
+            overlayActions={(
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-11 w-11 rounded-full border-white/35 bg-black/45 text-white shadow-md backdrop-blur-md hover:bg-black/65 hover:text-white"
+                  aria-label="Fermer l’annonce"
+                  title="Fermer"
+                  onClick={() => navigate(-((routeState?.propertyModalDepth ?? 0) + 1))}
+                >
+                  <X aria-hidden="true" className="h-5 w-5" />
+                </Button>
+                <div className="flex items-center gap-2">
+                  <ListingShareButton overlay propertyId={property.id} title={property.title} path={canonicalPath!} />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-11 w-11 rounded-full border-white/35 bg-black/45 text-white shadow-md backdrop-blur-md hover:bg-black/65 hover:text-white"
+                    aria-label={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+                    aria-pressed={isFavorite}
+                    title={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+                    onClick={() => {
+                      toggleFavorite(property.id);
+                      trackEvent("listing_viewed", { propertyId: property.id, action: isFavorite ? "favorite_removed" : "favorite_added" });
+                    }}
+                  >
+                    <Heart aria-hidden="true" className={`h-5 w-5 ${isFavorite ? "fill-current" : ""}`} />
+                  </Button>
+                </div>
+              </>
+            )}
+          />
+        )}
+
+        {previewLayout && (
+          <div className="flex min-h-[5.5rem] items-center bg-brand px-5 py-3 sm:px-8">
+            <div className="rounded-xl bg-white px-3 py-2 shadow-md">
+              <img src="/images/foch-immobilier-logo.webp" alt="Foch Immobilier" className="h-9 w-auto max-w-[15rem] object-contain" />
+            </div>
+          </div>
+        )}
+
+        {previewLayout && (
+          <nav ref={previewNavigationRef} aria-label="Navigation dans l’annonce" className="sticky top-0 z-40 hidden border-y border-border/80 bg-background/95 shadow-sm backdrop-blur-md lg:block">
             <div ref={previewNavigationScrollerRef} className="mx-auto flex min-h-12 max-w-7xl items-center gap-6 overflow-x-auto px-4 whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:px-6">
               {previewSections.map((section) => (
                 <a
@@ -828,48 +933,30 @@ export default function ListingDetailPage({
           </nav>
         )}
 
-        {previewLayout && (
-          <ListingGallery
-            key={property.id}
-            images={property.images}
-            title={property.title}
-            propertyId={property.id}
-            variant="modal"
-            overlayActions={(
-              <>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="h-11 w-11 rounded-full border-white/35 bg-black/45 text-white shadow-md backdrop-blur-md hover:bg-black/65 hover:text-white"
-                  aria-label="Fermer l’annonce"
-                  title="Fermer"
-                  onClick={() => navigate(-((routeState?.propertyModalDepth ?? 0) + 1))}
-                >
-                  <X aria-hidden="true" className="h-5 w-5" />
-                </Button>
-              </>
-            )}
-          />
-        )}
-
-        <div className={`grid min-w-0 grid-cols-1 gap-7 lg:grid-cols-[minmax(0,1fr)_340px] ${previewLayout ? "mx-auto mt-5 max-w-7xl px-4 sm:mt-7 sm:px-6" : "lg:gap-8"}`}>
+        <div className={`grid min-w-0 grid-cols-1 gap-7 lg:grid-cols-[minmax(0,1fr)_340px] ${previewLayout ? "relative z-[1] -mt-5 mx-auto max-w-7xl rounded-t-[2rem] bg-background px-5 pt-7 sm:px-8 lg:mt-0 lg:rounded-none lg:px-6 lg:pt-7" : "lg:gap-8"}`}>
         <div className="min-w-0">
           {!previewLayout && <ListingGallery key={property.id} images={property.images} title={property.title} propertyId={property.id} />}
 
           <div id="property-overview" ref={summaryRef} className={`scroll-mt-16 grid grid-cols-1 items-start gap-x-6 gap-y-4 lg:grid-cols-[minmax(0,1fr)_auto] ${previewLayout ? "mb-6" : "mt-5"}`}>
             <div className="min-w-0">
               {!previewLayout && <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Réf du bien {property.id}</p>}
-              <h1 className={`font-display leading-[1.08] ${previewLayout ? "text-3xl sm:text-4xl" : "mt-1 text-4xl"}`}>{property.title}</h1>
-              <p className="mt-3 text-sm font-medium text-muted-foreground">{propertyTypeLabel} <span aria-hidden="true">·</span> {statusLabel}</p>
-              <p className="mt-2 inline-flex items-center gap-1 text-sm text-muted-foreground">
+              <h1 className={`leading-[1.08] ${previewLayout ? "font-body text-3xl font-bold sm:text-4xl" : "mt-1 font-display text-4xl"}`}>{property.title}</h1>
+              <p className={`mt-3 ${previewLayout ? "text-base font-semibold text-foreground" : "text-sm font-medium text-muted-foreground"}`}>{previewLayout ? `${propertyTypeLabel} ${statusLabel.toLowerCase()}` : <>{propertyTypeLabel} <span aria-hidden="true">·</span> {statusLabel}</>}</p>
+              {!previewLayout && <p className="mt-2 inline-flex items-center gap-1 text-sm text-muted-foreground">
                 <MapPin className="h-4 w-4" />
                 {city ? <Link to={`/immobilier/${city.slug}`} className="underline underline-offset-4">{city.name}</Link> : "Localisation"} ({property.postalCode})
-              </p>
+              </p>}
             </div>
 
             <div className="min-w-0 text-left lg:w-auto lg:min-w-[16rem] lg:text-right">
-              <p className={`font-display leading-tight tracking-tight text-brand-strong ${previewLayout ? "text-4xl sm:text-5xl" : "text-5xl sm:text-6xl"}`}>{formatPrice(property.priceAmount, property.transactionType)}</p>
+              <div className={`flex flex-wrap items-center gap-2 ${previewLayout ? "mt-1 lg:justify-end" : ""}`}>
+                <p className={`leading-tight tracking-tight text-brand-strong ${previewLayout ? "font-body text-4xl font-bold sm:text-5xl" : "font-display text-5xl sm:text-6xl"}`}>{formatPrice(property.priceAmount, property.transactionType)}</p>
+                {previewLayout && property.surfaceM2 > 0 && (
+                  <span className="rounded-full bg-muted px-3 py-1.5 text-sm font-medium text-foreground">
+                    {Math.round(property.priceAmount / property.surfaceM2).toLocaleString("fr-FR")} € / m²
+                  </span>
+                )}
+              </div>
               <div className={`flex flex-wrap items-center gap-2 ${previewLayout ? "mt-3 lg:justify-end" : "mt-4 sm:mt-3 sm:justify-end"}`}>
                 {!previewLayout && property.status === "active" && property.transactionType === "vente" && (
                   <PropertyCompareToggle propertyId={property.id} />
@@ -909,13 +996,16 @@ export default function ListingDetailPage({
 
           {fullPageNavigationControls}
 
-          <div className={previewLayout ? "flex flex-wrap gap-x-7 gap-y-4 border-y border-border/80 py-5" : "mt-8 grid gap-3 rounded-2xl border border-border bg-card p-4 sm:grid-cols-4"}>
-            {quickFacts.map((fact) => previewLayout ? (
-              <div key={fact.label} className="inline-flex items-center gap-2.5">
-                <fact.icon className="h-4 w-4 text-brand-strong" />
-                <p className="text-sm"><span className="font-semibold">{fact.value}</span> <span className="text-muted-foreground">{fact.label}</span></p>
-              </div>
-            ) : (
+          <div className={previewLayout ? "border-y border-border/80 py-5" : "mt-8 grid gap-3 rounded-2xl border border-border bg-card p-4 sm:grid-cols-4"}>
+            {previewLayout ? (
+              <p className="text-base font-semibold leading-relaxed text-foreground sm:text-lg">
+                {[
+                  property.rooms != null ? `${property.rooms} pièce${property.rooms > 1 ? "s" : ""}` : null,
+                  property.bedrooms != null ? `${property.bedrooms} chambre${property.bedrooms > 1 ? "s" : ""}` : null,
+                  `${property.surfaceM2.toLocaleString("fr-FR")} m²`,
+                ].filter(Boolean).join(" · ")}
+              </p>
+            ) : quickFacts.map((fact) => (
               <div key={fact.label} className="rounded-xl border border-border p-3 text-center">
                 <fact.icon className="mx-auto h-4 w-4" />
                 <p className="mt-2 text-sm font-medium">{fact.value}</p>
@@ -923,6 +1013,28 @@ export default function ListingDetailPage({
               </div>
             ))}
           </div>
+
+          {previewLayout && (
+            <Link to={city ? `/immobilier/${city.slug}` : "/biens"} className="flex min-h-[6.5rem] items-center gap-4 border-b border-border/80 py-5 text-left transition-colors hover:text-brand-strong">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-muted text-brand-strong">
+                <MapPin className="h-6 w-6" aria-hidden="true" />
+              </span>
+              <span className="min-w-0 flex-1 text-base leading-relaxed sm:text-lg">
+                {city?.name ?? "Localisation"} ({property.postalCode})
+              </span>
+              <ChevronRight className="h-5 w-5 shrink-0" aria-hidden="true" />
+            </Link>
+          )}
+
+          {previewLayout && (
+            <button
+              type="button"
+              onClick={() => contactRef.current?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "center" })}
+              className="mt-6 inline-flex min-h-14 w-full items-center justify-center gap-3 rounded-2xl bg-brand px-5 text-base font-semibold text-white transition-colors hover:bg-brand/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            >
+              <Calculator className="h-5 w-5" aria-hidden="true" /> Parler de mon financement
+            </button>
+          )}
 
           <article id="property-description" className={previewLayout ? "scroll-mt-16 border-b border-border/80 py-7" : "mt-9 rounded-2xl border border-border bg-card p-6"}>
             <h2 className="font-display text-2xl">Description</h2>
@@ -967,14 +1079,14 @@ export default function ListingDetailPage({
             <p className="mt-2 font-display text-2xl">{agent?.fullName ?? "Foch Immobilier"}</p>
             <p className="text-sm text-muted-foreground">{agent?.role ?? "Transactions immobilières"}</p>
             <a
-              href={`tel:${(agent?.phone ?? "02 35 42 51 76").replace(/\s+/g, "")}`}
+              href={`tel:${contactPhone.replace(/\s+/g, "")}`}
               className="mt-3 inline-flex items-center gap-2 rounded-full border border-border px-3 py-1 text-sm"
               onClick={() => {
                 trackEvent("phone_clicked", { source: "property_sidebar", propertyId: property.id });
                 trackComparisonContactClick("phone");
               }}
             >
-              <Phone className="h-4 w-4" /> {agent?.phone ?? "02 35 42 51 76"}
+              <Phone className="h-4 w-4" /> {contactPhone}
             </a>
             {agent?.email && (
               <a
@@ -1087,7 +1199,9 @@ export default function ListingDetailPage({
           )}
         </section>
       )}
-      {stickySummaryPortalElement ? stickySummary && createPortal(stickySummary, stickySummaryPortalElement) : stickySummary}
+      {stickySummaryPortalElement
+        ? (previewLayout ? previewContactBar : stickySummary) && createPortal(previewLayout ? previewContactBar : stickySummary, stickySummaryPortalElement)
+        : stickySummary}
     </section>
   );
 }
