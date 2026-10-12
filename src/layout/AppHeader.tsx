@@ -222,14 +222,14 @@ export function AppHeader() {
               </button>
             </SheetTrigger>
             <Link to="/" onClick={handleLogoClick} className="flex min-w-0 max-w-full items-center justify-self-center gap-2" aria-label="Foch Immobilier — Accueil">
-              <picture className="block min-w-0 max-w-full dark:overflow-hidden dark:rounded-sm dark:bg-white">
+              <picture className="block min-w-0 max-w-full">
                 <source srcSet="/images/foch-immobilier-logo-transparent.png" type="image/png" />
                 <img
                   src="/images/foch-immobilier-logo-transparent.png"
                   alt="Foch Immobilier"
                   width={772}
                   height={150}
-                  className="h-auto max-w-full w-[170px] max-[359px]:w-[144px] mix-blend-multiply sm:w-[200px] lg:w-[220px]"
+                  className="h-auto max-w-full w-[170px] max-[359px]:w-[144px] sm:w-[200px] lg:w-[220px]"
                   decoding="async"
                 />
               </picture>
