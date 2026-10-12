@@ -22,6 +22,7 @@
 
 @layer base {
   :root {
+    color-scheme: light;
     --color-bg: 44 28% 97%;
     --color-surface: 0 0% 100%;
     --color-text: 214 24% 11%;
@@ -92,6 +93,66 @@
     --sidebar-ring: 205 42% 20%;
   }
 
+  .dark {
+    color-scheme: dark;
+
+    --color-bg: 216 24% 9%;
+    --color-surface: 216 21% 12%;
+    --color-text: 38 22% 92%;
+    --color-muted: 214 13% 70%;
+    --color-accent: 40 58% 64%;
+    --color-brand: 147 50% 34%;
+    --color-gold: 38 62% 62%;
+
+    --background: var(--color-bg);
+    --foreground: var(--color-text);
+
+    --card: var(--color-surface);
+    --card-foreground: var(--color-text);
+
+    --popover: 216 21% 13%;
+    --popover-foreground: var(--color-text);
+
+    --primary: var(--color-brand);
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 216 16% 19%;
+    --secondary-foreground: 38 22% 92%;
+
+    --muted: 216 16% 17%;
+    --muted-foreground: var(--color-muted);
+
+    --accent: var(--color-accent);
+    --accent-foreground: 216 28% 10%;
+
+    --brand: var(--color-brand);
+    --brand-soft: 147 34% 17%;
+    --brand-strong: 148 43% 70%;
+    --brand-border: 148 26% 39%;
+
+    --destructive: 0 67% 59%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 216 14% 26%;
+    --input: 216 14% 30%;
+    --ring: 147 48% 55%;
+
+    --gold: var(--color-gold);
+    --gold-light: 39 32% 18%;
+    --gold-dark: 38 62% 72%;
+
+    --gradient-hero: linear-gradient(120deg, hsl(216 32% 10% / 0.82), hsl(211 37% 8% / 0.76));
+
+    --sidebar-background: 216 24% 11%;
+    --sidebar-foreground: 38 22% 92%;
+    --sidebar-primary: var(--color-gold);
+    --sidebar-primary-foreground: 216 28% 10%;
+    --sidebar-accent: 216 18% 18%;
+    --sidebar-accent-foreground: 38 22% 92%;
+    --sidebar-border: 216 15% 25%;
+    --sidebar-ring: 147 48% 55%;
+  }
+
   * {
     @apply border-border;
   }
@@ -103,6 +164,11 @@
     line-height: 1.55;
     background-image: radial-gradient(circle at 16% 12%, hsl(44 50% 96%), transparent 40%),
       radial-gradient(circle at 86% 0%, hsl(145 30% 92%), transparent 46%);
+  }
+
+  .dark body {
+    background-image: radial-gradient(circle at 16% 12%, hsl(40 44% 28% / 0.12), transparent 40%),
+      radial-gradient(circle at 86% 0%, hsl(147 34% 24% / 0.13), transparent 46%);
   }
 
   @media (max-width: 1023px) {
