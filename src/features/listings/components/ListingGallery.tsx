@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { PointerEvent, ReactNode } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -41,7 +41,6 @@ export function ListingGallery({
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [galleryImageIndex, setGalleryImageIndex] = useState(0);
   const [displayedGalleryImageId, setDisplayedGalleryImageId] = useState<string | null>(() => images[0]?.id ?? null);
-  const [incomingGalleryImageId, setIncomingGalleryImageId] = useState<string | null>(null);
   const [imageFallbackKeys, setImageFallbackKeys] = useState<Set<string>>(() => new Set());
   const [isDesktopGallery, setIsDesktopGallery] = useState(() =>
     typeof window !== "undefined" && window.matchMedia?.("(min-width: 768px)").matches === true,
@@ -63,6 +62,8 @@ export function ListingGallery({
 
   const safeGalleryImageIndex = Math.min(galleryImageIndex, Math.max(0, images.length - 1));
   const selectedGalleryImage = images[safeGalleryImageIndex] ?? null;
+  const selectedGalleryImageId = selectedGalleryImage?.id ?? null;
+  const selectedGalleryImageSourceUrl = selectedGalleryImage?.sourceUrl ?? null;
   const selectedGalleryImageFallbackKey = selectedGalleryImage
     ? `viewer:${selectedGalleryImage.id}`
     : null;
@@ -70,31 +71,82 @@ export function ListingGallery({
     ? imageFallbackKeys.has(selectedGalleryImageFallbackKey)
     : false;
 
+  const getWarmedGalleryImage = useCallback((
+    photo: Pick<PropertyImage, "id" | "sourceUrl">,
+    width: number,
+    fetchPriority: "high" | "low" = "low",
+    useOriginalSource = false,
+  ) => {
+    const sourceUrl = photo.sourceUrl;
+    const preloadKey = `${sourceUrl}:${width}`;
+    let image = warmedImageUrlsRef.current.get(preloadKey);
+
+    if (!image) {
+      image = new Image();
+      image.decoding = "async";
+      const createdImage = image;
+      createdImage.onerror = () => {
+        if (createdImage.src === sourceUrl) return;
+        createdImage.dataset.galleryFallback = "true";
+        createdImage.srcset = "";
+        createdImage.sizes = "";
+        createdImage.src = sourceUrl;
+        const fallbackKey = `${width >= 900 ? "viewer" : "hero"}:${photo.id}`;
+        setImageFallbackKeys((current) => {
+          if (current.has(fallbackKey)) return current;
+          const next = new Set(current);
+          next.add(fallbackKey);
+          return next;
+        });
+      };
+      warmedImageUrlsRef.current.set(preloadKey, image);
+    }
+
+    image.fetchPriority = fetchPriority;
+
+    if (useOriginalSource) {
+      if (image.src !== sourceUrl || image.srcset) {
+        image.dataset.galleryFallback = "true";
+        image.srcset = "";
+        image.sizes = "";
+        image.src = sourceUrl;
+      }
+      return image;
+    }
+
+    if (image.dataset.galleryFallback === "true") return image;
+
+    const resizedSource = getPropertyImageUrl(sourceUrl, width);
+    const isGalleryImage = width >= 900;
+    const sizes = isGalleryImage
+      ? "(max-width: 767px) 96vw, (max-width: 1279px) 72vw, 80vw"
+      : "(max-width: 1023px) calc(100vw - 2rem), 66vw";
+    const srcSet = getPropertyImageSrcSet(
+      sourceUrl,
+      isGalleryImage ? [400, 700, 900, 1200] : undefined,
+    ) ?? "";
+
+    if (image.src !== resizedSource || image.srcset !== srcSet || image.sizes !== sizes) {
+      image.sizes = sizes;
+      image.srcset = srcSet;
+      image.src = resizedSource;
+    }
+
+    return image;
+  }, []);
+
   useEffect(() => {
-    if (!galleryOpen || !selectedGalleryImage) return;
+    if (!galleryOpen || !selectedGalleryImageId || !selectedGalleryImageSourceUrl) return;
 
-    if (selectedGalleryImage.id === displayedGalleryImageId) {
-      setIncomingGalleryImageId(null);
-      return;
-    }
+    if (selectedGalleryImageId === displayedGalleryImageId) return;
 
-    setIncomingGalleryImageId(null);
     let cancelled = false;
-    const image = new Image();
-    const resizedSource = getPropertyImageUrl(selectedGalleryImage.sourceUrl, 1200);
-    image.decoding = "async";
-    image.fetchPriority = "high";
-    image.sizes = "(max-width: 767px) 96vw, (max-width: 1279px) 72vw, 80vw";
-
-    if (!selectedGalleryImageUsesOriginal) {
-      image.srcset = getPropertyImageSrcSet(selectedGalleryImage.sourceUrl, [400, 700, 900, 1200]) ?? "";
-    }
-
-    image.src = selectedGalleryImageUsesOriginal ? selectedGalleryImage.sourceUrl : resizedSource;
+    const selectedImage = { id: selectedGalleryImageId, sourceUrl: selectedGalleryImageSourceUrl };
+    const image = getWarmedGalleryImage(selectedImage, 1200, "high", selectedGalleryImageUsesOriginal);
     image.decode().then(() => {
-      if (!cancelled) setIncomingGalleryImageId(selectedGalleryImage.id);
+      if (!cancelled) setDisplayedGalleryImageId(selectedGalleryImageId);
     }).catch(() => {
-      if (cancelled || selectedGalleryImageUsesOriginal || resizedSource === selectedGalleryImage.sourceUrl) return;
+      if (cancelled || selectedGalleryImageUsesOriginal || getPropertyImageUrl(selectedGalleryImageSourceUrl, 1200) === selectedGalleryImageSourceUrl) return;
       setImageFallbackKeys((current) => {
         if (current.has(selectedGalleryImageFallbackKey!)) return current;
         const next = new Set(current);
@@ -109,10 +161,11 @@ export function ListingGallery({
   }, [
     displayedGalleryImageId,
     galleryOpen,
-    selectedGalleryImage?.id,
-    selectedGalleryImage?.sourceUrl,
+    selectedGalleryImageId,
+    selectedGalleryImageSourceUrl,
     selectedGalleryImageFallbackKey,
     selectedGalleryImageUsesOriginal,
+    getWarmedGalleryImage,
   ]);
 
   if (images.length === 0) {
@@ -130,9 +183,6 @@ export function ListingGallery({
   const displayedGalleryImageIndex = foundDisplayedGalleryImageIndex >= 0
     ? foundDisplayedGalleryImageIndex
     : safeGalleryImageIndex;
-  const incomingGalleryImage = incomingGalleryImageId === selectedGalleryImage?.id
-    ? images.find((image) => image.id === incomingGalleryImageId) ?? null
-    : null;
   const imageMood = inferPlaceImageMood(title, activeImage.altText);
 
   const galleryImageProps = (
@@ -169,29 +219,7 @@ export function ListingGallery({
 
     adjacentIndexes.forEach((index) => {
       const photo = images[index];
-      const sourceUrl = photo.sourceUrl;
-      const preloadKey = `${sourceUrl}:${width}`;
-      if (!sourceUrl || warmedImageUrlsRef.current.has(preloadKey)) return;
-
-      const preloadedImage = new Image();
-      preloadedImage.decoding = "async";
-      preloadedImage.fetchPriority = "low";
-      const isGalleryImage = width >= 900;
-      preloadedImage.sizes = isGalleryImage
-        ? "(max-width: 767px) 96vw, (max-width: 1279px) 72vw, 80vw"
-        : "(max-width: 1023px) calc(100vw - 2rem), 66vw";
-      preloadedImage.srcset = getPropertyImageSrcSet(
-        sourceUrl,
-        isGalleryImage ? [400, 700, 900, 1200] : undefined,
-      ) ?? "";
-      preloadedImage.onerror = () => {
-        if (preloadedImage.src === sourceUrl) return;
-        preloadedImage.srcset = "";
-        preloadedImage.sizes = "";
-        preloadedImage.src = sourceUrl;
-      };
-      preloadedImage.src = getPropertyImageUrl(sourceUrl, width);
-      warmedImageUrlsRef.current.set(preloadKey, preloadedImage);
+      if (photo.sourceUrl) getWarmedGalleryImage(photo, width);
     });
   };
 
@@ -276,8 +304,6 @@ export function ListingGallery({
                 event.stopPropagation();
                 return;
               }
-              setDisplayedGalleryImageId(activeImage.id);
-              setIncomingGalleryImageId(null);
               setGalleryImageIndex(safeActiveImageIndex);
               preloadAdjacentImages(safeActiveImageIndex, 1200);
               trackEvent("gallery_opened", { property_id: propertyId });
@@ -429,39 +455,29 @@ export function ListingGallery({
               onPointerCancel={() => { gallerySwipeStartRef.current = null; }}
             >
               <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden">
-                <img
-                  {...galleryImageProps(displayedGalleryImage, 1200, `viewer:${displayedGalleryImage.id}`, [400, 700, 900, 1200])}
-                  sizes="(max-width: 767px) 96vw, (max-width: 1279px) 72vw, 80vw"
-                  alt={incomingGalleryImage ? "" : displayedGalleryImage.altText}
-                  aria-hidden={incomingGalleryImage ? true : undefined}
-                  className="absolute inset-0 h-full w-full select-none rounded-lg object-contain"
-                  draggable={false}
-                  loading="eager"
-                  fetchPriority="high"
-                  decoding="async"
-                  onLoad={() => preloadAdjacentImages(displayedGalleryImageIndex, 1200)}
-                />
-                {incomingGalleryImage && (
+                <AnimatePresence initial={false} mode="sync">
                   <motion.img
-                    key={incomingGalleryImage.id}
-                    {...galleryImageProps(incomingGalleryImage, 1200, `viewer:${incomingGalleryImage.id}`, [400, 700, 900, 1200])}
+                    key={displayedGalleryImage.id}
+                    {...galleryImageProps(displayedGalleryImage, 1200, `viewer:${displayedGalleryImage.id}`, [400, 700, 900, 1200])}
                     sizes="(max-width: 767px) 96vw, (max-width: 1279px) 72vw, 80vw"
-                    alt={incomingGalleryImage.altText}
+                    alt={displayedGalleryImage.altText}
                     className="absolute inset-0 h-full w-full select-none rounded-lg object-contain"
                     draggable={false}
                     loading="eager"
+                    fetchPriority="high"
                     decoding="async"
-                    onLoad={() => preloadAdjacentImages(safeGalleryImageIndex, 1200)}
                     initial={reducedMotion ? false : { opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: reducedMotion ? 0 : 0.16, ease: "easeOut" }}
-                    onAnimationComplete={() => {
-                      if (selectedGalleryImage?.id !== incomingGalleryImage.id) return;
-                      setDisplayedGalleryImageId(incomingGalleryImage.id);
-                      setIncomingGalleryImageId((current) => current === incomingGalleryImage.id ? null : current);
+                    animate={{
+                      opacity: 1,
+                      transition: { duration: reducedMotion ? 0 : 0.16, ease: "easeOut" },
                     }}
+                    exit={{
+                      opacity: 0,
+                      transition: { duration: reducedMotion ? 0 : 0.16, ease: "easeIn" },
+                    }}
+                    onLoad={() => preloadAdjacentImages(displayedGalleryImageIndex, 1200)}
                   />
-                )}
+                </AnimatePresence>
               </div>
 
               {safeGalleryImageIndex > 0 && (
