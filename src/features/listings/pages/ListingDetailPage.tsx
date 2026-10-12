@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { motion, useScroll } from "framer-motion";
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { createPortal } from "react-dom";
-import { ArrowRight, Bath, BedDouble, Calculator, Car, ChevronLeft, ChevronRight, Copy, Heart, Mail, MapPin, Maximize, Phone, X } from "lucide-react";
+import { ArrowRight, Bath, BedDouble, Calculator, Car, ChevronLeft, ChevronRight, Copy, Flame, Heart, Mail, MapPin, Maximize, Phone, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cityById, cityBySlug } from "@/features/cities/data/cities";
 import { getPropertyById, getSimilarProperties, searchProperties } from "@/features/listings/api/properties.service";
@@ -557,7 +557,7 @@ export default function ListingDetailPage({
           && contactRect.bottom > containerRect.top,
       );
 
-      setPreviewContactBarVisible(scrollContainer.scrollTop > 120 && !contactIsVisible);
+      setPreviewContactBarVisible(scrollContainer.scrollTop > 80 && !contactIsVisible);
     };
 
     scrollContainer.addEventListener("scroll", updateContactBarVisibility, { passive: true });
@@ -671,12 +671,17 @@ export default function ListingDetailPage({
   ) : null;
 
   const previewContactBar = property && previewContactBarVisible && previewLayout ? (
-    <div className="pointer-events-auto fixed inset-x-3 bottom-[calc(0.75rem_+_env(safe-area-inset-bottom))] z-[105] mx-auto max-w-xl lg:hidden">
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
+      className="pointer-events-auto fixed inset-x-3 bottom-[calc(0.75rem_+_env(safe-area-inset-bottom))] z-[105] mx-auto max-w-xl lg:hidden"
+    >
       <div className="grid grid-cols-2 gap-2 rounded-2xl border border-white/15 bg-[#15161a]/95 p-2 text-white shadow-2xl backdrop-blur-xl">
         <Button
           type="button"
           variant="brand"
-          className="h-12 rounded-xl text-sm font-semibold"
+          className="h-12 rounded-xl bg-[#c20d1b] text-sm font-semibold text-white hover:bg-[#a90b17]"
           onClick={() => {
             contactRef.current?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "center" });
             trackEvent("listing_viewed", { propertyId: property.id, action: "sticky_message" });
@@ -697,7 +702,7 @@ export default function ListingDetailPage({
           </a>
         </Button>
       </div>
-    </div>
+    </motion.div>
   ) : null;
 
   useSeo(
@@ -818,6 +823,11 @@ export default function ListingDetailPage({
   const agent = agentById.get(property.agentId);
   const propertyTypeLabel = formatPropertyTypeLabel(property.propertyType);
   const statusLabel = getPropertyStatusLabel(property.status) ?? "À vendre";
+  const publishedAt = Date.parse(property.publishedAt);
+  const isNewListing = property.status === "active"
+    && Number.isFinite(publishedAt)
+    && publishedAt <= Date.now()
+    && Date.now() - publishedAt < 30 * 24 * 60 * 60 * 1_000;
   const quickFacts = [
     { icon: Maximize, label: "Surface", value: `${property.surfaceM2} m²` },
     ...(property.terrainM2 != null && property.terrainM2 > 0 ? [{ icon: Maximize, label: "Terrain", value: `${property.terrainM2} m²` }] : []),
@@ -861,46 +871,53 @@ export default function ListingDetailPage({
 
       <div ref={contentRef} className="min-w-0">
         {previewLayout && (
-          <ListingGallery
-            key={property.id}
-            images={property.images}
-            title={property.title}
-            propertyId={property.id}
-            variant="modal"
-            overlayActions={(
-              <>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="h-11 w-11 rounded-full border-white/35 bg-black/45 text-white shadow-md backdrop-blur-md hover:bg-black/65 hover:text-white"
-                  aria-label="Fermer l’annonce"
-                  title="Fermer"
-                  onClick={() => navigate(-((routeState?.propertyModalDepth ?? 0) + 1))}
-                >
-                  <X aria-hidden="true" className="h-5 w-5" />
-                </Button>
-                <div className="flex items-center gap-2">
-                  <ListingShareButton overlay propertyId={property.id} title={property.title} path={canonicalPath!} />
+          <div className="relative">
+            <ListingGallery
+              key={property.id}
+              images={property.images}
+              title={property.title}
+              propertyId={property.id}
+              variant="modal"
+              overlayActions={(
+                <>
                   <Button
                     type="button"
                     variant="outline"
                     size="icon"
                     className="h-11 w-11 rounded-full border-white/35 bg-black/45 text-white shadow-md backdrop-blur-md hover:bg-black/65 hover:text-white"
-                    aria-label={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
-                    aria-pressed={isFavorite}
-                    title={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
-                    onClick={() => {
-                      toggleFavorite(property.id);
-                      trackEvent("listing_viewed", { propertyId: property.id, action: isFavorite ? "favorite_removed" : "favorite_added" });
-                    }}
+                    aria-label="Fermer l’annonce"
+                    title="Fermer"
+                    onClick={() => navigate(-((routeState?.propertyModalDepth ?? 0) + 1))}
                   >
-                    <Heart aria-hidden="true" className={`h-5 w-5 ${isFavorite ? "fill-current" : ""}`} />
+                    <X aria-hidden="true" className="h-5 w-5" />
                   </Button>
-                </div>
-              </>
+                  <div className="flex items-center gap-2">
+                    <ListingShareButton overlay propertyId={property.id} title={property.title} path={canonicalPath!} />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-11 w-11 rounded-full border-white/35 bg-black/45 text-white shadow-md backdrop-blur-md hover:bg-black/65 hover:text-white"
+                      aria-label={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+                      aria-pressed={isFavorite}
+                      title={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+                      onClick={() => {
+                        toggleFavorite(property.id);
+                        trackEvent("listing_viewed", { propertyId: property.id, action: isFavorite ? "favorite_removed" : "favorite_added" });
+                      }}
+                    >
+                      <Heart aria-hidden="true" className={`h-5 w-5 ${isFavorite ? "fill-current" : ""}`} />
+                    </Button>
+                  </div>
+                </>
+              )}
+            />
+            {isNewListing && (
+              <span className="pointer-events-none absolute bottom-4 left-4 z-[5] inline-flex items-center gap-2 rounded-full bg-[#c20d1b] px-3 py-1.5 text-sm font-semibold text-white shadow-lg sm:bottom-5 sm:left-6">
+                <Flame aria-hidden="true" className="h-4 w-4" /> Nouveau
+              </span>
             )}
-          />
+          </div>
         )}
 
         {previewLayout && (
@@ -940,8 +957,8 @@ export default function ListingDetailPage({
           <div id="property-overview" ref={summaryRef} className={`scroll-mt-16 grid grid-cols-1 items-start gap-x-6 gap-y-4 lg:grid-cols-[minmax(0,1fr)_auto] ${previewLayout ? "mb-6" : "mt-5"}`}>
             <div className="min-w-0">
               {!previewLayout && <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Réf du bien {property.id}</p>}
-              <h1 className={`leading-[1.08] ${previewLayout ? "font-body text-3xl font-bold sm:text-4xl" : "mt-1 font-display text-4xl"}`}>{property.title}</h1>
-              <p className={`mt-3 ${previewLayout ? "text-base font-semibold text-foreground" : "text-sm font-medium text-muted-foreground"}`}>{previewLayout ? `${propertyTypeLabel} ${statusLabel.toLowerCase()}` : <>{propertyTypeLabel} <span aria-hidden="true">·</span> {statusLabel}</>}</p>
+              <h1 className={`leading-[1.08] ${previewLayout ? "font-body text-xl font-bold sm:text-4xl" : "mt-1 font-display text-4xl"}`}>{property.title}</h1>
+              <p className={`mt-2 ${previewLayout ? "text-sm font-semibold text-foreground" : "text-sm font-medium text-muted-foreground"}`}>{previewLayout ? `${propertyTypeLabel} ${statusLabel.toLowerCase()}` : <>{propertyTypeLabel} <span aria-hidden="true">·</span> {statusLabel}</>}</p>
               {!previewLayout && <p className="mt-2 inline-flex items-center gap-1 text-sm text-muted-foreground">
                 <MapPin className="h-4 w-4" />
                 {city ? <Link to={`/immobilier/${city.slug}`} className="underline underline-offset-4">{city.name}</Link> : "Localisation"} ({property.postalCode})
@@ -950,9 +967,9 @@ export default function ListingDetailPage({
 
             <div className="min-w-0 text-left lg:w-auto lg:min-w-[16rem] lg:text-right">
               <div className={`flex flex-wrap items-center gap-2 ${previewLayout ? "mt-1 lg:justify-end" : ""}`}>
-                <p className={`leading-tight tracking-tight text-brand-strong ${previewLayout ? "font-body text-4xl font-bold sm:text-5xl" : "font-display text-5xl sm:text-6xl"}`}>{formatPrice(property.priceAmount, property.transactionType)}</p>
+                <p className={`leading-tight tracking-tight ${previewLayout ? "font-body text-[2rem] font-bold text-white sm:text-5xl" : "font-display text-5xl text-brand-strong sm:text-6xl"}`}>{formatPrice(property.priceAmount, property.transactionType)}</p>
                 {previewLayout && property.surfaceM2 > 0 && (
-                  <span className="rounded-full bg-muted px-3 py-1.5 text-sm font-medium text-foreground">
+                  <span className="rounded-full bg-[#4e5878] px-3 py-1.5 text-sm font-medium text-white">
                     {Math.round(property.priceAmount / property.surfaceM2).toLocaleString("fr-FR")} € / m²
                   </span>
                 )}
@@ -1015,6 +1032,17 @@ export default function ListingDetailPage({
           </div>
 
           {previewLayout && (
+            <button
+              type="button"
+              onClick={() => contactRef.current?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "center" })}
+              className="mt-6 inline-flex min-h-14 w-full items-center justify-center gap-3 rounded-2xl bg-[#3b0507] px-5 text-base font-semibold text-white transition-colors hover:bg-[#4c070a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            >
+              <Calculator className="h-5 w-5" aria-hidden="true" />
+              <span className="underline underline-offset-4">Parler de mon financement</span>
+            </button>
+          )}
+
+          {previewLayout && (
             <Link to={city ? `/immobilier/${city.slug}` : "/biens"} className="flex min-h-[6.5rem] items-center gap-4 border-b border-border/80 py-5 text-left transition-colors hover:text-brand-strong">
               <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-muted text-brand-strong">
                 <MapPin className="h-6 w-6" aria-hidden="true" />
@@ -1024,16 +1052,6 @@ export default function ListingDetailPage({
               </span>
               <ChevronRight className="h-5 w-5 shrink-0" aria-hidden="true" />
             </Link>
-          )}
-
-          {previewLayout && (
-            <button
-              type="button"
-              onClick={() => contactRef.current?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "center" })}
-              className="mt-6 inline-flex min-h-14 w-full items-center justify-center gap-3 rounded-2xl bg-brand px-5 text-base font-semibold text-white transition-colors hover:bg-brand/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-            >
-              <Calculator className="h-5 w-5" aria-hidden="true" /> Parler de mon financement
-            </button>
           )}
 
           <article id="property-description" className={previewLayout ? "scroll-mt-16 border-b border-border/80 py-7" : "mt-9 rounded-2xl border border-border bg-card p-6"}>
