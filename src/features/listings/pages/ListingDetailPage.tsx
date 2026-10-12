@@ -830,6 +830,7 @@ export default function ListingDetailPage({
 
         {previewLayout && (
           <ListingGallery
+            key={property.id}
             images={property.images}
             title={property.title}
             propertyId={property.id}
@@ -854,7 +855,7 @@ export default function ListingDetailPage({
 
         <div className={`grid min-w-0 grid-cols-1 gap-7 lg:grid-cols-[minmax(0,1fr)_340px] ${previewLayout ? "mx-auto mt-5 max-w-7xl px-4 sm:mt-7 sm:px-6" : "lg:gap-8"}`}>
         <div className="min-w-0">
-          {!previewLayout && <ListingGallery images={property.images} title={property.title} propertyId={property.id} />}
+          {!previewLayout && <ListingGallery key={property.id} images={property.images} title={property.title} propertyId={property.id} />}
 
           <div id="property-overview" ref={summaryRef} className={`scroll-mt-16 grid grid-cols-1 items-start gap-x-6 gap-y-4 lg:grid-cols-[minmax(0,1fr)_auto] ${previewLayout ? "mb-6" : "mt-5"}`}>
             <div className="min-w-0">
