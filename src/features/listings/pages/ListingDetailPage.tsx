@@ -771,7 +771,7 @@ export default function ListingDetailPage({
         {previewLayout && (
           <div className="flex min-h-[5.5rem] items-center bg-brand px-5 py-3 sm:px-8">
             <div className="rounded-xl bg-white px-3 py-2 shadow-md">
-              <img src="/images/foch-immobilier-logo.webp" alt="Foch Immobilier" className="h-9 w-auto max-w-[15rem] object-contain" />
+              <img src="/images/foch-immobilier-logo-transparent.png" alt="Foch Immobilier" className="h-9 w-auto max-w-[15rem] object-contain" />
             </div>
           </div>
         )}

@@ -223,9 +223,9 @@ export function AppHeader() {
             </SheetTrigger>
             <Link to="/" onClick={handleLogoClick} className="flex min-w-0 max-w-full items-center justify-self-center gap-2" aria-label="Foch Immobilier — Accueil">
               <picture className="block min-w-0 max-w-full dark:overflow-hidden dark:rounded-sm dark:bg-white">
-                <source srcSet="/images/foch-immobilier-logo.webp" type="image/webp" />
+                <source srcSet="/images/foch-immobilier-logo-transparent.png" type="image/png" />
                 <img
-                  src="/images/foch-immobilier-logo.jpg"
+                  src="/images/foch-immobilier-logo-transparent.png"
                   alt="Foch Immobilier"
                   width={772}
                   height={150}
