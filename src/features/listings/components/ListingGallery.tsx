@@ -40,6 +40,8 @@ export function ListingGallery({
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [galleryImageIndex, setGalleryImageIndex] = useState(0);
+  const [displayedGalleryImageId, setDisplayedGalleryImageId] = useState<string | null>(() => images[0]?.id ?? null);
+  const [incomingGalleryImageId, setIncomingGalleryImageId] = useState<string | null>(null);
   const [imageFallbackKeys, setImageFallbackKeys] = useState<Set<string>>(() => new Set());
   const [isDesktopGallery, setIsDesktopGallery] = useState(() =>
     typeof window !== "undefined" && window.matchMedia?.("(min-width: 768px)").matches === true,
@@ -59,6 +61,60 @@ export function ListingGallery({
     return () => mediaQuery.removeEventListener("change", updateDesktopGallery);
   }, []);
 
+  const safeGalleryImageIndex = Math.min(galleryImageIndex, Math.max(0, images.length - 1));
+  const selectedGalleryImage = images[safeGalleryImageIndex] ?? null;
+  const selectedGalleryImageFallbackKey = selectedGalleryImage
+    ? `viewer:${selectedGalleryImage.id}`
+    : null;
+  const selectedGalleryImageUsesOriginal = selectedGalleryImageFallbackKey
+    ? imageFallbackKeys.has(selectedGalleryImageFallbackKey)
+    : false;
+
+  useEffect(() => {
+    if (!galleryOpen || !selectedGalleryImage) return;
+
+    if (selectedGalleryImage.id === displayedGalleryImageId) {
+      setIncomingGalleryImageId(null);
+      return;
+    }
+
+    setIncomingGalleryImageId(null);
+    let cancelled = false;
+    const image = new Image();
+    const resizedSource = getPropertyImageUrl(selectedGalleryImage.sourceUrl, 1200);
+    image.decoding = "async";
+    image.fetchPriority = "high";
+    image.sizes = "(max-width: 767px) 96vw, (max-width: 1279px) 72vw, 80vw";
+
+    if (!selectedGalleryImageUsesOriginal) {
+      image.srcset = getPropertyImageSrcSet(selectedGalleryImage.sourceUrl, [400, 700, 900, 1200]) ?? "";
+    }
+
+    image.src = selectedGalleryImageUsesOriginal ? selectedGalleryImage.sourceUrl : resizedSource;
+    image.decode().then(() => {
+      if (!cancelled) setIncomingGalleryImageId(selectedGalleryImage.id);
+    }).catch(() => {
+      if (cancelled || selectedGalleryImageUsesOriginal || resizedSource === selectedGalleryImage.sourceUrl) return;
+      setImageFallbackKeys((current) => {
+        if (current.has(selectedGalleryImageFallbackKey!)) return current;
+        const next = new Set(current);
+        next.add(selectedGalleryImageFallbackKey!);
+        return next;
+      });
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    displayedGalleryImageId,
+    galleryOpen,
+    selectedGalleryImage?.id,
+    selectedGalleryImage?.sourceUrl,
+    selectedGalleryImageFallbackKey,
+    selectedGalleryImageUsesOriginal,
+  ]);
+
   if (images.length === 0) {
     return (
       <div className="aspect-[16/10] rounded-2xl border border-border bg-muted/30 p-6 text-sm text-muted-foreground">
@@ -69,6 +125,14 @@ export function ListingGallery({
 
   const safeActiveImageIndex = Math.min(activeImageIndex, images.length - 1);
   const activeImage = images[safeActiveImageIndex];
+  const displayedGalleryImage = images.find((image) => image.id === displayedGalleryImageId) ?? selectedGalleryImage ?? images[0];
+  const foundDisplayedGalleryImageIndex = images.findIndex((image) => image.id === displayedGalleryImage.id);
+  const displayedGalleryImageIndex = foundDisplayedGalleryImageIndex >= 0
+    ? foundDisplayedGalleryImageIndex
+    : safeGalleryImageIndex;
+  const incomingGalleryImage = incomingGalleryImageId === selectedGalleryImage?.id
+    ? images.find((image) => image.id === incomingGalleryImageId) ?? null
+    : null;
   const imageMood = inferPlaceImageMood(title, activeImage.altText);
 
   const galleryImageProps = (
@@ -212,6 +276,8 @@ export function ListingGallery({
                 event.stopPropagation();
                 return;
               }
+              setDisplayedGalleryImageId(activeImage.id);
+              setIncomingGalleryImageId(null);
               setGalleryImageIndex(safeActiveImageIndex);
               preloadAdjacentImages(safeActiveImageIndex, 1200);
               trackEvent("gallery_opened", { property_id: propertyId });
@@ -289,10 +355,10 @@ export function ListingGallery({
         overlayClassName="bg-black/45 backdrop-blur-[2px]"
         className="flex h-[min(94dvh,60rem)] w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] flex-col gap-0 overflow-hidden rounded-xl border-border bg-background p-0 shadow-2xl sm:h-[min(92dvh,56rem)] sm:max-w-7xl sm:rounded-2xl"
         onKeyDown={(event) => {
-          if (event.key === "ArrowLeft" && galleryImageIndex > 0) {
+          if (event.key === "ArrowLeft" && safeGalleryImageIndex > 0) {
             event.preventDefault();
             moveGalleryImage(-1);
-          } else if (event.key === "ArrowRight" && galleryImageIndex < images.length - 1) {
+          } else if (event.key === "ArrowRight" && safeGalleryImageIndex < images.length - 1) {
             event.preventDefault();
             moveGalleryImage(1);
           }
@@ -301,7 +367,7 @@ export function ListingGallery({
         <DialogHeader className="sr-only">
           <DialogTitle>Photos de {title}</DialogTitle>
           <DialogDescription>
-            Photo {galleryImageIndex + 1} sur {images.length}. Utilisez les vignettes, les flèches ou le balayage pour parcourir les photos.
+            Photo {safeGalleryImageIndex + 1} sur {images.length}. Utilisez les vignettes, les flèches ou le balayage pour parcourir les photos.
           </DialogDescription>
         </DialogHeader>
         <div className="flex h-14 min-h-14 items-center gap-3 border-b border-border/80 px-3 sm:px-6">
@@ -322,23 +388,23 @@ export function ListingGallery({
             Photos
           </span>
           <span className="ml-auto text-sm font-medium text-muted-foreground md:hidden" aria-live="polite">
-            {galleryImageIndex + 1} / {images.length}
+            {safeGalleryImageIndex + 1} / {images.length}
           </span>
         </div>
 
         <div className="flex min-h-0 flex-1 flex-col md:flex-row">
           <aside className="hidden w-64 shrink-0 flex-col border-r border-border/70 bg-background p-4 md:flex lg:w-72">
             <p className="mb-3 shrink-0 text-sm font-medium text-muted-foreground" aria-live="polite">
-              {galleryImageIndex + 1} / {images.length}
+              {safeGalleryImageIndex + 1} / {images.length}
             </p>
             <div className="grid grid-cols-3 content-start gap-2 overflow-y-auto pr-1">
               {images.map((image, index) => (
                 <button
                   key={image.id}
                   type="button"
-                  className={`group relative aspect-[4/3] overflow-hidden rounded-lg bg-muted text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${galleryImageIndex === index ? "ring-2 ring-foreground ring-offset-2" : "opacity-75 transition-opacity hover:opacity-100"}`}
+                  className={`group relative aspect-[4/3] overflow-hidden rounded-lg bg-muted text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${safeGalleryImageIndex === index ? "ring-2 ring-foreground ring-offset-2" : "opacity-75 transition-opacity hover:opacity-100"}`}
                   aria-label={`Afficher la photo ${index + 1}`}
-                  aria-current={galleryImageIndex === index ? "true" : undefined}
+                  aria-current={safeGalleryImageIndex === index ? "true" : undefined}
                   onClick={() => setGalleryImageIndex(index)}
                 >
                   <img
@@ -347,7 +413,7 @@ export function ListingGallery({
                     alt={image.altText}
                     className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03] motion-reduce:transition-none"
                     loading={isDesktopGallery ? "eager" : "lazy"}
-                    fetchPriority={galleryImageIndex === index ? "high" : "low"}
+                    fetchPriority={safeGalleryImageIndex === index ? "high" : "low"}
                     decoding="async"
                   />
                 </button>
@@ -357,28 +423,48 @@ export function ListingGallery({
 
           <div className="relative flex min-h-0 flex-1 flex-col">
             <div
-              className="relative flex min-h-0 flex-1 touch-pan-y items-center justify-center overflow-hidden bg-background p-2 sm:p-5"
+              className="relative flex min-h-0 flex-1 touch-pan-y overflow-hidden bg-background p-2 sm:p-5"
               onPointerDown={handleGalleryPointerDown}
               onPointerUp={handleGalleryPointerUp}
               onPointerCancel={() => { gallerySwipeStartRef.current = null; }}
             >
-              <motion.img
-                key={images[galleryImageIndex].id}
-                {...galleryImageProps(images[galleryImageIndex], 1200, `viewer:${images[galleryImageIndex].id}`, [400, 700, 900, 1200])}
-                sizes="(max-width: 767px) 96vw, (max-width: 1279px) 72vw, 80vw"
-                alt={images[galleryImageIndex].altText}
-                className="h-full w-full select-none rounded-lg object-contain"
-                draggable={false}
-                loading="eager"
-                fetchPriority="high"
-                decoding="async"
-                onLoad={() => preloadAdjacentImages(galleryImageIndex, 1200)}
-                initial={reducedMotion ? false : { opacity: 0, x: 12 }}
-                animate={{ opacity: 1, x: 0, scale: 1 }}
-                transition={{ duration: reducedMotion ? 0 : 0.2, ease: "easeOut" }}
-              />
+              <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden">
+                <img
+                  {...galleryImageProps(displayedGalleryImage, 1200, `viewer:${displayedGalleryImage.id}`, [400, 700, 900, 1200])}
+                  sizes="(max-width: 767px) 96vw, (max-width: 1279px) 72vw, 80vw"
+                  alt={incomingGalleryImage ? "" : displayedGalleryImage.altText}
+                  aria-hidden={incomingGalleryImage ? true : undefined}
+                  className="absolute inset-0 h-full w-full select-none rounded-lg object-contain"
+                  draggable={false}
+                  loading="eager"
+                  fetchPriority="high"
+                  decoding="async"
+                  onLoad={() => preloadAdjacentImages(displayedGalleryImageIndex, 1200)}
+                />
+                {incomingGalleryImage && (
+                  <motion.img
+                    key={incomingGalleryImage.id}
+                    {...galleryImageProps(incomingGalleryImage, 1200, `viewer:${incomingGalleryImage.id}`, [400, 700, 900, 1200])}
+                    sizes="(max-width: 767px) 96vw, (max-width: 1279px) 72vw, 80vw"
+                    alt={incomingGalleryImage.altText}
+                    className="absolute inset-0 h-full w-full select-none rounded-lg object-contain"
+                    draggable={false}
+                    loading="eager"
+                    decoding="async"
+                    onLoad={() => preloadAdjacentImages(safeGalleryImageIndex, 1200)}
+                    initial={reducedMotion ? false : { opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: reducedMotion ? 0 : 0.16, ease: "easeOut" }}
+                    onAnimationComplete={() => {
+                      if (selectedGalleryImage?.id !== incomingGalleryImage.id) return;
+                      setDisplayedGalleryImageId(incomingGalleryImage.id);
+                      setIncomingGalleryImageId((current) => current === incomingGalleryImage.id ? null : current);
+                    }}
+                  />
+                )}
+              </div>
 
-              {galleryImageIndex > 0 && (
+              {safeGalleryImageIndex > 0 && (
                 <button
                   type="button"
                   aria-label="Photo précédente"
@@ -389,7 +475,7 @@ export function ListingGallery({
                   <ChevronLeft className="h-6 w-6" aria-hidden="true" />
                 </button>
               )}
-              {galleryImageIndex < images.length - 1 && (
+              {safeGalleryImageIndex < images.length - 1 && (
                 <button
                   type="button"
                   aria-label="Photo suivante"
@@ -408,9 +494,9 @@ export function ListingGallery({
                   key={image.id}
                   type="button"
                   aria-label={`Afficher la photo ${index + 1}`}
-                  aria-current={galleryImageIndex === index ? "true" : undefined}
+                  aria-current={safeGalleryImageIndex === index ? "true" : undefined}
                   onClick={() => setGalleryImageIndex(index)}
-                  className={`relative aspect-[4/3] h-full shrink-0 overflow-hidden rounded-md bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${galleryImageIndex === index ? "ring-2 ring-foreground ring-offset-1" : "opacity-75"}`}
+                  className={`relative aspect-[4/3] h-full shrink-0 overflow-hidden rounded-md bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${safeGalleryImageIndex === index ? "ring-2 ring-foreground ring-offset-1" : "opacity-75"}`}
                 >
                   <img
                     {...galleryImageProps(image, 200, `mobile-thumbnail:${image.id}`)}
@@ -418,7 +504,7 @@ export function ListingGallery({
                     alt={image.altText}
                     className="absolute inset-0 h-full w-full object-cover"
                     loading="eager"
-                    fetchPriority={galleryImageIndex === index ? "high" : "low"}
+                    fetchPriority={safeGalleryImageIndex === index ? "high" : "low"}
                     decoding="async"
                   />
                 </button>
