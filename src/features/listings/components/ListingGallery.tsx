@@ -40,7 +40,6 @@ export function ListingGallery({
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [galleryImageIndex, setGalleryImageIndex] = useState(0);
-  const [loadedGalleryImageIds, setLoadedGalleryImageIds] = useState<Set<string>>(() => new Set());
   const [imageFallbackKeys, setImageFallbackKeys] = useState<Set<string>>(() => new Set());
   const [isDesktopGallery, setIsDesktopGallery] = useState(() =>
     typeof window !== "undefined" && window.matchMedia?.("(min-width: 768px)").matches === true,
@@ -70,8 +69,6 @@ export function ListingGallery({
 
   const safeActiveImageIndex = Math.min(activeImageIndex, images.length - 1);
   const activeImage = images[safeActiveImageIndex];
-  const selectedGalleryImage = images[galleryImageIndex];
-  const isSelectedGalleryImageLoaded = loadedGalleryImageIds.has(selectedGalleryImage.id);
   const imageMood = inferPlaceImageMood(title, activeImage.altText);
 
   const galleryImageProps = (
@@ -134,30 +131,6 @@ export function ListingGallery({
     });
   };
 
-  const preloadGalleryImages = (currentIndex: number, width = 1200) => {
-    images.forEach((photo, index) => {
-      if (index === currentIndex || !photo.sourceUrl) return;
-
-      const sourceUrl = photo.sourceUrl;
-      const preloadKey = `${sourceUrl}:${width}`;
-      if (warmedImageUrlsRef.current.has(preloadKey)) return;
-
-      const preloadedImage = new Image();
-      preloadedImage.decoding = "async";
-      preloadedImage.fetchPriority = "low";
-      preloadedImage.sizes = "(max-width: 767px) 96vw, (max-width: 1279px) 72vw, 80vw";
-      preloadedImage.srcset = getPropertyImageSrcSet(sourceUrl, [400, 700, 900, 1200]) ?? "";
-      preloadedImage.onerror = () => {
-        if (preloadedImage.src === sourceUrl) return;
-        preloadedImage.srcset = "";
-        preloadedImage.sizes = "";
-        preloadedImage.src = sourceUrl;
-      };
-      preloadedImage.src = getPropertyImageUrl(sourceUrl, width);
-      warmedImageUrlsRef.current.set(preloadKey, preloadedImage);
-    });
-  };
-
   const moveImage = (direction: -1 | 1) => {
     setActiveImageIndex((index) => (index + direction + images.length) % images.length);
   };
@@ -209,7 +182,6 @@ export function ListingGallery({
       open={galleryOpen}
       onOpenChange={(open) => {
         setGalleryOpen(open);
-        if (open) preloadGalleryImages(safeActiveImageIndex, 1200);
       }}
     >
       <div id={variant === "modal" ? "property-photos" : undefined} data-property-gallery className="relative">
@@ -241,6 +213,7 @@ export function ListingGallery({
                 return;
               }
               setGalleryImageIndex(safeActiveImageIndex);
+              preloadAdjacentImages(safeActiveImageIndex, 1200);
               trackEvent("gallery_opened", { property_id: propertyId });
             }}
           >
@@ -389,37 +362,19 @@ export function ListingGallery({
               onPointerUp={handleGalleryPointerUp}
               onPointerCancel={() => { gallerySwipeStartRef.current = null; }}
             >
-              <img
-                {...galleryImageProps(selectedGalleryImage, 400, `viewer-preview:${selectedGalleryImage.id}`)}
-                sizes="(max-width: 767px) 112px, 96px"
-                alt=""
-                aria-hidden="true"
-                className="absolute inset-0 h-full w-full scale-[1.02] rounded-lg object-contain opacity-40 blur-sm"
-                loading="eager"
-                fetchPriority="low"
-                decoding="async"
-              />
               <motion.img
-                key={selectedGalleryImage.id}
-                {...galleryImageProps(selectedGalleryImage, 1200, `viewer:${selectedGalleryImage.id}`, [400, 700, 900, 1200])}
+                key={images[galleryImageIndex].id}
+                {...galleryImageProps(images[galleryImageIndex], 1200, `viewer:${images[galleryImageIndex].id}`, [400, 700, 900, 1200])}
                 sizes="(max-width: 767px) 96vw, (max-width: 1279px) 72vw, 80vw"
-                alt={selectedGalleryImage.altText}
+                alt={images[galleryImageIndex].altText}
                 className="h-full w-full select-none rounded-lg object-contain"
                 draggable={false}
                 loading="eager"
                 fetchPriority="high"
                 decoding="async"
-                onLoad={() => {
-                  setLoadedGalleryImageIds((current) => {
-                    if (current.has(selectedGalleryImage.id)) return current;
-                    const next = new Set(current);
-                    next.add(selectedGalleryImage.id);
-                    return next;
-                  });
-                  preloadGalleryImages(galleryImageIndex, 1200);
-                }}
+                onLoad={() => preloadAdjacentImages(galleryImageIndex, 1200)}
                 initial={reducedMotion ? false : { opacity: 0, x: 12 }}
-                animate={{ opacity: isSelectedGalleryImageLoaded ? 1 : 0, x: isSelectedGalleryImageLoaded ? 0 : 12, scale: 1 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
                 transition={{ duration: reducedMotion ? 0 : 0.2, ease: "easeOut" }}
               />
 
@@ -459,7 +414,7 @@ export function ListingGallery({
                 >
                   <img
                     {...galleryImageProps(image, 200, `mobile-thumbnail:${image.id}`)}
-                    sizes="112px"
+                    sizes="84px"
                     alt={image.altText}
                     className="absolute inset-0 h-full w-full object-cover"
                     loading="eager"
