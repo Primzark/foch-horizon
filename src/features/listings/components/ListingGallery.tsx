@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { PointerEvent, ReactNode } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -40,11 +40,24 @@ export function ListingGallery({
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [galleryImageIndex, setGalleryImageIndex] = useState(0);
+  const [imageFallbackKeys, setImageFallbackKeys] = useState<Set<string>>(() => new Set());
+  const [isDesktopGallery, setIsDesktopGallery] = useState(() =>
+    typeof window !== "undefined" && window.matchMedia?.("(min-width: 768px)").matches === true,
+  );
   const warmedImageUrlsRef = useRef(new Map<string, HTMLImageElement>());
   const swipeStartRef = useRef<{ x: number; y: number } | null>(null);
   const gallerySwipeStartRef = useRef<{ x: number; y: number } | null>(null);
   const swipeHandledRef = useRef(false);
   const { reducedMotion } = useMotionPreference();
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return;
+    const mediaQuery = window.matchMedia("(min-width: 768px)");
+    const updateDesktopGallery = () => setIsDesktopGallery(mediaQuery.matches);
+    updateDesktopGallery();
+    mediaQuery.addEventListener("change", updateDesktopGallery);
+    return () => mediaQuery.removeEventListener("change", updateDesktopGallery);
+  }, []);
 
   if (images.length === 0) {
     return (
@@ -58,7 +71,31 @@ export function ListingGallery({
   const activeImage = images[safeActiveImageIndex];
   const imageMood = inferPlaceImageMood(title, activeImage.altText);
 
-  const preloadAdjacentImages = (currentIndex: number) => {
+  const galleryImageProps = (
+    image: PropertyImage,
+    width: number,
+    key: string,
+    widths?: readonly number[],
+  ) => {
+    const useOriginalSource = imageFallbackKeys.has(key);
+    const resizedSource = getPropertyImageUrl(image.sourceUrl, width);
+
+    return {
+      src: useOriginalSource ? image.sourceUrl : resizedSource,
+      srcSet: useOriginalSource ? undefined : getPropertyImageSrcSet(image.sourceUrl, widths),
+      onError: () => {
+        if (useOriginalSource || resizedSource === image.sourceUrl) return;
+        setImageFallbackKeys((current) => {
+          if (current.has(key)) return current;
+          const next = new Set(current);
+          next.add(key);
+          return next;
+        });
+      },
+    };
+  };
+
+  const preloadAdjacentImages = (currentIndex: number, width = 400) => {
     if (images.length < 2) return;
 
     const adjacentIndexes = new Set([
@@ -69,15 +106,28 @@ export function ListingGallery({
     adjacentIndexes.forEach((index) => {
       const photo = images[index];
       const sourceUrl = photo.sourceUrl;
-      if (!sourceUrl || warmedImageUrlsRef.current.has(sourceUrl)) return;
+      const preloadKey = `${sourceUrl}:${width}`;
+      if (!sourceUrl || warmedImageUrlsRef.current.has(preloadKey)) return;
 
       const preloadedImage = new Image();
       preloadedImage.decoding = "async";
       preloadedImage.fetchPriority = "low";
-      preloadedImage.sizes = "(max-width: 1023px) calc(100vw - 2rem), 66vw";
-      preloadedImage.srcset = getPropertyImageSrcSet(sourceUrl) ?? "";
-      preloadedImage.src = getPropertyImageUrl(sourceUrl, 400);
-      warmedImageUrlsRef.current.set(sourceUrl, preloadedImage);
+      const isGalleryImage = width >= 900;
+      preloadedImage.sizes = isGalleryImage
+        ? "(max-width: 767px) 96vw, (max-width: 1279px) 72vw, 80vw"
+        : "(max-width: 1023px) calc(100vw - 2rem), 66vw";
+      preloadedImage.srcset = getPropertyImageSrcSet(
+        sourceUrl,
+        isGalleryImage ? [400, 700, 900, 1200] : undefined,
+      ) ?? "";
+      preloadedImage.onerror = () => {
+        if (preloadedImage.src === sourceUrl) return;
+        preloadedImage.srcset = "";
+        preloadedImage.sizes = "";
+        preloadedImage.src = sourceUrl;
+      };
+      preloadedImage.src = getPropertyImageUrl(sourceUrl, width);
+      warmedImageUrlsRef.current.set(preloadKey, preloadedImage);
     });
   };
 
@@ -163,6 +213,7 @@ export function ListingGallery({
                 return;
               }
               setGalleryImageIndex(safeActiveImageIndex);
+              preloadAdjacentImages(safeActiveImageIndex, 1200);
               trackEvent("gallery_opened", { property_id: propertyId });
             }}
           >
@@ -176,8 +227,7 @@ export function ListingGallery({
                     animate={reducedMotion ? { opacity: 1, scale: 1 } : "center"}
                     exit={reducedMotion ? { opacity: 0 } : "exit"}
                     transition={{ duration: reducedMotion ? 0 : 0.52, ease: [0.22, 1, 0.36, 1] }}
-                    src={getPropertyImageUrl(activeImage.sourceUrl, 400)}
-                    srcSet={getPropertyImageSrcSet(activeImage.sourceUrl)}
+                    {...galleryImageProps(activeImage, 400, `hero:${activeImage.id}`)}
                     sizes={variant === "modal" ? "(max-width: 767px) 100vw, 88vw" : "(max-width: 1023px) calc(100vw - 2rem), 66vw"}
                     alt={activeImage.altText}
                     className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.015] motion-reduce:transition-none"
@@ -292,12 +342,12 @@ export function ListingGallery({
                   onClick={() => setGalleryImageIndex(index)}
                 >
                   <img
-                    src={getPropertyImageUrl(image.sourceUrl, 400)}
-                    srcSet={getPropertyImageSrcSet(image.sourceUrl)}
+                    {...galleryImageProps(image, 400, `desktop-thumbnail:${image.id}`)}
                     sizes="96px"
                     alt={image.altText}
                     className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03] motion-reduce:transition-none"
-                    loading="lazy"
+                    loading={isDesktopGallery ? "eager" : "lazy"}
+                    fetchPriority={galleryImageIndex === index ? "high" : "low"}
                     decoding="async"
                   />
                 </button>
@@ -314,8 +364,7 @@ export function ListingGallery({
             >
               <motion.img
                 key={images[galleryImageIndex].id}
-                src={getPropertyImageUrl(images[galleryImageIndex].sourceUrl, 1200)}
-                srcSet={getPropertyImageSrcSet(images[galleryImageIndex].sourceUrl, [400, 700, 900, 1200])}
+                {...galleryImageProps(images[galleryImageIndex], 1200, `viewer:${images[galleryImageIndex].id}`, [400, 700, 900, 1200])}
                 sizes="(max-width: 767px) 96vw, (max-width: 1279px) 72vw, 80vw"
                 alt={images[galleryImageIndex].altText}
                 className="h-full w-full select-none rounded-lg object-contain"
@@ -323,6 +372,7 @@ export function ListingGallery({
                 loading="eager"
                 fetchPriority="high"
                 decoding="async"
+                onLoad={() => preloadAdjacentImages(galleryImageIndex, 1200)}
                 initial={reducedMotion ? false : { opacity: 0, x: 12 }}
                 animate={{ opacity: 1, x: 0, scale: 1 }}
                 transition={{ duration: reducedMotion ? 0 : 0.2, ease: "easeOut" }}
@@ -363,10 +413,11 @@ export function ListingGallery({
                   className={`relative aspect-[4/3] h-full shrink-0 overflow-hidden rounded-md bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${galleryImageIndex === index ? "ring-2 ring-foreground ring-offset-1" : "opacity-75"}`}
                 >
                   <img
-                    src={getPropertyImageUrl(image.sourceUrl, 200)}
+                    {...galleryImageProps(image, 200, `mobile-thumbnail:${image.id}`)}
                     alt={image.altText}
                     className="absolute inset-0 h-full w-full object-cover"
-                    loading="lazy"
+                    loading="eager"
+                    fetchPriority={galleryImageIndex === index ? "high" : "low"}
                     decoding="async"
                   />
                 </button>
