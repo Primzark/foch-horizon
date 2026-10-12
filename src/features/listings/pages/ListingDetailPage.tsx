@@ -610,7 +610,7 @@ export default function ListingDetailPage({
 
   const canonicalPath = property ? toCanonicalPropertyPath({ id: property.id, slug: property.slug }) : null;
   const showStickySummary = Boolean(property && !summaryVisible && !contactVisible);
-  const contactPhone = agent?.phone ?? "02 35 42 51 76";
+  const contactPhone = agentById.get(property?.agentId ?? "")?.phone ?? "02 35 42 51 76";
 
   const discoveryCardContent = nextPropertyToDiscover ? (
     <>
