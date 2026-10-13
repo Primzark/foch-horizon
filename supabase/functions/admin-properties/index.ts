@@ -136,6 +136,10 @@ Deno.serve(async (request) => {
     await requireAdmin(request, supabase);
 
     if (request.method === "GET") {
+      if (new URL(request.url).searchParams.get("check") === "admin-access") {
+        return jsonResponse({ authorized: true });
+      }
+
       const properties = await listProperties(supabase);
       return jsonResponse({ properties });
     }

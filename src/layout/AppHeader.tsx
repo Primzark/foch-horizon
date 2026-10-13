@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
-import { BotMessageSquare, Heart, Menu, Phone, Search } from "lucide-react";
+import { BotMessageSquare, Heart, Menu, Phone, Search, ShieldCheck } from "lucide-react";
 import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useFavoritesStore } from "@/features/favorites/useFavoritesStore";
 import { cn } from "@/lib/utils";
@@ -11,6 +11,7 @@ import { scrollToPageTop } from "@/lib/navigation/scrollToPageTop";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { SpotlightSearchModal } from "@/features/listings/components/SpotlightSearchModal";
+import { useAdminAccess } from "@/features/admin/hooks/useAdminAccess";
 
 type MobileMenuSwipe = {
   pointerId: number;
@@ -35,6 +36,7 @@ export function AppHeader() {
   const suppressClickUntilRef = useRef(0);
   const location = useLocation();
   const favoriteIds = useFavoritesStore((state) => state.ids);
+  const isAuthorizedAdmin = useAdminAccess();
 
   useEffect(() => {
     setMobileOpen(false);
@@ -240,6 +242,17 @@ export function AppHeader() {
             </Link>
             <p className="hidden text-xs uppercase tracking-[0.2em] text-muted-foreground lg:block">Immobilier au Havre · Depuis 1972</p>
             <div className="flex shrink-0 items-center gap-2">
+              {isAuthorizedAdmin && (
+                <NavLink
+                  to="/admin"
+                  aria-label="Espace administrateur"
+                  title="Administration"
+                  className="hidden h-10 min-w-10 items-center justify-center gap-2 rounded-full border border-brand-border bg-brand-soft px-2.5 text-brand-strong transition-colors hover:bg-brand-soft/60 lg:inline-flex"
+                >
+                  <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+                  <span className="hidden text-xs font-medium xl:inline">Administration</span>
+                </NavLink>
+              )}
               <ThemeToggle className="hidden lg:inline-flex" />
               <LanguageSwitcher className="hidden sm:inline-flex" />
               <a href="tel:0235425176" className="hidden items-center gap-2 text-sm hover:text-brand-strong md:inline-flex" aria-label="Appeler l'agence au 02 35 42 51 76">
@@ -283,6 +296,14 @@ export function AppHeader() {
               <NavLink to={item.to} end={item.to === "/"} className={({ isActive }) => cn("rounded-lg px-3 py-3 font-medium hover:bg-brand-soft", isActive && "bg-brand-soft text-brand-strong")}>{item.label}</NavLink>
             </SheetClose>
           ))}
+          {isAuthorizedAdmin && (
+            <SheetClose asChild>
+              <NavLink to="/admin" className={({ isActive }) => cn("inline-flex items-center gap-3 rounded-lg px-3 py-3 font-medium hover:bg-brand-soft", isActive && "bg-brand-soft text-brand-strong")}>
+                <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+                Administration
+              </NavLink>
+            </SheetClose>
+          )}
           {assistantButton(true)}
         </nav>
         <div className="border-t border-border px-5 py-4 text-sm">
