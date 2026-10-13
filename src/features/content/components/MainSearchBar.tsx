@@ -266,9 +266,8 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
               )}
             </div>
 
-            <Button type="submit" variant="brand" size="lg" className="h-12 w-12 shrink-0 gap-2 rounded-full px-0 sm:h-14 sm:w-auto sm:px-6">
-              <span className="sr-only sm:not-sr-only">Rechercher</span>
-              <Search aria-hidden="true" className="h-4 w-4" />
+            <Button type="submit" variant="brand" size="lg" className="h-12 shrink-0 rounded-full px-4 sm:h-14 sm:px-6">
+              Rechercher
             </Button>
           </div>
         </form>

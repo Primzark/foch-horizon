@@ -789,11 +789,6 @@ export default function ListingDetailPage({
             <div className="min-w-0 text-left lg:w-auto lg:min-w-[16rem] lg:text-right">
               <div className={`flex flex-wrap items-center gap-2 ${previewLayout ? "mt-1 lg:justify-end" : ""}`}>
                 <p className={`leading-tight tracking-tight ${previewLayout ? "font-body text-[2rem] font-bold text-white sm:text-5xl" : "font-display text-5xl text-brand-strong sm:text-6xl"}`}>{formatPrice(property.priceAmount, property.transactionType)}</p>
-                {previewLayout && property.surfaceM2 > 0 && (
-                  <span className="rounded-full bg-[#4e5878] px-3 py-1.5 text-sm font-medium text-white">
-                    {Math.round(property.priceAmount / property.surfaceM2).toLocaleString("fr-FR")} € / m²
-                  </span>
-                )}
               </div>
               {!previewLayout && (
                 <div className="mt-4 flex flex-wrap items-center gap-2 sm:mt-3 sm:justify-end">
