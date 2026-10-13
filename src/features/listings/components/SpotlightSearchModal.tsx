@@ -182,6 +182,7 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
+        hideCloseButton
         className={`w-[calc(100%-1.25rem)] max-w-2xl gap-0 overflow-hidden rounded-2xl border border-border/80 bg-background/95 p-0 text-foreground shadow-[0_28px_100px_-30px_rgba(0,0,0,0.7)] backdrop-blur-xl sm:rounded-[1.4rem] ${reducedMotion ? "data-[state=open]:animate-none data-[state=closed]:animate-none" : ""}`}
         overlayClassName="bg-slate-950/55 backdrop-blur-[2px]"
         onOpenAutoFocus={(event) => {
