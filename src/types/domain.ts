@@ -2,7 +2,7 @@ export type TransactionType = "vente" | "location";
 
 export type PropertyType = "appartement" | "maison_villa" | "autre";
 
-export type PropertyStatus = "active" | "under_offer" | "sold" | "rented" | "off_market";
+export type PropertyStatus = "active" | "under_offer" | "reserved" | "sold" | "rented" | "off_market";
 
 export type EnergyLabel = "A" | "B" | "C" | "D" | "E" | "F" | "G";
 
@@ -49,6 +49,8 @@ export interface Property {
   transactionType: TransactionType;
   propertyType: PropertyType;
   status: PropertyStatus;
+  /** Explicit status chosen by an administrator, when one overrides the property feed. */
+  adminStatusOverride?: PropertyStatus | null;
   /** Original label from the property provider, retained for audit and future mappings. */
   sourceStatus?: string | null;
   priceAmount: number;

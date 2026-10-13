@@ -22,7 +22,7 @@ export function toCanonicalPropertyPath(property: Pick<Property, "id" | "slug">)
   return `/biens/${property.id}-${sanitizePropertySlug(property.slug)}`;
 }
 
-type PropertyBadgeSource = Pick<Property, "status" | "title"> & Partial<Pick<Property, "sourceStatus">>;
+type PropertyBadgeSource = Pick<Property, "status" | "title"> & Partial<Pick<Property, "sourceStatus" | "adminStatusOverride">>;
 
 function hasLabelToken(value: string, token: RegExp): boolean {
   return token.test(normalizeKeyword(value));
@@ -50,10 +50,12 @@ export function getPropertyStatusLabel(
         getExplicitStatusLabel(title ?? "") === "Sous compromis";
       return isUnderContract ? "Sous compromis" : "Sous offre";
     }
+    case "reserved":
+      return "Réservé";
     case "sold":
       return "Vendu";
     case "rented":
-      return null;
+      return "Loué";
     case "off_market":
       return "Retiré";
     case "active":
@@ -64,8 +66,13 @@ export function getPropertyStatusLabel(
 }
 
 export function getPropertyCardLabels(property: PropertyBadgeSource): string[] {
-  const statusLabel = getPropertyStatusLabel(property.status, property.sourceStatus, property.title);
-  if (property.status === "sold" || property.status === "off_market" || property.status === "rented") {
+  const hasAdminOverride = property.adminStatusOverride === property.status;
+  const statusLabel = getPropertyStatusLabel(
+    property.status,
+    hasAdminOverride ? null : property.sourceStatus,
+    hasAdminOverride ? undefined : property.title,
+  );
+  if (property.status === "reserved" || property.status === "sold" || property.status === "off_market" || property.status === "rented") {
     return statusLabel ? [statusLabel] : [];
   }
 

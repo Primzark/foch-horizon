@@ -56,6 +56,27 @@ export type Database = {
         }
         Relationships: []
       }
+      api_rate_limits: {
+        Row: {
+          key_hash: string
+          request_count: number
+          scope: string
+          window_started_at: string
+        }
+        Insert: {
+          key_hash: string
+          request_count: number
+          scope: string
+          window_started_at: string
+        }
+        Update: {
+          key_hash?: string
+          request_count?: number
+          scope?: string
+          window_started_at?: string
+        }
+        Relationships: []
+      }
       chatbot_content_chunks: {
         Row: {
           chunk_index: number
@@ -555,8 +576,38 @@ export type Database = {
           },
         ]
       }
+      market_counters: {
+        Row: {
+          id: number
+          sold_count: number
+          under_contract_count: number
+          under_offer_count: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          id: number
+          sold_count: number
+          under_contract_count: number
+          under_offer_count: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          id?: number
+          sold_count?: number
+          under_contract_count?: number
+          under_offer_count?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       properties: {
         Row: {
+          admin_status_override:
+            | Database["public"]["Enums"]["property_status"]
+            | null
           agent_id: string | null
           bathrooms: number | null
           bedrooms: number | null
@@ -579,6 +630,7 @@ export type Database = {
           published_at: string | null
           rooms: number | null
           slug: string
+          source_status: string | null
           status: Database["public"]["Enums"]["property_status"]
           surface_m2: number | null
           terrain_m2: number | null
@@ -587,6 +639,9 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          admin_status_override?:
+            | Database["public"]["Enums"]["property_status"]
+            | null
           agent_id?: string | null
           bathrooms?: number | null
           bedrooms?: number | null
@@ -609,6 +664,7 @@ export type Database = {
           published_at?: string | null
           rooms?: number | null
           slug: string
+          source_status?: string | null
           status?: Database["public"]["Enums"]["property_status"]
           surface_m2?: number | null
           terrain_m2?: number | null
@@ -617,6 +673,9 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          admin_status_override?:
+            | Database["public"]["Enums"]["property_status"]
+            | null
           agent_id?: string | null
           bathrooms?: number | null
           bedrooms?: number | null
@@ -639,6 +698,7 @@ export type Database = {
           published_at?: string | null
           rooms?: number | null
           slug?: string
+          source_status?: string | null
           status?: Database["public"]["Enums"]["property_status"]
           surface_m2?: number | null
           terrain_m2?: number | null
@@ -1039,6 +1099,16 @@ export type Database = {
       }
     }
     Functions: {
+      consume_api_rate_limit: {
+        Args: {
+          p_key_hash: string
+          p_limit: number
+          p_scope: string
+          p_window_seconds: number
+        }
+        Returns: boolean
+      }
+      import_property_feed: { Args: { p_feed: Json }; Returns: Json }
       match_chatbot_content_chunks: {
         Args: {
           match_count?: number
@@ -1072,6 +1142,8 @@ export type Database = {
           title: string
         }[]
       }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
       lead_source:
@@ -1086,6 +1158,7 @@ export type Database = {
         | "sold"
         | "rented"
         | "off_market"
+        | "reserved"
       property_type: "appartement" | "maison_villa" | "autre"
       transaction_type: "vente" | "location"
     }
@@ -1103,12 +1176,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1132,11 +1205,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1157,11 +1230,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1182,11 +1255,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1199,11 +1272,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1228,6 +1301,7 @@ export const Constants = {
         "sold",
         "rented",
         "off_market",
+        "reserved",
       ],
       property_type: ["appartement", "maison_villa", "autre"],
       transaction_type: ["vente", "location"],

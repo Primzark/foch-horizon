@@ -14,6 +14,7 @@ interface PropertyRow {
   transaction_type: string;
   property_type: string;
   status: string;
+  admin_status_override: string | null;
   source_status: string | null;
   price_amount: number;
   price_currency: string;
@@ -109,6 +110,7 @@ Deno.serve(async (request) => {
         item.images?.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))[0]?.source_url ?? "",
       dpeLabel: item.dpe_label,
       status: item.status,
+      adminStatusOverride: item.admin_status_override,
       sourceStatus: item.source_status,
     }));
 

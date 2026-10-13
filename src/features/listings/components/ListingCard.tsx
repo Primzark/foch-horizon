@@ -151,7 +151,7 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, eagerIma
         <div itemProp="offers" itemScope itemType="https://schema.org/Offer">
           <meta itemProp="priceCurrency" content={item.currency} />
           <meta itemProp="price" content={String(item.priceAmount)} />
-          <meta itemProp="availability" content={item.status === "active" ? "https://schema.org/InStock" : "https://schema.org/LimitedAvailability"} />
+          <meta itemProp="availability" content={item.status === "active" ? "https://schema.org/InStock" : item.status === "under_offer" || item.status === "reserved" ? "https://schema.org/LimitedAvailability" : item.status === "off_market" ? "https://schema.org/Discontinued" : "https://schema.org/SoldOut"} />
         </div>
       </motion.article>
     );
@@ -246,7 +246,7 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, eagerIma
         <div itemProp="offers" itemScope itemType="https://schema.org/Offer">
           <meta itemProp="priceCurrency" content={item.currency} />
           <meta itemProp="price" content={String(item.priceAmount)} />
-          <meta itemProp="availability" content={item.status === "active" ? "https://schema.org/InStock" : "https://schema.org/LimitedAvailability"} />
+          <meta itemProp="availability" content={item.status === "active" ? "https://schema.org/InStock" : item.status === "under_offer" || item.status === "reserved" ? "https://schema.org/LimitedAvailability" : item.status === "off_market" ? "https://schema.org/Discontinued" : "https://schema.org/SoldOut"} />
         </div>
       </div>
     </motion.article>

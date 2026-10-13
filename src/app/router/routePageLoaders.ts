@@ -19,7 +19,7 @@ export const routePageLoaders = {
   legalText: () => import("@/features/content/pages/LegalTextPage"),
   siteMap: () => import("@/features/content/pages/SiteMapPage"),
   selection: () => import("@/features/favorites/pages/SelectionPage"),
-  admin: () => import("@/features/admin/pages/AdminMarketCountersPage"),
+  admin: () => import("@/features/admin/pages/AdminPropertiesPage"),
   notFound: () => import("@/features/content/pages/NotFoundPage"),
 } as const;
 

@@ -33,6 +33,7 @@ export interface SharedPropertySearchRow {
   transaction_type: string;
   property_type: string;
   status: string;
+  admin_status_override?: string | null;
   source_status?: string | null;
   price_amount: number;
   price_currency: string;
@@ -300,7 +301,7 @@ export async function runSharedPropertySearchQuery(
   let query = supabase
     .from("properties")
     .select(
-      "id,title,slug,transaction_type,property_type,status,source_status,price_amount,price_currency,surface_m2,terrain_m2,bedrooms,bathrooms,parking_count,garage_count,postal_code,dpe_label,city:cities(name,slug),images:property_images(source_url,sort_order)",
+      "id,title,slug,transaction_type,property_type,status,admin_status_override,source_status,price_amount,price_currency,surface_m2,terrain_m2,bedrooms,bathrooms,parking_count,garage_count,postal_code,dpe_label,city:cities(name,slug),images:property_images(source_url,sort_order)",
       { count: "exact" },
     )
     .neq("status", "off_market")

@@ -70,7 +70,7 @@ function getNavigationPreview(state: unknown, propertyId: number | null): Proper
     (item.transaction !== "vente" && item.transaction !== "location") ||
     (item.type !== "appartement" && item.type !== "maison_villa" && item.type !== "autre") ||
     !item.status ||
-    (item.status !== "active" && item.status !== "under_offer" && item.status !== "sold" && item.status !== "rented" && item.status !== "off_market") ||
+    (item.status !== "active" && item.status !== "under_offer" && item.status !== "reserved" && item.status !== "sold" && item.status !== "rented" && item.status !== "off_market") ||
     typeof item.priceAmount !== "number" ||
     item.currency !== "EUR" ||
     typeof item.surfaceM2 !== "number" ||
@@ -96,6 +96,7 @@ function toPropertyPreview(item: PropertySearchItem): Property {
     transactionType: item.transaction,
     propertyType: item.type,
     status: item.status,
+    adminStatusOverride: item.adminStatusOverride ?? null,
     sourceStatus: item.sourceStatus ?? null,
     priceAmount: item.priceAmount,
     priceCurrency: item.currency,
@@ -605,7 +606,7 @@ export default function ListingDetailPage({
               seller: { "@id": `${siteUrl}/#agency` },
               businessFunction: "http://purl.org/goodrelations/v1#Sell",
               itemOffered: { "@id": `${siteUrl}${canonicalPath}#property` },
-              availability: property.status === "active" ? "https://schema.org/InStock" : property.status === "under_offer" ? "https://schema.org/LimitedAvailability" : property.status === "off_market" ? "https://schema.org/Discontinued" : "https://schema.org/SoldOut",
+              availability: property.status === "active" ? "https://schema.org/InStock" : property.status === "under_offer" || property.status === "reserved" ? "https://schema.org/LimitedAvailability" : property.status === "off_market" ? "https://schema.org/Discontinued" : "https://schema.org/SoldOut",
             },
           },
         }
@@ -676,7 +677,12 @@ export default function ListingDetailPage({
   const city = cityById.get(property.cityId);
   const agent = agentById.get(property.agentId);
   const propertyTypeLabel = formatPropertyTypeLabel(property.propertyType);
-  const statusLabel = getPropertyStatusLabel(property.status, property.sourceStatus, property.title) ?? "À vendre";
+  const hasAdminStatusOverride = property.adminStatusOverride === property.status;
+  const statusLabel = getPropertyStatusLabel(
+    property.status,
+    hasAdminStatusOverride ? null : property.sourceStatus,
+    hasAdminStatusOverride ? undefined : property.title,
+  ) ?? (property.transactionType === "location" ? "À louer" : "À vendre");
   const listingBadges = getPropertyCardLabels(property);
   const quickFacts = [
     { icon: Maximize, label: "Surface", value: `${property.surfaceM2} m²` },

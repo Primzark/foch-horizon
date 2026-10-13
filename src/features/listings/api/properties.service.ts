@@ -17,6 +17,7 @@ type EdgePropertyDetailRow = {
   transaction_type: Property["transactionType"];
   property_type: Property["propertyType"];
   status: Property["status"];
+  admin_status_override?: Property["status"] | null;
   source_status?: string | null;
   price_amount: number;
   price_currency: Property["priceCurrency"];
@@ -112,6 +113,7 @@ function mapEdgePropertyDetailToDomain(row: EdgePropertyDetailRow): Property {
     transactionType: row.transaction_type,
     propertyType: row.property_type,
     status: row.status,
+    adminStatusOverride: row.admin_status_override ?? null,
     sourceStatus: row.source_status ?? null,
     priceAmount: row.price_amount,
     priceCurrency: row.price_currency ?? "EUR",
@@ -343,6 +345,7 @@ export async function searchProperties(params: PropertySearchParams): Promise<Pr
         coverImageUrl: property.images[0]?.sourceUrl ?? "",
         dpeLabel: property.dpeLabel,
         status: property.status,
+        adminStatusOverride: property.adminStatusOverride ?? null,
         sourceStatus: property.sourceStatus ?? null,
       };
     }),
@@ -502,6 +505,7 @@ export async function getPropertiesByCitySlug(citySlug: string): Promise<Propert
         transactionType: item.transaction,
         propertyType: item.type,
         status: item.status,
+        adminStatusOverride: item.adminStatusOverride ?? null,
         sourceStatus: item.sourceStatus ?? null,
         priceAmount: item.priceAmount,
         priceCurrency: item.currency,
