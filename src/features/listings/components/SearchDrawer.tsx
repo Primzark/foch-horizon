@@ -90,22 +90,6 @@ export function SearchDrawer() {
     trackEvent("filter_applied", normalized as Record<string, unknown>);
   }, [location, navigate, setSearchDrawerOpen]);
 
-  useEffect(() => {
-    if (isMobile) {
-      return;
-    }
-
-    if (!searchDrawerOpen) {
-      return;
-    }
-
-    const timer = window.setTimeout(() => {
-      pushFilters(draft);
-    }, 300);
-
-    return () => window.clearTimeout(timer);
-  }, [draft, isMobile, pushFilters, searchDrawerOpen]);
-
   const selectedFeatures = useMemo(() => new Set(draft.features ?? []), [draft.features]);
   const selectedArea = getSelectedArea(draft);
   const genericQuery = geographyGuideOptions.some((area) => area.query === draft.q) ? undefined : draft.q;
