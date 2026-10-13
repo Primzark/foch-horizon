@@ -3,11 +3,12 @@ import { useQuery } from "@tanstack/react-query";
 import { motion, useScroll } from "framer-motion";
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { createPortal } from "react-dom";
-import { ArrowRight, Bath, BedDouble, Car, ChevronLeft, ChevronRight, Copy, Flame, Heart, Mail, MapPin, Maximize, Phone, X } from "lucide-react";
+import { ArrowRight, Bath, BedDouble, Car, ChevronLeft, ChevronRight, Copy, Heart, Mail, MapPin, Maximize, Phone, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cityById, cityBySlug } from "@/features/cities/data/cities";
 import { getPropertyById, getSimilarProperties, searchProperties } from "@/features/listings/api/properties.service";
 import { ListingGallery } from "@/features/listings/components/ListingGallery";
+import { ListingBadges } from "@/features/listings/components/ListingBadges";
 import { PropertyPreviewLink } from "@/features/listings/components/PropertyPreviewLink";
 import { ListingShareButton } from "@/features/listings/components/ListingShareButton";
 import { PropertyCompareToggle } from "@/features/listings/components/PropertyCompareToggle";
@@ -95,7 +96,7 @@ function toPropertyPreview(item: PropertySearchItem): Property {
     transactionType: item.transaction,
     propertyType: item.type,
     status: item.status,
-    sourceStatus: null,
+    sourceStatus: item.sourceStatus ?? null,
     priceAmount: item.priceAmount,
     priceCurrency: item.currency,
     surfaceM2: item.surfaceM2,
@@ -674,8 +675,8 @@ export default function ListingDetailPage({
   const city = cityById.get(property.cityId);
   const agent = agentById.get(property.agentId);
   const propertyTypeLabel = formatPropertyTypeLabel(property.propertyType);
-  const statusLabel = getPropertyStatusLabel(property.status) ?? "À vendre";
-  const isNewListing = getPropertyCardLabels(property).includes("Nouveautés");
+  const statusLabel = getPropertyStatusLabel(property.status, property.sourceStatus, property.title) ?? "À vendre";
+  const listingBadges = getPropertyCardLabels(property);
   const quickFacts = [
     { icon: Maximize, label: "Surface", value: `${property.surfaceM2} m²` },
     ...(property.terrainM2 != null && property.terrainM2 > 0 ? [{ icon: Maximize, label: "Terrain", value: `${property.terrainM2} m²` }] : []),
@@ -719,53 +720,46 @@ export default function ListingDetailPage({
 
       <div ref={contentRef} className="min-w-0">
         {previewLayout && (
-          <div className="relative">
-            <ListingGallery
-              key={property.id}
-              images={property.images}
-              title={property.title}
-              propertyId={property.id}
-              variant="modal"
-              overlayActions={(
-                <>
+          <ListingGallery
+            key={property.id}
+            images={property.images}
+            title={property.title}
+            propertyId={property.id}
+            variant="modal"
+            overlayActions={(
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-11 w-11 rounded-full border-white/35 bg-black/45 text-white shadow-md backdrop-blur-md hover:bg-black/65 hover:text-white"
+                  aria-label="Fermer l’annonce"
+                  title="Fermer"
+                  onClick={() => navigate(-((routeState?.propertyModalDepth ?? 0) + 1))}
+                >
+                  <X aria-hidden="true" className="h-5 w-5" />
+                </Button>
+                <div className="flex items-center gap-2">
+                  <ListingShareButton overlay propertyId={property.id} title={property.title} path={canonicalPath!} />
                   <Button
                     type="button"
                     variant="outline"
                     size="icon"
                     className="h-11 w-11 rounded-full border-white/35 bg-black/45 text-white shadow-md backdrop-blur-md hover:bg-black/65 hover:text-white"
-                    aria-label="Fermer l’annonce"
-                    title="Fermer"
-                    onClick={() => navigate(-((routeState?.propertyModalDepth ?? 0) + 1))}
+                    aria-label={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+                    aria-pressed={isFavorite}
+                    title={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+                    onClick={() => {
+                      toggleFavorite(property.id);
+                      trackEvent("listing_viewed", { propertyId: property.id, action: isFavorite ? "favorite_removed" : "favorite_added" });
+                    }}
                   >
-                    <X aria-hidden="true" className="h-5 w-5" />
+                    <Heart aria-hidden="true" className={`h-5 w-5 ${isFavorite ? "fill-current" : ""}`} />
                   </Button>
-                  <div className="flex items-center gap-2">
-                    <ListingShareButton overlay propertyId={property.id} title={property.title} path={canonicalPath!} />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      className="h-11 w-11 rounded-full border-white/35 bg-black/45 text-white shadow-md backdrop-blur-md hover:bg-black/65 hover:text-white"
-                      aria-label={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
-                      aria-pressed={isFavorite}
-                      title={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
-                      onClick={() => {
-                        toggleFavorite(property.id);
-                        trackEvent("listing_viewed", { propertyId: property.id, action: isFavorite ? "favorite_removed" : "favorite_added" });
-                      }}
-                    >
-                      <Heart aria-hidden="true" className={`h-5 w-5 ${isFavorite ? "fill-current" : ""}`} />
-                    </Button>
-                  </div>
-                </>
-              )}
-            />
-            {isNewListing && (
-              <span className="pointer-events-none absolute bottom-4 left-4 z-[5] inline-flex items-center gap-2 rounded-full bg-[#c20d1b] px-3 py-1.5 text-sm font-semibold text-white shadow-lg sm:bottom-5 sm:left-6">
-                <Flame aria-hidden="true" className="h-4 w-4" /> Nouveau
-              </span>
+                </div>
+              </>
             )}
-          </div>
+          />
         )}
 
         {previewLayout && (
@@ -785,6 +779,7 @@ export default function ListingDetailPage({
               {!previewLayout && <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Réf du bien {property.id}</p>}
               <h1 className={`leading-[1.08] ${previewLayout ? "font-body text-xl font-bold sm:text-4xl" : "mt-1 font-display text-4xl"}`}>{property.title}</h1>
               <p className={`mt-2 ${previewLayout ? "text-sm font-semibold text-foreground" : "text-sm font-medium text-muted-foreground"}`}>{previewLayout ? `${propertyTypeLabel} ${statusLabel.toLowerCase()}` : <>{propertyTypeLabel} <span aria-hidden="true">·</span> {statusLabel}</>}</p>
+              <ListingBadges labels={listingBadges} className="mt-3" />
               {!previewLayout && <p className="mt-2 inline-flex items-center gap-1 text-sm text-muted-foreground">
                 <MapPin className="h-4 w-4" />
                 {city ? <Link to={`/immobilier/${city.slug}`} className="underline underline-offset-4">{city.name}</Link> : "Localisation"} ({property.postalCode})

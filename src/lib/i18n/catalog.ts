@@ -457,6 +457,7 @@ export const englishCopy: Record<string, string> = {
   "Sauvegarder": "Save",
   "Favori": "Saved",
   "Vendu": "Sold",
+  "Retiré": "Withdrawn",
   "Sous offre": "Under offer",
   "Sous compromis": "Sale agreed",
   "Exclusivité": "Exclusive",

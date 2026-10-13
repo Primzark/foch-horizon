@@ -38,6 +38,7 @@ export interface PropertySearchItem {
   coverImageUrl: string;
   dpeLabel: Property["dpeLabel"];
   status: Property["status"];
+  sourceStatus?: Property["sourceStatus"];
 }
 
 export interface PropertySearchResponse {

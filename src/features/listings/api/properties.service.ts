@@ -343,6 +343,7 @@ export async function searchProperties(params: PropertySearchParams): Promise<Pr
         coverImageUrl: property.images[0]?.sourceUrl ?? "",
         dpeLabel: property.dpeLabel,
         status: property.status,
+        sourceStatus: property.sourceStatus ?? null,
       };
     }),
   };
@@ -501,6 +502,7 @@ export async function getPropertiesByCitySlug(citySlug: string): Promise<Propert
         transactionType: item.transaction,
         propertyType: item.type,
         status: item.status,
+        sourceStatus: item.sourceStatus ?? null,
         priceAmount: item.priceAmount,
         priceCurrency: item.currency,
         surfaceM2: item.surfaceM2,

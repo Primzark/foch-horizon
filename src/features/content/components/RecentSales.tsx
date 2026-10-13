@@ -9,8 +9,9 @@ import { PhotoAttribution } from "@/features/content/components/PhotoAttribution
 import { getRecentSales } from "@/features/content/api/recentSales.service";
 import { SearchThinkingState } from "@/features/content/components/SearchThinkingState";
 import { searchProperties } from "@/features/listings/api/properties.service";
-import { formatPrice, formatPropertyTypeLabel } from "@/features/listings/utils/formatting";
+import { formatPrice, formatPropertyTypeLabel, getPropertyCardLabels } from "@/features/listings/utils/formatting";
 import { PropertyPreviewLink } from "@/features/listings/components/PropertyPreviewLink";
+import { ListingBadges } from "@/features/listings/components/ListingBadges";
 import type { PropertySearchItem } from "@/types/api";
 import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
 
@@ -156,7 +157,7 @@ export function RecentSales({ compact = false }: { compact?: boolean }) {
                       loading="lazy"
                       decoding="async"
                     />
-                    <span className="absolute left-3 top-3 rounded-full bg-background px-3 py-1 text-xs font-medium">Vendu</span>
+                    <ListingBadges labels={getPropertyCardLabels(sale)} className="absolute left-3 top-3 z-[2]" />
                   </div>
                   <p className="mt-4 text-xs uppercase tracking-wider text-muted-foreground">{sale.city.name} · {sale.surfaceM2} m²</p>
                   <h3 className="mt-1 font-display text-2xl">{sale.title}</h3>
@@ -171,6 +172,8 @@ export function RecentSales({ compact = false }: { compact?: boolean }) {
 }
 
 function PropertyCarouselCard({ property, browseItems, isSold }: { property: PropertySearchItem; browseItems: PropertySearchItem[]; isSold: boolean }) {
+  const labels = getPropertyCardLabels(property);
+
   return (
     <article className="h-full">
       <PropertyPreviewLink
@@ -189,9 +192,16 @@ function PropertyCarouselCard({ property, browseItems, isSold }: { property: Pro
             loading="lazy"
           />
           <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-slate-950/35 via-transparent to-transparent opacity-80" />
-          <span className="absolute left-4 top-4 rounded-full border border-white/70 bg-background/95 px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm">
-            {isSold ? "Vendu" : "À la vente"}
-          </span>
+          {isSold ? (
+            <ListingBadges labels={labels} className="absolute left-4 top-4 z-[2]" />
+          ) : (
+            <>
+              <span className="absolute left-4 top-4 rounded-full border border-white/70 bg-background/95 px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm">
+                À la vente
+              </span>
+              <ListingBadges labels={labels} className="absolute left-4 right-4 top-14 z-[2]" />
+            </>
+          )}
           <span className="absolute bottom-4 left-4 inline-flex items-center gap-1.5 text-sm font-medium text-white drop-shadow">
             <MapPin aria-hidden="true" className="h-4 w-4" /> {property.city.name}
           </span>

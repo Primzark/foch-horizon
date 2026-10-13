@@ -22,50 +22,69 @@ export function toCanonicalPropertyPath(property: Pick<Property, "id" | "slug">)
   return `/biens/${property.id}-${sanitizePropertySlug(property.slug)}`;
 }
 
-export function getPropertyStatusLabel(status: PropertyStatus): string | null {
+type PropertyBadgeSource = Pick<Property, "status" | "title"> & Partial<Pick<Property, "sourceStatus">>;
+
+function hasLabelToken(value: string, token: RegExp): boolean {
+  return token.test(normalizeKeyword(value));
+}
+
+function getExplicitStatusLabel(value: string): "Sous compromis" | "Sous offre" | null {
+  const normalized = normalizeKeyword(value);
+  if (/(?:^|[^\p{L}\p{N}])sous[\s-]+compromis(?:$|[^\p{L}\p{N}])/u.test(normalized)) {
+    return "Sous compromis";
+  }
+  if (/(?:^|[^\p{L}\p{N}])sous[\s-]+offre(?:$|[^\p{L}\p{N}])/u.test(normalized)) {
+    return "Sous offre";
+  }
+  return null;
+}
+
+export function getPropertyStatusLabel(
+  status: PropertyStatus,
+  sourceStatus?: string | null,
+  title?: string,
+): string | null {
   switch (status) {
-    case "under_offer":
-      return "Sous offre";
+    case "under_offer": {
+      const isUnderContract = normalizeKeyword(sourceStatus ?? "").includes("compromis") ||
+        getExplicitStatusLabel(title ?? "") === "Sous compromis";
+      return isUnderContract ? "Sous compromis" : "Sous offre";
+    }
     case "sold":
       return "Vendu";
     case "rented":
       return null;
     case "off_market":
       return "Retiré";
+    case "active":
+      return getExplicitStatusLabel(sourceStatus ?? "") ?? getExplicitStatusLabel(title ?? "");
     default:
       return null;
   }
 }
 
-export function getPropertyCardLabels(property: Pick<Property, "status" | "title">): string[] {
-  const statusLabel = getPropertyStatusLabel(property.status);
-  if (property.status === "sold" || property.status === "off_market") {
+export function getPropertyCardLabels(property: PropertyBadgeSource): string[] {
+  const statusLabel = getPropertyStatusLabel(property.status, property.sourceStatus, property.title);
+  if (property.status === "sold" || property.status === "off_market" || property.status === "rented") {
     return statusLabel ? [statusLabel] : [];
   }
 
-  // The source feed currently publishes these labels in listing titles, without
-  // dedicated exclusivity/newness fields. Only read explicit leading labels;
-  // do not infer a property's status from its age, price, or description.
-  const sourceLabels = new Set<string>();
-  let title = normalizeKeyword(property.title).replace(/^[\s\p{P}]+/u, "");
-  let match: RegExpMatchArray | null;
-  while ((match = title.match(/^(sous[\s-]+compromis|sous[\s-]+offre|exclusivite|nouveautes?)\b/))) {
-    sourceLabels.add(match[1].replace(/[\s-]+/g, " "));
-    title = title.slice(match[0].length).replace(/^[\s\p{P}]+/u, "");
-  }
+  // Exclusivity and newness are explicit title tags in the source feed. Read
+  // the title only, so ordinary description text never creates a badge.
+  const normalizedTitle = normalizeKeyword(property.title);
+  const hasExclusivity = hasLabelToken(
+    normalizedTitle,
+    /(?:^|[^\p{L}\p{N}])exclusivite(?:$|[^\p{L}\p{N}])/u,
+  ) && !/(?:^|[^\p{L}\p{N}])sans[\s-]+exclusivite(?:$|[^\p{L}\p{N}])/u.test(normalizedTitle);
+  const hasNewness = hasLabelToken(
+    normalizedTitle,
+    /(?:^|[^\p{L}\p{N}])nouveaut(?:e|es)(?:$|[^\p{L}\p{N}])/u,
+  );
 
   const labels: string[] = [];
-  const sourceStatus = sourceLabels.has("sous compromis")
-    ? "Sous compromis"
-    : sourceLabels.has("sous offre")
-      ? "Sous offre"
-      : null;
-  const effectiveStatus = statusLabel ?? sourceStatus;
-  if (effectiveStatus) labels.push(effectiveStatus);
-  if (sourceLabels.has("exclusivite")) labels.push("Exclusivité");
-  if (!effectiveStatus && (sourceLabels.has("nouveaute") || sourceLabels.has("nouveautes"))) {
-    labels.push("Nouveautés");
-  }
+  if (statusLabel) labels.push(statusLabel);
+  if (hasExclusivity) labels.push("Exclusivité");
+  if (!statusLabel && hasNewness) labels.push("Nouveautés");
   return labels;
 }
 

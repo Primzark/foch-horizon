@@ -4,6 +4,8 @@ import { Property, formatPrice, getAgentById } from "@/data/mock-data";
 import DpeBadge from "./DpeBadge";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { ListingBadges } from "@/features/listings/components/ListingBadges";
+import { getPropertyCardLabels } from "@/features/listings/utils/formatting";
 
 interface PropertyCardProps {
   property: Property;
@@ -14,12 +16,12 @@ const PropertyCard = ({ property, variant = "grid" }: PropertyCardProps) => {
   const [isFav, setIsFav] = useState(false);
   const agent = getAgentById(property.agent_id);
 
-  const statusLabels: Record<string, string> = {
-    under_offer: "Sous offre",
-    sold: "Vendu",
-  };
-
-  const statusLabel = statusLabels[property.status];
+  const listingStatus = property.status === "available"
+    ? "active"
+    : property.status === "archived"
+      ? "off_market"
+      : property.status;
+  const labels = getPropertyCardLabels({ status: listingStatus, title: property.title });
 
   if (variant === "list") {
     return (
@@ -34,11 +36,7 @@ const PropertyCard = ({ property, variant = "grid" }: PropertyCardProps) => {
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
             loading="lazy"
           />
-          {statusLabel && (
-            <span className="absolute left-3 top-3 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">
-              {statusLabel}
-            </span>
-          )}
+          <ListingBadges labels={labels} className="absolute left-3 right-3 top-3 z-[2]" />
         </div>
         <div className="flex flex-1 flex-col justify-between p-5">
           <div>
@@ -82,11 +80,7 @@ const PropertyCard = ({ property, variant = "grid" }: PropertyCardProps) => {
             loading="lazy"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-foreground/40 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
-          {statusLabel && (
-            <span className="absolute left-3 top-3 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">
-              {statusLabel}
-            </span>
-          )}
+          <ListingBadges labels={labels} className="absolute left-3 right-14 top-3 z-[2]" />
           <span className="absolute bottom-3 left-3 rounded-md bg-card/90 px-2 py-1 text-xs font-medium text-foreground backdrop-blur-sm">
             À vendre
           </span>

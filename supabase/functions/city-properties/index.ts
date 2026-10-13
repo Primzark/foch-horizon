@@ -27,7 +27,7 @@ Deno.serve(async (request) => {
     const { data: properties, error: propertiesError } = await supabase
       .from("properties")
       .select(
-        "id,title,slug,transaction_type,property_type,status,price_amount,price_currency,surface_m2,bedrooms,bathrooms,parking_count,garage_count,postal_code,dpe_label,images:property_images(source_url,sort_order)",
+        "id,title,slug,transaction_type,property_type,status,source_status,price_amount,price_currency,surface_m2,bedrooms,bathrooms,parking_count,garage_count,postal_code,dpe_label,images:property_images(source_url,sort_order)",
       )
       .eq("city_id", city.id)
       .eq("transaction_type", "vente")

@@ -14,6 +14,7 @@ interface PropertyRow {
   transaction_type: string;
   property_type: string;
   status: string;
+  source_status: string | null;
   price_amount: number;
   price_currency: string;
   surface_m2: number | null;
@@ -108,6 +109,7 @@ Deno.serve(async (request) => {
         item.images?.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))[0]?.source_url ?? "",
       dpeLabel: item.dpe_label,
       status: item.status,
+      sourceStatus: item.source_status,
     }));
 
     return jsonResponse({

@@ -27,5 +27,6 @@ export function toSearchItem(property: Property): PropertySearchItem {
     coverImageUrl: property.images[0]?.sourceUrl ?? "",
     dpeLabel: property.dpeLabel,
     status: property.status,
+    sourceStatus: property.sourceStatus ?? null,
   };
 }
