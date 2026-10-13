@@ -782,6 +782,15 @@ export default function ListingDetailPage({
               {!previewLayout && <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Réf du bien {property.id}</p>}
               <h1 className={`leading-[1.08] ${previewLayout ? "font-body text-xl font-bold sm:text-4xl" : "mt-1 font-display text-4xl"}`}>{property.title}</h1>
               <p className={`mt-2 ${previewLayout ? "text-sm font-semibold text-foreground" : "text-sm font-medium text-muted-foreground"}`}>{previewLayout ? `${propertyTypeLabel} ${statusLabel.toLowerCase()}` : <>{propertyTypeLabel} <span aria-hidden="true">·</span> {statusLabel}</>}</p>
+              {previewLayout && (
+                <p
+                  aria-label={`Référence du bien ${property.id}`}
+                  className="mt-3 inline-flex min-h-9 items-center gap-2 rounded-full border border-border bg-muted/40 px-3 text-sm font-semibold text-foreground sm:text-base"
+                >
+                  <span className="text-muted-foreground">Réf.</span>
+                  <span className="font-mono font-bold tabular-nums">{property.id}</span>
+                </p>
+              )}
               {!previewLayout && <ListingBadges labels={listingBadges} className="mt-3" />}
               {!previewLayout && <p className="mt-2 inline-flex items-center gap-1 text-sm text-muted-foreground">
                 <MapPin className="h-4 w-4" />
