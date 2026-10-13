@@ -117,7 +117,7 @@ export function SpotlightSearchCriteria({ filters, onChange, onQueryChange }: Sp
               <SelectTrigger aria-labelledby="spotlight-search-type-label">
                 <SelectValue placeholder="Tous types" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="z-[210]">
                 <SelectItem value="all">Tous types</SelectItem>
                 {propertyTypeOptions.map((option) => (
                   <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
@@ -132,7 +132,7 @@ export function SpotlightSearchCriteria({ filters, onChange, onQueryChange }: Sp
               <SelectTrigger aria-labelledby="spotlight-search-area-label">
                 <SelectValue placeholder="Toutes les villes et tous les secteurs" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="z-[210]">
                 <SelectItem value="all" className="group">
                   {renderAreaOption("Toutes les villes et tous les secteurs", areaCounts.data?.all)}
                 </SelectItem>
