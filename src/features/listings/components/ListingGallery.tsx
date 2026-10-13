@@ -16,6 +16,7 @@ import { inferPlaceImageMood } from "@/lib/visuals/placeImageMotion";
 import { PlaceAtmosphereLayer } from "@/components/visuals/PlaceAtmosphereLayer";
 import { ContextAwareParallax } from "@/components/visuals/ContextAwareParallax";
 import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
+import { ListingBadges } from "@/features/listings/components/ListingBadges";
 import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
 
 const galleryImageVariants = {
@@ -36,12 +37,14 @@ export function ListingGallery({
   propertyId,
   variant = "page",
   overlayActions,
+  badgeLabels = [],
 }: {
   images: PropertyImage[];
   title: string;
   propertyId: number;
   variant?: "page" | "modal";
   overlayActions?: ReactNode;
+  badgeLabels?: string[];
 }) {
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -421,6 +424,9 @@ export function ListingGallery({
             </ContextAwareParallax>
             <PlaceAtmosphereLayer mood={imageMood} animated={false} variant="gallery" className="z-[1]" />
             <div className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-t from-black/50 via-transparent to-black/5" />
+            {variant === "modal" && (
+              <ListingBadges labels={badgeLabels} className="absolute bottom-4 left-4 z-[3] sm:bottom-5 sm:left-6" />
+            )}
             <span className={`pointer-events-none absolute bottom-4 z-[3] font-medium text-white drop-shadow sm:bottom-5 ${variant === "modal" ? "right-4 rounded-full bg-black/70 px-3 py-1.5 text-base sm:right-6" : "left-4 text-sm sm:left-6"}`}>
               {safeActiveImageIndex + 1} / {images.length}
             </span>
