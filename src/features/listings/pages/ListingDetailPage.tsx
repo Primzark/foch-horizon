@@ -686,6 +686,39 @@ export default function ListingDetailPage({
     ...(property.bathrooms != null ? [{ icon: Bath, label: "Salles de bains", value: `${property.bathrooms}` }] : []),
     ...(property.garageCount != null && property.garageCount > 0 ? [{ icon: Car, label: "Garage", value: `${property.garageCount}` }] : []),
   ];
+  const previewOverlayActions = (
+    <>
+      <Button
+        type="button"
+        variant="outline"
+        size="icon"
+        className="h-11 w-11 rounded-full border-white/35 bg-black/45 text-white shadow-md backdrop-blur-md hover:bg-black/65 hover:text-white"
+        aria-label="Fermer l’annonce"
+        title="Fermer"
+        onClick={() => navigate(-((routeState?.propertyModalDepth ?? 0) + 1))}
+      >
+        <X aria-hidden="true" className="h-5 w-5" />
+      </Button>
+      <div className="flex items-center gap-2">
+        <ListingShareButton overlay propertyId={property.id} title={property.title} path={canonicalPath!} />
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="h-11 w-11 rounded-full border-white/35 bg-black/45 text-white shadow-md backdrop-blur-md hover:bg-black/65 hover:text-white"
+          aria-label={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+          aria-pressed={isFavorite}
+          title={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+          onClick={() => {
+            toggleFavorite(property.id);
+            trackEvent("listing_viewed", { propertyId: property.id, action: isFavorite ? "favorite_removed" : "favorite_added" });
+          }}
+        >
+          <Heart aria-hidden="true" className={`h-5 w-5 ${isFavorite ? "fill-current" : ""}`} />
+        </Button>
+      </div>
+    </>
+  );
   return (
     <section className={previewLayout ? "listing-preview-modal w-full bg-background pb-32 text-foreground" : "container mx-auto px-4 pt-8 pb-28 lg:pb-8"}>
       {!previewLayout && <div className="pointer-events-none fixed right-5 top-1/2 z-20 hidden h-36 -translate-y-1/2 lg:block">
@@ -727,39 +760,7 @@ export default function ListingDetailPage({
             title={property.title}
             propertyId={property.id}
             variant="modal"
-            overlayActions={(
-              <>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="h-11 w-11 rounded-full border-white/35 bg-black/45 text-white shadow-md backdrop-blur-md hover:bg-black/65 hover:text-white"
-                  aria-label="Fermer l’annonce"
-                  title="Fermer"
-                  onClick={() => navigate(-((routeState?.propertyModalDepth ?? 0) + 1))}
-                >
-                  <X aria-hidden="true" className="h-5 w-5" />
-                </Button>
-                <div className="flex items-center gap-2">
-                  <ListingShareButton overlay propertyId={property.id} title={property.title} path={canonicalPath!} />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    className="h-11 w-11 rounded-full border-white/35 bg-black/45 text-white shadow-md backdrop-blur-md hover:bg-black/65 hover:text-white"
-                    aria-label={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
-                    aria-pressed={isFavorite}
-                    title={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
-                    onClick={() => {
-                      toggleFavorite(property.id);
-                      trackEvent("listing_viewed", { propertyId: property.id, action: isFavorite ? "favorite_removed" : "favorite_added" });
-                    }}
-                  >
-                    <Heart aria-hidden="true" className={`h-5 w-5 ${isFavorite ? "fill-current" : ""}`} />
-                  </Button>
-                </div>
-              </>
-            )}
+            overlayActions={stickySummaryPortalElement ? undefined : previewOverlayActions}
           />
         )}
 
@@ -1025,9 +1026,17 @@ export default function ListingDetailPage({
           )}
         </section>
       )}
-      {stickySummaryPortalElement
-        ? (previewLayout ? previewContactBar : stickySummary) && createPortal(previewLayout ? previewContactBar : stickySummary, stickySummaryPortalElement)
-        : stickySummary}
+      {stickySummaryPortalElement ? (
+        <>
+          {(previewLayout ? previewContactBar : stickySummary) && createPortal(previewLayout ? previewContactBar : stickySummary, stickySummaryPortalElement)}
+          {previewLayout && createPortal(
+            <div className="pointer-events-none absolute inset-x-3 top-3 z-[60] flex items-center justify-between sm:inset-x-5 sm:top-5 [&>*]:pointer-events-auto">
+              {previewOverlayActions}
+            </div>,
+            stickySummaryPortalElement,
+          )}
+        </>
+      ) : stickySummary}
     </section>
   );
 }
