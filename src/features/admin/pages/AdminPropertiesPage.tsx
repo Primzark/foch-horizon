@@ -15,7 +15,18 @@ import {
   X,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { Button, type ButtonProps } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -156,6 +167,42 @@ function PropertyPrice({ property }: { property: AdminProperty }) {
       <p className="font-medium tabular-nums">{formatPrice(property.price_amount, property.transaction_type)}</p>
       <p className="mt-1 text-xs text-muted-foreground">{formatArea(property.surface_m2)}</p>
     </div>
+  );
+}
+
+function LogoutConfirmationButton({
+  onConfirm,
+  children,
+  ...buttonProps
+}: {
+  onConfirm: () => void | Promise<void>;
+  children: ReactNode;
+  variant?: ButtonProps["variant"];
+  size?: ButtonProps["size"];
+  className?: string;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <AlertDialog open={open} onOpenChange={setOpen}>
+      <AlertDialogTrigger asChild>
+        <Button {...buttonProps}>{children}</Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Confirmer la déconnexion</AlertDialogTitle>
+          <AlertDialogDescription>
+            Vous devrez vous reconnecter pour accéder à la gestion des annonces.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Rester connecté</AlertDialogCancel>
+          <AlertDialogAction onClick={() => { void onConfirm(); }}>
+            Se déconnecter
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
 
@@ -520,7 +567,7 @@ export default function AdminPropertiesPage() {
         icon="denied"
         title="Accès réservé"
         description="Ce compte est connecté, mais il ne figure pas parmi les administrateurs autorisés."
-        action={<Button variant="outline" onClick={() => void logout()} className="gap-2"><LogOut className="h-4 w-4" />Se déconnecter</Button>}
+        action={<LogoutConfirmationButton variant="outline" onConfirm={logout} className="gap-2"><LogOut className="h-4 w-4" />Se déconnecter</LogoutConfirmationButton>}
       />
     );
   }
@@ -537,7 +584,7 @@ export default function AdminPropertiesPage() {
         description={propertiesQuery.error instanceof Error ? propertiesQuery.error.message : "Vérifiez votre session et réessayez."}
         action={(
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => void logout()} className="gap-2"><LogOut className="h-4 w-4" />Se déconnecter</Button>
+            <LogoutConfirmationButton variant="outline" onConfirm={logout} className="gap-2"><LogOut className="h-4 w-4" />Se déconnecter</LogoutConfirmationButton>
             <Button onClick={() => void propertiesQuery.refetch()}>Réessayer</Button>
           </div>
         )}
@@ -580,10 +627,10 @@ export default function AdminPropertiesPage() {
           <div className="mt-auto border-t border-border/70 pt-5">
             <p className="truncate text-xs font-medium" title={userEmail}>{userEmail}</p>
             <p className="mt-1 text-[11px] text-muted-foreground">Compte autorisé</p>
-            <Button variant="ghost" size="sm" onClick={() => void logout()} className="mt-4 w-full justify-start gap-2 px-2 text-muted-foreground">
+            <LogoutConfirmationButton variant="ghost" size="sm" onConfirm={logout} className="mt-4 w-full justify-start gap-2 px-2 text-muted-foreground">
               <LogOut className="h-4 w-4" aria-hidden="true" />
               Se déconnecter
-            </Button>
+            </LogoutConfirmationButton>
           </div>
         </aside>
 
@@ -598,10 +645,10 @@ export default function AdminPropertiesPage() {
               <a href="/biens" target="_blank" rel="noreferrer" className="inline-flex h-9 items-center gap-2 rounded-lg px-3 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
                 Voir le site <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
               </a>
-              <Button variant="outline" size="sm" onClick={() => void logout()} className="gap-2 lg:hidden">
+              <LogoutConfirmationButton variant="outline" size="sm" onConfirm={logout} className="gap-2 lg:hidden">
                 <LogOut className="h-4 w-4" aria-hidden="true" />
                 Quitter
-              </Button>
+              </LogoutConfirmationButton>
             </div>
           </header>
 
