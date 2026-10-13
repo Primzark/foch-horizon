@@ -6,6 +6,7 @@ import { AppLayout } from "@/layout/AppLayout";
 import { CookieConsentManager } from "@/layout/CookieConsentManager";
 import { routePageLoaders } from "@/app/router/routePageLoaders";
 import { RouteIntentPrefetcher } from "@/app/router/RouteIntentPrefetcher";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const LegacyAnnonceRedirect = lazy(routePageLoaders.legacyAnnonce);
 const LegacyPropertySlugRedirect = lazy(routePageLoaders.legacyProperty);
@@ -129,8 +130,10 @@ function PropertyDetailRouteModal() {
 
 function AppRoutes() {
   const location = useLocation();
+  const isMobile = useIsMobile();
   const routeState = location.state as PropertyModalRouteState | null;
-  const backgroundLocation = routeState?.propertyModal ? routeState.backgroundLocation : undefined;
+  const showPropertyModal = isMobile && Boolean(routeState?.propertyModal && routeState.backgroundLocation);
+  const backgroundLocation = showPropertyModal ? routeState?.backgroundLocation : undefined;
 
   return (
     <>
@@ -178,7 +181,7 @@ function AppRoutes() {
           </Route>
         </Routes>
       </Suspense>
-      {backgroundLocation && routeState?.propertyModal && (
+      {showPropertyModal && backgroundLocation && (
         <Routes>
           <Route path="/biens/:idSlug/*" element={<PropertyDetailRouteModal />} />
         </Routes>
