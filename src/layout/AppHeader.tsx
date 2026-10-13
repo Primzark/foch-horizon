@@ -4,13 +4,13 @@ import { BotMessageSquare, Heart, Menu, Phone, Search } from "lucide-react";
 import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useFavoritesStore } from "@/features/favorites/useFavoritesStore";
 import { cn } from "@/lib/utils";
-import { useUiStore } from "@/lib/state/useUiStore";
 import { trackEvent } from "@/lib/analytics/events";
 import { primaryLinks, openSiteAssistant } from "@/layout/navigation";
 import { preloadSiteChatbot } from "@/features/content/components/siteChatbotPreload";
 import { scrollToPageTop } from "@/lib/navigation/scrollToPageTop";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { SpotlightSearchModal } from "@/features/listings/components/SpotlightSearchModal";
 
 type MobileMenuSwipe = {
   pointerId: number;
@@ -27,15 +27,19 @@ type MobileMenuSwipe = {
 
 export function AppHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const mobileDrawerRef = useRef<HTMLDivElement>(null);
+  const searchButtonRef = useRef<HTMLButtonElement>(null);
   const swipeRef = useRef<MobileMenuSwipe | null>(null);
   const settleTimerRef = useRef<number | null>(null);
   const suppressClickUntilRef = useRef(0);
   const location = useLocation();
-  const setSearchDrawerOpen = useUiStore((state) => state.setSearchDrawerOpen);
   const favoriteIds = useFavoritesStore((state) => state.ids);
 
-  useEffect(() => setMobileOpen(false), [location.pathname, location.search]);
+  useEffect(() => {
+    setMobileOpen(false);
+    setSearchOpen(false);
+  }, [location.pathname, location.search]);
   useEffect(() => {
     const onResize = () => { if (window.innerWidth >= 1024) setMobileOpen(false); };
     window.addEventListener("resize", onResize, { passive: true });
@@ -244,7 +248,7 @@ export function AppHeader() {
               <NavLink to="/biens-sauvegardes" className="inline-flex h-10 min-w-10 items-center justify-center gap-1 rounded-full border border-brand-border bg-brand-soft px-2 text-brand-strong" aria-label={`Biens sauvegardés (${favoriteIds.length})`} onClick={() => trackEvent("favorites_opened", { source: "header" })}>
                 <Heart className={cn("h-4 w-4", favoriteIds.length > 0 && "fill-brand")} /><span className="hidden text-xs sm:inline">{favoriteIds.length}</span>
               </NavLink>
-              <button type="button" className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border" aria-label="Ouvrir la recherche de biens" onClick={() => { setSearchDrawerOpen(true); trackEvent("search_opened", { source: "header" }); }}>
+              <button ref={searchButtonRef} type="button" className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border" aria-label="Ouvrir la recherche de biens" aria-haspopup="dialog" aria-expanded={searchOpen} onClick={() => { setSearchOpen(true); trackEvent("search_opened", { source: "header" }); }}>
                 <Search className="h-4 w-4" />
               </button>
             </div>
@@ -287,6 +291,7 @@ export function AppHeader() {
           <a href="mailto:vendre@fochimmobilier.com" className="block">vendre@fochimmobilier.com</a>
         </div>
       </SheetContent>
+      <SpotlightSearchModal open={searchOpen} onOpenChange={setSearchOpen} triggerRef={searchButtonRef} />
     </Sheet>
   );
 }
