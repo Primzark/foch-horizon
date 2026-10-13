@@ -454,15 +454,7 @@ export default function ListingDetailPage({
     if (!scrollContainer) return;
 
     const updateContactBarVisibility = () => {
-      const contactRect = contactRef.current?.getBoundingClientRect();
-      const containerRect = scrollContainer.getBoundingClientRect();
-      const contactIsVisible = Boolean(
-        contactRect
-          && contactRect.top < containerRect.bottom
-          && contactRect.bottom > containerRect.top,
-      );
-
-      setPreviewContactBarVisible(scrollContainer.scrollTop > 80 && !contactIsVisible);
+      setPreviewContactBarVisible(scrollContainer.scrollTop > 80);
     };
 
     scrollContainer.addEventListener("scroll", updateContactBarVisibility, { passive: true });

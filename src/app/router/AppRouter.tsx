@@ -95,7 +95,7 @@ function PropertyDetailRouteModal() {
         <div ref={setStickySummaryPortalElement} className="pointer-events-none absolute inset-0 z-50" />
         <div
           ref={detailsScrollRef}
-          className="min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain"
+          className="min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain pb-[calc(6rem_+_env(safe-area-inset-bottom))] lg:pb-0"
         >
           <Suspense
             key={propertyReference}
