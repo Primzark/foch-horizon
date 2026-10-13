@@ -226,7 +226,7 @@ export default function ListingDetailPage({
       propertyQuery.data && !propertyQuery.isPlaceholderData
         ? getSimilarProperties(propertyQuery.data, 3)
         : Promise.resolve([]),
-    enabled: Boolean(propertyQuery.data && !propertyQuery.isPlaceholderData && !previewLayout),
+    enabled: Boolean(propertyQuery.data && !propertyQuery.isPlaceholderData),
   });
   const similarItems = useMemo(
     () => (similarQuery.data ?? []).map(({ property: similarProperty }) => toSearchItem(similarProperty)),
@@ -251,14 +251,12 @@ export default function ListingDetailPage({
   const endPage = routeState?.announcementEndPage ?? sourceSearchParams?.page ?? 1;
   const pageSize = routeState?.announcementPageSize ?? sourceSearchParams?.pageSize ?? 12;
   const navigationTotal = routeState?.announcementTotal ?? navigationItems.length;
-  const shouldLoadPreviousPage = !previewLayout
-    && navigationMode === "selection"
+  const shouldLoadPreviousPage = navigationMode === "selection"
     && sourceSearchParams != null
     && navigationIndex >= 0
     && navigationIndex <= 1
     && startPage > 1;
-  const shouldLoadNextPage = !previewLayout
-    && navigationMode === "selection"
+  const shouldLoadNextPage = navigationMode === "selection"
     && sourceSearchParams != null
     && navigationIndex >= Math.max(0, navigationItems.length - 2)
     && endPage * pageSize < navigationTotal;
@@ -325,8 +323,19 @@ export default function ListingDetailPage({
     };
   };
 
+  const getNavigationRouteState = (item: PropertySearchItem): PropertyModalRouteState => {
+    const state = getFullPageNavigationState(item);
+    if (!previewLayout) return state;
+
+    return {
+      ...state,
+      propertyModal: true,
+      propertyModalDepth: routeState?.propertyModalDepth ?? 0,
+    };
+  };
+
   const navigationStatus = navigationMode === "selection" ? "Dans votre sélection" : "Biens similaires";
-  const fullPageNavigationControls = !previewLayout && navigationContextReady ? (
+  const propertyNavigationControls = navigationContextReady ? (
     <section className="mt-4 rounded-2xl border border-border bg-muted/20 p-3 sm:p-4" aria-label="Navigation entre les annonces">
       <div className="flex items-center justify-between gap-3">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">{navigationStatus}</p>
@@ -339,7 +348,7 @@ export default function ListingDetailPage({
           <Link
             to={toCanonicalPropertyPath(previousProperty)}
             replace
-            state={getFullPageNavigationState(previousProperty)}
+            state={getNavigationRouteState(previousProperty)}
             aria-label="Annonce précédente"
             className="inline-flex min-h-[4.25rem] w-12 shrink-0 items-center justify-center rounded-xl border border-border bg-background text-foreground transition-colors hover:border-brand-border hover:bg-brand-soft/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:w-auto sm:gap-2 sm:px-4"
           >
@@ -351,7 +360,7 @@ export default function ListingDetailPage({
           <Link
             to={toCanonicalPropertyPath(nextProperty)}
             replace
-            state={getFullPageNavigationState(nextProperty)}
+            state={getNavigationRouteState(nextProperty)}
             aria-label={`Annonce suivante : ${nextProperty.title}, ${nextProperty.city.name}, ${formatPrice(nextProperty.priceAmount, nextProperty.transaction)}`}
             className="group flex min-h-[4.25rem] min-w-0 flex-1 items-center gap-3 rounded-xl border border-border bg-background p-2 text-left transition-[border-color,background-color,box-shadow] duration-200 hover:border-brand-border hover:bg-brand-soft/30 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
@@ -829,7 +838,7 @@ export default function ListingDetailPage({
             </div>
           </div>
 
-          {fullPageNavigationControls}
+          {propertyNavigationControls}
 
           <div className={previewLayout ? "border-y border-border/80 py-5" : "mt-8 grid gap-3 rounded-2xl border border-border bg-card p-4 sm:grid-cols-4"}>
             {previewLayout ? (
@@ -939,13 +948,13 @@ export default function ListingDetailPage({
       </div>
       </div>
 
-      {!previewLayout && nextPropertyToDiscover && (
-        <section className="mt-16">
+      {nextPropertyToDiscover && (
+        <section className={`mt-16 ${previewLayout ? "mx-auto w-full max-w-7xl px-5 sm:px-8 lg:px-6" : ""}`}>
           <h2 className="font-display text-3xl">Prochain bien à découvrir</h2>
           <Link
             to={toCanonicalPropertyPath(nextPropertyToDiscover)}
             replace
-            state={getFullPageNavigationState(nextPropertyToDiscover)}
+            state={getNavigationRouteState(nextPropertyToDiscover)}
             className="group relative mt-4 flex min-h-[18rem] flex-col justify-end overflow-hidden rounded-2xl bg-neutral-950 p-6 text-white shadow-sm transition-shadow duration-500 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:min-h-[22rem] sm:p-9"
             aria-label={`Découvrir le bien suivant : ${nextPropertyToDiscover.title}, ${getRecommendationLocation(nextPropertyToDiscover)}, ${formatPrice(nextPropertyToDiscover.priceAmount, nextPropertyToDiscover.transaction)}`}
           >
@@ -953,8 +962,8 @@ export default function ListingDetailPage({
           </Link>
         </section>
       )}
-      {!previewLayout && secondarySimilarItems.length > 0 && (
-        <section className="mt-14" aria-labelledby="similar-properties-heading">
+      {secondarySimilarItems.length > 0 && (
+        <section className={`mt-14 ${previewLayout ? "mx-auto w-full max-w-7xl px-5 sm:px-8 lg:px-6" : ""}`} aria-labelledby="similar-properties-heading">
           <h2 id="similar-properties-heading" className="font-display text-2xl sm:text-3xl">Biens similaires</h2>
           <div className="mt-4 grid grid-flow-col auto-cols-[84%] snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain pb-2 pr-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:auto-cols-[46%] lg:auto-cols-[32%] lg:justify-center lg:overflow-visible lg:pb-0 lg:pr-0">
             {secondarySimilarItems.map((item) => {
