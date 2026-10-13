@@ -832,7 +832,7 @@ export default function ListingDetailPage({
             </div>
           </div>
 
-          {propertyNavigationControls}
+          {!previewLayout && propertyNavigationControls}
 
           <div className={previewLayout ? "border-y border-border/80 py-5" : "mt-8 grid gap-3 rounded-2xl border border-border bg-card p-4 sm:grid-cols-4"}>
             {previewLayout ? (
@@ -851,6 +851,8 @@ export default function ListingDetailPage({
               </div>
             ))}
           </div>
+
+          {previewLayout && propertyNavigationControls}
 
           {previewLayout && (
             <Link to={city ? `/immobilier/${city.slug}` : "/biens"} className="flex min-h-[6.5rem] items-center gap-4 border-b border-border/80 py-5 text-left transition-colors hover:text-brand-strong">
