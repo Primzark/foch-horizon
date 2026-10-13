@@ -100,6 +100,24 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
   }, [queryText, searchableInventory]);
   const showSuggestions = queryText.length >= 2;
   const browseOptionIndex = suggestions.length;
+  const resultCountFilters = useMemo<PropertySearchParams>(() => ({
+    ...draftFilters,
+    transaction: "vente",
+    q: queryText || undefined,
+    page: 1,
+    pageSize: 1,
+  }), [draftFilters, queryText]);
+  const resultCount = useQuery({
+    queryKey: ["property-search-result-count", resultCountFilters],
+    queryFn: () => searchProperties(resultCountFilters),
+    enabled: open && advancedOpen,
+    staleTime: 30_000,
+  });
+  const resultCountLabel = resultCount.data
+    ? `${resultCount.data.total.toLocaleString("fr-FR")} bien${resultCount.data.total === 1 ? "" : "s"} disponibles`
+    : resultCount.isError
+      ? "nombre de biens indisponible"
+      : "calcul du nombre de biens";
 
   useEffect(() => {
     setActiveIndex(-1);
@@ -420,9 +438,13 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
               <button
                 type="submit"
                 form="spotlight-search-criteria-form"
-                className="shrink-0 rounded-full bg-brand-strong px-4 py-2 font-semibold text-white transition-colors hover:bg-brand-strong/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-strong focus-visible:ring-offset-2"
+                aria-label={`Rechercher, ${resultCountLabel}`}
+                className="inline-flex shrink-0 items-center gap-2 rounded-full bg-brand-strong px-4 py-2 font-semibold text-white transition-colors hover:bg-brand-strong/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-strong focus-visible:ring-offset-2"
               >
                 Rechercher
+                <span aria-live="polite" className="text-xs font-normal tabular-nums opacity-85">
+                  {resultCount.data?.total.toLocaleString("fr-FR") ?? (resultCount.isError ? "—" : "…")}
+                </span>
               </button>
             ) : (
               <button type="button" onClick={() => navigateToSearch({}, true)} className="shrink-0 rounded-full px-3 py-2 font-medium text-foreground transition-colors hover:bg-muted hover:text-brand-strong">

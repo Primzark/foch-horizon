@@ -14,6 +14,7 @@ import { parseReferenceFromQuery, toCanonicalPropertyPath } from "@/features/lis
 import { toSearchItem } from "@/features/listings/utils/mappers";
 import { buildSearchParams } from "@/features/listings/utils/query";
 import { persistAppliedPropertySearchFilters, resolvePropertySearchFilters } from "@/features/listings/utils/searchFilterPersistence";
+import { searchProperties } from "@/features/listings/api/properties.service";
 import type { PropertySearchParams } from "@/types/api";
 import { useUiStore } from "@/lib/state/useUiStore";
 import { trackEvent } from "@/lib/analytics/events";
@@ -115,6 +116,18 @@ export function SearchDrawer() {
     enabled: searchDrawerOpen,
     staleTime: 60_000,
   });
+  const resultCountFilters = useMemo(() => ({ ...normalizeFilters(draft), page: 1, pageSize: 1 }), [draft]);
+  const resultCount = useQuery({
+    queryKey: ["property-search-result-count", resultCountFilters],
+    queryFn: () => searchProperties(resultCountFilters),
+    enabled: searchDrawerOpen,
+    staleTime: 30_000,
+  });
+  const resultCountLabel = resultCount.data
+    ? `${resultCount.data.total.toLocaleString("fr-FR")} bien${resultCount.data.total === 1 ? "" : "s"}`
+    : resultCount.isError
+      ? "Indisponible"
+      : "Calcul…";
 
   const renderAreaOption = (name: string, count: number | undefined) => (
     <span className="flex w-full min-w-0 items-center justify-between gap-4">
@@ -355,6 +368,9 @@ export function SearchDrawer() {
               }}
             >
               Voir les résultats
+              <span aria-live="polite" className="ml-1 text-xs font-normal tabular-nums opacity-80">
+                {resultCountLabel}
+              </span>
             </Button>
           )}
           {!isMobile && (
@@ -366,6 +382,9 @@ export function SearchDrawer() {
               }}
             >
               Voir les résultats
+              <span aria-live="polite" className="ml-1 text-xs font-normal tabular-nums opacity-80">
+                {resultCountLabel}
+              </span>
             </Button>
           )}
         </div>
