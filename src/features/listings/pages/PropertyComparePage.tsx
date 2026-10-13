@@ -5,8 +5,9 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { getPropertyById } from "@/features/listings/api/properties.service";
+import { ListingBadges } from "@/features/listings/components/ListingBadges";
 import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
-import { formatPrice, formatPropertyTypeLabel, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
+import { formatPrice, formatPropertyTypeLabel, getPropertyCardLabels, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
 import { cityById } from "@/features/cities/data/cities";
 import { PROPERTY_COMPARE_LIMIT, usePropertyCompareStore } from "@/features/listings/state/usePropertyCompareStore";
 import { useSeo } from "@/lib/seo/useSeo";
@@ -247,6 +248,7 @@ export default function PropertyComparePage() {
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{property.title}</p>
                 <p className="text-sm text-muted-foreground">{formatPrice(property.priceAmount, property.transactionType)}</p>
+                <ListingBadges compact labels={getPropertyCardLabels(property)} className="mt-1" />
               </div>
               <Button type="button" variant="ghost" size="icon" className="h-9 w-9 shrink-0 rounded-full" aria-label={`Retirer le bien ${property.id}`} onClick={() => handleRemove(property.id, "single_property_summary")}>
                 <X className="h-4 w-4" />
@@ -273,6 +275,7 @@ export default function PropertyComparePage() {
                       <th scope="col" key={property.id} className="w-[220px] min-w-[220px] p-3 align-top sm:w-[250px] sm:min-w-[250px]">
                         <div className="relative">
                           <ComparisonPhoto property={property} />
+                          <ListingBadges labels={getPropertyCardLabels(property)} className="absolute left-2 right-12 top-2 z-10" />
                           <Button type="button" variant="secondary" size="icon" className="absolute right-2 top-2 h-8 w-8 rounded-full shadow-sm" aria-label={`Retirer ${property.title} de la comparaison`} onClick={() => handleRemove(property.id, "comparison_table")}>
                             <X className="h-4 w-4" />
                           </Button>

@@ -480,6 +480,7 @@ export default function ListingDetailPage({
         />
       )}
       <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/38 to-black/15 transition-opacity duration-700 group-hover:opacity-70 motion-reduce:transition-none" />
+      <ListingBadges labels={getPropertyCardLabels(nextPropertyToDiscover)} className="absolute left-6 top-6 z-10 sm:left-9 sm:top-9" />
       <div className="relative z-10 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/75">{getRecommendationLocation(nextPropertyToDiscover)} · {nextPropertyToDiscover.surfaceM2} m²</p>
@@ -973,7 +974,7 @@ export default function ListingDetailPage({
                     className="block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4"
                     aria-label={`Voir ${item.title}, ${getRecommendationLocation(item)}, ${formatPrice(item.priceAmount, item.transaction)}${roomAndSurface ? `, ${roomAndSurface}` : ""}`}
                   >
-                    <div className="aspect-[1.9/1] overflow-hidden rounded-xl bg-muted">
+                    <div className="relative aspect-[1.9/1] overflow-hidden rounded-xl bg-muted">
                       <img
                         src={getPropertyImageUrl(item.coverImageUrl, 600)}
                         srcSet={getPropertyImageSrcSet(item.coverImageUrl)}
@@ -983,6 +984,7 @@ export default function ListingDetailPage({
                         loading="lazy"
                         decoding="async"
                       />
+                      <ListingBadges labels={getPropertyCardLabels(item)} className="absolute left-3 top-3 z-[2]" />
                     </div>
                     <div className="pt-3">
                       <p className="font-display text-xl font-semibold tracking-tight text-brand-strong">

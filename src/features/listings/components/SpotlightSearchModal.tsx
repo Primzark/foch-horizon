@@ -10,7 +10,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { formatPrice, formatPropertyTypeLabel, normalizeKeyword, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
+import { ListingBadges } from "@/features/listings/components/ListingBadges";
+import { formatPrice, formatPropertyTypeLabel, getPropertyCardLabels, normalizeKeyword, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
 import { buildSearchParams, parseSearchParams } from "@/features/listings/utils/query";
 import { searchProperties } from "@/features/listings/api/properties.service";
 import { properties } from "@/features/listings/data/properties";
@@ -332,12 +333,13 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
                   ) : (
                     <span aria-hidden="true" className="h-12 w-[3.75rem] rounded-lg bg-muted" />
                   )}
-                  <span className="min-w-0">
+                  <div className="min-w-0">
                     <span className="block truncate text-sm font-medium">{suggestion.title}</span>
                     <span className="mt-0.5 block truncate text-xs text-muted-foreground">
                       {suggestion.city.name} · {formatPropertyTypeLabel(suggestion.type)}
                     </span>
-                  </span>
+                    <ListingBadges compact labels={getPropertyCardLabels(suggestion)} className="mt-1" />
+                  </div>
                   <span className="whitespace-nowrap text-right text-sm font-semibold tabular-nums">
                     {formatPrice(suggestion.priceAmount, suggestion.transaction)}
                   </span>

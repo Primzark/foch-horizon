@@ -15,9 +15,10 @@ import { Input } from "@/components/ui/input";
 import { SearchThinkingState } from "@/features/content/components/SearchThinkingState";
 import { geographyGuideOptions } from "@/features/content/data/geographyGuideOptions";
 import { searchProperties } from "@/features/listings/api/properties.service";
+import { ListingBadges } from "@/features/listings/components/ListingBadges";
 import { propertyTypeOptions } from "@/features/listings/data/options";
 import { buildSearchParams } from "@/features/listings/utils/query";
-import { formatPrice, formatPropertyTypeLabel, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
+import { formatPrice, formatPropertyTypeLabel, getPropertyCardLabels, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
 import type { PropertySearchParams } from "@/types/api";
 import type { PropertyType } from "@/types/domain";
 import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
@@ -236,12 +237,13 @@ export function BudgetFinder() {
                                 <MapPin className="h-5 w-5" />
                               </div>
                             )}
-                            <span className="min-w-0 flex-1">
+                            <div className="min-w-0 flex-1">
                               <span className="block truncate text-sm font-medium group-hover:text-brand-strong">{item.title}</span>
                               <span className="mt-1 block truncate text-[11px] text-muted-foreground">
                                 {item.city.name} · {formatPropertyTypeLabel(item.type)} · {item.surfaceM2} m²
                               </span>
-                            </span>
+                              <ListingBadges compact labels={getPropertyCardLabels(item)} className="mt-1" />
+                            </div>
                             <span className="shrink-0 text-right text-xs font-semibold tabular-nums text-brand-strong">
                               {formatPrice(item.priceAmount, item.transaction)}
                             </span>
@@ -333,12 +335,13 @@ export function BudgetFinder() {
                           <MapPin className="h-5 w-5" />
                         </div>
                       )}
-                      <span className="min-w-0 flex-1">
+                      <div className="min-w-0 flex-1">
                         <span className="block truncate text-sm font-medium group-hover:text-brand-strong lg:text-base">{item.title}</span>
                         <span className="mt-1 block truncate text-[11px] text-muted-foreground lg:text-xs">
                           {item.city.name} · {formatPropertyTypeLabel(item.type)} · {item.surfaceM2} m²
                         </span>
-                      </span>
+                        <ListingBadges compact labels={getPropertyCardLabels(item)} className="mt-1" />
+                      </div>
                       <span className="shrink-0 text-right text-xs font-semibold tabular-nums text-brand-strong lg:text-sm">
                         {formatPrice(item.priceAmount, item.transaction)}
                       </span>
