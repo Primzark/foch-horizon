@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { AnimatePresence, motion } from "framer-motion";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { z } from "zod";
 import {
   ArrowUpRight,
   Building2,
@@ -16,6 +17,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button, type ButtonProps } from "@/components/ui/button";
+import { FormErrorSummary, type FormErrorItem } from "@/components/forms/FormErrorSummary";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -51,6 +53,26 @@ import {
 } from "@/features/admin/api/adminProperties.service";
 
 type StatusFilter = "all" | PropertyStatus;
+type AdminLoginErrors = Partial<Record<"email" | "password", string>>;
+
+const adminLoginEmailSchema = z.string().trim().email().max(254);
+
+function validateAdminLogin(emailValue: string, password: string): AdminLoginErrors {
+  const errors: AdminLoginErrors = {};
+  const email = emailValue.trim();
+
+  if (!email) {
+    errors.email = "Indiquez votre adresse email.";
+  } else if (email.length > 254) {
+    errors.email = "L’adresse email doit contenir 254 caractères maximum.";
+  } else if (!adminLoginEmailSchema.safeParse(email).success) {
+    errors.email = "Vérifiez l’adresse email, par exemple nom@exemple.fr.";
+  }
+
+  if (password.length === 0) errors.password = "Indiquez votre mot de passe.";
+
+  return errors;
+}
 
 const statusDetails: Record<PropertyStatus, { label: string; trigger: string; dot: string }> = {
   active: {
@@ -252,13 +274,46 @@ function LoginPage({
   onLogin,
   pending,
   serverError,
+  onCredentialsChange,
 }: {
   onLogin: (event: FormEvent<HTMLFormElement>) => void;
   pending: boolean;
   serverError: string | null;
+  onCredentialsChange: () => void;
 }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [validationAttempted, setValidationAttempted] = useState(false);
+  const [emailBlurred, setEmailBlurred] = useState(false);
+  const errorSummaryRef = useRef<HTMLElement>(null);
+  const serverErrorRef = useRef<HTMLParagraphElement>(null);
+  const validationErrors = validateAdminLogin(email, password);
+  const emailError = validationAttempted || emailBlurred ? validationErrors.email : undefined;
+  const passwordError = validationAttempted ? validationErrors.password : undefined;
+  const summaryErrors: FormErrorItem[] = validationAttempted
+    ? [
+        ...(validationErrors.email ? [{ fieldId: "admin-email", label: "Adresse email", message: validationErrors.email }] : []),
+        ...(validationErrors.password ? [{ fieldId: "admin-password", label: "Mot de passe", message: validationErrors.password }] : []),
+      ]
+    : [];
+
+  useEffect(() => {
+    if (serverError) serverErrorRef.current?.focus();
+  }, [serverError]);
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (pending) return;
+
+    setValidationAttempted(true);
+    const errors = validateAdminLogin(email, password);
+    if (Object.keys(errors).length > 0) {
+      window.requestAnimationFrame(() => errorSummaryRef.current?.focus());
+      return;
+    }
+
+    onLogin(event);
+  };
 
   return (
     <main className="grid min-h-dvh place-items-center bg-[hsl(var(--background))] px-5 py-12">
@@ -289,7 +344,13 @@ function LoginPage({
             </div>
           </div>
 
-          <form className="space-y-4" onSubmit={onLogin} aria-busy={pending}>
+          <form className="space-y-4" onSubmit={handleSubmit} noValidate aria-busy={pending}>
+            <FormErrorSummary
+              id="admin-login-error-summary"
+              ref={errorSummaryRef}
+              errors={summaryErrors}
+              guidance="Corrigez les champs signalés, puis réessayez."
+            />
             <div className="space-y-2">
               <Label htmlFor="admin-email">Adresse email</Label>
               <Input
@@ -298,10 +359,20 @@ function LoginPage({
                 name="email"
                 autoComplete="username"
                 maxLength={254}
+                aria-invalid={emailError ? true : undefined}
+                aria-describedby={emailError ? "admin-email-error" : undefined}
+                className={emailError ? "border-destructive" : undefined}
                 value={email}
-                onChange={(event) => setEmail(event.target.value)}
+                onBlur={() => {
+                  if (email.trim()) setEmailBlurred(true);
+                }}
+                onChange={(event) => {
+                  setEmail(event.target.value);
+                  onCredentialsChange();
+                }}
                 required
               />
+              {emailError && <p id="admin-email-error" className="text-xs text-destructive" aria-live="polite">{emailError}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="admin-password">Mot de passe</Label>
@@ -310,13 +381,20 @@ function LoginPage({
                 type="password"
                 name="password"
                 autoComplete="current-password"
+                aria-invalid={passwordError ? true : undefined}
+                aria-describedby={passwordError ? "admin-password-error" : undefined}
+                className={passwordError ? "border-destructive" : undefined}
                 value={password}
-                onChange={(event) => setPassword(event.target.value)}
+                onChange={(event) => {
+                  setPassword(event.target.value);
+                  onCredentialsChange();
+                }}
                 required
               />
+              {passwordError && <p id="admin-password-error" className="text-xs text-destructive" aria-live="polite">{passwordError}</p>}
             </div>
             {serverError && (
-              <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2.5 text-sm text-destructive">
+              <p ref={serverErrorRef} tabIndex={-1} role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2.5 text-sm text-destructive">
                 {serverError}
               </p>
             )}
@@ -438,7 +516,7 @@ export default function AdminPropertiesPage() {
       if (error) throw error;
     },
     onSuccess: () => setLoginError(null),
-    onError: () => setLoginError("Connexion impossible. Vérifiez votre adresse email et votre mot de passe."),
+    onError: () => setLoginError("Connexion impossible. Vérifiez votre adresse email et votre mot de passe, puis réessayez. Si le problème persiste, vérifiez votre connexion internet."),
   });
 
   const logout = async () => {
@@ -455,10 +533,11 @@ export default function AdminPropertiesPage() {
 
   const handleLogin = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (loginMutation.isPending) return;
     const formData = new FormData(event.currentTarget);
     const email = String(formData.get("email") ?? "").trim();
     const password = String(formData.get("password") ?? "");
-    if (!email || !password) return;
+    if (Object.keys(validateAdminLogin(email, password)).length > 0) return;
     setLoginError(null);
     loginMutation.mutate({ email, password });
   };
@@ -528,7 +607,14 @@ export default function AdminPropertiesPage() {
   }
 
   if (!session) {
-    return <LoginPage onLogin={handleLogin} pending={loginMutation.isPending} serverError={loginError} />;
+    return (
+      <LoginPage
+        onLogin={handleLogin}
+        pending={loginMutation.isPending}
+        serverError={loginError}
+        onCredentialsChange={() => setLoginError(null)}
+      />
+    );
   }
 
   const isForbidden = propertiesQuery.error instanceof AdminPropertiesError && propertiesQuery.error.status === 403;

@@ -10,10 +10,11 @@ interface FormErrorSummaryProps {
   errors: FormErrorItem[];
   id: string;
   className?: string;
+  guidance?: string;
 }
 
 export const FormErrorSummary = forwardRef<HTMLElement, FormErrorSummaryProps>(
-  function FormErrorSummary({ errors, id, className = "" }, ref) {
+  function FormErrorSummary({ errors, id, className = "", guidance = "Corrigez les champs signalés, puis envoyez à nouveau." }, ref) {
     if (errors.length === 0) return null;
 
     const headingId = `${id}-heading`;
@@ -30,7 +31,7 @@ export const FormErrorSummary = forwardRef<HTMLElement, FormErrorSummaryProps>(
         className={`rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${className}`}
       >
         <p id={headingId} className="font-semibold">Votre formulaire contient des erreurs.</p>
-        <p id={guidanceId} className="mt-1 text-muted-foreground">Corrigez les champs signalés, puis envoyez à nouveau.</p>
+        <p id={guidanceId} className="mt-1 text-muted-foreground">{guidance}</p>
         <ul className="mt-2 list-disc space-y-1 pl-5">
           {errors.map((error) => (
             <li key={error.fieldId}>
