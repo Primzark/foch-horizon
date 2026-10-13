@@ -2,9 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowUpRight, LocateFixed, MapPin, X } from "lucide-react";
 import * as L from "leaflet";
 import type { PropertySearchItem } from "@/types/api";
-import { ListingBadges } from "@/features/listings/components/ListingBadges";
 import { PropertyPreviewLink } from "@/features/listings/components/PropertyPreviewLink";
-import { formatPrice, formatPropertyTypeLabel, getPropertyCardLabels, normalizeKeyword } from "@/features/listings/utils/formatting";
+import { formatPrice, formatPropertyTypeLabel, normalizeKeyword } from "@/features/listings/utils/formatting";
 import { PaginationBar } from "@/features/listings/components/PaginationBar";
 import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
 import "leaflet/dist/leaflet.css";
@@ -234,17 +233,14 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
                   onClick={() => selectProperty(item.id)}
                   className="grid w-full grid-cols-[92px_minmax(0,1fr)] gap-3 rounded-xl text-left outline-none ring-offset-background transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:grid-cols-[112px_minmax(0,1fr)]"
                 >
-                  <div className="relative h-[82px] w-[92px] shrink-0 overflow-hidden rounded-lg sm:h-[94px] sm:w-[112px]">
-                    <img
-                      src={getPropertyImageUrl(item.coverImageUrl, 200)}
-                      srcSet={getPropertyImageSrcSet(item.coverImageUrl, [200, 400])}
-                      sizes="112px"
-                      alt=""
-                      loading="lazy"
-                      className="h-full w-full object-cover"
-                    />
-                    <ListingBadges compact labels={getPropertyCardLabels(item)} className="absolute left-1 top-1 z-[1]" />
-                  </div>
+                  <img
+                    src={getPropertyImageUrl(item.coverImageUrl, 200)}
+                    srcSet={getPropertyImageSrcSet(item.coverImageUrl, [200, 400])}
+                    sizes="112px"
+                    alt=""
+                    loading="lazy"
+                    className="h-[82px] w-[92px] rounded-lg object-cover sm:h-[94px] sm:w-[112px]"
+                  />
                   <span className="flex min-w-0 flex-col justify-between py-0.5">
                     <span className="flex items-center gap-1.5 truncate text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
                       <span>Réf. {item.id}</span>
@@ -310,7 +306,6 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
                 {selectedItem.city.name} · Réf. {selectedItem.id}
               </p>
               <h3 className="mt-1 line-clamp-1 font-display text-sm">{selectedItem.title}</h3>
-              <ListingBadges compact labels={getPropertyCardLabels(selectedItem)} className="mt-1" />
               <p className="mt-1 flex items-center justify-between gap-2">
                 <span className="truncate text-sm font-semibold text-brand-strong">
                   {formatPrice(selectedItem.priceAmount, selectedItem.transaction)}

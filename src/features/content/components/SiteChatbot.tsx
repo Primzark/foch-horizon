@@ -33,8 +33,6 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { SearchThinkingState } from "@/features/content/components/SearchThinkingState";
 import { createPropertyModalRouteState } from "@/features/listings/navigation/propertyModalNavigation";
-import { ListingBadges } from "@/features/listings/components/ListingBadges";
-import { getPropertyCardLabels } from "@/features/listings/utils/formatting";
 import { useSiteLanguage } from "@/lib/i18n/LanguageProvider";
 
 type ChatRole = "assistant" | "user";
@@ -2595,8 +2593,7 @@ export function SiteChatbot({ initiallyOpen = false }: { initiallyOpen?: boolean
                     <th className="pb-1 pr-2 font-medium">Critère</th>
                     {action.data.properties.map((property) => (
                       <th key={`${action.id}-col-${property.id}`} className="pb-1 pr-2 font-medium">
-                        <span className="block">{property.title}</span>
-                        <ListingBadges compact labels={getPropertyCardLabels({ status: "active", title: property.title })} className="mt-1" />
+                        {property.title}
                       </th>
                     ))}
                   </tr>
@@ -2667,7 +2664,6 @@ export function SiteChatbot({ initiallyOpen = false }: { initiallyOpen?: boolean
                           {item.surfaceM2 ? ` · ${formatSurface(item.surfaceM2)}` : ""}
                           {typeof item.bedrooms === "number" ? ` · ${item.bedrooms} ch.` : ""}
                         </p>
-                        <ListingBadges compact labels={getPropertyCardLabels({ status: "active", title: item.title })} className="mt-1" />
                       </div>
                       {item.dpeLabel && (
                         <span className="rounded-full border border-border px-1.5 py-0.5 text-[10px]">
@@ -3044,11 +3040,11 @@ export function SiteChatbot({ initiallyOpen = false }: { initiallyOpen?: boolean
                           className="block rounded-lg border border-border bg-card/90 px-3 py-2 text-xs text-foreground hover:bg-muted"
                           onClick={(event) => handlePropertySuggestionClick(event, property.path)}
                         >
-                          <span className="block font-medium">{property.title}</span>
-                          <span className="block text-muted-foreground">
+                          <span className="font-medium">{property.title}</span>
+                          <br />
+                          <span className="text-muted-foreground">
                             {property.city} · {property.price}
                           </span>
-                          <ListingBadges compact labels={getPropertyCardLabels({ status: "active", title: property.title })} className="mt-1" />
                         </Link>
                       ))}
                     </div>
