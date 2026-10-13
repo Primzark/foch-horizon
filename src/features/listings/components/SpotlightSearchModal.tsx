@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type RefObject } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ArrowRight, Search, X } from "lucide-react";
+import { ArrowRight, Search, SlidersHorizontal, X } from "lucide-react";
 import {
   Dialog,
   DialogClose,
@@ -17,6 +17,7 @@ import { properties } from "@/features/listings/data/properties";
 import { toSearchItem } from "@/features/listings/utils/mappers";
 import { createPropertyModalRouteState } from "@/features/listings/navigation/propertyModalNavigation";
 import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
+import { SpotlightSearchCriteria } from "@/features/listings/components/SpotlightSearchCriteria";
 import type { PropertySearchItem, PropertySearchParams, PropertySearchResponse } from "@/types/api";
 import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
 
@@ -28,6 +29,13 @@ const popularSearches: Array<{ label: string; filters: Partial<PropertySearchPar
   { label: "Vue mer", filters: { q: "vue mer" } },
   { label: "Maison", filters: { type: "maison_villa" } },
 ];
+
+const defaultSearchFilters: PropertySearchParams = {
+  transaction: "vente",
+  page: 1,
+  pageSize: 12,
+  sort: "newest",
+};
 
 interface SpotlightSearchModalProps {
   open: boolean;
@@ -43,6 +51,8 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
   const { reducedMotion } = useMotionPreference();
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(-1);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [draftFilters, setDraftFilters] = useState<PropertySearchParams>(defaultSearchFilters);
 
   const seedItems = useMemo<SearchableProperty[]>(
     () => properties
@@ -95,19 +105,32 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
   }, [queryText, inventoryQuery.data]);
 
   useEffect(() => {
-    if (!open) setQuery("");
-  }, [open]);
+    if (!open) {
+      setQuery("");
+      setDraftFilters(defaultSearchFilters);
+      setAdvancedOpen(false);
+      return;
+    }
+
+    const parsedFilters = parseSearchParams(new URLSearchParams(location.search));
+    setDraftFilters({ ...defaultSearchFilters, ...parsedFilters, transaction: "vente" });
+    setQuery(parsedFilters.q ?? "");
+  }, [location.search, open]);
 
   const navigateToSearch = (filters: Partial<PropertySearchParams>) => {
     const searchParams = buildSearchParams({
+      ...filters,
       transaction: "vente",
       page: 1,
       pageSize: 12,
-      sort: "newest",
-      ...filters,
+      sort: filters.sort ?? "newest",
     });
 
-    if (queryText.length >= 2 && filters.q === queryText) {
+    const containsOnlyTextSearch = Object.entries(filters).every(([key, value]) =>
+      value == null || ["q", "transaction", "page", "pageSize", "sort"].includes(key),
+    );
+
+    if (queryText.length >= 2 && filters.q === queryText && containsOnlyTextSearch) {
       const parsedFilters = parseSearchParams(searchParams);
       const definedFilters = Object.fromEntries(
         Object.entries(parsedFilters).filter(([, value]) => value !== undefined),
@@ -148,6 +171,14 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
   };
 
   const handleInputKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (advancedOpen) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        navigateToSearch({ ...draftFilters, q: queryText || undefined });
+      }
+      return;
+    }
+
     if (!showSuggestions) {
       if (event.key === "Enter" && queryText) {
         event.preventDefault();
@@ -183,7 +214,7 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         hideCloseButton
-        className={`w-[calc(100%-1.25rem)] max-w-2xl gap-0 overflow-hidden rounded-2xl border border-border/80 bg-background/95 p-0 text-foreground shadow-[0_28px_100px_-30px_rgba(0,0,0,0.7)] backdrop-blur-xl sm:rounded-[1.4rem] ${reducedMotion ? "data-[state=open]:animate-none data-[state=closed]:animate-none" : ""}`}
+        className={`max-h-[calc(100dvh-1rem)] w-[calc(100%-1.25rem)] max-w-2xl gap-0 overflow-hidden rounded-2xl border border-border/80 bg-background/95 p-0 text-foreground shadow-[0_28px_100px_-30px_rgba(0,0,0,0.7)] backdrop-blur-xl sm:rounded-[1.4rem] ${reducedMotion ? "data-[state=open]:animate-none data-[state=closed]:animate-none" : ""}`}
         overlayClassName="bg-slate-950/55 backdrop-blur-[2px]"
         onOpenAutoFocus={(event) => {
           event.preventDefault();
@@ -210,12 +241,16 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
             type="search"
             role="combobox"
             aria-autocomplete="list"
-            aria-expanded={showSuggestions}
-            aria-controls="spotlight-search-options"
-            aria-activedescendant={showSuggestions ? activeOptionId : undefined}
+            aria-expanded={showSuggestions && !advancedOpen}
+            aria-controls={showSuggestions && !advancedOpen ? "spotlight-search-options" : undefined}
+            aria-activedescendant={showSuggestions && !advancedOpen ? activeOptionId : undefined}
             autoComplete="off"
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => {
+              const value = event.target.value;
+              setQuery(value);
+              setDraftFilters((current) => ({ ...current, q: value.trim() || undefined }));
+            }}
             onKeyDown={handleInputKeyDown}
             placeholder="Ville, quartier, type ou référence…"
             className="h-[4.5rem] min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground sm:text-lg"
@@ -232,9 +267,9 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
 
         <div className="flex items-center justify-between gap-4 px-5 pb-2 pt-4">
           <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-            {showSuggestions ? "Biens correspondants" : "Recherches populaires"}
+            {advancedOpen ? "Affiner votre recherche" : showSuggestions ? "Biens correspondants" : "Recherches populaires"}
           </p>
-          {showSuggestions && (
+          {!advancedOpen && showSuggestions && (
             <p className="text-xs text-muted-foreground" aria-live="polite">
               {inventoryQuery.isLoading && suggestions.length === 0
                 ? "Recherche…"
@@ -243,7 +278,35 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
           )}
         </div>
 
-        <div className="max-h-[min(55vh,28rem)] min-h-44 overflow-y-auto px-2 pb-2">
+        {advancedOpen ? (
+          <form
+            id="spotlight-search-criteria-form"
+            onSubmit={(event) => {
+              event.preventDefault();
+              navigateToSearch({ ...draftFilters, q: queryText || undefined });
+            }}
+            className="max-h-[min(65vh,34rem)] overflow-y-auto px-4 pb-5 pt-3 sm:px-5"
+          >
+            <div className="mb-4 flex justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  setDraftFilters(defaultSearchFilters);
+                  setQuery("");
+                }}
+                className="rounded-full px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-strong"
+              >
+                Réinitialiser
+              </button>
+            </div>
+            <SpotlightSearchCriteria
+              filters={draftFilters}
+              onChange={(updates) => setDraftFilters((current) => ({ ...current, ...updates }))}
+              onQueryChange={setQuery}
+            />
+          </form>
+        ) : (
+          <div className="max-h-[min(55vh,28rem)] min-h-44 overflow-y-auto px-2 pb-2">
           {showSuggestions ? (
             <div id="spotlight-search-options" role="listbox" aria-label="Suggestions de biens" className="space-y-0.5">
               {suggestions.map((suggestion, index) => (
@@ -325,14 +388,41 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
               ))}
             </div>
           )}
-        </div>
+          </div>
+        )}
 
         <div className="flex items-center justify-between gap-3 border-t border-border/80 bg-muted/20 px-4 py-3 text-[11px] text-muted-foreground sm:px-5">
-          <span className="hidden sm:inline">↑ ↓ naviguer · Entrée ouvrir</span>
-          <span className="sm:hidden">Choisissez un bien ou une recherche</span>
-          <button type="button" onClick={() => navigateToSearch({})} className="shrink-0 font-medium text-foreground transition-colors hover:text-brand-strong">
-            Tous les biens
-          </button>
+          <span className="hidden sm:inline">
+            {advancedOpen ? "Choisissez vos critères" : "↑ ↓ naviguer · Entrée ouvrir"}
+          </span>
+          <div className="ml-auto flex items-center gap-2">
+            <button
+              type="button"
+              aria-expanded={advancedOpen}
+              aria-controls={advancedOpen ? "spotlight-search-criteria-form" : undefined}
+              onClick={() => {
+                setActiveIndex(-1);
+                setAdvancedOpen((current) => !current);
+              }}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-2 font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-strong"
+            >
+              <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
+              {advancedOpen ? "Masquer les critères" : "Plus de critères"}
+            </button>
+            {advancedOpen ? (
+              <button
+                type="submit"
+                form="spotlight-search-criteria-form"
+                className="shrink-0 rounded-full bg-brand-strong px-4 py-2 font-semibold text-white transition-colors hover:bg-brand-strong/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-strong focus-visible:ring-offset-2"
+              >
+                Rechercher
+              </button>
+            ) : (
+              <button type="button" onClick={() => navigateToSearch({})} className="shrink-0 rounded-full px-3 py-2 font-medium text-foreground transition-colors hover:bg-muted hover:text-brand-strong">
+                Tous les biens
+              </button>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>
