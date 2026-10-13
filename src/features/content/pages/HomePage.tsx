@@ -108,7 +108,7 @@ export default function HomePage() {
             Notre cabinet accompagne vendeurs et acquéreurs avec une approche sur mesure.
           </p>
 
-          <div className="relative top-0 md:top-12" style={ctaSweepStyle}>
+          <div className="relative top-0 lg:top-12" style={ctaSweepStyle}>
             <MainSearchBar seedItems={instantSearchItems} />
           </div>
         </div>
