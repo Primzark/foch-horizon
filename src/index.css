@@ -579,20 +579,28 @@
   }
 }
 
-/* The property preview follows the dark, full-bleed presentation used by the mobile listing reference. */
+/* Dialogs and property previews use clean white/black surfaces with a slightly raised card layer. */
+.theme-aware-dialog,
 .listing-preview-modal {
-  --background: 220 8% 10%;
+  --background: 0 0% 100%;
+  --card: 0 0% 100%;
+  --popover: 0 0% 100%;
+}
+
+.dark .theme-aware-dialog,
+.dark .listing-preview-modal {
+  --background: 0 0% 0%;
   --foreground: 0 0% 98%;
-  --card: 220 8% 14%;
+  --card: 0 0% 5%;
   --card-foreground: 0 0% 98%;
-  --popover: 220 8% 14%;
+  --popover: 0 0% 6%;
   --popover-foreground: 0 0% 98%;
-  --secondary: 220 8% 20%;
+  --secondary: 0 0% 10%;
   --secondary-foreground: 0 0% 98%;
-  --muted: 220 8% 20%;
-  --muted-foreground: 215 10% 72%;
-  --border: 220 8% 28%;
-  --input: 220 8% 31%;
+  --muted: 0 0% 10%;
+  --muted-foreground: 0 0% 72%;
+  --border: 0 0% 22%;
+  --input: 0 0% 28%;
   --brand-strong: 147 48% 67%;
   --brand-soft: 147 34% 19%;
   --brand-border: 148 24% 43%;

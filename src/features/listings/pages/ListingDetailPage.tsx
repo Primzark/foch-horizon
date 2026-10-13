@@ -530,7 +530,7 @@ export default function ListingDetailPage({
       transition={{ duration: 0.2, ease: "easeOut" }}
       className="pointer-events-auto fixed inset-x-3 bottom-[calc(0.75rem_+_env(safe-area-inset-bottom))] z-[105] mx-auto max-w-xl lg:hidden"
     >
-      <div className="grid grid-cols-2 gap-2 rounded-2xl border border-white/15 bg-[#15161a]/95 p-2 text-white shadow-2xl backdrop-blur-xl">
+      <div className="grid grid-cols-2 gap-2 rounded-2xl border border-border/80 bg-white/95 p-2 text-foreground shadow-2xl backdrop-blur-xl dark:bg-black/95">
         <Button
           type="button"
           variant="brand"
@@ -543,7 +543,7 @@ export default function ListingDetailPage({
         >
           <Mail aria-hidden="true" className="h-4 w-4" /> Message
         </Button>
-        <Button asChild variant="outline" className="h-12 rounded-xl border-white/30 bg-transparent text-sm font-semibold text-white hover:bg-white/10 hover:text-white">
+        <Button asChild variant="outline" className="h-12 rounded-xl border-border bg-white text-sm font-semibold text-foreground hover:bg-muted hover:text-foreground dark:bg-black">
           <a
             href={`tel:${contactPhone.replace(/\s+/g, "")}`}
             onClick={() => {
@@ -788,7 +788,7 @@ export default function ListingDetailPage({
 
             <div className="min-w-0 text-left lg:w-auto lg:min-w-[16rem] lg:text-right">
               <div className={`flex flex-wrap items-center gap-2 ${previewLayout ? "mt-1 lg:justify-end" : ""}`}>
-                <p className={`leading-tight tracking-tight ${previewLayout ? "font-body text-[2rem] font-bold text-white sm:text-5xl" : "font-display text-5xl text-brand-strong sm:text-6xl"}`}>{formatPrice(property.priceAmount, property.transactionType)}</p>
+                <p className={`leading-tight tracking-tight ${previewLayout ? "font-body text-[2rem] font-bold text-foreground sm:text-5xl" : "font-display text-5xl text-brand-strong sm:text-6xl"}`}>{formatPrice(property.priceAmount, property.transactionType)}</p>
               </div>
               {!previewLayout && (
                 <div className="mt-4 flex flex-wrap items-center gap-2 sm:mt-3 sm:justify-end">

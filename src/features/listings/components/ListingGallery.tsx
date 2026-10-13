@@ -367,7 +367,7 @@ export function ListingGallery({
         <DialogTrigger asChild>
           <button
             type="button"
-            className={`group relative block w-full touch-pan-y overflow-hidden bg-neutral-950 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${variant === "modal" ? "rounded-none border-0" : "rounded-2xl border border-border"}`}
+            className={`group relative block w-full touch-pan-y overflow-hidden bg-white text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:bg-black ${variant === "modal" ? "rounded-none border-0" : "rounded-2xl border border-border"}`}
             aria-label={`Ouvrir la galerie photos, ${images.length} ${images.length === 1 ? "photo" : "photos"}`}
             title="Ouvrir la galerie photos"
             onPointerDown={handlePhotoPointerDown}
@@ -467,7 +467,7 @@ export function ListingGallery({
         data-menu-swipe-ignore
         hideCloseButton
         overlayClassName="bg-black/45 backdrop-blur-[2px]"
-        className="flex h-[min(94dvh,60rem)] w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] flex-col gap-0 overflow-hidden rounded-xl border-border bg-background p-0 shadow-2xl sm:h-[min(92dvh,56rem)] sm:max-w-7xl sm:rounded-2xl"
+        className="flex h-[min(94dvh,60rem)] w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] flex-col gap-0 overflow-hidden rounded-xl border-border bg-white p-0 shadow-2xl dark:bg-black sm:h-[min(92dvh,56rem)] sm:max-w-7xl sm:rounded-2xl"
         onKeyDown={(event) => {
           if (event.key === "ArrowLeft" && safeGalleryImageIndex > 0) {
             event.preventDefault();
@@ -507,7 +507,7 @@ export function ListingGallery({
         </div>
 
         <div className="flex min-h-0 flex-1 flex-col md:flex-row">
-          <aside className="hidden w-64 shrink-0 flex-col border-r border-border/70 bg-background p-4 md:flex lg:w-72">
+          <aside className="hidden w-64 shrink-0 flex-col border-r border-border/70 bg-white p-4 dark:bg-black md:flex lg:w-72">
             <p className="mb-3 shrink-0 text-sm font-medium text-muted-foreground" aria-live="polite">
               {safeGalleryImageIndex + 1} / {images.length}
             </p>
@@ -516,7 +516,7 @@ export function ListingGallery({
                 <button
                   key={image.id}
                   type="button"
-                  className={`group relative aspect-[4/3] overflow-hidden rounded-lg bg-muted text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${safeGalleryImageIndex === index ? "ring-2 ring-foreground ring-offset-2" : "opacity-75 transition-opacity hover:opacity-100"}`}
+                  className={`group relative aspect-[4/3] overflow-hidden rounded-lg bg-white text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:bg-black ${safeGalleryImageIndex === index ? "ring-2 ring-foreground ring-offset-2" : "opacity-75 transition-opacity hover:opacity-100"}`}
                   aria-label={`Afficher la photo ${index + 1}`}
                   aria-current={safeGalleryImageIndex === index ? "true" : undefined}
                   onClick={() => selectGalleryImage(index)}
@@ -537,7 +537,7 @@ export function ListingGallery({
 
           <div className="relative flex min-h-0 flex-1 flex-col">
             <div
-              className="relative flex min-h-0 flex-1 touch-pan-y overflow-hidden bg-background p-2 sm:p-5"
+              className="relative flex min-h-0 flex-1 touch-pan-y overflow-hidden bg-white p-2 dark:bg-black sm:p-5"
               onPointerDown={handleGalleryPointerDown}
               onPointerUp={handleGalleryPointerUp}
               onPointerCancel={() => { gallerySwipeStartRef.current = null; }}
@@ -569,7 +569,7 @@ export function ListingGallery({
                   aria-label="Photo précédente"
                   title="Photo précédente"
                   onClick={() => moveGalleryImage(-1)}
-                  className="absolute left-4 top-1/2 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-background/95 text-foreground shadow-lg transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 md:inline-flex"
+                  className="absolute left-4 top-1/2 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-foreground shadow-lg transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:bg-black/95 md:inline-flex"
                 >
                   <ChevronLeft className="h-6 w-6" aria-hidden="true" />
                 </button>
@@ -580,7 +580,7 @@ export function ListingGallery({
                   aria-label="Photo suivante"
                   title="Photo suivante"
                   onClick={() => moveGalleryImage(1)}
-                  className="absolute right-4 top-1/2 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-background/95 text-foreground shadow-lg transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 md:inline-flex"
+                  className="absolute right-4 top-1/2 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-foreground shadow-lg transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:bg-black/95 md:inline-flex"
                 >
                   <ChevronRight className="h-6 w-6" aria-hidden="true" />
                 </button>
@@ -611,7 +611,7 @@ export function ListingGallery({
                   onClick={() => {
                     selectGalleryImage(index);
                   }}
-                  className={`relative aspect-[4/3] h-full shrink-0 overflow-hidden rounded-md bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${safeGalleryImageIndex === index ? "ring-2 ring-foreground ring-offset-1" : "opacity-75"}`}
+                  className={`relative aspect-[4/3] h-full shrink-0 overflow-hidden rounded-md bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:bg-black ${safeGalleryImageIndex === index ? "ring-2 ring-foreground ring-offset-1" : "opacity-75"}`}
                 >
                   {!isDesktopGallery && index < mobileThumbnailLoadLimit && (
                     <img
