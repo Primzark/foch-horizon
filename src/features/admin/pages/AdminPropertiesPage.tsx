@@ -323,14 +323,16 @@ function LoginPage({
         transition={{ duration: 0.24, ease: "easeOut" }}
         className="w-full max-w-[440px]"
       >
-        <div className="mb-8 flex items-center gap-3">
-          <span className="grid h-11 w-11 place-items-center rounded-xl bg-primary text-primary-foreground">
-            <Building2 className="h-5 w-5" aria-hidden="true" />
-          </span>
-          <div>
-            <p className="font-display text-2xl leading-none">Foch Immobilier</p>
-            <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Administration</p>
-          </div>
+        <div className="mb-8 flex flex-col items-start gap-2">
+          <img
+            src="/images/foch-immobilier-logo-transparent.png"
+            alt="Foch Immobilier"
+            width={772}
+            height={150}
+            className="h-auto w-[220px] max-w-full object-contain"
+            decoding="async"
+          />
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Administration</p>
         </div>
 
         <div className="rounded-2xl border border-border/70 bg-card p-6 shadow-[0_18px_50px_-34px_hsl(var(--foreground)/0.22)] sm:p-8">
@@ -664,14 +666,16 @@ export default function AdminPropertiesPage() {
     >
       <div className="mx-auto min-h-dvh max-w-[1680px] lg:grid lg:grid-cols-[240px_minmax(0,1fr)]">
         <aside className="hidden border-r border-border/70 bg-card/70 px-5 py-7 lg:flex lg:flex-col">
-          <Link to="/" className="flex items-center gap-3" aria-label="Foch Immobilier, accueil">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary text-primary-foreground">
-              <Building2 className="h-5 w-5" aria-hidden="true" />
-            </span>
-            <span>
-              <span className="block font-display text-[1.35rem] leading-none">Foch Immobilier</span>
-              <span className="mt-1 block text-[9px] font-semibold uppercase tracking-[0.19em] text-muted-foreground">Administration</span>
-            </span>
+          <Link to="/" className="flex flex-col items-start gap-2" aria-label="Foch Immobilier, accueil">
+            <img
+              src="/images/foch-immobilier-logo-transparent.png"
+              alt="Foch Immobilier"
+              width={772}
+              height={150}
+              className="h-auto w-full max-w-[185px] object-contain"
+              decoding="async"
+            />
+            <span className="text-[9px] font-semibold uppercase tracking-[0.19em] text-muted-foreground">Administration</span>
           </Link>
 
           <p className="mb-3 mt-12 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Espace de travail</p>
@@ -689,9 +693,15 @@ export default function AdminPropertiesPage() {
 
         <div className="min-w-0">
           <header className="flex min-h-[68px] items-center justify-between border-b border-border/70 bg-card/75 px-5 sm:px-7 lg:px-9">
-            <div className="flex items-center gap-2 lg:hidden">
-              <Building2 className="h-5 w-5 text-brand" aria-hidden="true" />
-              <span className="font-display text-xl">Foch Immobilier</span>
+            <div className="flex items-center lg:hidden">
+              <img
+                src="/images/foch-immobilier-logo-transparent.png"
+                alt="Foch Immobilier"
+                width={772}
+                height={150}
+                className="h-auto w-[120px] max-w-full object-contain max-[359px]:w-[102px] sm:w-[150px]"
+                decoding="async"
+              />
             </div>
             <div className="hidden text-xs text-muted-foreground lg:block">Espace sécurisé · Gestion des biens</div>
             <div className="ml-auto flex items-center gap-2">
