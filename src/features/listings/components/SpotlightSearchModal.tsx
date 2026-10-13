@@ -68,16 +68,14 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
       itemsById.set(item.id, { ...seedItem, ...item, description: seedItem?.description });
     });
 
-    return Array.from(itemsById.values())
-      .sort((first, second) => new Date(second.publishedAt).getTime() - new Date(first.publishedAt).getTime())
-      .map((item) => ({
-        item,
-        searchableText: normalizeKeyword(
-          [item.title, item.slug, item.description, item.city.name, item.city.slug, item.city.postalCode, String(item.id), formatPropertyTypeLabel(item.type)]
-            .join(" ")
-            .replace(/[-_/]+/g, " "),
-        ),
-      }));
+    return Array.from(itemsById.values()).map((item) => ({
+      item,
+      searchableText: normalizeKeyword(
+        [item.title, item.slug, item.description, item.city.name, item.city.slug, item.city.postalCode, String(item.id), formatPropertyTypeLabel(item.type)]
+          .join(" ")
+          .replace(/[-_/]+/g, " "),
+      ),
+    }));
   }, [inventoryQuery.data, seedItems]);
 
   const suggestions = useMemo(() => {
