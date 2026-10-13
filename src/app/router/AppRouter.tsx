@@ -27,7 +27,7 @@ const RecentSalesPage = lazy(routePageLoaders.recentSales);
 const LegalTextPage = lazy(routePageLoaders.legalText);
 const SiteMapPage = lazy(routePageLoaders.siteMap);
 const SelectionPage = lazy(routePageLoaders.selection);
-const AdminMarketCountersPage = lazy(routePageLoaders.admin);
+const AdminPropertiesPage = lazy(routePageLoaders.admin);
 const NotFoundPage = lazy(routePageLoaders.notFound);
 
 function LayoutShell() {
@@ -136,7 +136,7 @@ function AppRoutes() {
     <>
       <Suspense fallback={null}>
         <Routes location={backgroundLocation ?? location}>
-          <Route path="/admin" element={<AdminMarketCountersPage />} />
+          <Route path="/admin" element={<AdminPropertiesPage />} />
           <Route element={<LayoutShell />}>
             <Route path="/" element={<HomePage />} />
             <Route path="/biens" element={<ListingsIndexPage />} />
