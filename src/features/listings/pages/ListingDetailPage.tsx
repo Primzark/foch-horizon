@@ -681,10 +681,10 @@ export default function ListingDetailPage({
   const quickFacts = [
     { icon: Maximize, label: "Surface", value: `${property.surfaceM2} m²` },
     ...(property.terrainM2 != null && property.terrainM2 > 0 ? [{ icon: Maximize, label: "Terrain", value: `${property.terrainM2} m²` }] : []),
-    ...(property.rooms != null ? [{ icon: BedDouble, label: "Pièces", value: `${property.rooms}` }] : []),
-    ...(property.bedrooms != null ? [{ icon: BedDouble, label: "Chambres", value: `${property.bedrooms}` }] : []),
-    ...(property.bathrooms != null ? [{ icon: Bath, label: "Salles de bains", value: `${property.bathrooms}` }] : []),
-    ...(property.garageCount != null && property.garageCount > 0 ? [{ icon: Car, label: "Garage", value: `${property.garageCount}` }] : []),
+    ...(property.rooms != null ? [{ icon: BedDouble, label: property.rooms === 1 ? "Pièce" : "Pièces", value: `${property.rooms}` }] : []),
+    ...(property.bedrooms != null ? [{ icon: BedDouble, label: property.bedrooms === 1 ? "Chambre" : "Chambres", value: `${property.bedrooms}` }] : []),
+    ...(property.bathrooms != null ? [{ icon: Bath, label: property.bathrooms === 1 ? "Salle de bain" : "Salles de bain", value: `${property.bathrooms}` }] : []),
+    ...(property.garageCount != null && property.garageCount > 0 ? [{ icon: Car, label: property.garageCount === 1 ? "Garage" : "Garages", value: `${property.garageCount}` }] : []),
   ];
   const previewOverlayActions = (
     <>
@@ -834,16 +834,16 @@ export default function ListingDetailPage({
 
           {!previewLayout && propertyNavigationControls}
 
-          <div className={previewLayout ? "border-y border-border/80 py-5" : "mt-8 grid gap-3 rounded-2xl border border-border bg-card p-4 sm:grid-cols-4"}>
-            {previewLayout ? (
-              <p className="text-base font-semibold leading-relaxed text-foreground sm:text-lg">
-                {[
-                  property.rooms != null ? `${property.rooms} pièce${property.rooms > 1 ? "s" : ""}` : null,
-                  property.bedrooms != null ? `${property.bedrooms} chambre${property.bedrooms > 1 ? "s" : ""}` : null,
-                  `${property.surfaceM2.toLocaleString("fr-FR")} m²`,
-                ].filter(Boolean).join(" · ")}
-              </p>
-            ) : quickFacts.map((fact) => (
+          <div className={previewLayout ? "flex flex-wrap gap-x-7 gap-y-4 border-y border-border/80 py-5" : "mt-8 grid gap-3 rounded-2xl border border-border bg-card p-4 sm:grid-cols-4"}>
+            {previewLayout ? quickFacts.map((fact) => (
+              <div key={fact.label} className="inline-flex items-center gap-2.5">
+                <fact.icon className="h-4 w-4 shrink-0 text-brand-strong" aria-hidden="true" />
+                <p className="text-sm">
+                  <span className="font-semibold">{fact.value}</span>{" "}
+                  <span className="text-muted-foreground">{fact.label}</span>
+                </p>
+              </div>
+            )) : quickFacts.map((fact) => (
               <div key={fact.label} className="rounded-xl border border-border p-3 text-center">
                 <fact.icon className="mx-auto h-4 w-4" />
                 <p className="mt-2 text-sm font-medium">{fact.value}</p>
