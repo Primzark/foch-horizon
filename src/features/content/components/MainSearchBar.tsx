@@ -13,6 +13,7 @@ import type { PropertySearchItem, PropertySearchParams, PropertySearchResponse }
 import type { TransactionType } from "@/types/domain";
 import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
 import { createPropertyModalRouteState } from "@/features/listings/navigation/propertyModalNavigation";
+import { persistAppliedPropertySearchFilters, readLastAppliedPropertySearchFilters } from "@/features/listings/utils/searchFilterPersistence";
 import { SearchThinkingState } from "@/features/content/components/SearchThinkingState";
 
 const searchPrompts = ["Le Havre", "Sainte-Adresse", "Montivilliers", "vue mer"];
@@ -37,7 +38,7 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
   const setSearchDrawerOpen = useUiStore((state) => state.setSearchDrawerOpen);
   const { reducedMotion } = useMotionPreference();
   const transaction: TransactionType = "vente";
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(() => readLastAppliedPropertySearchFilters()?.q ?? "");
   const [promptIndex, setPromptIndex] = useState(0);
   const [focused, setFocused] = useState(false);
   const [suggestionsDismissed, setSuggestionsDismissed] = useState(false);
@@ -92,13 +93,19 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
     setActiveSuggestionIndex(-1);
   }, [query, transaction, inventoryQuery.data]);
 
+  useEffect(() => {
+    setQuery(readLastAppliedPropertySearchFilters()?.q ?? "");
+  }, [location.pathname, location.search]);
+
   const navigateToResults = () => {
+    const previousFilters = readLastAppliedPropertySearchFilters() ?? {};
     const searchParams = buildSearchParams({
+      ...previousFilters,
       transaction,
       q: queryText || undefined,
       page: 1,
       pageSize: 12,
-      sort: "newest",
+      sort: previousFilters.sort ?? "newest",
     });
     const parsedFilters = parseSearchParams(searchParams);
     const definedFilters = Object.fromEntries(
@@ -110,31 +117,46 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
       sort: "newest",
       ...definedFilters,
     };
-    const terms = normalizeKeyword(queryText).replace(/[-_]+/g, " ").split(/\s+/).filter(Boolean);
-    const matchingItems = searchableInventory
-      .filter(({ item, searchableText }) => item.transaction === transaction && terms.every((term) => searchableText.includes(term)))
-      .map(({ item }) => item);
-    const initialResults: PropertySearchResponse = {
-      page: 1,
-      pageSize: 12,
-      total: matchingItems.length,
-      items: matchingItems.slice(0, 12),
-    };
+    const canSeedTextOnlyResults = Object.entries(filters).every(([key, value]) =>
+      value == null || ["q", "transaction", "page", "pageSize", "sort"].includes(key),
+    ) && (filters.sort == null || filters.sort === "newest");
+    if (queryText.length >= 2 && canSeedTextOnlyResults) {
+      const terms = normalizeKeyword(queryText).replace(/[-_]+/g, " ").split(/\s+/).filter(Boolean);
+      const matchingItems = searchableInventory
+        .filter(({ item, searchableText }) => item.transaction === transaction && terms.every((term) => searchableText.includes(term)))
+        .map(({ item }) => item);
+      const initialResults: PropertySearchResponse = {
+        page: 1,
+        pageSize: 12,
+        total: matchingItems.length,
+        items: matchingItems.slice(0, 12),
+      };
 
-    queryClient.setQueryData(["properties", filters], initialResults);
-    void queryClient.invalidateQueries({ queryKey: ["properties", filters], exact: true, refetchType: "none" });
+      queryClient.setQueryData(["properties", filters], initialResults);
+      void queryClient.invalidateQueries({ queryKey: ["properties", filters], exact: true, refetchType: "none" });
+    }
 
+    persistAppliedPropertySearchFilters(filters);
     navigate({ pathname: "/biens", search: searchParams.toString() });
   };
 
   const navigateToShortcut = (shortcutFilters: Partial<PropertySearchParams>) => {
-    const searchParams = buildSearchParams({
+    const previousFilters = readLastAppliedPropertySearchFilters() ?? {};
+    const appliedFilters: PropertySearchParams = {
+      ...previousFilters,
+      ...shortcutFilters,
+      ...(shortcutFilters.features && previousFilters.features ? {
+        features: Array.from(new Set([...previousFilters.features, ...shortcutFilters.features])),
+      } : {}),
       transaction,
       page: 1,
       pageSize: 12,
-      sort: "newest",
-      ...shortcutFilters,
+      sort: shortcutFilters.sort ?? previousFilters.sort ?? "newest",
+    };
+    const searchParams = buildSearchParams({
+      ...appliedFilters,
     });
+    persistAppliedPropertySearchFilters(appliedFilters);
     navigate({ pathname: "/biens", search: searchParams.toString() });
   };
 

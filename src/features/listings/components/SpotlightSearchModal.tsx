@@ -16,6 +16,7 @@ import { searchProperties } from "@/features/listings/api/properties.service";
 import { properties } from "@/features/listings/data/properties";
 import { toSearchItem } from "@/features/listings/utils/mappers";
 import { createPropertyModalRouteState } from "@/features/listings/navigation/propertyModalNavigation";
+import { persistAppliedPropertySearchFilters, resolvePropertySearchFilters } from "@/features/listings/utils/searchFilterPersistence";
 import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
 import { SpotlightSearchCriteria } from "@/features/listings/components/SpotlightSearchCriteria";
 import type { PropertySearchItem, PropertySearchParams, PropertySearchResponse } from "@/types/api";
@@ -112,25 +113,30 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
       return;
     }
 
-    const parsedFilters = parseSearchParams(new URLSearchParams(location.search));
+    const parsedFilters = resolvePropertySearchFilters(location.search);
     setDraftFilters({ ...defaultSearchFilters, ...parsedFilters, transaction: "vente" });
     setQuery(parsedFilters.q ?? "");
   }, [location.search, open]);
 
-  const navigateToSearch = (filters: Partial<PropertySearchParams>) => {
-    const searchParams = buildSearchParams({
+  const navigateToSearch = (filters: Partial<PropertySearchParams>, resetFilters = false) => {
+    const baseFilters = resetFilters ? defaultSearchFilters : draftFilters;
+    const appliedFilters: PropertySearchParams = {
+      ...baseFilters,
       ...filters,
       transaction: "vente",
       page: 1,
       pageSize: 12,
-      sort: filters.sort ?? "newest",
+      sort: filters.sort ?? baseFilters.sort ?? "newest",
+    };
+    const searchParams = buildSearchParams({
+      ...appliedFilters,
     });
 
-    const containsOnlyTextSearch = Object.entries(filters).every(([key, value]) =>
+    const containsOnlyTextSearch = Object.entries(appliedFilters).every(([key, value]) =>
       value == null || ["q", "transaction", "page", "pageSize", "sort"].includes(key),
     );
 
-    if (queryText.length >= 2 && filters.q === queryText && containsOnlyTextSearch) {
+    if (queryText.length >= 2 && appliedFilters.q === queryText && containsOnlyTextSearch) {
       const parsedFilters = parseSearchParams(searchParams);
       const definedFilters = Object.fromEntries(
         Object.entries(parsedFilters).filter(([, value]) => value !== undefined),
@@ -156,6 +162,7 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
       void queryClient.invalidateQueries({ queryKey: ["properties", searchFilters], exact: true, refetchType: "none" });
     }
 
+    persistAppliedPropertySearchFilters(appliedFilters);
     onOpenChange(false);
     navigate({ pathname: "/biens", search: searchParams.toString() });
   };
@@ -418,7 +425,7 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
                 Rechercher
               </button>
             ) : (
-              <button type="button" onClick={() => navigateToSearch({})} className="shrink-0 rounded-full px-3 py-2 font-medium text-foreground transition-colors hover:bg-muted hover:text-brand-strong">
+              <button type="button" onClick={() => navigateToSearch({}, true)} className="shrink-0 rounded-full px-3 py-2 font-medium text-foreground transition-colors hover:bg-muted hover:text-brand-strong">
                 Tous les biens
               </button>
             )}

@@ -12,7 +12,8 @@ import { geographyGuideOptions } from "@/features/content/data/geographyGuideOpt
 import { featureOptions, propertyTypeOptions } from "@/features/listings/data/options";
 import { parseReferenceFromQuery, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
 import { toSearchItem } from "@/features/listings/utils/mappers";
-import { buildSearchParams, parseSearchParams } from "@/features/listings/utils/query";
+import { buildSearchParams } from "@/features/listings/utils/query";
+import { persistAppliedPropertySearchFilters, resolvePropertySearchFilters } from "@/features/listings/utils/searchFilterPersistence";
 import type { PropertySearchParams } from "@/types/api";
 import { useUiStore } from "@/lib/state/useUiStore";
 import { trackEvent } from "@/lib/analytics/events";
@@ -61,12 +62,13 @@ export function SearchDrawer() {
   const setSearchDrawerOpen = useUiStore((state) => state.setSearchDrawerOpen);
 
   useEffect(() => {
-    const parsed = parseSearchParams(new URLSearchParams(location.search));
+    const parsed = resolvePropertySearchFilters(location.search);
     setDraft({ ...defaultFilters, ...parsed });
   }, [location.search]);
 
   const pushFilters = useCallback(async (next: PropertySearchParams) => {
     const normalized = normalizeFilters(next);
+    persistAppliedPropertySearchFilters(normalized);
 
     const reference = parseReferenceFromQuery(normalized.q ?? "");
     if (reference) {

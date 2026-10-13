@@ -1,6 +1,6 @@
 import { atLocation } from "@/lib/utils/frenchLocation";
 import { StorefrontPageHero } from "@/features/content/components/StorefrontPageHero";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
@@ -22,6 +22,11 @@ import { getSiteUrl, useSeo } from "@/lib/seo/useSeo";
 import { formatPrice, formatPropertyTypeLabel, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
 import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
 import { SearchThinkingState } from "@/features/content/components/SearchThinkingState";
+import {
+  hasAppliedPropertySearchPreferences,
+  persistAppliedPropertySearchFilters,
+  readLastAppliedPropertySearchFilters,
+} from "@/features/listings/utils/searchFilterPersistence";
 
 const defaultParams: PropertySearchParams = {
   transaction: "vente",
@@ -43,7 +48,8 @@ export default function ListingsIndexPage() {
     const definedParsed = Object.fromEntries(
       Object.entries(parsed).filter(([, value]) => value !== undefined),
     ) as PropertySearchParams;
-    return { ...defaultParams, ...definedParsed };
+    const saved = hasAppliedPropertySearchPreferences(parsed) ? undefined : readLastAppliedPropertySearchFilters();
+    return { ...defaultParams, ...saved, ...definedParsed };
   }, [searchParams]);
   const locationGuideId = searchParams.get("guide");
   const locationGuide = geographyGuides.find((guide) => guide.id === locationGuideId);
@@ -53,6 +59,24 @@ export default function ListingsIndexPage() {
     if (locationGuide) nextParams.set("guide", locationGuide.id);
     return nextParams;
   };
+
+  useEffect(() => {
+    const parsed = parseSearchParams(searchParams);
+    if (hasAppliedPropertySearchPreferences(parsed)) {
+      persistAppliedPropertySearchFilters(parsed);
+      return;
+    }
+
+    const saved = readLastAppliedPropertySearchFilters();
+    if (!saved) return;
+
+    const restored = buildSearchParams({ ...defaultParams, ...saved, page: 1, pageSize: 12 });
+    const guideId = searchParams.get("guide");
+    if (guideId) restored.set("guide", guideId);
+    if (restored.toString() !== searchParams.toString()) {
+      setSearchParams(restored, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const query = useQuery({
     queryKey: ["properties", filters],
@@ -81,21 +105,25 @@ export default function ListingsIndexPage() {
     if (!updates.page) {
       next.page = 1;
     }
+    persistAppliedPropertySearchFilters(next);
     setSearchParams(buildContextualSearchParams(next));
   };
 
   const clearFilter = (key: keyof PropertySearchParams) => {
     const next: PropertySearchParams = { ...filters, [key]: undefined };
     next.page = 1;
+    persistAppliedPropertySearchFilters(next);
     setSearchParams(buildContextualSearchParams(next));
   };
 
   const clearAreaFilter = () => {
     const next: PropertySearchParams = { ...filters, city: undefined, q: undefined, page: 1 };
+    persistAppliedPropertySearchFilters(next);
     setSearchParams(buildContextualSearchParams(next));
   };
 
   const clearAllCriteria = () => {
+    persistAppliedPropertySearchFilters(defaultParams);
     setSearchParams(
       buildContextualSearchParams({
         transaction: filters.transaction,
@@ -196,7 +224,10 @@ export default function ListingsIndexPage() {
         filters={filters}
         onClear={clearFilter}
         onClearArea={clearAreaFilter}
-        onClearAll={() => setSearchParams(buildContextualSearchParams(defaultParams))}
+        onClearAll={() => {
+          persistAppliedPropertySearchFilters(defaultParams);
+          setSearchParams(buildContextualSearchParams(defaultParams));
+        }}
       />
 
       {favoriteIds.length >= 3 && (
