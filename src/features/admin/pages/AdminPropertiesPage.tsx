@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { AnimatePresence, motion } from "framer-motion";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -205,10 +205,12 @@ function LoginPage({
   onLogin,
   pending,
   serverError,
+  onCredentialsChange,
 }: {
   onLogin: (event: FormEvent<HTMLFormElement>) => void;
   pending: boolean;
   serverError: string | null;
+  onCredentialsChange: () => void;
 }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -252,7 +254,10 @@ function LoginPage({
                 autoComplete="username"
                 maxLength={254}
                 value={email}
-                onChange={(event) => setEmail(event.target.value)}
+                onChange={(event) => {
+                  setEmail(event.target.value);
+                  onCredentialsChange();
+                }}
                 required
               />
             </div>
@@ -264,7 +269,10 @@ function LoginPage({
                 name="password"
                 autoComplete="current-password"
                 value={password}
-                onChange={(event) => setPassword(event.target.value)}
+                onChange={(event) => {
+                  setPassword(event.target.value);
+                  onCredentialsChange();
+                }}
                 required
               />
             </div>
@@ -278,6 +286,9 @@ function LoginPage({
               {pending ? "Connexion…" : "Se connecter"}
             </Button>
           </form>
+          <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+            {pending ? "Connexion en cours." : ""}
+          </p>
         </div>
         <p className="mt-5 text-center text-xs text-muted-foreground">Accès réservé aux comptes administrateurs autorisés.</p>
       </motion.section>
@@ -297,6 +308,11 @@ function AdminState({
   action?: ReactNode;
 }) {
   const Icon = icon === "denied" ? ShieldCheck : icon === "error" ? CircleAlert : Building2;
+  const titleRef = useRef<HTMLHeadingElement>(null);
+
+  useEffect(() => {
+    if (icon === "denied") titleRef.current?.focus();
+  }, [icon]);
 
   return (
     <main className="grid min-h-dvh place-items-center bg-[hsl(var(--background))] px-5 py-12">
@@ -313,7 +329,7 @@ function AdminState({
             <Icon className="h-5 w-5" aria-hidden="true" />
           )}
         </div>
-        <h1 className="text-xl font-semibold">{title}</h1>
+        <h1 ref={titleRef} tabIndex={icon === "denied" ? -1 : undefined} className="text-xl font-semibold">{title}</h1>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">{description}</p>
         {action && <div className="mt-5 flex justify-center">{action}</div>}
       </motion.section>
@@ -337,6 +353,7 @@ export default function AdminPropertiesPage() {
   const [session, setSession] = useState<Session | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
+  const dashboardHeadingRef = useRef<HTMLHeadingElement>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [savingIds, setSavingIds] = useState<Set<number>>(() => new Set());
@@ -384,6 +401,10 @@ export default function AdminPropertiesPage() {
     staleTime: 0,
   });
 
+  useEffect(() => {
+    if (propertiesQuery.isSuccess) dashboardHeadingRef.current?.focus();
+  }, [propertiesQuery.isSuccess]);
+
   const loginMutation = useMutation({
     mutationFn: async (credentials: { email: string; password: string }) => {
       if (!supabaseClient) throw new Error("Configuration Supabase manquante.");
@@ -391,7 +412,7 @@ export default function AdminPropertiesPage() {
       if (error) throw error;
     },
     onSuccess: () => setLoginError(null),
-    onError: () => setLoginError("Connexion impossible. Vérifiez votre adresse email et votre mot de passe."),
+    onError: () => setLoginError("Impossible de vous connecter. Vérifiez votre adresse email et votre mot de passe, puis réessayez. Vérifiez également votre connexion internet."),
   });
 
   const logout = async () => {
@@ -408,6 +429,7 @@ export default function AdminPropertiesPage() {
 
   const handleLogin = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (loginMutation.isPending) return;
     const formData = new FormData(event.currentTarget);
     const email = String(formData.get("email") ?? "").trim();
     const password = String(formData.get("password") ?? "");
@@ -481,7 +503,14 @@ export default function AdminPropertiesPage() {
   }
 
   if (!session) {
-    return <LoginPage onLogin={handleLogin} pending={loginMutation.isPending} serverError={loginError} />;
+    return (
+      <LoginPage
+        onLogin={handleLogin}
+        pending={loginMutation.isPending}
+        serverError={loginError}
+        onCredentialsChange={() => setLoginError(null)}
+      />
+    );
   }
 
   const isForbidden = propertiesQuery.error instanceof AdminPropertiesError && propertiesQuery.error.status === 403;
@@ -580,7 +609,7 @@ export default function AdminPropertiesPage() {
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-brand">Inventaire immobilier</p>
-                <h1 className="mt-2 font-display text-4xl leading-none tracking-tight sm:text-[2.75rem]">Annonces</h1>
+                <h1 ref={dashboardHeadingRef} tabIndex={-1} className="mt-2 font-display text-4xl leading-none tracking-tight sm:text-[2.75rem]">Annonces</h1>
                 <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
                   Gérez la visibilité et le statut de chaque bien. Les changements sont enregistrés automatiquement.
                 </p>

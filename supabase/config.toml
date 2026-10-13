@@ -4,9 +4,6 @@ project_id = "rcrulfdobtmfxzpuyryn"
 verify_jwt = false
 
 [functions.admin-properties]
-verify_jwt = true
-
-[functions.admin-properties]
 enabled = true
 verify_jwt = true
 import_map = "./functions/admin-properties/deno.json"
