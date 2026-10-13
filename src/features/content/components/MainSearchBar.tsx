@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent, type KeyboardEvent } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { House, Search, SlidersHorizontal } from "lucide-react";
+import { ArrowRight, Compass, House, Search, SlidersHorizontal } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -354,31 +354,36 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
       </div>
 
       <div className="mt-4">
-        <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.16em] text-white/80">
-          Explorer par critère
-        </p>
+        <div className="mb-2.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+          <p className="flex items-center gap-2.5 text-sm font-semibold tracking-[0.01em] text-white [text-shadow:0_2px_10px_rgba(0,0,0,0.75)] sm:text-base">
+            <span aria-hidden="true" className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-white/50 bg-white/20 shadow-sm backdrop-blur-sm">
+              <Compass className="h-4 w-4" />
+            </span>
+            Explorer par critère
+          </p>
+          <button
+            type="button"
+            onClick={() => setSearchDrawerOpen(true)}
+            className="group inline-flex min-h-10 items-center gap-2 rounded-full border border-white/90 bg-white px-4 py-2 text-sm font-semibold text-brand-strong shadow-[0_8px_22px_-8px_rgba(7,40,25,0.65)] transition duration-200 hover:-translate-y-0.5 hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950/30"
+          >
+            <SlidersHorizontal aria-hidden="true" className="h-4 w-4" />
+            Plus de critères
+            <ArrowRight aria-hidden="true" className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+          </button>
+        </div>
         <div role="group" aria-label="Raccourcis de recherche" className="flex flex-wrap gap-2">
           {searchShortcuts.map((shortcut) => (
             <button
               key={shortcut.label}
               type="button"
               onClick={() => navigateToShortcut(shortcut.filters)}
-              className="rounded-full border border-white/35 bg-slate-950/20 px-3.5 py-2 text-sm font-medium text-white backdrop-blur-sm transition-colors hover:border-white/70 hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950/20"
+              className="rounded-full border border-white/45 bg-slate-950/40 px-3.5 py-2 text-sm font-medium text-white shadow-[0_4px_14px_-8px_rgba(0,0,0,0.8)] backdrop-blur-sm transition-colors hover:border-white/80 hover:bg-slate-950/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950/20"
             >
               {shortcut.label}
             </button>
           ))}
         </div>
       </div>
-
-      <button
-        type="button"
-        onClick={() => setSearchDrawerOpen(true)}
-        className="mt-2 inline-flex items-center gap-1.5 rounded text-sm text-white/90 underline decoration-white/40 underline-offset-4 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-      >
-        <SlidersHorizontal className="h-3.5 w-3.5" />
-        Plus de critères
-      </button>
     </div>
   );
 }
