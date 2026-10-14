@@ -185,6 +185,7 @@ export default function ListingDetailPage({
   const [summaryVisible, setSummaryVisible] = useState(true);
   const [contactVisible, setContactVisible] = useState(false);
   const [previewContactBarVisible, setPreviewContactBarVisible] = useState(false);
+  const [previewContactFormVisible, setPreviewContactFormVisible] = useState(false);
   const cookieConsent = useUiStore((state) => state.cookieConsent);
   const location = useLocation();
   const navigate = useNavigate();
@@ -463,6 +464,27 @@ export default function ListingDetailPage({
     return () => scrollContainer.removeEventListener("scroll", updateContactBarVisibility);
   }, [previewLayout, property?.id, scrollContainerRef]);
 
+  useEffect(() => {
+    if (!previewLayout) {
+      setPreviewContactFormVisible(false);
+      return;
+    }
+
+    const contact = contactRef.current;
+    if (!contact) return;
+
+    setPreviewContactFormVisible(false);
+    if (typeof IntersectionObserver === "undefined") return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setPreviewContactFormVisible(entry.isIntersecting),
+      { root: scrollContainerRef?.current ?? null, threshold: 0 },
+    );
+
+    observer.observe(contact);
+    return () => observer.disconnect();
+  }, [previewLayout, property?.id, scrollContainerRef]);
+
   const canonicalPath = property ? toCanonicalPropertyPath({ id: property.id, slug: property.slug }) : null;
   const showStickySummary = Boolean(property && !summaryVisible && !contactVisible);
   const contactPhone = agentById.get(property?.agentId ?? "")?.phone ?? "02 35 42 51 76";
@@ -530,21 +552,23 @@ export default function ListingDetailPage({
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, ease: "easeOut" }}
-      className="pointer-events-auto fixed inset-x-3 bottom-[calc(0.75rem_+_env(safe-area-inset-bottom))] z-[105] mx-auto max-w-xl lg:hidden"
+      className={`pointer-events-auto fixed ${previewContactFormVisible ? "right-3 w-fit" : "inset-x-3 mx-auto max-w-xl"} bottom-[calc(0.75rem_+_env(safe-area-inset-bottom))] z-[105] lg:hidden`}
     >
-      <div className="grid grid-cols-2 gap-2 rounded-2xl border border-border/80 bg-white/95 p-2 text-foreground shadow-2xl backdrop-blur-xl dark:bg-black/95">
-        <Button
-          type="button"
-          variant="brand"
-          className="h-12 rounded-xl bg-[#c20d1b] text-sm font-semibold text-white hover:bg-[#a90b17]"
-          onClick={() => {
-            contactRef.current?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "center" });
-            trackEvent("listing_viewed", { propertyId: property.id, action: "sticky_message" });
-            trackComparisonContactClick("sticky_contact");
-          }}
-        >
-          <Mail aria-hidden="true" className="h-4 w-4" /> Message
-        </Button>
+      <div className={`grid ${previewContactFormVisible ? "grid-cols-1" : "grid-cols-2"} gap-2 rounded-2xl border border-border/80 bg-white/95 p-2 text-foreground shadow-2xl backdrop-blur-xl dark:bg-black/95`}>
+        {!previewContactFormVisible && (
+          <Button
+            type="button"
+            variant="brand"
+            className="h-12 rounded-xl bg-[#c20d1b] text-sm font-semibold text-white hover:bg-[#a90b17]"
+            onClick={() => {
+              contactRef.current?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "center" });
+              trackEvent("listing_viewed", { propertyId: property.id, action: "sticky_message" });
+              trackComparisonContactClick("sticky_contact");
+            }}
+          >
+            <Mail aria-hidden="true" className="h-4 w-4" /> Message
+          </Button>
+        )}
         <Button asChild variant="outline" className="h-12 rounded-xl border-border bg-white text-sm font-semibold text-foreground hover:bg-muted hover:text-foreground dark:bg-black">
           <a
             href={`tel:${contactPhone.replace(/\s+/g, "")}`}
@@ -788,15 +812,6 @@ export default function ListingDetailPage({
               {!previewLayout && <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Réf du bien {property.id}</p>}
               <h1 className={`leading-[1.08] ${previewLayout ? "font-body text-xl font-bold sm:text-4xl" : "mt-1 font-display text-4xl"}`}>{property.title}</h1>
               <p className={`mt-2 ${previewLayout ? "text-sm font-semibold text-foreground" : "text-sm font-medium text-muted-foreground"}`}>{previewLayout ? `${propertyTypeLabel} ${statusLabel.toLowerCase()}` : <>{propertyTypeLabel} <span aria-hidden="true">·</span> {statusLabel}</>}</p>
-              {previewLayout && (
-                <p
-                  aria-label={`Référence du bien ${property.id}`}
-                  className="mt-3 inline-flex min-h-9 items-center gap-2 rounded-full border border-border bg-muted/40 px-3 text-sm font-semibold text-foreground sm:text-base"
-                >
-                  <span className="text-muted-foreground">Réf.</span>
-                  <span className="font-mono font-bold tabular-nums">{property.id}</span>
-                </p>
-              )}
               {!previewLayout && <ListingBadges labels={listingBadges} className="mt-3" />}
               {!previewLayout && <p className="mt-2 inline-flex items-center gap-1 text-sm text-muted-foreground">
                 <MapPin className="h-4 w-4" />
@@ -806,7 +821,16 @@ export default function ListingDetailPage({
 
             <div className="min-w-0 text-left lg:w-auto lg:min-w-[16rem] lg:text-right">
               <div className={`flex flex-wrap items-center gap-2 ${previewLayout ? "mt-1 lg:justify-end" : ""}`}>
-                <p className={`leading-tight tracking-tight ${previewLayout ? "font-body text-[2rem] font-bold text-foreground sm:text-5xl" : "font-display text-5xl text-brand-strong sm:text-6xl"}`}>{formatPrice(property.priceAmount, property.transactionType)}</p>
+                <p className={`leading-tight tracking-tight ${previewLayout ? "whitespace-nowrap font-body text-[2rem] font-bold text-foreground sm:text-5xl" : "font-display text-5xl text-brand-strong sm:text-6xl"}`}>{formatPrice(property.priceAmount, property.transactionType)}</p>
+                {previewLayout && (
+                  <p
+                    aria-label={`Référence du bien ${property.id}`}
+                    className="inline-flex min-h-9 items-center gap-2 rounded-full border border-border bg-muted/40 px-3 text-sm font-semibold text-foreground sm:text-base"
+                  >
+                    <span className="text-muted-foreground">Réf.</span>
+                    <span className="font-mono font-bold tabular-nums">{property.id}</span>
+                  </p>
+                )}
               </div>
               {!previewLayout && (
                 <div className="mt-4 flex flex-wrap items-center gap-2 sm:mt-3 sm:justify-end">

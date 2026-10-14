@@ -210,8 +210,7 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
               </span>
             </div>
 
-            <div className="relative flex min-w-0 flex-1 items-center gap-3 px-2 sm:pl-4">
-              <Search aria-hidden="true" className="h-5 w-5 shrink-0 text-brand-strong" />
+            <div className="relative flex min-w-0 flex-1 items-center px-2 sm:pl-4">
               <label htmlFor="main-property-search" className="sr-only">
                 Ville, quartier, type de bien ou référence
               </label>
@@ -242,7 +241,7 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
               {!query && !focused && (
                 <span
                   aria-hidden="true"
-                  className="pointer-events-none absolute left-10 right-2 top-1/2 -translate-y-1/2 overflow-hidden text-ellipsis whitespace-nowrap text-base text-muted-foreground sm:left-14"
+                  className="pointer-events-none absolute left-2 right-2 top-1/2 -translate-y-1/2 overflow-hidden text-ellipsis whitespace-nowrap text-base text-muted-foreground sm:left-4"
                 >
                   <AnimatePresence mode="wait" initial={false}>
                     <motion.span
@@ -260,8 +259,15 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
               )}
             </div>
 
-            <Button type="submit" variant="brand" size="lg" className="h-12 shrink-0 rounded-full px-4 sm:h-14 sm:px-6">
-              Rechercher
+            <Button
+              type="submit"
+              variant="brand"
+              size="icon"
+              aria-label="Rechercher"
+              className="h-12 w-12 shrink-0 rounded-full p-0 sm:h-14 sm:w-14"
+            >
+              <Search aria-hidden="true" className="h-5 w-5" />
+              <span className="sr-only">Rechercher</span>
             </Button>
           </div>
         </form>
@@ -352,7 +358,7 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
           <button
             type="button"
             onClick={() => setSearchDrawerOpen(true)}
-            className="group inline-flex min-h-10 items-center gap-2 rounded-full border border-white/90 bg-white px-4 py-2 text-sm font-semibold text-brand-strong shadow-[0_8px_22px_-8px_rgba(7,40,25,0.65)] transition duration-200 hover:-translate-y-0.5 hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950/30"
+            className="group inline-flex min-h-10 items-center gap-2 rounded-full border border-white/80 bg-transparent px-4 py-2 text-sm font-semibold text-white/95 shadow-[0_8px_22px_-8px_rgba(7,40,25,0.65)] transition duration-200 hover:-translate-y-0.5 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950/30"
           >
             <SlidersHorizontal aria-hidden="true" className="h-4 w-4" />
             Plus de critères

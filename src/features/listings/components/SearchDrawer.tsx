@@ -123,11 +123,15 @@ export function SearchDrawer() {
     enabled: searchDrawerOpen,
     staleTime: 30_000,
   });
-  const resultCountLabel = resultCount.data
-    ? `${resultCount.data.total.toLocaleString("fr-FR")} bien${resultCount.data.total === 1 ? "" : "s"}`
-    : resultCount.isError
-      ? "Indisponible"
-      : "Calcul…";
+  const resultCountValue = resultCount.data?.total;
+  const resultCountLabel = resultCountValue == null
+    ? resultCount.isError ? "—" : "…"
+    : resultCountValue.toLocaleString("fr-FR");
+  const resultCountPrefix = resultCountValue === 1 ? "Voir le" : "Voir les";
+  const resultCountSuffix = resultCountValue === 1 ? "résultat disponible" : "résultats disponibles";
+  const resultCountAccessibleLabel = resultCountValue == null
+    ? resultCount.isError ? "Voir les résultats, disponibilité indisponible" : "Voir les résultats, calcul en cours"
+    : `${resultCountPrefix} ${resultCountLabel} ${resultCountSuffix}`;
 
   const renderAreaOption = (name: string, count: number | undefined) => (
     <span className="flex w-full min-w-0 items-center justify-between gap-4">
@@ -162,10 +166,10 @@ export function SearchDrawer() {
               onValueChange={(value) => setDraft((current) => ({ ...current, type: value === "all" ? undefined : (value as PropertySearchParams["type"]) }))}
             >
               <SelectTrigger aria-labelledby="listing-search-type-label">
-                <SelectValue placeholder="Tous types" />
+                <SelectValue placeholder="Tous" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Tous types</SelectItem>
+                <SelectItem value="all">Tous</SelectItem>
                 {propertyTypeOptions.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}
@@ -205,11 +209,11 @@ export function SearchDrawer() {
               }}
             >
               <SelectTrigger aria-labelledby="listing-search-city-label">
-                <SelectValue placeholder="Toutes les villes et tous les secteurs" />
+                <SelectValue placeholder="Tous" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all" className="group">
-                  {renderAreaOption("Toutes les villes et tous les secteurs", areaCounts.data?.all)}
+                  {renderAreaOption("Tous", areaCounts.data?.all)}
                 </SelectItem>
                 <SelectGroup>
                   <SelectLabel>Le Havre et ses quartiers</SelectLabel>
@@ -362,29 +366,35 @@ export function SearchDrawer() {
         <div className="mt-6 flex flex-wrap justify-end gap-2 border-t border-border pt-4">
           {isMobile && (
             <Button
+              aria-label={resultCountAccessibleLabel}
               onClick={() => {
                 pushFilters(draft);
                 setSearchDrawerOpen(false);
               }}
+              className="gap-2"
             >
-              Voir les résultats
-              <span aria-live="polite" className="ml-1 text-xs font-normal tabular-nums opacity-80">
+              <span className="whitespace-nowrap">{resultCountPrefix}</span>
+              <span aria-live="polite" className="min-w-7 text-center text-xs font-semibold tabular-nums">
                 {resultCountLabel}
               </span>
+              <span className="whitespace-nowrap">{resultCountSuffix}</span>
             </Button>
           )}
           {!isMobile && (
             <Button
               variant="outline"
+              aria-label={resultCountAccessibleLabel}
               onClick={() => {
                 pushFilters(draft);
                 setSearchDrawerOpen(false);
               }}
+              className="gap-2"
             >
-              Voir les résultats
-              <span aria-live="polite" className="ml-1 text-xs font-normal tabular-nums opacity-80">
+              <span className="whitespace-nowrap">{resultCountPrefix}</span>
+              <span aria-live="polite" className="min-w-7 text-center text-xs font-semibold tabular-nums">
                 {resultCountLabel}
               </span>
+              <span className="whitespace-nowrap">{resultCountSuffix}</span>
             </Button>
           )}
         </div>

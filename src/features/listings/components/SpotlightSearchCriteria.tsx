@@ -115,10 +115,10 @@ export function SpotlightSearchCriteria({ filters, onChange, onQueryChange }: Sp
               onValueChange={(value) => onChange({ type: value === "all" ? undefined : value as PropertySearchParams["type"] })}
             >
               <SelectTrigger aria-labelledby="spotlight-search-type-label">
-                <SelectValue placeholder="Tous types" />
+                <SelectValue placeholder="Tous" />
               </SelectTrigger>
               <SelectContent className="z-[210]">
-                <SelectItem value="all">Tous types</SelectItem>
+                <SelectItem value="all">Tous</SelectItem>
                 {propertyTypeOptions.map((option) => (
                   <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
                 ))}
@@ -130,11 +130,11 @@ export function SpotlightSearchCriteria({ filters, onChange, onQueryChange }: Sp
             <Label id="spotlight-search-area-label">Ville ou secteur</Label>
             <Select value={selectedArea?.id ?? "all"} onValueChange={updateArea}>
               <SelectTrigger aria-labelledby="spotlight-search-area-label">
-                <SelectValue placeholder="Toutes les villes et tous les secteurs" />
+                <SelectValue placeholder="Tous" />
               </SelectTrigger>
               <SelectContent className="z-[210]">
                 <SelectItem value="all" className="group">
-                  {renderAreaOption("Toutes les villes et tous les secteurs", areaCounts.data?.all)}
+                  {renderAreaOption("Tous", areaCounts.data?.all)}
                 </SelectItem>
                 <SelectGroup>
                   <SelectLabel>Le Havre et ses quartiers</SelectLabel>
