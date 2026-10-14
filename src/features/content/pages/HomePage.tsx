@@ -101,8 +101,7 @@ export default function HomePage() {
         <PhotoAttribution credit={HERO_IMAGE_CREDIT} />
         <div className="page-banner homepage-hero-content container relative z-[5] mx-auto flex flex-col justify-center px-4 py-5 md:py-8">
           <h1 className="max-w-4xl font-display text-3xl text-white md:text-5xl">
-            <span className="block text-3xl font-semibold leading-tight sm:text-5xl md:text-7xl">Agence immobilière au Havre</span>
-            <span className="mt-1 block text-xl font-semibold sm:text-3xl md:text-4xl">Foch Immobilier depuis 1972</span>
+            <span className="block text-4xl font-semibold sm:text-5xl md:text-7xl">Depuis 1972</span>
           </h1>
           <p className="mt-3 max-w-2xl text-base text-white drop-shadow-sm md:text-lg">
             Notre cabinet accompagne vendeurs et acquéreurs avec une approche sur mesure.
