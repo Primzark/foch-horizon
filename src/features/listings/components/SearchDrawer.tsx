@@ -127,8 +127,8 @@ export function SearchDrawer() {
   const resultCountLabel = resultCountValue == null
     ? resultCount.isError ? "—" : "…"
     : resultCountValue.toLocaleString("fr-FR");
-  const resultCountPrefix = resultCountValue === 1 ? "Voir le" : "Voir les";
-  const resultCountSuffix = resultCountValue === 1 ? "résultat disponible" : "résultats disponibles";
+  const resultCountPrefix = "Voir";
+  const resultCountSuffix = resultCountValue === 1 ? "résultat" : "résultats";
   const resultCountAccessibleLabel = resultCountValue == null
     ? resultCount.isError ? "Voir les résultats, disponibilité indisponible" : "Voir les résultats, calcul en cours"
     : `${resultCountPrefix} ${resultCountLabel} ${resultCountSuffix}`;
