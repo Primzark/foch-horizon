@@ -114,7 +114,7 @@ export default function HomePage() {
       </section>
       <section data-live-content="/biens" className="container mx-auto px-4 pt-5 pb-12 md:pt-8 md:pb-12">
         <ScrollReveal mood={heroMood}>
-          <div className="mb-6 flex items-end justify-between gap-4">
+          <div className="mb-6 flex flex-col items-start gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h2 className="font-display text-3xl">Biens actuellement à vendre</h2>
             </div>
@@ -204,7 +204,7 @@ export default function HomePage() {
       {reviewsQuery.data && (
         <section className="container mx-auto px-4 py-12">
           <ScrollReveal mood={heroMood}>
-            <div className="mb-6 flex items-end justify-between gap-4">
+            <div className="mb-6 flex flex-col items-start gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <div className="inline-flex items-center gap-2">
                   <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-border bg-background/80 shadow-sm">
