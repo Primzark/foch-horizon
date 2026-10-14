@@ -371,13 +371,11 @@ export function SearchDrawer() {
                 pushFilters(draft);
                 setSearchDrawerOpen(false);
               }}
-              className="gap-2"
+              className="gap-0"
             >
-              <span className="whitespace-nowrap">{resultCountPrefix}</span>
-              <span aria-live="polite" className="min-w-7 text-center text-xs font-semibold tabular-nums">
-                {resultCountLabel}
+              <span className="whitespace-nowrap">
+                {resultCountPrefix} <span aria-live="polite" className="font-semibold tabular-nums">{resultCountLabel}</span> {resultCountSuffix}
               </span>
-              <span className="whitespace-nowrap">{resultCountSuffix}</span>
             </Button>
           )}
           {!isMobile && (
@@ -388,13 +386,11 @@ export function SearchDrawer() {
                 pushFilters(draft);
                 setSearchDrawerOpen(false);
               }}
-              className="gap-2"
+              className="gap-0"
             >
-              <span className="whitespace-nowrap">{resultCountPrefix}</span>
-              <span aria-live="polite" className="min-w-7 text-center text-xs font-semibold tabular-nums">
-                {resultCountLabel}
+              <span className="whitespace-nowrap">
+                {resultCountPrefix} <span aria-live="polite" className="font-semibold tabular-nums">{resultCountLabel}</span> {resultCountSuffix}
               </span>
-              <span className="whitespace-nowrap">{resultCountSuffix}</span>
             </Button>
           )}
         </div>
