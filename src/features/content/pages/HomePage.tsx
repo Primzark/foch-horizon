@@ -2,6 +2,7 @@ import { useMemo, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Compass, Handshake } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { GoogleGIcon } from "@/components/branding/GoogleGIcon";
 import { BudgetFinder } from "@/features/content/components/BudgetFinder";
 import { MainSearchBar } from "@/features/content/components/MainSearchBar";
@@ -148,6 +149,19 @@ export default function HomePage() {
               className="paper-grain [--paper-grain-opacity:0.032] [--paper-grain-mobile-reduction:0.018]"
             />
           ))}
+        </div>
+
+        <div className="mt-6 flex flex-col gap-4 rounded-2xl border border-brand-border bg-brand-soft/50 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+          <p className="text-sm leading-relaxed text-foreground sm:text-base">
+            <span className="font-semibold">Vous ne trouvez pas encore le bien qu’il vous faut ?</span>{" "}
+            Notre portefeuille comprend aussi des biens non publiés en ligne. Contactez-nous pour découvrir l’ensemble de nos biens disponibles.
+          </p>
+          <Button asChild variant="brand" className="min-h-11 w-full shrink-0 sm:w-auto">
+            <Link to="/contact">
+              Contacter l’agence
+              <ArrowRight aria-hidden="true" className="ml-1 h-4 w-4" />
+            </Link>
+          </Button>
         </div>
       </section>
 
