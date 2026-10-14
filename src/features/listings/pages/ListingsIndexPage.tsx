@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
+import { ArrowRight, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { searchProperties } from "@/features/listings/api/properties.service";
 import { ActiveFiltersChips } from "@/features/listings/components/ActiveFiltersChips";
@@ -229,6 +230,24 @@ export default function ListingsIndexPage() {
           setSearchParams(buildContextualSearchParams(defaultParams));
         }}
       />
+
+      <aside className="my-5 flex flex-col gap-4 rounded-2xl border border-brand-border bg-brand-soft/50 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+        <div className="flex items-start gap-3">
+          <span className="mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-background text-brand-strong">
+            <Phone aria-hidden="true" className="h-5 w-5" />
+          </span>
+          <p className="max-w-3xl text-sm leading-relaxed text-foreground sm:text-base">
+            <span className="font-semibold">Notre sélection en ligne ne présente pas tous les biens disponibles.</span>{" "}
+            Contactez l’agence pour découvrir l’ensemble de notre portefeuille immobilier.
+          </p>
+        </div>
+        <Button asChild variant="brand" className="min-h-11 w-full shrink-0 sm:w-auto">
+          <Link to="/contact">
+            Contacter l’agence
+            <ArrowRight aria-hidden="true" className="ml-1 h-4 w-4" />
+          </Link>
+        </Button>
+      </aside>
 
       {favoriteIds.length >= 3 && (
         <div className="mb-4 rounded-2xl border border-brand-border bg-brand-soft/60 p-4 text-sm text-brand-strong">
