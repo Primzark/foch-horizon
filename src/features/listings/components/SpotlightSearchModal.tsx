@@ -441,12 +441,12 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
                 type="submit"
                 form="spotlight-search-criteria-form"
                 aria-label={resultCountAccessibleLabel}
-                className="inline-flex shrink-0 items-center gap-2 rounded-full bg-brand-strong px-4 py-2 font-semibold text-white transition-colors hover:bg-brand-strong/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-strong focus-visible:ring-offset-2"
+                className="inline-flex shrink-0 items-center gap-0 rounded-full bg-brand-strong px-4 py-2 font-semibold text-white transition-colors hover:bg-brand-strong/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-strong focus-visible:ring-offset-2"
               >
-                {resultCountPrefix}
+                {resultCountPrefix}{" "}
                 <span aria-live="polite" className="text-xs font-normal tabular-nums opacity-85">
                   {resultCountNumber}
-                </span>
+                </span>{" "}
                 {resultCountSuffix}
               </button>
             ) : (
