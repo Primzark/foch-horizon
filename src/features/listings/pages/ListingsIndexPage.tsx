@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { searchProperties } from "@/features/listings/api/properties.service";
+import { getPropertyById, searchProperties } from "@/features/listings/api/properties.service";
 import { ActiveFiltersChips } from "@/features/listings/components/ActiveFiltersChips";
 import { FiltersBar } from "@/features/listings/components/FiltersBar";
 import { ListingCard } from "@/features/listings/components/ListingCard";
@@ -81,7 +81,29 @@ export default function ListingsIndexPage() {
 
   const query = useQuery({
     queryKey: ["properties", filters],
-    queryFn: () => searchProperties(filters),
+    queryFn: async () => {
+      const response = await searchProperties(filters);
+      const items = await Promise.all(
+        response.items.map(async (item) => {
+          if ((item.imageUrls?.length ?? 0) > 1) return item;
+
+          const property = await getPropertyById(item.id);
+          const imageUrls = property?.images
+            .map((image) => image.sourceUrl)
+            .filter(Boolean) ?? [];
+
+          if (imageUrls.length <= (item.imageUrls?.length ?? 0)) return item;
+
+          return {
+            ...item,
+            coverImageUrl: imageUrls[0] ?? item.coverImageUrl,
+            imageUrls,
+          };
+        }),
+      );
+
+      return { ...response, items };
+    },
   });
 
   const isPriceSort = filters.sort === "price_asc" || filters.sort === "price_desc";
