@@ -206,7 +206,7 @@ export function AppHeader() {
   const assistantButton = (mobile = false) => (
     <button
       type="button"
-      className={cn("inline-flex items-center gap-2 rounded-full border border-brand-border bg-brand-soft px-4 py-2.5 text-sm font-medium text-brand-strong transition-colors hover:bg-brand-soft/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand", mobile && "mt-2 justify-center py-3")}
+      className={cn("inline-flex items-center gap-2 rounded-full border border-brand-border bg-brand-soft px-4 py-2.5 text-sm font-medium text-brand-strong transition-colors hover:bg-brand-soft/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand", mobile && "mt-1 justify-center py-2.5")}
       onClick={() => { setMobileOpen(false); openSiteAssistant(); }}
       onPointerEnter={prewarmAssistant}
       onPointerDown={prewarmAssistant}
@@ -282,22 +282,22 @@ export function AppHeader() {
         onClickCapture={handleMobileDrawerClickCapture}
         className="flex h-dvh w-[88vw] max-w-[360px] touch-pan-y flex-col bg-background p-0 lg:hidden"
       >
-        <SheetTitle className="border-b border-border px-5 py-6 font-display text-2xl">Foch Immobilier</SheetTitle>
-        <div className="flex items-center justify-end border-b border-border px-5 py-3">
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <LanguageSwitcher />
+        <SheetTitle className="border-b border-border px-5 py-4 font-display text-2xl">Foch Immobilier</SheetTitle>
+        <div className="flex items-center justify-end border-b border-border px-4 py-2">
+          <div className="flex items-center gap-1.5">
+            <ThemeToggle className="h-9 w-9" />
+            <LanguageSwitcher className="h-[30px] w-[68px]" />
           </div>
         </div>
-        <nav aria-label="Navigation mobile" className="flex flex-1 flex-col gap-1 overflow-y-auto px-4 py-3">
+        <nav aria-label="Navigation mobile" className="flex flex-1 flex-col gap-0 overflow-y-auto px-4 py-2">
           {primaryLinks.map((item) => (
             <SheetClose asChild key={item.to}>
-              <NavLink to={item.to} end={item.to === "/"} className={({ isActive }) => cn("rounded-lg px-3 py-3 font-medium hover:bg-brand-soft", isActive && "bg-brand-soft text-brand-strong")}>{item.label}</NavLink>
+              <NavLink to={item.to} end={item.to === "/"} className={({ isActive }) => cn("rounded-lg px-3 py-2.5 font-medium hover:bg-brand-soft", isActive && "bg-brand-soft text-brand-strong")}>{item.label}</NavLink>
             </SheetClose>
           ))}
           {isAuthorizedAdmin && (
             <SheetClose asChild>
-              <NavLink to="/admin" className={({ isActive }) => cn("inline-flex items-center gap-3 rounded-lg px-3 py-3 font-medium hover:bg-brand-soft", isActive && "bg-brand-soft text-brand-strong")}>
+              <NavLink to="/admin" className={({ isActive }) => cn("inline-flex items-center gap-3 rounded-lg px-3 py-2.5 font-medium hover:bg-brand-soft", isActive && "bg-brand-soft text-brand-strong")}>
                 <ShieldCheck className="h-4 w-4" aria-hidden="true" />
                 Administration
               </NavLink>
@@ -305,7 +305,7 @@ export function AppHeader() {
           )}
           {assistantButton(true)}
         </nav>
-        <div className="border-t border-border px-5 py-4 text-sm">
+        <div className="border-t border-border px-4 py-3 text-sm">
           <p>109 Av. Foch, 76600 Le Havre</p>
           <a href="tel:0235425176" className="mt-2 block">02 35 42 51 76</a>
           <a href="mailto:vendre@fochimmobilier.com" className="block">vendre@fochimmobilier.com</a>
