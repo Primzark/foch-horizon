@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowUpRight, LocateFixed, MapPin, X } from "lucide-react";
+import { ArrowUpRight, LocateFixed, MapPin, Move, X } from "lucide-react";
 import * as L from "leaflet";
 import type { PropertySearchItem } from "@/types/api";
 import { PropertyPreviewLink } from "@/features/listings/components/PropertyPreviewLink";
@@ -76,7 +76,10 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
   const onSelectRef = useRef<(id: number) => void>(() => undefined);
   const selectedIdRef = useRef<number | null>(null);
   const highlightedIdRef = useRef<number | null>(null);
+  const singleFingerPanEnabledRef = useRef(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [usesCooperativeMapGestures, setUsesCooperativeMapGestures] = useState(false);
+  const [singleFingerPanEnabled, setSingleFingerPanEnabled] = useState(false);
 
   const positions = useMemo(
     () => items.map((item) => ({ item, position: approximatePosition(item) })),
@@ -95,12 +98,15 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
     if (!mapElementRef.current) return;
 
     const markersForCleanup = markerRefs.current;
+    const cooperativeViewport = window.matchMedia("(max-width: 1023px)");
 
     const map = L.map(mapElementRef.current, {
       center: DEFAULT_CENTER,
       zoom: 11,
       zoomControl: true,
       scrollWheelZoom: false,
+      touchZoom: true,
+      dragging: !cooperativeViewport.matches,
     });
     L.tileLayer(TILE_URL, {
       maxZoom: 19,
@@ -110,7 +116,22 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
     mapRef.current = map;
     markerLayerRef.current = markerLayer;
 
+    const syncMapGestureMode = () => {
+      const useCooperativeGestures = cooperativeViewport.matches;
+      setUsesCooperativeMapGestures(useCooperativeGestures);
+      if (!useCooperativeGestures) {
+        singleFingerPanEnabledRef.current = false;
+        setSingleFingerPanEnabled(false);
+      }
+
+      if (!useCooperativeGestures || singleFingerPanEnabledRef.current) map.dragging.enable();
+      else map.dragging.disable();
+    };
+    syncMapGestureMode();
+    cooperativeViewport.addEventListener("change", syncMapGestureMode);
+
     return () => {
+      cooperativeViewport.removeEventListener("change", syncMapGestureMode);
       markerLayer.clearLayers();
       map.remove();
       mapRef.current = null;
@@ -201,6 +222,17 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
     }
   };
 
+  const toggleSingleFingerPan = () => {
+    const nextEnabled = !singleFingerPanEnabledRef.current;
+    singleFingerPanEnabledRef.current = nextEnabled;
+    setSingleFingerPanEnabled(nextEnabled);
+
+    const map = mapRef.current;
+    if (!map) return;
+    if (nextEnabled || !window.matchMedia("(max-width: 1023px)").matches) map.dragging.enable();
+    else map.dragging.disable();
+  };
+
   return (
     <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
       <section
@@ -280,6 +312,24 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
 
       <section aria-label="Carte des biens" className="relative isolate h-[440px] overflow-hidden rounded-2xl border border-border bg-muted lg:h-[min(74vh,780px)]">
         <div ref={mapElementRef} className="foch-property-map h-full w-full" />
+
+        {usesCooperativeMapGestures && (
+          <>
+            <div className="pointer-events-none absolute bottom-14 left-3 z-[500] max-w-[calc(100%-13rem)] rounded-full border border-border/70 bg-background/90 px-3 py-2 text-[11px] font-medium text-foreground shadow-sm backdrop-blur">
+              {singleFingerPanEnabled ? "Déplacement à un doigt activé" : "Deux doigts pour déplacer ou zoomer la carte"}
+            </div>
+            <button
+              type="button"
+              onClick={toggleSingleFingerPan}
+              aria-pressed={singleFingerPanEnabled}
+              aria-label={singleFingerPanEnabled ? "Arrêter le déplacement de la carte à un doigt" : "Activer le déplacement de la carte à un doigt"}
+              className="absolute bottom-14 right-3 z-[1000] inline-flex min-h-10 items-center gap-2 rounded-full border border-border/80 bg-background/95 px-3 py-2 text-xs font-semibold text-foreground shadow-sm backdrop-blur transition hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <Move aria-hidden="true" className="h-4 w-4 text-brand-strong" />
+              {singleFingerPanEnabled ? "Arrêter le déplacement" : "Déplacer à un doigt"}
+            </button>
+          </>
+        )}
 
         <button
           type="button"
