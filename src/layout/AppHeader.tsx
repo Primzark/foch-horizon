@@ -283,8 +283,7 @@ export function AppHeader() {
         className="flex h-dvh w-[88vw] max-w-[360px] touch-pan-y flex-col bg-background p-0 lg:hidden"
       >
         <SheetTitle className="border-b border-border px-5 py-6 font-display text-2xl">Foch Immobilier</SheetTitle>
-        <div className="flex items-center justify-between border-b border-border px-5 py-3 text-xs uppercase tracking-[0.16em] text-muted-foreground">
-          <span>Langue / Language</span>
+        <div className="flex items-center justify-end border-b border-border px-5 py-3">
           <div className="flex items-center gap-2">
             <ThemeToggle />
             <LanguageSwitcher />
