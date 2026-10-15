@@ -575,9 +575,9 @@ export function ListingGallery({
                   aria-label="Photo précédente"
                   title="Photo précédente"
                   onClick={() => moveGalleryImage(-1)}
-                  className="absolute left-4 top-1/2 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-foreground shadow-lg transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:bg-black/95 md:inline-flex"
+                  className="absolute left-2 top-1/2 z-10 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-border/70 bg-white/95 text-foreground shadow-md transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 touch-manipulation dark:bg-black/95 dark:hover:bg-muted sm:left-4"
                 >
-                  <ChevronLeft className="h-6 w-6" aria-hidden="true" />
+                  <ChevronLeft className="h-5 w-5" aria-hidden="true" />
                 </button>
               )}
               {safeGalleryImageIndex < images.length - 1 && (
@@ -586,9 +586,9 @@ export function ListingGallery({
                   aria-label="Photo suivante"
                   title="Photo suivante"
                   onClick={() => moveGalleryImage(1)}
-                  className="absolute right-4 top-1/2 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-foreground shadow-lg transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:bg-black/95 md:inline-flex"
+                  className="absolute right-2 top-1/2 z-10 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-border/70 bg-white/95 text-foreground shadow-md transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 touch-manipulation dark:bg-black/95 dark:hover:bg-muted sm:right-4"
                 >
-                  <ChevronRight className="h-6 w-6" aria-hidden="true" />
+                  <ChevronRight className="h-5 w-5" aria-hidden="true" />
                 </button>
               )}
             </div>
