@@ -60,7 +60,7 @@ export function FiltersBar({ sort, onSortChange, viewMode, onViewModeChange, onO
             <button
               type="button"
               aria-pressed={viewMode === "grid"}
-              className={`rounded-md p-2 ${viewMode === "grid" ? "bg-muted text-foreground" : "text-muted-foreground"}`}
+              className={`hidden rounded-md p-2 md:inline-flex ${viewMode === "grid" ? "bg-muted text-foreground" : "text-muted-foreground"}`}
               onClick={() => onViewModeChange("grid")}
               aria-label="Vue grille"
             >
