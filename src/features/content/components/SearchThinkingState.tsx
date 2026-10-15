@@ -8,6 +8,74 @@ type SearchThinkingStateProps = {
   className?: string;
 };
 
+type SearchThinkingIndicatorProps = {
+  compact?: boolean;
+  className?: string;
+};
+
+export function SearchThinkingIndicator({ compact = false, className }: SearchThinkingIndicatorProps) {
+  const prefersReducedMotion = useReducedMotion();
+
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        "relative block shrink-0",
+        compact ? "h-5 w-8 overflow-hidden" : "h-10 w-16",
+        className,
+      )}
+    >
+      <span
+        className={cn("absolute left-0 top-0 h-10 w-16 origin-top-left", compact && "scale-50")}
+      >
+        {[0, 1, 2].map((row) => (
+          <span
+            key={`track-${row}`}
+            className="absolute left-1 right-1 h-px rounded-full bg-border/70"
+            style={{ top: `${8 + row * 12}px` }}
+          />
+        ))}
+
+        {[0, 1, 2].map((row) => (
+          <motion.span
+            key={`packet-${row}`}
+            className="absolute h-1.5 w-4 rounded-full bg-gradient-to-r from-primary/30 via-primary/90 to-emerald-300/80 shadow-[0_0_12px_rgba(16,185,129,0.25)]"
+            style={{ top: `${5 + row * 12}px` }}
+            animate={
+              prefersReducedMotion
+                ? { opacity: [0.5, 1, 0.5] }
+                : { x: [0, 36, 0], opacity: [0.35, 1, 0.35] }
+            }
+            transition={{
+              duration: 1.25,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: row * 0.18,
+            }}
+          />
+        ))}
+
+        {[0, 1, 2].map((row) => (
+          <motion.span
+            key={`node-${row}`}
+            className="absolute right-0 h-2.5 w-2.5 rounded-full border border-primary/40 bg-background shadow-[0_0_0_1px_rgba(255,255,255,0.06)_inset]"
+            style={{ top: `${3 + row * 12}px` }}
+            animate={{
+              scale: [1, 1.12, 1],
+              boxShadow: [
+                "0 0 0 rgba(16,185,129,0)",
+                "0 0 10px rgba(16,185,129,0.35)",
+                "0 0 0 rgba(16,185,129,0)",
+              ],
+            }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: row * 0.12 }}
+          />
+        ))}
+      </span>
+    </span>
+  );
+}
+
 export function SearchThinkingState({
   label = "je cherche",
   details,
@@ -39,44 +107,7 @@ export function SearchThinkingState({
         />
 
         <div className="relative flex items-center gap-3">
-          <div aria-hidden="true" className="relative h-10 w-16 shrink-0">
-            {[0, 1, 2].map((row) => (
-              <div
-                key={`track-${row}`}
-                className="absolute left-1 right-1 h-px rounded-full bg-border/70"
-                style={{ top: `${8 + row * 12}px` }}
-              />
-            ))}
-
-            {[0, 1, 2].map((row) => (
-              <motion.span
-                key={`packet-${row}`}
-                className="absolute h-1.5 w-4 rounded-full bg-gradient-to-r from-primary/30 via-primary/90 to-emerald-300/80 shadow-[0_0_12px_rgba(16,185,129,0.25)]"
-                style={{ top: `${5 + row * 12}px` }}
-                animate={
-                  prefersReducedMotion
-                    ? { opacity: [0.5, 1, 0.5] }
-                    : { x: [0, 36, 0], opacity: [0.35, 1, 0.35] }
-                }
-                transition={{
-                  duration: 1.25,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: row * 0.18,
-                }}
-              />
-            ))}
-
-            {[0, 1, 2].map((row) => (
-              <motion.span
-                key={`node-${row}`}
-                className="absolute right-0 h-2.5 w-2.5 rounded-full border border-primary/40 bg-background shadow-[0_0_0_1px_rgba(255,255,255,0.06)_inset]"
-                style={{ top: `${3 + row * 12}px` }}
-                animate={{ scale: [1, 1.12, 1], boxShadow: ["0 0 0 rgba(16,185,129,0)", "0 0 10px rgba(16,185,129,0.35)", "0 0 0 rgba(16,185,129,0)"] }}
-                transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: row * 0.12 }}
-              />
-            ))}
-          </div>
+          <SearchThinkingIndicator />
 
           <div className="min-w-0 flex-1">
             <p className="font-medium text-foreground">{label}</p>

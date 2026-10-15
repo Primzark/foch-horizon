@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { sortOptions } from "@/features/listings/data/options";
+import { SearchThinkingIndicator } from "@/features/content/components/SearchThinkingState";
 import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
 
 interface FiltersBarProps {
@@ -11,30 +12,43 @@ interface FiltersBarProps {
   viewMode: "grid" | "list" | "map";
   onViewModeChange: (value: "grid" | "list" | "map") => void;
   onOpenDrawer: () => void;
-  total: number;
+  total?: number;
+  isLoading?: boolean;
 }
 
-export function FiltersBar({ sort, onSortChange, viewMode, onViewModeChange, onOpenDrawer, total }: FiltersBarProps) {
+export function FiltersBar({
+  sort,
+  onSortChange,
+  viewMode,
+  onViewModeChange,
+  onOpenDrawer,
+  total,
+  isLoading = false,
+}: FiltersBarProps) {
   const { reducedMotion } = useMotionPreference();
 
   return (
     <div className="sticky top-[calc(93px+env(safe-area-inset-top))] lg:top-[calc(145px+env(safe-area-inset-top))] z-30 rounded-2xl border border-border bg-background/85 p-3 backdrop-blur supports-[backdrop-filter]:bg-background/70">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground" role="status" aria-live="polite" aria-busy={isLoading}>
             <AnimatePresence mode="wait" initial={false}>
               <motion.span
-                key={total}
+                key={isLoading ? "loading" : total ?? "unavailable"}
                 initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -6 }}
                 transition={{ duration: 0.18, ease: "easeOut" }}
-                className="inline-block"
+                className="inline-flex min-w-[1ch] items-center justify-center align-middle"
               >
-                {total}
+                {isLoading ? <SearchThinkingIndicator compact /> : total ?? "—"}
               </motion.span>
             </AnimatePresence>{" "}
-            bien{total > 1 ? "s" : ""} trouvé{total > 1 ? "s" : ""}
+            {isLoading
+              ? "biens en cours de recherche"
+              : total == null
+                ? "résultats indisponibles"
+                : `bien${total > 1 ? "s" : ""} trouvé${total > 1 ? "s" : ""}`}
           </p>
         </div>
 

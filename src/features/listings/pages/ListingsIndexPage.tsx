@@ -240,7 +240,8 @@ export default function ListingsIndexPage() {
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         onOpenDrawer={() => setSearchDrawerOpen(true)}
-        total={query.data?.total ?? 0}
+        total={query.data?.total}
+        isLoading={query.isFetching}
       />
 
       <ActiveFiltersChips
