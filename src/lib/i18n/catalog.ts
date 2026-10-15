@@ -295,6 +295,7 @@ export const englishCopy: Record<string, string> = {
   "Vue grille": "Grid view",
   "Vue liste": "List view",
   "Vue carte": "Map view",
+  "Liste": "List",
   "Aucune image disponible pour ce bien.": "No image is available for this property.",
   "Image précédente": "Previous image",
   "Image suivante": "Next image",
