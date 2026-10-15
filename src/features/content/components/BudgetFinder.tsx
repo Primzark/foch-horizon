@@ -140,7 +140,7 @@ export function BudgetFinder() {
                 onChange={(event) => setPropertyType(event.target.value as PropertyType | "")}
                 className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
-                <option value="">Tous les types</option>
+                <option value="">Tous</option>
                 {propertyTypeOptions.map((option) => (
                   <option key={option.value} value={option.value}>{option.label}</option>
                 ))}
@@ -155,7 +155,7 @@ export function BudgetFinder() {
                 onChange={(event) => setAreaId(event.target.value)}
                 className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
-                <option value="">Tous les secteurs</option>
+                <option value="">Tous</option>
                 <optgroup label="Le Havre et ses quartiers">
                   {havreAreas.map((guide) => (
                     <option key={guide.id} value={guide.id}>{guide.name}</option>

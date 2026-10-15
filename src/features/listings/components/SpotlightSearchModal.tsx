@@ -113,11 +113,13 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
     enabled: open && advancedOpen,
     staleTime: 30_000,
   });
-  const resultCountLabel = resultCount.data
-    ? `${resultCount.data.total.toLocaleString("fr-FR")} bien${resultCount.data.total === 1 ? "" : "s"} disponibles`
-    : resultCount.isError
-      ? "nombre de biens indisponible"
-      : "calcul du nombre de biens";
+  const resultCountValue = resultCount.data?.total;
+  const resultCountNumber = resultCountValue?.toLocaleString("fr-FR") ?? (resultCount.isError ? "—" : "…");
+  const resultCountPrefix = resultCountValue === 1 ? "Voir" : "Voir les";
+  const resultCountSuffix = resultCountValue === 1 ? "résultat" : "résultats";
+  const resultCountAccessibleLabel = resultCountValue == null
+    ? resultCount.isError ? "Voir les résultats, disponibilité indisponible" : "Voir les résultats, calcul en cours"
+    : `${resultCountPrefix} ${resultCountNumber} ${resultCountSuffix}`;
 
   useEffect(() => {
     setActiveIndex(-1);
@@ -438,13 +440,14 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
               <button
                 type="submit"
                 form="spotlight-search-criteria-form"
-                aria-label={`Rechercher, ${resultCountLabel}`}
+                aria-label={resultCountAccessibleLabel}
                 className="inline-flex shrink-0 items-center gap-2 rounded-full bg-brand-strong px-4 py-2 font-semibold text-white transition-colors hover:bg-brand-strong/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-strong focus-visible:ring-offset-2"
               >
-                Rechercher
+                {resultCountPrefix}
                 <span aria-live="polite" className="text-xs font-normal tabular-nums opacity-85">
-                  {resultCount.data?.total.toLocaleString("fr-FR") ?? (resultCount.isError ? "—" : "…")}
+                  {resultCountNumber}
                 </span>
+                {resultCountSuffix}
               </button>
             ) : (
               <button type="button" onClick={() => navigateToSearch({}, true)} className="shrink-0 rounded-full px-3 py-2 font-medium text-foreground transition-colors hover:bg-muted hover:text-brand-strong">

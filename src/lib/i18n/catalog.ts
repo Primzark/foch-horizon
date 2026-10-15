@@ -288,6 +288,8 @@ export const englishCopy: Record<string, string> = {
   "Réinitialiser tous les filtres": "Reset all filters",
   "trouvé": "found",
   "trouvés": "found",
+  "résultat": "result",
+  "résultats": "results",
   "Ouvrir les filtres": "Open filters",
   "Mode d’affichage": "View mode",
   "Vue grille": "Grid view",
@@ -298,6 +300,7 @@ export const englishCopy: Record<string, string> = {
   "Image suivante": "Next image",
   "Ouvrir la galerie en plein écran": "Open full-screen gallery",
   "Voir la photo": "View photo",
+  "Voir": "View",
   "Voir les": "View",
   "Revenir à la photo principale": "Return to the main photo",
   "Voir toutes les photos": "View all photos",
@@ -327,6 +330,7 @@ export const englishCopy: Record<string, string> = {
   "Filtrez par type, ville, secteur et critères avancés. L'URL est mise à jour pour des liens partageables.": "Filter by property type, town, area and other criteria. The URL updates so you can share your search.",
   "Tous types": "All property types",
   "Ville ou secteur": "Town or area",
+  "Tous": "All",
   "Toutes les villes et tous les secteurs": "All towns and areas",
   "Le Havre et ses quartiers": "Le Havre and its neighbourhoods",
   "Autres communes et secteurs": "Other towns and areas",
@@ -802,6 +806,13 @@ function translateDynamicFrench(source: string): string | undefined {
 
   const photoCount = source.match(/^Voir les (\d+) photos?$/i);
   if (photoCount) return `View ${photoCount[1]} photo${Number(photoCount[1]) === 1 ? "" : "s"}`;
+
+  const resultAction = source.match(/^Voir(?: les)?\s+([\d\s\u202f,.]+)\s+résultats?$/i);
+  if (resultAction) {
+    const count = resultAction[1].trim();
+    const normalizedCount = Number(count.replace(/[\s\u202f]/g, "").replace(",", "."));
+    return `View ${count} result${normalizedCount === 1 ? "" : "s"}`;
+  }
 
   const photoPosition = source.match(/^Photo (\d+) sur (\d+)$/i);
   if (photoPosition) return `Photo ${photoPosition[1]} of ${photoPosition[2]}`;

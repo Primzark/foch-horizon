@@ -2,8 +2,6 @@ import { LeadForm } from "@/features/leads/components/LeadForm";
 import { useSeo } from "@/lib/seo/useSeo";
 import { StorefrontPageHero } from "@/features/content/components/StorefrontPageHero";
 
-const gallieniReferenceUrl = "https://gallieni-location.fr/page/a-vendre";
-
 export default function EstimationPageV2() {
   useSeo({
     title: "Avis de valeur | Foch Immobilier",
@@ -24,14 +22,9 @@ export default function EstimationPageV2() {
           <p className="text-xs font-medium uppercase tracking-[0.2em] text-brand-strong">En toute confidentialité</p>
           <blockquote className="mt-3 font-display text-3xl leading-tight text-foreground sm:text-4xl md:text-5xl">
             N’hésitez pas à{" "}
-            <a
-              href={gallieniReferenceUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="text-brand-strong underline decoration-brand/50 underline-offset-4 hover:decoration-brand"
-            >
+            <span className="text-brand-strong">
               y faire estimer gracieusement votre bien
-            </a>{" "}
+            </span>{" "}
             et ce en toute confidentialité.
           </blockquote>
         </div>
