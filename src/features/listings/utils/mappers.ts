@@ -4,6 +4,10 @@ import type { Property } from "@/types/domain";
 
 export function toSearchItem(property: Property): PropertySearchItem {
   const city = cityById.get(property.cityId);
+  const imageUrls = [...property.images]
+    .sort((left, right) => left.sortOrder - right.sortOrder)
+    .map((image) => image.sourceUrl)
+    .filter(Boolean);
 
   return {
     id: property.id,
@@ -24,7 +28,8 @@ export function toSearchItem(property: Property): PropertySearchItem {
       slug: city?.slug ?? "",
       postalCode: property.postalCode,
     },
-    coverImageUrl: property.images[0]?.sourceUrl ?? "",
+    coverImageUrl: imageUrls[0] ?? "",
+    imageUrls,
     dpeLabel: property.dpeLabel,
     status: property.status,
     sourceStatus: property.sourceStatus ?? null,

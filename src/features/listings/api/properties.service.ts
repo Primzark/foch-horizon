@@ -324,6 +324,10 @@ export async function searchProperties(params: PropertySearchParams): Promise<Pr
     total,
     items: paginated.map((property) => {
       const city = cityById.get(property.cityId);
+      const imageUrls = [...property.images]
+        .sort((left, right) => left.sortOrder - right.sortOrder)
+        .map((image) => image.sourceUrl)
+        .filter(Boolean);
       return {
         id: property.id,
         title: property.title,
@@ -342,7 +346,8 @@ export async function searchProperties(params: PropertySearchParams): Promise<Pr
           slug: city?.slug ?? "",
           postalCode: property.postalCode,
         },
-        coverImageUrl: property.images[0]?.sourceUrl ?? "",
+        coverImageUrl: imageUrls[0] ?? "",
+        imageUrls,
         dpeLabel: property.dpeLabel,
         status: property.status,
         adminStatusOverride: property.adminStatusOverride ?? null,
@@ -529,15 +534,15 @@ export async function getPropertiesByCitySlug(citySlug: string): Promise<Propert
         publishedAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         isFeatured: false,
-        images: [
-          {
-            id: `${item.id}-cover`,
+        images: (item.imageUrls?.length ? item.imageUrls : [item.coverImageUrl])
+          .filter(Boolean)
+          .map((sourceUrl, sortOrder) => ({
+            id: `${item.id}-image-${sortOrder}`,
             propertyId: item.id,
-            sourceUrl: item.coverImageUrl,
-            sortOrder: 0,
+            sourceUrl,
+            sortOrder,
             altText: item.title,
-          },
-        ],
+          })),
         features: [],
       };
     });

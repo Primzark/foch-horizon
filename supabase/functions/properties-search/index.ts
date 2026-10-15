@@ -88,31 +88,38 @@ Deno.serve(async (request) => {
       },
     );
 
-    const items = (searchResult.rows as PropertyRow[]).map((item) => ({
-      id: item.id,
-      title: item.title,
-      slug: item.slug,
-      transaction: item.transaction_type,
-      type: item.property_type,
-      priceAmount: item.price_amount,
-      currency: item.price_currency,
-      surfaceM2: item.surface_m2,
-      bedrooms: item.bedrooms,
-      bathrooms: item.bathrooms,
-      parking: item.parking_count,
-      garage: item.garage_count,
-      city: {
-        name: item.city?.name ?? "",
-        slug: item.city?.slug ?? "",
-        postalCode: item.postal_code ?? "",
-      },
-      coverImageUrl:
-        item.images?.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))[0]?.source_url ?? "",
-      dpeLabel: item.dpe_label,
-      status: item.status,
-      adminStatusOverride: item.admin_status_override,
-      sourceStatus: item.source_status,
-    }));
+    const items = (searchResult.rows as PropertyRow[]).map((item) => {
+      const imageUrls = [...(item.images ?? [])]
+        .sort((left, right) => (left.sort_order ?? 0) - (right.sort_order ?? 0))
+        .map((image) => image.source_url)
+        .filter(Boolean);
+
+      return {
+        id: item.id,
+        title: item.title,
+        slug: item.slug,
+        transaction: item.transaction_type,
+        type: item.property_type,
+        priceAmount: item.price_amount,
+        currency: item.price_currency,
+        surfaceM2: item.surface_m2,
+        bedrooms: item.bedrooms,
+        bathrooms: item.bathrooms,
+        parking: item.parking_count,
+        garage: item.garage_count,
+        city: {
+          name: item.city?.name ?? "",
+          slug: item.city?.slug ?? "",
+          postalCode: item.postal_code ?? "",
+        },
+        coverImageUrl: imageUrls[0] ?? "",
+        imageUrls,
+        dpeLabel: item.dpe_label,
+        status: item.status,
+        adminStatusOverride: item.admin_status_override,
+        sourceStatus: item.source_status,
+      };
+    });
 
     return jsonResponse({
       page: searchResult.page,

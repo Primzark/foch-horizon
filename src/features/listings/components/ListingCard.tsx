@@ -12,12 +12,10 @@ import {
 } from "@/features/listings/utils/formatting";
 import { useFavoritesStore } from "@/features/favorites/useFavoritesStore";
 import { getPlaceImageMotionPreset, inferPlaceImageMood } from "@/lib/visuals/placeImageMotion";
-import { PlaceAtmosphereLayer } from "@/components/visuals/PlaceAtmosphereLayer";
-import { ContextAwareParallax } from "@/components/visuals/ContextAwareParallax";
 import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
 import { getMotionDirectorProfile } from "@/lib/visuals/motionDirector";
-import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
 import { PropertyCompareToggle } from "@/features/listings/components/PropertyCompareToggle";
+import { ListingCardPhotoCarousel } from "@/features/listings/components/ListingCardPhotoCarousel";
 
 interface ListingCardProps {
   item: PropertySearchItem;
@@ -61,31 +59,20 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, eagerIma
         itemType="https://schema.org/RealEstateListing"
       >
         <PropertyPreviewLink item={item} browseItems={browseItems} browseTotal={browseTotal} className="group grid gap-4 p-3 md:grid-cols-[280px_1fr] md:p-4" itemProp="url">
-          <div className="relative overflow-hidden rounded-xl">
-            <ContextAwareParallax mood={imageMood} reducedMotion={reducedMotion} intensity="subtle">
-              <img
-                src={getPropertyImageUrl(item.coverImageUrl, 400)}
-                srcSet={getPropertyImageSrcSet(item.coverImageUrl)}
-                sizes={viewMode === "list" ? "(max-width: 767px) 100vw, 280px" : "(max-width: 767px) 92vw, (max-width: 1023px) 48vw, 33vw"}
-                alt={item.title}
-                className={cn(
-                  "aspect-[4/3] h-full w-full object-cover transition-transform",
-                  imageMotionPreset.hoverClassName,
-                )}
-                loading={eagerImage ? "eager" : "lazy"}
-                fetchPriority="low"
-                itemProp="image"
-              />
-            </ContextAwareParallax>
-            <PlaceAtmosphereLayer mood={imageMood} animated={enableAmbientAnimation} className="z-[1]" />
-            <div
-              className={cn(
-                "pointer-events-none absolute inset-0 z-[2] bg-gradient-to-tr opacity-0 transition-opacity duration-500 group-hover:opacity-100",
-                imageMotionPreset.overlayClassName,
-              )}
-            />
+          <ListingCardPhotoCarousel
+            item={item}
+            mood={imageMood}
+            reducedMotion={reducedMotion}
+            eagerImage={eagerImage}
+            containerClassName="rounded-xl"
+            sizes="(max-width: 767px) 100vw, 280px"
+            imageClassName="aspect-[4/3] h-full"
+            imageMotionClassName={cn("transition-transform", imageMotionPreset.hoverClassName)}
+            overlayClassName={cn("bg-gradient-to-tr opacity-0 transition-opacity duration-500 group-hover:opacity-100", imageMotionPreset.overlayClassName)}
+            animateAtmosphere={enableAmbientAnimation}
+          >
             <ListingBadges labels={labels} className="absolute left-2 right-2 top-2 z-[3]" />
-          </div>
+          </ListingCardPhotoCarousel>
 
           <div>
             <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">
@@ -166,45 +153,36 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, eagerIma
       itemType="https://schema.org/RealEstateListing"
     >
       <PropertyPreviewLink item={item} browseItems={browseItems} browseTotal={browseTotal} className="relative block overflow-hidden" itemProp="url">
-        <ContextAwareParallax mood={imageMood} reducedMotion={reducedMotion} intensity="subtle">
-          <img
-            src={getPropertyImageUrl(item.coverImageUrl, 400)}
-            srcSet={getPropertyImageSrcSet(item.coverImageUrl)}
-            sizes="(max-width: 767px) 92vw, (max-width: 1023px) 48vw, 33vw"
-            alt={item.title}
-            className={cn(
-                  "aspect-[3/2] w-full object-cover transition-transform",
-              imageMotionPreset.hoverClassName,
-            )}
-            loading={eagerImage ? "eager" : "lazy"}
-            fetchPriority="low"
-            itemProp="image"
-          />
-        </ContextAwareParallax>
-        <PlaceAtmosphereLayer mood={imageMood} animated={enableAmbientAnimation} className="z-[1]" />
-        <div
-          className={cn(
-            "pointer-events-none absolute inset-0 z-[2] bg-gradient-to-t opacity-80 transition-opacity duration-500 group-hover:opacity-95",
-            imageMotionPreset.overlayClassName,
-          )}
-        />
-        <ListingBadges labels={labels} className="absolute left-3 right-14 top-3 z-[3]" />
-        <button
-          type="button"
-          className={cn(
-            "absolute right-3 top-3 z-[3] rounded-full p-2 transition-colors",
-            isFavorite
-              ? "bg-brand-soft text-brand-strong shadow-[0_8px_22px_hsl(var(--brand)/0.18)]"
-              : "bg-background/90 text-foreground hover:bg-brand-soft/75",
-          )}
-          onClick={(event) => {
-            event.preventDefault();
-            toggleFavorite(item.id);
-          }}
-          aria-label={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+        <ListingCardPhotoCarousel
+          item={item}
+          mood={imageMood}
+          reducedMotion={reducedMotion}
+          eagerImage={eagerImage}
+          sizes="(max-width: 767px) 92vw, (max-width: 1023px) 48vw, 33vw"
+          imageClassName="aspect-[3/2]"
+          imageMotionClassName={imageMotionPreset.hoverClassName}
+          overlayClassName={cn("bg-gradient-to-t opacity-80 transition-opacity duration-500 group-hover:opacity-95", imageMotionPreset.overlayClassName)}
+          animateAtmosphere={enableAmbientAnimation}
         >
-          <Heart className={cn("h-4 w-4", isFavorite && "fill-brand text-brand")} />
-        </button>
+          <ListingBadges labels={labels} className="absolute left-3 right-14 top-3 z-[3]" />
+          <button
+            type="button"
+            className={cn(
+              "absolute right-3 top-3 z-[3] rounded-full p-2 transition-colors",
+              isFavorite
+                ? "bg-brand-soft text-brand-strong shadow-[0_8px_22px_hsl(var(--brand)/0.18)]"
+                : "bg-background/90 text-foreground hover:bg-brand-soft/75",
+            )}
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              toggleFavorite(item.id);
+            }}
+            aria-label={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+          >
+            <Heart className={cn("h-4 w-4", isFavorite && "fill-brand text-brand")} />
+          </button>
+        </ListingCardPhotoCarousel>
       </PropertyPreviewLink>
 
       <div className="space-y-2 p-3 sm:p-4">

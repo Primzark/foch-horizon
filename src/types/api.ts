@@ -36,6 +36,7 @@ export interface PropertySearchItem {
   garage: number | null;
   city: Pick<City, "name" | "slug"> & { postalCode: string };
   coverImageUrl: string;
+  imageUrls?: string[];
   dpeLabel: Property["dpeLabel"];
   status: Property["status"];
   adminStatusOverride?: Property["adminStatusOverride"];
