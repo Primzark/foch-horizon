@@ -518,7 +518,7 @@ export default function ListingDetailPage({
   ) : null;
 
   const stickySummary = property && showStickySummary && !previewLayout ? (
-    <div className="pointer-events-auto fixed inset-x-3 bottom-[calc(4rem_+_env(safe-area-inset-bottom))] z-[105] mx-auto max-w-3xl 2xl:hidden">
+    <div className="pointer-events-auto fixed inset-x-3 bottom-[calc(4rem_+_env(safe-area-inset-bottom))] z-[105] mx-auto max-w-3xl lg:hidden">
       <div className="flex min-w-0 items-center gap-2 rounded-full border border-border/80 bg-background/95 p-1.5 pl-3 shadow-lg backdrop-blur-md">
         <p className="shrink-0 text-[13px] font-semibold tracking-tight text-brand-strong">
           {formatPrice(property.priceAmount, property.transactionType)}
@@ -552,7 +552,7 @@ export default function ListingDetailPage({
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, ease: "easeOut" }}
-      className={`pointer-events-auto fixed ${previewContactFormVisible ? "right-3 w-fit" : "inset-x-3 mx-auto max-w-xl"} bottom-[calc(0.75rem_+_env(safe-area-inset-bottom))] z-[105] 2xl:hidden`}
+      className={`pointer-events-auto fixed ${previewContactFormVisible ? "right-3 w-fit" : "inset-x-3 mx-auto max-w-xl"} bottom-[calc(0.75rem_+_env(safe-area-inset-bottom))] z-[105] lg:hidden`}
     >
       <div className={`grid ${previewContactFormVisible ? "grid-cols-1" : "grid-cols-2"} gap-2 rounded-2xl border border-border/80 bg-white/95 p-2 text-foreground shadow-2xl backdrop-blur-xl dark:bg-black/95`}>
         {!previewContactFormVisible && (
@@ -663,7 +663,7 @@ export default function ListingDetailPage({
     return (
       <section className="container mx-auto min-h-[60vh] px-4 py-8" aria-busy="true" aria-label="Chargement de l’annonce">
         <div className="mb-4 h-4 w-44 rounded bg-muted" aria-hidden="true" />
-        <div className="grid gap-8 2xl:grid-cols-[1fr_340px]">
+        <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
           <div>
             <div className="aspect-[16/9] rounded-2xl bg-muted" aria-hidden="true" />
             <div className="mt-6 h-8 w-2/3 rounded bg-muted" aria-hidden="true" />
@@ -750,8 +750,8 @@ export default function ListingDetailPage({
     </>
   );
   return (
-    <section className={previewLayout ? "listing-preview-modal w-full bg-background pb-32 text-foreground" : "container mx-auto px-4 pt-8 pb-28 2xl:pb-8"}>
-      {!previewLayout && <div className="pointer-events-none fixed right-5 top-1/2 z-20 hidden h-36 -translate-y-1/2 2xl:block">
+    <section className={previewLayout ? "listing-preview-modal w-full bg-background pb-32 text-foreground" : "container mx-auto px-4 pt-8 pb-28 lg:pb-8"}>
+      {!previewLayout && <div className="pointer-events-none fixed right-5 top-1/2 z-20 hidden h-36 -translate-y-1/2 lg:block">
         <div className="h-full w-1 rounded-full bg-border/70">
           <motion.span
             className="block h-full w-full origin-top rounded-full bg-accent"
@@ -803,11 +803,11 @@ export default function ListingDetailPage({
           </div>
         )}
 
-        <div className={`grid min-w-0 grid-cols-1 gap-7 2xl:grid-cols-[minmax(0,1fr)_340px] ${previewLayout ? "relative z-[1] -mt-5 mx-auto max-w-7xl rounded-t-[2rem] bg-background px-5 pt-7 sm:px-8 2xl:mt-0 2xl:rounded-none 2xl:px-6 2xl:pt-7" : "2xl:gap-8"}`}>
+        <div className={`grid min-w-0 grid-cols-1 gap-7 lg:grid-cols-[minmax(0,1fr)_340px] ${previewLayout ? "relative z-[1] -mt-5 mx-auto max-w-7xl rounded-t-[2rem] bg-background px-5 pt-7 sm:px-8 lg:mt-0 lg:rounded-none lg:px-6 lg:pt-7" : "lg:gap-8"}`}>
         <div className="min-w-0">
           {!previewLayout && <ListingGallery key={property.id} images={property.images} title={property.title} propertyId={property.id} />}
 
-          <div id="property-overview" ref={summaryRef} className={`scroll-mt-16 grid grid-cols-1 items-start gap-x-6 gap-y-4 2xl:grid-cols-[minmax(0,1fr)_auto] ${previewLayout ? "mb-6" : "mt-5"}`}>
+          <div id="property-overview" ref={summaryRef} className={`scroll-mt-16 grid grid-cols-1 items-start gap-x-6 gap-y-4 lg:grid-cols-[minmax(0,1fr)_auto] ${previewLayout ? "mb-6" : "mt-5"}`}>
             <div className="min-w-0">
               {!previewLayout && <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Réf du bien {property.id}</p>}
               <h1 className={`leading-[1.08] ${previewLayout ? "font-body text-xl font-bold sm:text-4xl" : "mt-1 font-display text-4xl"}`}>{property.title}</h1>
@@ -819,8 +819,8 @@ export default function ListingDetailPage({
               </p>}
             </div>
 
-            <div className="min-w-0 text-right 2xl:w-auto 2xl:min-w-[16rem]">
-              <div className={`flex flex-wrap items-center justify-end gap-2 ${previewLayout ? "mt-1" : ""}`}>
+            <div className="min-w-0 text-left lg:w-auto lg:min-w-[16rem] lg:text-right">
+              <div className={`flex flex-wrap items-center gap-2 ${previewLayout ? "mt-1 lg:justify-end" : ""}`}>
                 <p className={`leading-tight tracking-tight ${previewLayout ? "whitespace-nowrap font-body text-[2rem] font-bold text-foreground sm:text-5xl" : "font-display text-5xl text-brand-strong sm:text-6xl"}`}>{formatPrice(property.priceAmount, property.transactionType)}</p>
                 {previewLayout && (
                   <p
@@ -833,7 +833,7 @@ export default function ListingDetailPage({
                 )}
               </div>
               {!previewLayout && (
-                <div className="mt-4 flex flex-wrap items-center justify-end gap-2 sm:mt-3">
+                <div className="mt-4 flex flex-wrap items-center gap-2 sm:mt-3 sm:justify-end">
                   {property.status === "active" && property.transactionType === "vente" && (
                     <PropertyCompareToggle propertyId={property.id} />
                   )}
@@ -942,7 +942,7 @@ export default function ListingDetailPage({
           </article>
         </div>
 
-        <aside className={`min-w-0 space-y-4 2xl:sticky ${previewLayout ? "2xl:top-14" : "2xl:top-[calc(145px+env(safe-area-inset-top))]"} 2xl:h-fit`}>
+        <aside className={`min-w-0 space-y-4 lg:sticky ${previewLayout ? "lg:top-14" : "lg:top-[calc(145px+env(safe-area-inset-top))]"} lg:h-fit`}>
           <section className={previewLayout ? "border-b border-border/80 pb-5" : "rounded-2xl border border-border bg-card p-5"}>
             <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Votre interlocuteur</p>
             <p className="mt-2 font-display text-2xl">{agent?.fullName ?? "Foch Immobilier"}</p>
@@ -984,7 +984,7 @@ export default function ListingDetailPage({
       </div>
 
       {nextPropertyToDiscover && (
-        <section className={`mt-16 ${previewLayout ? "mx-auto w-full max-w-7xl px-5 sm:px-8 2xl:px-6" : ""}`}>
+        <section className={`mt-16 ${previewLayout ? "mx-auto w-full max-w-7xl px-5 sm:px-8 lg:px-6" : ""}`}>
           <h2 className="font-display text-3xl">Prochain bien à découvrir</h2>
           <Link
             to={toCanonicalPropertyPath(nextPropertyToDiscover)}
@@ -998,9 +998,9 @@ export default function ListingDetailPage({
         </section>
       )}
       {secondarySimilarItems.length > 0 && (
-        <section className={`mt-14 ${previewLayout ? "mx-auto w-full max-w-7xl px-5 sm:px-8 2xl:px-6" : ""}`} aria-labelledby="similar-properties-heading">
+        <section className={`mt-14 ${previewLayout ? "mx-auto w-full max-w-7xl px-5 sm:px-8 lg:px-6" : ""}`} aria-labelledby="similar-properties-heading">
           <h2 id="similar-properties-heading" className="font-display text-2xl sm:text-3xl">Biens similaires</h2>
-          <div className="mt-4 grid grid-flow-col auto-cols-[84%] snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain pb-2 pr-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:auto-cols-[46%] 2xl:auto-cols-[32%] 2xl:justify-center 2xl:overflow-visible 2xl:pb-0 2xl:pr-0">
+          <div className="mt-4 grid grid-flow-col auto-cols-[84%] snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain pb-2 pr-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:auto-cols-[46%] lg:auto-cols-[32%] lg:justify-center lg:overflow-visible lg:pb-0 lg:pr-0">
             {secondarySimilarItems.map((item) => {
               const favorite = favoriteIds.includes(item.id);
               const roomAndSurface = getRecommendationFacts(item);
