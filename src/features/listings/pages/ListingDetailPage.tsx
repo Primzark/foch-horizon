@@ -807,7 +807,7 @@ export default function ListingDetailPage({
         <div className="min-w-0">
           {!previewLayout && <ListingGallery key={property.id} images={property.images} title={property.title} propertyId={property.id} />}
 
-          <div id="property-overview" ref={summaryRef} className={`scroll-mt-16 grid grid-cols-1 items-start gap-x-6 gap-y-4 2xl:grid-cols-[minmax(0,1fr)_auto] ${previewLayout ? "mb-6" : "mt-5"}`}>
+          <div id="property-overview" ref={summaryRef} className={`scroll-mt-16 grid grid-cols-1 items-start gap-x-6 gap-y-4 lg:grid-cols-[minmax(0,1fr)_18rem] 2xl:grid-cols-[minmax(0,1fr)_auto] ${previewLayout ? "mb-6" : "mt-5"}`}>
             <div className="min-w-0">
               {!previewLayout && <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Réf du bien {property.id}</p>}
               <h1 className={`leading-[1.08] ${previewLayout ? "font-body text-xl font-bold sm:text-4xl" : "mt-1 font-display text-4xl"}`}>{property.title}</h1>
