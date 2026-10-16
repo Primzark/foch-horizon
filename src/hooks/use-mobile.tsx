@@ -1,7 +1,8 @@
 import * as React from "react";
 
 const MOBILE_BREAKPOINT = 768;
-const TABLET_BREAKPOINT = 1440;
+const DESKTOP_BREAKPOINT = 1024;
+const MOBILE_OR_TABLET_QUERY = `(max-width: ${DESKTOP_BREAKPOINT - 1}px), (pointer: coarse)`;
 
 export function useIsMobile() {
   const [isMobile, setIsMobile] = React.useState(() =>
@@ -21,11 +22,11 @@ export function useIsMobile() {
 
 export function useIsMobileOrTablet() {
   const [isMobileOrTablet, setIsMobileOrTablet] = React.useState(() =>
-    typeof window !== "undefined" && window.innerWidth < TABLET_BREAKPOINT,
+    typeof window !== "undefined" && window.matchMedia(MOBILE_OR_TABLET_QUERY).matches,
   );
 
   React.useEffect(() => {
-    const mql = window.matchMedia(`(max-width: ${TABLET_BREAKPOINT - 1}px)`);
+    const mql = window.matchMedia(MOBILE_OR_TABLET_QUERY);
     const onChange = () => setIsMobileOrTablet(mql.matches);
     mql.addEventListener("change", onChange);
     onChange();

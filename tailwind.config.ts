@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import plugin from "tailwindcss/plugin";
 import tailwindcssAnimate from "tailwindcss-animate";
 
 const config: Config = {
@@ -18,9 +19,6 @@ const config: Config = {
       },
     },
     extend: {
-      screens: {
-        desktop: "1440px",
-      },
       fontFamily: {
         display: ["Cormorant Garamond", "Georgia", "serif"],
         body: ["Sora", "Avenir Next", "sans-serif"],
@@ -111,7 +109,12 @@ const config: Config = {
       },
     },
   },
-  plugins: [tailwindcssAnimate],
+  plugins: [
+    tailwindcssAnimate,
+    plugin(({ addVariant }) => {
+      addVariant("desktop", "@media (min-width: 1024px) and (not (pointer: coarse))");
+    }),
+  ],
 };
 
 export default config;
