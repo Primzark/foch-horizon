@@ -807,7 +807,7 @@ export default function ListingDetailPage({
         <div className="min-w-0">
           {!previewLayout && <ListingGallery key={property.id} images={property.images} title={property.title} propertyId={property.id} />}
 
-          <div id="property-overview" ref={summaryRef} className={`scroll-mt-16 grid grid-cols-1 items-start gap-x-6 gap-y-4 lg:grid-cols-[minmax(0,1fr)_auto] ${previewLayout ? "mb-6" : "mt-5"}`}>
+          <div id="property-overview" ref={summaryRef} className={`scroll-mt-16 grid grid-cols-1 items-start gap-x-6 gap-y-4 2xl:grid-cols-[minmax(0,1fr)_auto] ${previewLayout ? "mb-6" : "mt-5"}`}>
             <div className="min-w-0">
               {!previewLayout && <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Réf du bien {property.id}</p>}
               <h1 className={`leading-[1.08] ${previewLayout ? "font-body text-xl font-bold sm:text-4xl" : "mt-1 font-display text-4xl"}`}>{property.title}</h1>
@@ -819,7 +819,7 @@ export default function ListingDetailPage({
               </p>}
             </div>
 
-            <div className="min-w-0 text-left lg:w-auto lg:min-w-[16rem] lg:text-right">
+            <div className="min-w-0 text-left 2xl:w-auto 2xl:min-w-[16rem] 2xl:text-right">
               <div className={`flex flex-wrap items-center gap-2 ${previewLayout ? "mt-1 lg:justify-end" : ""}`}>
                 <p className={`leading-tight tracking-tight ${previewLayout ? "whitespace-nowrap font-body text-[2rem] font-bold text-foreground sm:text-5xl" : "font-display text-5xl text-brand-strong sm:text-6xl"}`}>{formatPrice(property.priceAmount, property.transactionType)}</p>
                 {previewLayout && (
