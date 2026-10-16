@@ -819,8 +819,8 @@ export default function ListingDetailPage({
               </p>}
             </div>
 
-            <div className="min-w-0 text-left 2xl:w-auto 2xl:min-w-[16rem] 2xl:text-right">
-              <div className={`flex flex-wrap items-center gap-2 ${previewLayout ? "mt-1 lg:justify-end" : ""}`}>
+            <div className="min-w-0 text-right 2xl:w-auto 2xl:min-w-[16rem]">
+              <div className={`flex flex-wrap items-center justify-end gap-2 ${previewLayout ? "mt-1" : ""}`}>
                 <p className={`leading-tight tracking-tight ${previewLayout ? "whitespace-nowrap font-body text-[2rem] font-bold text-foreground sm:text-5xl" : "font-display text-5xl text-brand-strong sm:text-6xl"}`}>{formatPrice(property.priceAmount, property.transactionType)}</p>
                 {previewLayout && (
                   <p
@@ -833,7 +833,7 @@ export default function ListingDetailPage({
                 )}
               </div>
               {!previewLayout && (
-                <div className="mt-4 flex flex-wrap items-center gap-2 sm:mt-3 sm:justify-end">
+                <div className="mt-4 flex flex-wrap items-center justify-end gap-2 sm:mt-3">
                   {property.status === "active" && property.transactionType === "vente" && (
                     <PropertyCompareToggle propertyId={property.id} />
                   )}
