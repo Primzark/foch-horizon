@@ -6,7 +6,7 @@ import { AppLayout } from "@/layout/AppLayout";
 import { CookieConsentManager } from "@/layout/CookieConsentManager";
 import { routePageLoaders } from "@/app/router/routePageLoaders";
 import { RouteIntentPrefetcher } from "@/app/router/RouteIntentPrefetcher";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsMobileOrTablet } from "@/hooks/use-mobile";
 
 const LegacyAnnonceRedirect = lazy(routePageLoaders.legacyAnnonce);
 const LegacyPropertySlugRedirect = lazy(routePageLoaders.legacyProperty);
@@ -96,14 +96,14 @@ function PropertyDetailRouteModal() {
         <div ref={setStickySummaryPortalElement} className="pointer-events-none absolute inset-0 z-50" />
         <div
           ref={detailsScrollRef}
-          className="min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain pb-[calc(6rem_+_env(safe-area-inset-bottom))] lg:pb-0"
+          className="min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain pb-[calc(6rem_+_env(safe-area-inset-bottom))] desktop:pb-0"
         >
           <Suspense
             key={propertyReference}
             fallback={(
               <section className="container mx-auto min-h-[60vh] px-4 pt-4 pb-8" aria-busy="true" aria-label="Chargement de l’annonce">
                 <div className="mb-4 h-4 w-44 rounded bg-muted" aria-hidden="true" />
-                <div className="grid min-w-0 grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
+                <div className="grid min-w-0 grid-cols-1 gap-8 desktop:grid-cols-[minmax(0,1fr)_340px]">
                   <div className="min-w-0">
                     <div className="aspect-[16/9] rounded-2xl bg-muted" aria-hidden="true" />
                     <div className="mt-6 h-8 w-2/3 rounded bg-muted" aria-hidden="true" />
@@ -130,9 +130,9 @@ function PropertyDetailRouteModal() {
 
 function AppRoutes() {
   const location = useLocation();
-  const isMobile = useIsMobile();
+  const isMobileOrTablet = useIsMobileOrTablet();
   const routeState = location.state as PropertyModalRouteState | null;
-  const showPropertyModal = isMobile && Boolean(routeState?.propertyModal && routeState.backgroundLocation);
+  const showPropertyModal = isMobileOrTablet && Boolean(routeState?.propertyModal && routeState.backgroundLocation);
   const backgroundLocation = showPropertyModal ? routeState?.backgroundLocation : undefined;
 
   return (

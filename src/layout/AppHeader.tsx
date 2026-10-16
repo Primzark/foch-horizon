@@ -221,9 +221,9 @@ export function AppHeader() {
     <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
       <header className="sticky top-0 z-50 touch-pan-y border-b border-border bg-background/95 backdrop-blur-md [padding-top:env(safe-area-inset-top)]">
         <div className="container mx-auto px-3 sm:px-4">
-          <div className="grid min-h-20 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 lg:flex lg:min-h-[72px] lg:justify-between">
+          <div className="grid min-h-20 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 desktop:flex desktop:min-h-[72px] desktop:justify-between">
             <SheetTrigger asChild>
-              <button type="button" className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-border lg:hidden" aria-label="Ouvrir le menu" aria-expanded={mobileOpen}>
+              <button type="button" className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-border desktop:hidden" aria-label="Ouvrir le menu" aria-expanded={mobileOpen}>
                 <Menu className="h-5 w-5" />
               </button>
             </SheetTrigger>
@@ -235,28 +235,28 @@ export function AppHeader() {
                   alt="Foch Immobilier"
                   width={772}
                   height={150}
-                  className="h-auto max-w-full w-[170px] max-[359px]:w-[144px] sm:w-[200px] lg:w-[220px]"
+                  className="h-auto max-w-full w-[170px] max-[359px]:w-[144px] sm:w-[200px] desktop:w-[220px]"
                   decoding="async"
                 />
               </picture>
             </Link>
-            <p className="hidden text-xs uppercase tracking-[0.2em] text-muted-foreground lg:block">Immobilier au Havre · Depuis 1972</p>
+            <p className="hidden text-xs uppercase tracking-[0.2em] text-muted-foreground desktop:block">Immobilier au Havre · Depuis 1972</p>
             <div className="flex shrink-0 items-center gap-2">
               {isAuthorizedAdmin && (
                 <NavLink
                   to="/admin"
                   aria-label="Espace administrateur"
                   title="Administration"
-                  className="hidden h-10 min-w-10 items-center justify-center gap-2 rounded-full border border-brand-border bg-brand-soft px-2.5 text-brand-strong transition-colors hover:bg-brand-soft/60 lg:inline-flex"
+                  className="hidden h-10 min-w-10 items-center justify-center gap-2 rounded-full border border-brand-border bg-brand-soft px-2.5 text-brand-strong transition-colors hover:bg-brand-soft/60 desktop:inline-flex"
                 >
                   <ShieldCheck className="h-4 w-4" aria-hidden="true" />
-                  <span className="hidden text-xs font-medium xl:inline">Administration</span>
+                  <span className="hidden text-xs font-medium desktop:inline">Administration</span>
                 </NavLink>
               )}
-              <ThemeToggle className="hidden lg:inline-flex" />
+              <ThemeToggle className="hidden desktop:inline-flex" />
               <LanguageSwitcher className="hidden sm:inline-flex" />
               <a href="tel:0235425176" className="hidden items-center gap-2 text-sm hover:text-brand-strong md:inline-flex" aria-label="Appeler l'agence au 02 35 42 51 76">
-                <Phone className="h-4 w-4" /><span className="hidden xl:inline">02 35 42 51 76</span>
+                <Phone className="h-4 w-4" /><span className="hidden desktop:inline">02 35 42 51 76</span>
               </a>
               <NavLink to="/biens-sauvegardes" className="inline-flex h-10 min-w-10 items-center justify-center gap-1 rounded-full border border-brand-border bg-brand-soft px-2 text-brand-strong" aria-label={`Biens sauvegardés (${favoriteIds.length})`} onClick={() => trackEvent("favorites_opened", { source: "header" })}>
                 <Heart className={cn("h-4 w-4", favoriteIds.length > 0 && "fill-brand")} /><span className="hidden text-xs sm:inline">{favoriteIds.length}</span>
@@ -266,7 +266,7 @@ export function AppHeader() {
               </button>
             </div>
           </div>
-          <nav aria-label="Navigation principale" className="hidden min-h-[60px] items-center justify-center gap-4 border-t border-border/70 lg:flex xl:gap-7">
+          <nav aria-label="Navigation principale" className="hidden min-h-[60px] items-center justify-center gap-4 border-t border-border/70 desktop:flex desktop:gap-7">
             {primaryLinks.map((item) => (
               <NavLink key={item.to} to={item.to} end={item.to === "/"} className={({ isActive }) => cn("whitespace-nowrap px-1 py-3 text-sm font-medium transition-colors hover:text-brand-strong", isActive ? "text-brand-strong underline underline-offset-8" : "text-foreground/80")}>
                 {item.label}
@@ -280,7 +280,7 @@ export function AppHeader() {
         ref={mobileDrawerRef}
         side="left"
         onClickCapture={handleMobileDrawerClickCapture}
-        className="flex h-dvh w-[88vw] max-w-[360px] touch-pan-y flex-col bg-background p-0 lg:hidden"
+        className="flex h-dvh w-[88vw] max-w-[360px] touch-pan-y flex-col bg-background p-0 desktop:hidden"
       >
         <SheetTitle className="border-b border-border px-5 py-4 font-display text-2xl">Foch Immobilier</SheetTitle>
         <div className="flex items-center justify-end border-b border-border px-4 py-2">

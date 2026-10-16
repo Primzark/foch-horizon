@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { PROPERTY_COMPARE_LIMIT, usePropertyCompareStore } from "@/features/listings/state/usePropertyCompareStore";
 import { trackEvent } from "@/lib/analytics/events";
 import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsMobileOrTablet } from "@/hooks/use-mobile";
 
 export function PropertyCompareTray() {
   const ids = usePropertyCompareStore((state) => state.ids);
@@ -13,10 +13,10 @@ export function PropertyCompareTray() {
   const location = useLocation();
   const navigate = useNavigate();
   const { reducedMotion } = useMotionPreference();
-  const isMobile = useIsMobile();
+  const isMobileOrTablet = useIsMobileOrTablet();
 
   const isComparisonPage = location.pathname === "/biens/comparer";
-  const isPropertyPreviewModal = isMobile && Boolean((location.state as { propertyModal?: boolean } | null)?.propertyModal);
+  const isPropertyPreviewModal = isMobileOrTablet && Boolean((location.state as { propertyModal?: boolean } | null)?.propertyModal);
   const isVisible = ids.length > 0 && !isComparisonPage && !isPropertyPreviewModal;
   const clearComparison = () => {
     ids.forEach((propertyId) => {

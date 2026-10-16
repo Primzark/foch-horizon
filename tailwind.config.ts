@@ -18,6 +18,9 @@ const config: Config = {
       },
     },
     extend: {
+      screens: {
+        desktop: "1440px",
+      },
       fontFamily: {
         display: ["Cormorant Garamond", "Georgia", "serif"],
         body: ["Sora", "Avenir Next", "sans-serif"],
