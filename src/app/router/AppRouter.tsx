@@ -87,7 +87,7 @@ function PropertyDetailRouteModal() {
         hideCloseButton
         overlayClassName="bg-black/45"
         data-menu-swipe-ignore
-        className="left-0 top-0 flex h-[100dvh] w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 p-0 sm:left-[50%] sm:top-[50%] sm:h-[min(92dvh,64rem)] sm:max-h-[92dvh] sm:w-[calc(100%-1rem)] sm:max-w-none lg:w-[min(92vw,88rem)] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-2xl sm:border"
+        className="left-0 top-0 flex h-[100dvh] w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 p-0 sm:left-[50%] sm:top-[50%] sm:h-[min(92dvh,64rem)] sm:max-h-[92dvh] sm:w-[calc(100%-1rem)] sm:max-w-none 2xl:w-[min(92vw,88rem)] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-2xl sm:border"
       >
         <DialogTitle className="sr-only">Annonce · Réf {propertyReference ?? "—"}</DialogTitle>
         <DialogDescription className="sr-only">
@@ -96,14 +96,14 @@ function PropertyDetailRouteModal() {
         <div ref={setStickySummaryPortalElement} className="pointer-events-none absolute inset-0 z-50" />
         <div
           ref={detailsScrollRef}
-          className="min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain pb-[calc(6rem_+_env(safe-area-inset-bottom))] lg:pb-0"
+          className="min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain pb-[calc(6rem_+_env(safe-area-inset-bottom))] 2xl:pb-0"
         >
           <Suspense
             key={propertyReference}
             fallback={(
               <section className="container mx-auto min-h-[60vh] px-4 pt-4 pb-8" aria-busy="true" aria-label="Chargement de l’annonce">
                 <div className="mb-4 h-4 w-44 rounded bg-muted" aria-hidden="true" />
-                <div className="grid min-w-0 grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
+                <div className="grid min-w-0 grid-cols-1 gap-8 2xl:grid-cols-[minmax(0,1fr)_340px]">
                   <div className="min-w-0">
                     <div className="aspect-[16/9] rounded-2xl bg-muted" aria-hidden="true" />
                     <div className="mt-6 h-8 w-2/3 rounded bg-muted" aria-hidden="true" />
