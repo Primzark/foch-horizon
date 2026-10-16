@@ -21,11 +21,16 @@ export default function EstimationPageV2() {
         <div className="mx-auto max-w-4xl text-center">
           <p className="text-xs font-medium uppercase tracking-[0.2em] text-brand-strong">En toute confidentialité</p>
           <blockquote className="mt-3 font-display text-3xl leading-tight text-foreground sm:text-4xl md:text-5xl">
-            N’hésitez pas à{" "}
+            <p className="font-sans text-lg leading-relaxed text-muted-foreground sm:text-xl">
+              Le cabinet Foch Immobilier accompagne chaque client avec rigueur et bienveillance, qu’il s’agisse d’un premier achat, d’un investissement ou d’une vente patrimoniale.
+            </p>
+            <p className="mt-5">
+              N’hésitez pas à{" "}
             <span className="text-brand-strong">
               y faire estimer gracieusement votre bien
             </span>{" "}
             et ce en toute confidentialité.
+            </p>
           </blockquote>
         </div>
 
