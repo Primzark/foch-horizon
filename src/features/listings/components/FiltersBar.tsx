@@ -1,5 +1,5 @@
 import { LayoutGrid, List, Map as MapIcon, SlidersHorizontal } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { sortOptions } from "@/features/listings/data/options";
@@ -32,18 +32,15 @@ export function FiltersBar({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-sm text-muted-foreground" role="status" aria-live="polite" aria-busy={isLoading}>
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.span
-                key={isLoading ? "loading" : total ?? "unavailable"}
-                initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -6 }}
-                transition={{ duration: 0.18, ease: "easeOut" }}
-                className="inline-flex min-w-[1ch] items-center justify-center align-middle"
-              >
-                {isLoading ? <SearchThinkingIndicator compact /> : total ?? "—"}
-              </motion.span>
-            </AnimatePresence>{" "}
+            <motion.span
+              key={isLoading ? "loading" : total ?? "unavailable"}
+              initial={isLoading ? false : reducedMotion ? { opacity: 0 } : { opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.18, ease: "easeOut" }}
+              className="inline-flex min-w-[1ch] items-center justify-center align-middle"
+            >
+              {isLoading ? <SearchThinkingIndicator compact /> : total ?? "—"}
+            </motion.span>{" "}
             {isLoading
               ? "biens en cours de recherche"
               : total == null
