@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { cityById, cityBySlug } from "@/features/cities/data/cities";
 import { getPropertyById, getSimilarProperties, searchProperties } from "@/features/listings/api/properties.service";
 import { ListingGallery } from "@/features/listings/components/ListingGallery";
-import { ListingBadges } from "@/features/listings/components/ListingBadges";
 import { PropertyPreviewLink } from "@/features/listings/components/PropertyPreviewLink";
 import { ListingShareButton } from "@/features/listings/components/ListingShareButton";
 import { PropertyCompareToggle } from "@/features/listings/components/PropertyCompareToggle";
@@ -23,6 +22,7 @@ import {
   formatPropertyTypeLabel,
   getPropertyCardLabels,
   getPropertyStatusLabel,
+  normalizePropertyDescription,
   normalizeKeyword,
   sanitizePropertySlug,
   toCanonicalPropertyPath,
@@ -591,7 +591,7 @@ export default function ListingDetailPage({
             property.priceAmount,
             property.transactionType,
           )} – Réf ${property.id}`,
-          description: `${property.description.slice(0, 150)}…`,
+          description: `${normalizePropertyDescription(property.description).slice(0, 150)}…`,
           canonicalPath,
           image: property.images[0]?.sourceUrl,
           jsonLd: {
@@ -601,7 +601,7 @@ export default function ListingDetailPage({
             url: `${siteUrl}${canonicalPath}`,
             identifier: String(property.id),
             image: property.images.map((image) => image.sourceUrl),
-            description: property.description,
+            description: normalizePropertyDescription(property.description),
             publisher: { "@id": `${siteUrl}/#agency` },
             about: cityById.get(property.cityId) && geographyGuideIds.has(cityById.get(property.cityId)!.slug)
               ? { "@id": `${siteUrl}/immobilier/${cityById.get(property.cityId)!.slug}#place`, "@type": "City", name: cityById.get(property.cityId)!.name }
@@ -805,14 +805,13 @@ export default function ListingDetailPage({
 
         <div className={`grid min-w-0 grid-cols-1 gap-7 desktop:grid-cols-[minmax(0,1fr)_340px] ${previewLayout ? "relative z-[1] -mt-5 mx-auto max-w-7xl rounded-t-[2rem] bg-background px-5 pt-7 sm:px-8 desktop:mt-0 desktop:rounded-none desktop:px-6 desktop:pt-7" : "desktop:gap-8"}`}>
         <div className="min-w-0">
-          {!previewLayout && <ListingGallery key={property.id} images={property.images} title={property.title} propertyId={property.id} />}
+          {!previewLayout && <ListingGallery key={property.id} images={property.images} title={property.title} propertyId={property.id} badgeLabels={listingBadges} />}
 
           <div id="property-overview" ref={summaryRef} className={`scroll-mt-16 grid grid-cols-1 items-start gap-x-6 gap-y-4 desktop:grid-cols-[minmax(0,1fr)_auto] ${previewLayout ? "mb-6" : "mt-5"}`}>
             <div className="min-w-0">
               {!previewLayout && <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Réf du bien {property.id}</p>}
               <h1 className={`leading-[1.08] ${previewLayout ? "font-body text-xl font-bold sm:text-4xl" : "mt-1 font-display text-4xl"}`}>{property.title}</h1>
               <p className={`mt-2 ${previewLayout ? "text-sm font-semibold text-foreground" : "text-sm font-medium text-muted-foreground"}`}>{previewLayout ? `${propertyTypeLabel} ${statusLabel.toLowerCase()}` : <>{propertyTypeLabel} <span aria-hidden="true">·</span> {statusLabel}</>}</p>
-              {!previewLayout && <ListingBadges labels={listingBadges} className="mt-3" />}
               {!previewLayout && <p className="mt-2 inline-flex items-center gap-1 text-sm text-muted-foreground">
                 <MapPin className="h-4 w-4" />
                 {city ? <Link to={`/immobilier/${city.slug}`} className="underline underline-offset-4">{city.name}</Link> : "Localisation"} ({property.postalCode})
@@ -907,7 +906,7 @@ export default function ListingDetailPage({
 
           <article id="property-description" className={previewLayout ? "scroll-mt-16 border-b border-border/80 py-7" : "mt-9 rounded-2xl border border-border bg-card p-6"}>
             <h2 className="font-display text-2xl">Description</h2>
-            <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">{property.description}</p>
+            <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">{normalizePropertyDescription(property.description)}</p>
           </article>
 
           <article id="property-features" className={previewLayout ? "scroll-mt-16 border-b border-border/80 py-7" : "mt-6 rounded-2xl border border-border bg-card p-6"}>

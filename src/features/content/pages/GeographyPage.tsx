@@ -154,7 +154,6 @@ export default function GeographyPage() {
   return (
     <div>
       <StorefrontPageHero
-        eyebrow="Nos secteurs"
         title="Immobilier au Havre et alentours"
         description="Du Havre et de Sainte-Adresse aux communes et stations du littoral citées par notre agence, explorez les lieux de votre projet."
       >

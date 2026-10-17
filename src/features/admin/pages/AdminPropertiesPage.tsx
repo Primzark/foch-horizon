@@ -62,14 +62,14 @@ function validateAdminLogin(emailValue: string, password: string): AdminLoginErr
   const email = emailValue.trim();
 
   if (!email) {
-    errors.email = "Indiquez votre adresse email.";
+    errors.email = "Obligatoire.";
   } else if (email.length > 254) {
     errors.email = "L’adresse email doit contenir 254 caractères maximum.";
   } else if (!adminLoginEmailSchema.safeParse(email).success) {
     errors.email = "Vérifiez l’adresse email, par exemple nom@exemple.fr.";
   }
 
-  if (password.length === 0) errors.password = "Indiquez votre mot de passe.";
+  if (password.length === 0) errors.password = "Obligatoire.";
 
   return errors;
 }

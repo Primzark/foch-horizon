@@ -424,8 +424,13 @@ export function ListingGallery({
             </ContextAwareParallax>
             <PlaceAtmosphereLayer mood={imageMood} animated={false} variant="gallery" className="z-[1]" />
             <div className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-t from-black/50 via-transparent to-black/5" />
-            {variant === "modal" && (
-              <ListingBadges labels={badgeLabels} className="absolute bottom-4 left-4 z-[3] sm:bottom-5 sm:left-6" />
+            {badgeLabels.length > 0 && (
+              <ListingBadges
+                labels={badgeLabels}
+                className={variant === "modal"
+                  ? "absolute bottom-4 left-4 z-[3] sm:bottom-5 sm:left-6"
+                  : "absolute left-4 top-4 z-[3] sm:left-6 sm:top-6"}
+              />
             )}
             <span className={`pointer-events-none absolute bottom-4 z-[3] font-medium text-white drop-shadow sm:bottom-5 ${variant === "modal" ? "right-4 rounded-full bg-black/70 px-3 py-1.5 text-base sm:right-6" : "left-4 text-sm sm:left-6"}`}>
               {safeActiveImageIndex + 1} / {images.length}
@@ -522,7 +527,7 @@ export function ListingGallery({
                 <button
                   key={image.id}
                   type="button"
-                  className={`group relative aspect-[4/3] overflow-hidden rounded-lg bg-white text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:bg-black ${safeGalleryImageIndex === index ? "ring-2 ring-foreground ring-offset-2" : "opacity-75 transition-opacity hover:opacity-100"}`}
+                  className={`group relative aspect-[4/3] overflow-hidden rounded-lg bg-white text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:bg-black ${safeGalleryImageIndex === index ? "after:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:border-2 after:border-white after:content-['']" : "opacity-75 transition-opacity hover:opacity-100"}`}
                   aria-label={`Afficher la photo ${index + 1}`}
                   aria-current={safeGalleryImageIndex === index ? "true" : undefined}
                   onClick={() => selectGalleryImage(index)}
@@ -617,7 +622,7 @@ export function ListingGallery({
                   onClick={() => {
                     selectGalleryImage(index);
                   }}
-                  className={`relative aspect-[4/3] h-full shrink-0 overflow-hidden rounded-md bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:bg-black ${safeGalleryImageIndex === index ? "ring-2 ring-foreground ring-offset-1" : "opacity-75"}`}
+                  className={`relative aspect-[4/3] h-full shrink-0 overflow-hidden rounded-md bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:bg-black ${safeGalleryImageIndex === index ? "after:pointer-events-none after:absolute after:inset-0 after:rounded-md after:border-2 after:border-white after:content-['']" : "opacity-75"}`}
                 >
                   {!isDesktopGallery && index < mobileThumbnailLoadLimit && (
                     <img

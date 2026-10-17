@@ -547,7 +547,7 @@
 @media (min-width: 768px) { .page-banner { height: 420px; } }
 
 .homepage-hero-content { height: auto; min-height: 440px; }
-@media (min-width: 768px) { .homepage-hero-content { height: 480px; min-height: 0; } }
+@media (min-width: 768px) { .homepage-hero-content { height: 620px; min-height: 0; } }
 
 .storefront-page-hero__background { object-position: center top; }
 
@@ -604,4 +604,13 @@
   --brand-strong: 147 48% 67%;
   --brand-soft: 147 34% 19%;
   --brand-border: 148 24% 43%;
+}
+
+input[aria-invalid="true"],
+textarea[aria-invalid="true"],
+select[aria-invalid="true"],
+[role="combobox"][aria-invalid="true"],
+[role="checkbox"][aria-invalid="true"] {
+  border-color: hsl(var(--destructive));
+  box-shadow: 0 0 0 1px hsl(var(--destructive) / 0.28);
 }

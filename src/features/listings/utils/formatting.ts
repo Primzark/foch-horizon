@@ -22,6 +22,15 @@ export function toCanonicalPropertyPath(property: Pick<Property, "id" | "slug">)
   return `/biens/${property.id}-${sanitizePropertySlug(property.slug)}`;
 }
 
+export function normalizePropertyDescription(description: string | null | undefined): string {
+  return (description ?? "")
+    .replace(/\\r\\n|\\n|\\r/g, "\n")
+    .replace(/\r\n?/g, "\n")
+    .replace(/[\t ]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 type PropertyBadgeSource = Pick<Property, "status" | "title"> & Partial<Pick<Property, "sourceStatus" | "adminStatusOverride">>;
 
 function hasLabelToken(value: string, token: RegExp): boolean {

@@ -21,7 +21,6 @@ export default function SellPage() {
   return (
     <>
       <StorefrontPageHero
-        eyebrow="Vendre"
         title="Vendre votre bien"
         description="Le cabinet est à votre disposition dans le cadre de la mise en vente de votre bien avec des négociateurs expérimentés et un large carnet d’adresses et de recherches."
       />

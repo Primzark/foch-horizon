@@ -274,13 +274,14 @@ export function LeadForm({
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="lead-phone">
-                  Téléphone <span className="font-normal text-muted-foreground">(facultatif)</span>
+                  Téléphone
                 </Label>
                 <Input
                   id="lead-phone"
                   name="phone"
                   type="tel"
                   maxLength={40}
+                  placeholder="(facultatif)"
                   autoComplete="tel"
                   aria-invalid={phoneError ? true : undefined}
                   aria-describedby={phoneError ? "lead-phone-error" : undefined}

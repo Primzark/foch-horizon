@@ -18,7 +18,6 @@ export default function ContactPageV2() {
   return (
     <>
       <StorefrontPageHero
-        eyebrow="Contact"
         title="Parlons de votre projet immobilier"
         description="Nous répondons rapidement à vos demandes d’achat, de vente et d’estimation."
       />
@@ -58,7 +57,7 @@ export default function ContactPageV2() {
             <li className="flex items-start gap-2">
               <Clock className="mt-0.5 h-4 w-4" />
               <span>
-                Lundi à vendredi : 09:30-12:00, 14:00-18:30
+                Lundi au vendredi : 09:30-12:00, 14:00-18:30
                 <br />
                 Samedi : sur rendez-vous
               </span>

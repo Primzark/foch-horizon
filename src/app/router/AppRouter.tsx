@@ -39,11 +39,93 @@ function LayoutShell() {
   );
 }
 
+const SCROLL_POSITIONS_STORAGE_KEY = "foch:scroll-positions:v1";
+
+function readSavedScrollPositions(): Map<string, number> {
+  if (typeof window === "undefined") return new Map();
+
+  try {
+    const stored = window.sessionStorage.getItem(SCROLL_POSITIONS_STORAGE_KEY);
+    if (!stored) return new Map();
+    const parsed = JSON.parse(stored) as Record<string, unknown>;
+    return new Map(
+      Object.entries(parsed)
+        .filter((entry): entry is [string, number] => typeof entry[1] === "number" && Number.isFinite(entry[1]))
+        .slice(-80),
+    );
+  } catch {
+    return new Map();
+  }
+}
+
+function rememberScrollPosition(positions: Map<string, number>, key: string, top: number) {
+  positions.delete(key);
+  positions.set(key, top);
+  while (positions.size > 80) {
+    const oldestKey = positions.keys().next().value;
+    if (oldestKey === undefined) break;
+    positions.delete(oldestKey);
+  }
+}
+
+function saveScrollPositions(positions: Map<string, number>) {
+  try {
+    window.sessionStorage.setItem(SCROLL_POSITIONS_STORAGE_KEY, JSON.stringify(Object.fromEntries(positions)));
+  } catch {
+    // Scroll restoration remains available in memory if storage is unavailable.
+  }
+}
+
 function RouteScrollManager() {
   const location = useLocation();
   const navigationType = useNavigationType();
   const previousLocation = useRef(location);
-  const scrollPositions = useRef(new Map<string, number>());
+  const scrollPositions = useRef(readSavedScrollPositions());
+  const activeLocationKey = useRef(location.key);
+  const restoreTimer = useRef<number | null>(null);
+  const isRestoringScroll = useRef(false);
+
+  useEffect(() => {
+    let animationFrame: number | null = null;
+    const saveCurrentPosition = () => {
+      if (isRestoringScroll.current) return;
+      rememberScrollPosition(scrollPositions.current, activeLocationKey.current, window.scrollY);
+      if (animationFrame !== null) return;
+      animationFrame = window.requestAnimationFrame(() => {
+        animationFrame = null;
+        saveScrollPositions(scrollPositions.current);
+      });
+    };
+    const saveBeforePageHide = () => {
+      rememberScrollPosition(scrollPositions.current, activeLocationKey.current, window.scrollY);
+      saveScrollPositions(scrollPositions.current);
+    };
+    const cancelRestoreOnUserInput = () => {
+      if (restoreTimer.current !== null) {
+        window.clearTimeout(restoreTimer.current);
+        restoreTimer.current = null;
+      }
+      isRestoringScroll.current = false;
+    };
+
+    window.addEventListener("scroll", saveCurrentPosition, { passive: true });
+    window.addEventListener("pagehide", saveBeforePageHide);
+    window.addEventListener("wheel", cancelRestoreOnUserInput, { passive: true });
+    window.addEventListener("touchstart", cancelRestoreOnUserInput, { passive: true });
+    window.addEventListener("keydown", cancelRestoreOnUserInput);
+
+    return () => {
+      window.removeEventListener("scroll", saveCurrentPosition);
+      window.removeEventListener("pagehide", saveBeforePageHide);
+      window.removeEventListener("wheel", cancelRestoreOnUserInput);
+      window.removeEventListener("touchstart", cancelRestoreOnUserInput);
+      window.removeEventListener("keydown", cancelRestoreOnUserInput);
+      if (animationFrame !== null) window.cancelAnimationFrame(animationFrame);
+      if (restoreTimer.current !== null) window.clearTimeout(restoreTimer.current);
+      restoreTimer.current = null;
+      isRestoringScroll.current = false;
+    };
+  }, []);
 
   useLayoutEffect(() => {
     if (typeof window === "undefined") return;
@@ -52,13 +134,43 @@ function RouteScrollManager() {
     const previous = previousLocation.current;
     if (previous.key === location.key) return;
 
-    scrollPositions.current.set(previous.key, window.scrollY);
+    activeLocationKey.current = location.key;
+    previousLocation.current = location;
+
+    if (restoreTimer.current !== null) {
+      window.clearTimeout(restoreTimer.current);
+      restoreTimer.current = null;
+    }
+    isRestoringScroll.current = false;
+
     if (navigationType === "POP") {
-      window.scrollTo(0, scrollPositions.current.get(location.key) ?? 0);
+      const savedTop = scrollPositions.current.get(location.key) ?? 0;
+      let attempts = 0;
+      isRestoringScroll.current = true;
+      const restorePosition = () => {
+        const root = document.documentElement;
+        const previousScrollBehavior = root.style.scrollBehavior;
+        root.style.scrollBehavior = "auto";
+        window.scrollTo(0, savedTop);
+        root.style.scrollBehavior = previousScrollBehavior;
+
+        if (Math.abs(window.scrollY - savedTop) <= 1 || attempts >= 24) {
+          if (Math.abs(window.scrollY - savedTop) <= 1) {
+            rememberScrollPosition(scrollPositions.current, location.key, savedTop);
+            saveScrollPositions(scrollPositions.current);
+          }
+          restoreTimer.current = null;
+          isRestoringScroll.current = false;
+          return;
+        }
+
+        attempts += 1;
+        restoreTimer.current = window.setTimeout(restorePosition, 100);
+      };
+      restorePosition();
     } else if (previous.pathname !== location.pathname) {
       window.scrollTo(0, 0);
     }
-    previousLocation.current = location;
   }, [location, navigationType]);
 
   return null;

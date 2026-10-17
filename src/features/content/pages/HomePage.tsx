@@ -92,7 +92,7 @@ export default function HomePage() {
             alt="Peinture de la plage de Sainte-Adresse, avec villas en bord de mer et baigneurs"
             width={955}
             height={447}
-            className="h-full w-full object-cover object-[27%_70%] md:object-[center_70%]"
+            className="h-full w-full object-cover object-[27%_70%] md:object-top"
             loading="eager"
             decoding="async"
             fetchPriority="high"

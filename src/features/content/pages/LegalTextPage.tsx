@@ -23,9 +23,7 @@ const legalContent: Record<LegalPageKey, { title: string; description: string; s
       },
       {
         heading: "Hébergement",
-        body: [
-          <>Vercel Inc., 440 N Barranca Avenue #4133, Covina, CA 91723, États-Unis. <a className="underline underline-offset-4" href="https://vercel.com/legal/privacy-notice" target="_blank" rel="noreferrer">Coordonnées légales de Vercel</a>.</>,
-        ],
+        body: ["L’hébergement du site est assuré par un prestataire de services numériques."],
       },
     ],
   },

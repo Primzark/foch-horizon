@@ -12,7 +12,6 @@ export default function EstimationPageV2() {
   return (
     <>
       <StorefrontPageHero
-        eyebrow="Votre projet de vente"
         title="Avis de valeur"
         description="Décrivez votre bien et vos contraintes de calendrier. Un conseiller dédié vous recontacte avec un avis de valeur argumenté."
       />

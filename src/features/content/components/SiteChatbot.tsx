@@ -1,7 +1,7 @@
 import { FormEvent, Fragment, MouseEvent, useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
-import { BotMessageSquare, Mail, RotateCcw, Send, Sparkles, ThumbsDown, ThumbsUp, X } from "lucide-react";
+import { BotMessageSquare, Mail, MessageSquarePlus, Send, Sparkles, ThumbsDown, ThumbsUp, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -1017,7 +1017,7 @@ export function SiteChatbot({ initiallyOpen = false }: { initiallyOpen?: boolean
     message: assistantLeadMessage,
     consent: leadConsent,
   });
-  if (!leadForm.criteria.trim()) assistantLeadErrors.message = "Décrivez le bien ou les critères recherchés.";
+  if (!leadForm.criteria.trim()) assistantLeadErrors.message = "Obligatoire.";
   const assistantLeadEmailError =
     leadValidationAttempted || leadEmailBlurred ? assistantLeadErrors.email : undefined;
   const assistantLeadSummaryErrors: FormErrorItem[] = leadValidationAttempted
@@ -2918,12 +2918,13 @@ export function SiteChatbot({ initiallyOpen = false }: { initiallyOpen?: boolean
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  aria-label="Réinitialiser la conversation"
-                  title="Nouvelle conversation"
-                  className="rounded-full border border-border p-1.5"
+                  aria-label="Démarrer une nouvelle conversation"
+                  title="Nouveau chat"
+                  className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-brand-border bg-brand-soft px-2.5 py-1.5 text-xs font-medium text-brand-strong transition-colors hover:bg-brand-soft/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   onClick={handleResetButtonClick}
                 >
-                  <RotateCcw className="h-4 w-4" />
+                  <MessageSquarePlus aria-hidden="true" className="h-4 w-4 shrink-0" />
+                  <span className="hidden min-[420px]:inline">Nouveau chat</span>
                 </button>
 
                 <button

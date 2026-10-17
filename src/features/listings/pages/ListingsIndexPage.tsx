@@ -20,7 +20,7 @@ import { geographyGuides } from "@/features/content/data/geographyGuides";
 import { GeographyGuideDetails } from "@/features/content/components/GeographyGuideDetails";
 import { useUiStore } from "@/lib/state/useUiStore";
 import { getSiteUrl, useSeo } from "@/lib/seo/useSeo";
-import { formatPrice, formatPropertyTypeLabel, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
+import { formatPrice, formatPropertyTypeLabel, normalizePropertyDescription, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
 import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
 import { SearchThinkingState } from "@/features/content/components/SearchThinkingState";
 import {
@@ -80,22 +80,30 @@ export default function ListingsIndexPage() {
   }, [searchParams, setSearchParams]);
 
   const query = useQuery({
-    queryKey: ["properties", filters],
+    queryKey: ["properties", filters, viewMode === "list" ? "list" : "default"],
     queryFn: async () => {
       const response = await searchProperties(filters);
       const items = await Promise.all(
         response.items.map(async (item) => {
-          if ((item.imageUrls?.length ?? 0) > 1) return item;
+          const needsDescription = viewMode === "list";
+          const needsImageEnrichment = (item.imageUrls?.length ?? 0) <= 1;
+          if (!needsDescription && !needsImageEnrichment) return item;
 
           const property = await getPropertyById(item.id);
-          const imageUrls = property?.images
-            .map((image) => image.sourceUrl)
-            .filter(Boolean) ?? [];
+          if (!property) return item;
 
-          if (imageUrls.length <= (item.imageUrls?.length ?? 0)) return item;
+          const imageUrls = property.images
+            .map((image) => image.sourceUrl)
+            .filter(Boolean);
+
+          const enrichedItem = {
+            ...item,
+            description: normalizePropertyDescription(property.description),
+          };
+          if (imageUrls.length <= (item.imageUrls?.length ?? 0)) return enrichedItem;
 
           return {
-            ...item,
+            ...enrichedItem,
             coverImageUrl: imageUrls[0] ?? item.coverImageUrl,
             imageUrls,
           };
@@ -228,7 +236,6 @@ export default function ListingsIndexPage() {
   return (
     <>
       <StorefrontPageHero
-        eyebrow="À découvrir"
         title="Nos biens"
         description="Affinez votre recherche et trouvez le bien qui correspond à votre projet."
       />

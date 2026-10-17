@@ -73,20 +73,20 @@ export function validateLeadForm(values: LeadFormValues): LeadFormErrors {
   const errors: LeadFormErrors = {};
 
   if (!values.firstName.trim()) {
-    errors.firstName = "Indiquez votre prénom.";
+    errors.firstName = "Obligatoire.";
   } else if (values.firstName.trim().length > 80) {
     errors.firstName = "Le prénom doit contenir 80 caractères maximum.";
   }
 
   if (!values.lastName.trim()) {
-    errors.lastName = "Indiquez votre nom.";
+    errors.lastName = "Obligatoire.";
   } else if (values.lastName.trim().length > 80) {
     errors.lastName = "Le nom doit contenir 80 caractères maximum.";
   }
 
   const email = values.email.trim();
   if (!email) {
-    errors.email = "Indiquez votre adresse email.";
+    errors.email = "Obligatoire.";
   } else if (email.length > 254) {
     errors.email = "L’adresse email doit contenir 254 caractères maximum.";
   } else if (!leadInputSchema.shape.email.safeParse(email).success) {
@@ -102,7 +102,7 @@ export function validateLeadForm(values: LeadFormValues): LeadFormErrors {
 
   const message = values.message.trim();
   if (!message) {
-    errors.message = "Décrivez brièvement votre demande.";
+    errors.message = "Obligatoire.";
   } else if (message.length < 8) {
     errors.message = "Ajoutez quelques précisions (8 caractères minimum).";
   } else if (message.length > 2000) {
@@ -110,7 +110,7 @@ export function validateLeadForm(values: LeadFormValues): LeadFormErrors {
   }
 
   if (!values.consent) {
-    errors.consent = "Confirmez l’utilisation de vos données pour traiter cette demande.";
+    errors.consent = "Obligatoire.";
   }
 
   return errors;

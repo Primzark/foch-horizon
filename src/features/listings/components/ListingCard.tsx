@@ -9,6 +9,7 @@ import {
   formatPrice,
   formatPropertyTypeLabel,
   getPropertyCardLabels,
+  normalizePropertyDescription,
 } from "@/features/listings/utils/formatting";
 import { useFavoritesStore } from "@/features/favorites/useFavoritesStore";
 import { getPlaceImageMotionPreset, inferPlaceImageMood } from "@/lib/visuals/placeImageMotion";
@@ -90,6 +91,12 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, eagerIma
                 <span itemProp="addressLocality">{item.city.name}</span> (<span itemProp="postalCode">{item.city.postalCode}</span>)
               </span>
             </p>
+
+            {item.description && (
+              <p className="mt-2 line-clamp-3 max-w-3xl text-sm leading-relaxed text-muted-foreground">
+                {normalizePropertyDescription(item.description)}
+              </p>
+            )}
 
             <div className="mt-3 flex flex-wrap gap-3 text-sm text-muted-foreground">
               <span className="inline-flex items-center gap-1">
