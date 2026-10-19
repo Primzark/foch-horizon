@@ -171,7 +171,9 @@ function readCounterEnv(name: string): number | null {
 }
 
 function applyFilters(items: Property[], params: PropertySearchParams): Property[] {
-  let result = items.filter((property) => property.transactionType === "vente" && property.status !== "off_market");
+  let result = items.filter(
+    (property) => property.transactionType === "vente" && property.status !== "off_market" && property.status !== "sold",
+  );
 
   if (params.transaction && params.transaction !== "vente") return [];
 
@@ -362,7 +364,7 @@ export async function getPropertyById(id: number): Promise<Property | null> {
     try {
       const payload = await apiJson<EdgePropertyDetailRow>(`/api/properties/${id}`);
       const property = mapEdgePropertyDetailToDomain(payload);
-      return property.transactionType === "vente" ? property : null;
+      return property.transactionType === "vente" && property.status !== "sold" ? property : null;
     } catch {
       return null;
     }
@@ -370,7 +372,7 @@ export async function getPropertyById(id: number): Promise<Property | null> {
 
   await apiDelay();
   const property = propertyById.get(id);
-  return property?.transactionType === "vente" ? property : null;
+  return property?.transactionType === "vente" && property.status !== "sold" ? property : null;
 }
 
 export async function getPropertyBySlug(slug: string): Promise<Property | null> {
@@ -380,7 +382,7 @@ export async function getPropertyBySlug(slug: string): Promise<Property | null> 
 
   await apiDelay();
   const property = propertyBySlug.get(slug);
-  return property?.transactionType === "vente" ? property : null;
+  return property?.transactionType === "vente" && property.status !== "sold" ? property : null;
 }
 
 export async function getPropertyByCanonicalPathId(idParam: string): Promise<Property | null> {
@@ -391,7 +393,7 @@ export async function getPropertyByCanonicalPathId(idParam: string): Promise<Pro
   }
 
   const property = propertyById.get(id);
-  return property?.transactionType === "vente" ? property : null;
+  return property?.transactionType === "vente" && property.status !== "sold" ? property : null;
 }
 
 export interface SimilarPropertyRecommendation {
@@ -555,7 +557,7 @@ export async function getPropertiesByCitySlug(citySlug: string): Promise<Propert
   }
 
   return properties.filter(
-    (property) => property.cityId === city.id && property.transactionType === "vente" && property.status !== "off_market",
+    (property) => property.cityId === city.id && property.transactionType === "vente" && property.status !== "off_market" && property.status !== "sold",
   );
 }
 
@@ -582,7 +584,7 @@ export async function resolveLegacySlugToProperty(slug: string): Promise<Propert
 
   await apiDelay();
   const property = propertyBySlug.get(slug);
-  return property?.transactionType === "vente" ? property : null;
+  return property?.transactionType === "vente" && property.status !== "sold" ? property : null;
 }
 
 export async function getMarketCountersSnapshot(): Promise<MarketCountersSnapshot> {

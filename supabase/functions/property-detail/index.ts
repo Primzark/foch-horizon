@@ -22,6 +22,7 @@ Deno.serve(async (request) => {
       )
       .eq("id", id)
       .eq("transaction_type", "vente")
+      .neq("status", "sold")
       .maybeSingle();
 
     if (error) throw error;

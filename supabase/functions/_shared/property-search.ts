@@ -95,6 +95,7 @@ export async function collectPropertyIdsForTextQuery(
       .from("properties")
       .select("id")
       .neq("status", "off_market")
+      .neq("status", "sold")
       .ilike(field, likePattern)
       .limit(200);
 
@@ -112,6 +113,7 @@ export async function collectPropertyIdsForTextQuery(
         .from("properties")
         .select("id")
         .neq("status", "off_market")
+        .neq("status", "sold")
         .eq("id", propertyId)
         .limit(1);
       if (error) throw error;
@@ -136,6 +138,7 @@ export async function collectPropertyIdsForTextQuery(
       .from("properties")
       .select("id")
       .neq("status", "off_market")
+      .neq("status", "sold")
       .in("city_id", Array.from(cityIds))
       .limit(400);
     if (error) throw error;
@@ -203,6 +206,7 @@ export async function resolveCityFilterPropertyIds(
       .from("properties")
       .select("id")
       .neq("status", "off_market")
+      .neq("status", "sold")
       .in("city_id", cityIds)
       .limit(4000);
 
@@ -227,6 +231,7 @@ export async function resolveCityFilterPropertyIds(
       .from("properties")
       .select("id")
       .neq("status", "off_market")
+      .neq("status", "sold")
       .in("city_id", Array.from(cityIdMatches))
       .limit(4000);
     if (error) throw error;
@@ -237,6 +242,7 @@ export async function resolveCityFilterPropertyIds(
     .from("properties")
     .select("id")
     .neq("status", "off_market")
+    .neq("status", "sold")
     .ilike("postal_code", likePattern)
     .limit(2000);
   if (postalError) throw postalError;
@@ -305,6 +311,7 @@ export async function runSharedPropertySearchQuery(
       { count: "exact" },
     )
     .neq("status", "off_market")
+    .neq("status", "sold")
     .eq("transaction_type", "vente")
     .range(from, to);
 
@@ -490,7 +497,8 @@ export async function fetchAggregateRowsForSearchFilters(
   let query = supabase
     .from("properties")
     .select("id,transaction_type,property_type,price_amount,surface_m2,city:cities(name,slug)")
-    .neq("status", "off_market");
+    .neq("status", "off_market")
+    .neq("status", "sold");
 
   if (input.transaction) query = query.eq("transaction_type", input.transaction);
   if (input.type) query = query.eq("property_type", input.type);
@@ -539,7 +547,8 @@ export async function fetchAggregateRowsByIds(
     .from("properties")
     .select("id,transaction_type,property_type,price_amount,surface_m2,city:cities(name,slug)")
     .in("id", ids)
-    .neq("status", "off_market");
+    .neq("status", "off_market")
+    .neq("status", "sold");
   if (error) throw error;
   const rows = ((data as SharedPropertyAggregateRow[] | null) ?? []).filter((row) => typeof row.id === "number");
   const byId = new Map(rows.map((row) => [row.id, row]));

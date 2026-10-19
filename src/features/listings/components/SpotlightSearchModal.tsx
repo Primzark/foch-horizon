@@ -57,7 +57,7 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
 
   const seedItems = useMemo<SearchableProperty[]>(
     () => properties
-      .filter((property) => property.status !== "off_market")
+      .filter((property) => property.status !== "off_market" && property.status !== "sold")
       .map((property) => ({ ...toSearchItem(property), description: property.description })),
     [],
   );

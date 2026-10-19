@@ -70,7 +70,8 @@ function getNavigationPreview(state: unknown, propertyId: number | null): Proper
     (item.transaction !== "vente" && item.transaction !== "location") ||
     (item.type !== "appartement" && item.type !== "maison_villa" && item.type !== "autre") ||
     !item.status ||
-    (item.status !== "active" && item.status !== "under_offer" && item.status !== "reserved" && item.status !== "sold" && item.status !== "rented" && item.status !== "off_market") ||
+    item.status === "sold" ||
+    (item.status !== "active" && item.status !== "under_offer" && item.status !== "reserved" && item.status !== "rented" && item.status !== "off_market") ||
     typeof item.priceAmount !== "number" ||
     item.currency !== "EUR" ||
     typeof item.surfaceM2 !== "number" ||

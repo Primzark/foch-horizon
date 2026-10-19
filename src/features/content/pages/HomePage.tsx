@@ -58,7 +58,7 @@ export default function HomePage() {
     [featuredQuery.data],
   );
   const instantSearchItems = useMemo(
-    () => properties.filter((property) => property.status !== "off_market").map((property) => ({
+    () => properties.filter((property) => property.status !== "off_market" && property.status !== "sold").map((property) => ({
       ...toSearchItem(property),
       description: property.description,
     })),

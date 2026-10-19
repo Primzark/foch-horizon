@@ -3513,7 +3513,8 @@ async function executeGetPropertiesTool(
       "id,title,slug,status,price_amount,price_currency,surface_m2,terrain_m2,bedrooms,bathrooms,garage_count,dpe_label,transaction_type,property_type,city:cities(name,slug)",
     )
     .in("id", uniqueIds)
-    .neq("status", "off_market");
+    .neq("status", "off_market")
+    .neq("status", "sold");
 
   if (error) throw error;
 
