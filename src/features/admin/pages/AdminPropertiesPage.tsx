@@ -746,13 +746,12 @@ export default function AdminPropertiesPage() {
               </p>
             </div>
 
-            <section aria-label="Synthèse des annonces" className="mt-8 grid grid-cols-2 gap-y-5 border-y border-border/70 py-5 sm:grid-cols-3 lg:grid-cols-7">
+            <section aria-label="Synthèse des annonces" className="mt-8 grid grid-cols-2 gap-y-5 border-y border-border/70 py-5 sm:grid-cols-3 lg:grid-cols-6">
               <SummaryItem label="Toutes" value={allProperties.length} />
               <SummaryItem label="Disponibles" value={counts.active} />
               <SummaryItem label="Sous offre" value={counts.under_offer} />
               <SummaryItem label="Réservés" value={counts.reserved} />
               <SummaryItem label="Vendus" value={counts.sold} />
-              <SummaryItem label="Loués" value={counts.rented} />
               <SummaryItem label="Retirés" value={counts.off_market} />
             </section>
 
