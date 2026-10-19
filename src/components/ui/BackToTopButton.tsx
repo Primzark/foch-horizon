@@ -6,8 +6,11 @@ import { scrollToPageTop } from "@/lib/navigation/scrollToPageTop";
 
 const SCROLL_THRESHOLD_PX = 320;
 
-export function BackToTopButton() {
+export function BackToTopButton({ side = "left" }: { side?: "left" | "right" }) {
   const [isVisible, setIsVisible] = useState(false);
+  const horizontalPosition = side === "right"
+    ? "right-[max(0.75rem,env(safe-area-inset-right))] sm:right-[max(1rem,env(safe-area-inset-right))]"
+    : "left-[max(0.75rem,env(safe-area-inset-left))] sm:left-[max(1rem,env(safe-area-inset-left))]";
 
   useEffect(() => {
     const updateVisibility = () => {
@@ -30,7 +33,7 @@ export function BackToTopButton() {
       onClick={scrollToPageTop}
       className={cn(
         "fixed z-[120] h-11 w-11 rounded-full border-border/70 bg-background/95 shadow-lg backdrop-blur transition-all duration-200",
-        "left-[max(0.75rem,env(safe-area-inset-left))] sm:left-[max(1rem,env(safe-area-inset-left))]",
+        horizontalPosition,
         "bottom-[max(0.75rem,env(safe-area-inset-bottom))] sm:bottom-[max(1rem,env(safe-area-inset-bottom))]",
         isVisible ? "pointer-events-auto translate-y-0 opacity-100" : "pointer-events-none translate-y-3 opacity-0",
       )}

@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/compone
 import type { PropertyModalRouteState } from "@/features/listings/navigation/propertyModalNavigation";
 import { AppLayout } from "@/layout/AppLayout";
 import { CookieConsentManager } from "@/layout/CookieConsentManager";
+import { BackToTopButton } from "@/components/ui/BackToTopButton";
 import { routePageLoaders } from "@/app/router/routePageLoaders";
 import { RouteIntentPrefetcher } from "@/app/router/RouteIntentPrefetcher";
 import { useIsMobileOrTablet } from "@/hooks/use-mobile";
@@ -298,6 +299,7 @@ function AppRoutes() {
           <Route path="/biens/:idSlug/*" element={<PropertyDetailRouteModal />} />
         </Routes>
       )}
+      {location.pathname.startsWith("/admin") && <BackToTopButton side="right" />}
     </>
   );
 }
