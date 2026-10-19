@@ -8,7 +8,6 @@ export const ADMIN_PROPERTY_STATUS_OPTIONS: Array<{ value: PropertyStatus; label
   { value: "under_offer", label: "Sous offre" },
   { value: "reserved", label: "Réservé" },
   { value: "sold", label: "Vendu" },
-  { value: "rented", label: "Loué" },
   { value: "off_market", label: "Retiré" },
 ];
 
