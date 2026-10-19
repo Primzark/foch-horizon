@@ -8,6 +8,8 @@ import {
   Building2,
   Check,
   CircleAlert,
+  Eye,
+  EyeOff,
   KeyRound,
   LogOut,
   Search,
@@ -283,6 +285,7 @@ function LoginPage({
 }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [validationAttempted, setValidationAttempted] = useState(false);
   const [emailBlurred, setEmailBlurred] = useState(false);
   const errorSummaryRef = useRef<HTMLElement>(null);
@@ -378,21 +381,33 @@ function LoginPage({
             </div>
             <div className="space-y-2">
               <Label htmlFor="admin-password">Mot de passe</Label>
-              <Input
-                id="admin-password"
-                type="password"
-                name="password"
-                autoComplete="current-password"
-                aria-invalid={passwordError ? true : undefined}
-                aria-describedby={passwordError ? "admin-password-error" : undefined}
-                className={passwordError ? "border-destructive" : undefined}
-                value={password}
-                onChange={(event) => {
-                  setPassword(event.target.value);
-                  onCredentialsChange();
-                }}
-                required
-              />
+              <div className="relative">
+                <Input
+                  id="admin-password"
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  autoComplete="current-password"
+                  aria-invalid={passwordError ? true : undefined}
+                  aria-describedby={passwordError ? "admin-password-error" : undefined}
+                  className={`pr-10${passwordError ? " border-destructive" : ""}`}
+                  value={password}
+                  onChange={(event) => {
+                    setPassword(event.target.value);
+                    onCredentialsChange();
+                  }}
+                  required
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-1 top-1/2 h-8 w-8 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                  onClick={() => setShowPassword((visible) => !visible)}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
+                </Button>
+              </div>
               {passwordError && <p id="admin-password-error" className="text-xs text-destructive" aria-live="polite">{passwordError}</p>}
             </div>
             {serverError && (
