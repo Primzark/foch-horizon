@@ -3,6 +3,7 @@ import { LeadForm } from "@/features/leads/components/LeadForm";
 import { getConfiguredPublicSiteUrl, getSiteUrl, useSeo } from "@/lib/seo/useSeo";
 import { trackEvent } from "@/lib/analytics/events";
 import { StorefrontPageHero } from "@/features/content/components/StorefrontPageHero";
+import { AgencyTeamSection } from "@/features/content/components/AgencyTeamSection";
 
 export default function ContactPageV2() {
   const siteUrl = getSiteUrl();
@@ -84,6 +85,8 @@ export default function ContactPageV2() {
           />
       </div>
       </section>
+
+      <AgencyTeamSection mood="urban" />
     </>
   );
 }
