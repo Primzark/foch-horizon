@@ -77,6 +77,21 @@ describe("local guide suggestions in public quick search", () => {
     expect(getRoute()).toBe("/immobilier/honfleur");
   });
 
+  it("keeps matching suggestions mounted while the query narrows", async () => {
+    renderSearch(<MainSearchHarness />);
+    const input = screen.getByRole("combobox", { name: "Ville, quartier, type de bien ou référence" });
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: "Sainte" } });
+
+    const guideSuggestion = await screen.findByRole("option", { name: "Sainte-Adresse Page locale" });
+    const propertySuggestion = await screen.findByRole("option", { name: /Nouveauté, Dollemard limite Sainte Adresse/ });
+
+    fireEvent.change(input, { target: { value: "Sainte-Adresse" } });
+
+    expect(await screen.findByRole("option", { name: "Sainte-Adresse Page locale" })).toBe(guideSuggestion);
+    expect(await screen.findByRole("option", { name: /Nouveauté, Dollemard limite Sainte Adresse/ })).toBe(propertySuggestion);
+  });
+
   it("keeps matching property suggestions in the homepage autocomplete", async () => {
     renderSearch(<MainSearchHarness />);
     const input = screen.getByRole("combobox", { name: "Ville, quartier, type de bien ou référence" });

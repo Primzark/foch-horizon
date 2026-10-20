@@ -1,18 +1,26 @@
-import { useEffect, useMemo, useState, type FormEvent, type KeyboardEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, House, Search, SlidersHorizontal } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import {
+  AnimatedGuideSuggestionGroup,
+  AnimatedPropertySuggestionGroup,
+  SearchSuggestionCategorySwitch,
+  SearchSuggestionCrossfade,
+  SearchSuggestionPanel,
+  SearchSuggestionResults,
+  type SearchSuggestionCategory,
+} from "@/features/content/components/AnimatedSearchSuggestions";
 import { useUiStore } from "@/lib/state/useUiStore";
 import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
 import { searchGeographyGuides } from "@/features/content/utils/geographyGuideSearch";
 import { buildSearchParams, parseSearchParams } from "@/features/listings/utils/query";
 import { searchProperties } from "@/features/listings/api/properties.service";
-import { formatPrice, formatPropertyTypeLabel, normalizeKeyword, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
+import { formatPropertyTypeLabel, normalizeKeyword, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
 import type { PropertySearchItem, PropertySearchParams, PropertySearchResponse } from "@/types/api";
 import type { TransactionType } from "@/types/domain";
-import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
 import { createPropertyModalRouteState } from "@/features/listings/navigation/propertyModalNavigation";
 import { persistAppliedPropertySearchFilters, readLastAppliedPropertySearchFilters } from "@/features/listings/utils/searchFilterPersistence";
 import { SearchThinkingState } from "@/features/content/components/SearchThinkingState";
@@ -29,6 +37,7 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
   const location = useLocation();
   const queryClient = useQueryClient();
   const setSearchDrawerOpen = useUiStore((state) => state.setSearchDrawerOpen);
+  const inputRef = useRef<HTMLInputElement>(null);
   const { reducedMotion } = useMotionPreference();
   const transaction: TransactionType = "vente";
   const [query, setQuery] = useState(() => readLastAppliedPropertySearchFilters()?.q ?? "");
@@ -36,6 +45,7 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
   const [focused, setFocused] = useState(false);
   const [suggestionsDismissed, setSuggestionsDismissed] = useState(false);
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
+  const [suggestionCategory, setSuggestionCategory] = useState<SearchSuggestionCategory>("all");
 
   const inventoryQuery = useQuery({
     queryKey: ["main-search-inventory"],
@@ -71,6 +81,10 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
       .map(({ item }) => item)
       .slice(0, 5);
   }, [queryText, searchableInventory, transaction]);
+  const visibleGuideSuggestions = suggestionCategory === "properties" ? [] : guideSuggestions;
+  const visiblePropertySuggestions = suggestionCategory === "guides" ? [] : suggestions;
+  const browseOptionIndex = visibleGuideSuggestions.length + visiblePropertySuggestions.length;
+  const optionCount = browseOptionIndex + 1;
   const showSuggestions = focused && !suggestionsDismissed && queryText.length >= 2;
 
   useEffect(() => {
@@ -155,6 +169,10 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
     setFocused(false);
   };
 
+  const openVisibleSuggestion = (index: number) => {
+    openSuggestion(suggestionCategory === "properties" ? index + guideSuggestions.length : index);
+  };
+
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     navigateToResults();
@@ -170,14 +188,15 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
       return;
     }
 
-    const optionCount = guideSuggestions.length + suggestions.length + 1;
     if (event.key === "ArrowDown") {
+      if (optionCount === 0) return;
       event.preventDefault();
       setActiveSuggestionIndex((current) => (current + 1) % optionCount);
       return;
     }
 
     if (event.key === "ArrowUp") {
+      if (optionCount === 0) return;
       event.preventDefault();
       setActiveSuggestionIndex((current) => (current <= 0 ? optionCount - 1 : current - 1));
       return;
@@ -185,9 +204,9 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
 
     if (event.key === "Enter" && activeSuggestionIndex >= 0) {
       event.preventDefault();
-      if (activeSuggestionIndex < guideSuggestions.length + suggestions.length) {
-        openSuggestion(activeSuggestionIndex);
-      } else {
+      if (activeSuggestionIndex < browseOptionIndex) {
+        openVisibleSuggestion(activeSuggestionIndex);
+      } else if (activeSuggestionIndex === browseOptionIndex) {
         navigateToResults();
       }
     }
@@ -195,11 +214,13 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
 
   const activeOptionId = activeSuggestionIndex < 0
     ? undefined
-    : activeSuggestionIndex < guideSuggestions.length
-      ? `main-search-guide-${guideSuggestions[activeSuggestionIndex]?.id}`
-      : activeSuggestionIndex < guideSuggestions.length + suggestions.length
-        ? `main-search-suggestion-${suggestions[activeSuggestionIndex - guideSuggestions.length]?.id}`
-      : "main-search-browse-option";
+    : activeSuggestionIndex < visibleGuideSuggestions.length
+      ? `main-search-guide-${visibleGuideSuggestions[activeSuggestionIndex]?.id}`
+      : activeSuggestionIndex < browseOptionIndex
+        ? `main-search-suggestion-${visiblePropertySuggestions[activeSuggestionIndex - visibleGuideSuggestions.length]?.id}`
+        : activeSuggestionIndex === browseOptionIndex
+          ? "main-search-browse-option"
+          : undefined;
 
   return (
     <div className="w-full max-w-3xl">
@@ -231,6 +252,7 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
                 Ville, quartier, type de bien ou référence
               </label>
               <input
+                ref={inputRef}
                 id="main-property-search"
                 name="q"
                 type="search"
@@ -248,7 +270,11 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
                   setFocused(true);
                   setSuggestionsDismissed(false);
                 }}
-                onBlur={() => window.setTimeout(() => setFocused(false), 120)}
+                onBlur={(event) => {
+                  const suggestionsPanel = event.currentTarget.form?.parentElement?.querySelector("#main-search-suggestion-panel");
+                  if (event.relatedTarget instanceof Node && suggestionsPanel?.contains(event.relatedTarget)) return;
+                  window.setTimeout(() => setFocused(false), 120);
+                }}
                 onKeyDown={handleInputKeyDown}
                 placeholder=""
                 autoComplete="off"
@@ -288,121 +314,103 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
           </div>
         </form>
 
-        {showSuggestions && (
-          <AnimatePresence>
-            <motion.div
-              initial={reducedMotion ? false : { opacity: 0, y: -5 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={reducedMotion ? undefined : { opacity: 0, y: -5 }}
-              transition={{ duration: reducedMotion ? 0 : 0.16, ease: "easeOut" }}
-              className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-40 overflow-hidden rounded-2xl border border-border bg-background text-foreground shadow-xl"
-            >
-              {suggestions.length === 0 && inventoryQuery.isLoading && (
-                <div className="p-2">
-                  <SearchThinkingState
-                    label="Je recherche les biens"
-                    details="Je vérifie les annonces correspondant à votre recherche."
-                    className="max-w-full"
-                  />
-                </div>
-              )}
-              <div id="main-search-suggestions" role="listbox" aria-label="Pages locales et biens correspondants" className="max-h-[min(24rem,60vh)] overflow-y-auto p-2">
-                {guideSuggestions.length > 0 && (
-                  <div role="group" aria-label="Pages locales" className="space-y-0.5">
-                    <p className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                      Pages locales
-                    </p>
-                    {guideSuggestions.map((guide, index) => (
-                      <button
-                        key={guide.id}
-                        id={`main-search-guide-${guide.id}`}
-                        type="button"
-                        role="option"
-                        aria-selected={activeSuggestionIndex === index}
-                        onMouseDown={(event) => event.preventDefault()}
-                        onClick={() => openSuggestion(index)}
-                        className={`flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left transition-colors ${
-                          activeSuggestionIndex === index ? "bg-brand-soft/70" : "hover:bg-muted/70"
-                        }`}
-                      >
-                        <span className="block truncate text-sm font-medium">{guide.name}</span>
-                        <span className="shrink-0 text-xs text-muted-foreground">Page locale</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
+        <SearchSuggestionPanel
+          isVisible={showSuggestions}
+          id="main-search-suggestion-panel"
+          className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-40 overflow-hidden rounded-2xl border border-border bg-background text-foreground shadow-xl"
+          onBlur={(event) => {
+            const nextTarget = event.relatedTarget;
+            if (!(nextTarget instanceof Node) || !event.currentTarget.contains(nextTarget)) {
+              setFocused(false);
+            }
+          }}
+          onKeyDown={(event) => {
+            if (event.key !== "Escape") return;
+            event.preventDefault();
+            inputRef.current?.focus();
+            setSuggestionsDismissed(true);
+            setActiveSuggestionIndex(-1);
+          }}
+        >
+          <SearchSuggestionCategorySwitch
+            activeCategory={suggestionCategory}
+            guideCount={guideSuggestions.length}
+            propertyCount={suggestions.length}
+            reducedMotion={reducedMotion}
+            className="mx-2 mt-2"
+            onChange={(category) => {
+              setSuggestionCategory(category);
+              setActiveSuggestionIndex(-1);
+            }}
+          />
 
-                {suggestions.length > 0 && (
-                  <div role="group" aria-label="Biens correspondants" className="space-y-0.5">
-                    <p className="px-3 pb-1 pt-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                      Biens correspondants
-                    </p>
-                    {suggestions.map((suggestion, index) => {
-                      const optionIndex = guideSuggestions.length + index;
-                      return (
-                        <button
-                          key={suggestion.id}
-                          id={`main-search-suggestion-${suggestion.id}`}
-                          type="button"
-                          role="option"
-                          aria-selected={activeSuggestionIndex === optionIndex}
-                          onMouseDown={(event) => event.preventDefault()}
-                          onClick={() => openSuggestion(optionIndex)}
-                          className={`grid w-full grid-cols-[3.5rem_minmax(0,1fr)_auto] items-center gap-3 rounded-xl px-2 py-2 text-left transition-colors hover:bg-muted/70 ${
-                            activeSuggestionIndex === optionIndex ? "bg-muted/70" : ""
-                          }`}
-                        >
-                          {suggestion.coverImageUrl ? (
-                            <img
-                              src={getPropertyImageUrl(suggestion.coverImageUrl, 200)}
-                              srcSet={getPropertyImageSrcSet(suggestion.coverImageUrl, [200, 400])}
-                              sizes="56px"
-                              alt=""
-                              className="h-11 w-14 rounded-lg object-cover"
-                              loading="lazy"
-                            />
-                          ) : (
-                            <span aria-hidden="true" className="h-11 w-14 rounded-lg bg-muted" />
-                          )}
-                          <span className="min-w-0">
-                            <span className="block truncate text-sm font-medium">{suggestion.title}</span>
-                            <span className="block truncate text-xs text-muted-foreground">
-                              {suggestion.city.name} · {formatPropertyTypeLabel(suggestion.type)}
-                            </span>
-                          </span>
-                          <span className="whitespace-nowrap text-right text-sm font-semibold">
-                            {formatPrice(suggestion.priceAmount, suggestion.transaction)}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
+          <SearchSuggestionResults reducedMotion={reducedMotion}>
+          {visiblePropertySuggestions.length === 0 && suggestionCategory !== "guides" && inventoryQuery.isLoading && (
+            <div className="p-2">
+              <SearchThinkingState
+                label="Je recherche les biens"
+                details="Je vérifie les annonces correspondant à votre recherche."
+                className="max-w-full"
+              />
+            </div>
+          )}
+          <div id="main-search-suggestions" role="listbox" aria-label="Pages locales et biens correspondants" className="grid max-h-[min(24rem,60vh)] grid-cols-1 overflow-y-auto p-2">
+            <SearchSuggestionCrossfade category={suggestionCategory} reducedMotion={reducedMotion}>
+              <AnimatedGuideSuggestionGroup
+                guides={visibleGuideSuggestions}
+                activeIndex={activeSuggestionIndex}
+                idPrefix="main-search-guide"
+                reducedMotion={reducedMotion}
+                showHeading={suggestionCategory === "all"}
+                onSelect={openVisibleSuggestion}
+              />
 
-                {suggestions.length === 0 && inventoryQuery.isFetched && (
+              <AnimatedPropertySuggestionGroup
+                properties={visiblePropertySuggestions}
+                activeIndex={activeSuggestionIndex}
+                optionIndexOffset={visibleGuideSuggestions.length}
+                staggerIndexOffset={suggestionCategory === "all" ? visibleGuideSuggestions.length : 0}
+                idPrefix="main-search-suggestion"
+                reducedMotion={reducedMotion}
+                variant="main"
+                showHeading={suggestionCategory === "all"}
+                onSelect={openVisibleSuggestion}
+              />
+
+              {visiblePropertySuggestions.length === 0 &&
+                visibleGuideSuggestions.length === 0 &&
+                suggestionCategory !== "guides" &&
+                inventoryQuery.isFetched && (
                   <p role="status" className="px-3 py-4 text-sm text-muted-foreground">
                     Aucun bien trouvé pour « {queryText} ».
                   </p>
                 )}
 
-                <button
-                  id="main-search-browse-option"
-                  type="button"
-                  role="option"
-                  aria-selected={activeSuggestionIndex === guideSuggestions.length + suggestions.length}
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={navigateToResults}
-                  className={`mt-1 flex w-full items-center gap-2 rounded-xl border-t border-border px-3 py-3 text-left text-sm text-brand-strong transition-colors hover:bg-brand-soft/60 ${
-                    activeSuggestionIndex === guideSuggestions.length + suggestions.length ? "bg-brand-soft/60" : ""
-                  }`}
-                >
-                  <Search className="h-4 w-4 shrink-0" />
-                  <span className="truncate">Voir tous les résultats pour « {queryText} »</span>
-                </button>
-              </div>
-            </motion.div>
-          </AnimatePresence>
-        )}
+              {suggestionCategory === "guides" && visibleGuideSuggestions.length === 0 && (
+                <p role="status" className="px-3 py-4 text-sm text-muted-foreground">
+                  Aucune page locale trouvée pour « {queryText} ».
+                </p>
+              )}
+
+              <button
+                id="main-search-browse-option"
+                type="button"
+                role="option"
+                aria-selected={activeSuggestionIndex === browseOptionIndex}
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={navigateToResults}
+                className={`mt-1 flex w-full items-center gap-2 rounded-xl border-t border-border px-3 py-3 text-left text-sm text-brand-strong transition-colors hover:bg-brand-soft/60 focus-visible:bg-brand-soft/60 ${
+                  activeSuggestionIndex === browseOptionIndex ? "bg-brand-soft/60" : ""
+                }`}
+                style={{ transitionDuration: reducedMotion ? "0ms" : "160ms" }}
+              >
+                <Search className="h-4 w-4 shrink-0" />
+                <span className="truncate">Voir tous les résultats pour « {queryText} »</span>
+              </button>
+            </SearchSuggestionCrossfade>
+          </div>
+          </SearchSuggestionResults>
+        </SearchSuggestionPanel>
       </div>
 
       <div className="mt-4">
