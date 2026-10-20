@@ -16,6 +16,7 @@ interface PropertyRow {
   status: string;
   admin_status_override: string | null;
   source_status: string | null;
+  description?: string | null;
   price_amount: number;
   price_currency: string;
   surface_m2: number | null;
@@ -59,6 +60,7 @@ Deno.serve(async (request) => {
     const supabase = createServiceClient();
     const url = new URL(request.url);
     const params = url.searchParams;
+    const includeDescription = params.get("includeDescription") === "true";
     const searchResult = await runSharedPropertySearchQuery(
       supabase,
       {
@@ -85,6 +87,7 @@ Deno.serve(async (request) => {
         defaultPageSize: 24,
         minPageSizeWithoutSlug: 12,
         maxPageSize: 100,
+        includeDescription,
       },
     );
 
@@ -114,6 +117,7 @@ Deno.serve(async (request) => {
         },
         coverImageUrl: imageUrls[0] ?? "",
         imageUrls,
+        ...(includeDescription ? { description: item.description ?? "" } : {}),
         dpeLabel: item.dpe_label,
         status: item.status,
         adminStatusOverride: item.admin_status_override,

@@ -81,9 +81,9 @@ export default function ListingsIndexPage() {
   }, [searchParams, setSearchParams]);
 
   const query = useQuery({
-    queryKey: ["properties", filters, viewMode === "list" ? "list" : "default"],
+    queryKey: ["properties", filters, viewMode === "list" ? "list" : viewMode === "map" ? "map" : "default"],
     queryFn: async () => {
-      const response = await searchProperties(filters);
+      const response = await searchProperties(filters, { includeDescription: viewMode === "map" });
       const items = await Promise.all(
         response.items.map(async (item) => {
           const needsDescription = viewMode === "list";

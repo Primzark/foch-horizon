@@ -3,7 +3,8 @@ import { ArrowUpRight, LocateFixed, MapPin, Move, X } from "lucide-react";
 import * as L from "leaflet";
 import type { PropertySearchItem } from "@/types/api";
 import { PropertyPreviewLink } from "@/features/listings/components/PropertyPreviewLink";
-import { formatPrice, formatPropertyTypeLabel, normalizeKeyword } from "@/features/listings/utils/formatting";
+import { formatPrice, formatPropertyTypeLabel } from "@/features/listings/utils/formatting";
+import { resolveApproximatePropertyMapLocation } from "@/features/listings/utils/propertyMapLocations";
 import { PaginationBar } from "@/features/listings/components/PaginationBar";
 import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
 import "leaflet/dist/leaflet.css";
@@ -17,33 +18,10 @@ interface PropertyMapSplitViewProps {
   onPageChange: (page: number) => void;
 }
 
-const DEFAULT_CENTER: L.LatLngTuple = [49.505, 0.14];
+const DEFAULT_CENTER: L.LatLngTuple = [49.4943, 0.1078];
 const SELECTED_PROPERTY_ZOOM = 15;
 const MAP_FLY_DURATION_SECONDS = 0.5;
 const TILE_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
-
-const cityAnchors: Record<string, L.LatLngTuple> = {
-  "le-havre": [49.4944, 0.1079],
-  "sainte-adresse": [49.5065, 0.0848],
-  montivilliers: [49.5455, 0.1872],
-  maneglise: [49.589, 0.292],
-  gainneville: [49.511, 0.278],
-  harfleur: [49.507, 0.198],
-  "octeville-sur-mer": [49.554, 0.132],
-};
-
-function approximatePosition(item: PropertySearchItem): L.LatLngTuple {
-  const citySlug = normalizeKeyword(item.city.slug || item.city.name)
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
-  const [latitude, longitude] = cityAnchors[citySlug] ?? DEFAULT_CENTER;
-  const bearing = ((item.id * 137.508) % 360) * (Math.PI / 180);
-  const distance = 180 + (item.id % 5) * 85;
-  const latitudeOffset = (Math.cos(bearing) * distance) / 111_000;
-  const longitudeOffset = (Math.sin(bearing) * distance) / (111_000 * Math.cos((latitude * Math.PI) / 180));
-
-  return [latitude + latitudeOffset, longitude + longitudeOffset];
-}
 
 function makePriceIcon(item: PropertySearchItem, selected: boolean): L.DivIcon {
   const compactPrice = new Intl.NumberFormat("fr-FR", {
@@ -82,10 +60,15 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
   const [singleFingerPanEnabled, setSingleFingerPanEnabled] = useState(false);
 
   const positions = useMemo(
-    () => items.map((item) => ({ item, position: approximatePosition(item) })),
+    () => items.map((item) => ({ item, ...resolveApproximatePropertyMapLocation(item) })),
     [items],
   );
+  const locationByPropertyId = useMemo(
+    () => new Map(positions.map(({ item, label, basis }) => [item.id, { label, basis }] as const)),
+    [positions],
+  );
   const selectedItem = items.find((item) => item.id === selectedId) ?? null;
+  const selectedMapLocation = selectedId == null ? undefined : locationByPropertyId.get(selectedId);
 
   const selectProperty = (id: number | null) => {
     selectedIdRef.current = id;
@@ -242,7 +225,7 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
         <div className="flex items-center justify-between gap-3 border-b border-border/70 px-4 py-3">
           <div>
             <h2 className="font-display text-xl">Les biens</h2>
-            <p className="mt-0.5 text-xs text-muted-foreground">Les emplacements sont indicatifs.</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">Repères approximatifs basés sur la ville, le code postal et le secteur de l’annonce.</p>
           </div>
           <span className="shrink-0 text-xs text-muted-foreground">{items.length} sur cette page</span>
         </div>
@@ -250,6 +233,8 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
           {items.map((item) => {
             const isSelected = item.id === selectedId;
+            const mapLocation = locationByPropertyId.get(item.id);
+            const locality = mapLocation && mapLocation.label !== item.city.name ? ` · ${mapLocation.label}` : "";
             return (
               <article
                 key={item.id}
@@ -283,7 +268,7 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
                       {item.title}
                     </span>
                     <span className="truncate text-xs text-muted-foreground">
-                      {item.city.name} · {item.surfaceM2} m²
+                      {item.city.name}{locality} · {item.surfaceM2} m²
                     </span>
                     <span className="text-sm font-semibold text-brand-strong">
                       {formatPrice(item.priceAmount, item.transaction)}
@@ -353,7 +338,9 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
             />
             <div className="min-w-0 flex-1">
               <p className="truncate text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                {selectedItem.city.name} · Réf. {selectedItem.id}
+                {selectedItem.city.name}
+                {selectedMapLocation && selectedMapLocation.label !== selectedItem.city.name ? ` · ${selectedMapLocation.label}` : ""}
+                {` · Réf. ${selectedItem.id}`}
               </p>
               <h3 className="mt-1 line-clamp-1 font-display text-sm">{selectedItem.title}</h3>
               <p className="mt-1 flex items-center justify-between gap-2">

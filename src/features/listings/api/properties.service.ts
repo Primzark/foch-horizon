@@ -281,7 +281,10 @@ function applySort(items: Property[], sort: PropertySearchParams["sort"]): Prope
   return result;
 }
 
-export async function searchProperties(params: PropertySearchParams): Promise<PropertySearchResponse> {
+export async function searchProperties(
+  params: PropertySearchParams,
+  options: { includeDescription?: boolean } = {},
+): Promise<PropertySearchResponse> {
   const page = params.page && params.page > 0 ? params.page : DEFAULT_PAGE;
   const pageSize = params.pageSize && params.pageSize > 0 ? params.pageSize : DEFAULT_PAGE_SIZE;
 
@@ -308,6 +311,7 @@ export async function searchProperties(params: PropertySearchParams): Promise<Pr
     if (params.page) query.set("page", String(params.page));
     if (params.pageSize) query.set("pageSize", String(params.pageSize));
     if (params.sort) query.set("sort", params.sort);
+    if (options.includeDescription) query.set("includeDescription", "true");
 
     return apiJson<PropertySearchResponse>(`/api/properties?${query.toString()}`);
   }
@@ -350,6 +354,7 @@ export async function searchProperties(params: PropertySearchParams): Promise<Pr
         },
         coverImageUrl: imageUrls[0] ?? "",
         imageUrls,
+        ...(options.includeDescription ? { description: property.description } : {}),
         dpeLabel: property.dpeLabel,
         status: property.status,
         adminStatusOverride: property.adminStatusOverride ?? null,

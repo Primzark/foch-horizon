@@ -33,6 +33,7 @@ export interface SharedPropertySearchRow {
   transaction_type: string;
   property_type: string;
   status: string;
+  description?: string | null;
   admin_status_override?: string | null;
   source_status?: string | null;
   price_amount: number;
@@ -272,6 +273,7 @@ export interface SharedPropertySearchQueryOptions {
   defaultPageSize?: number;
   minPageSizeWithoutSlug?: number;
   maxPageSize?: number;
+  includeDescription?: boolean;
 }
 
 export interface SharedPropertySearchQueryResult {
@@ -304,12 +306,13 @@ export async function runSharedPropertySearchQuery(
   const features = (input.features ?? []).map((value) => String(value)).filter(Boolean);
   const q = normalizeTerm(input.q ?? "");
 
+  const selectFields = options.includeDescription
+    ? "id,title,slug,transaction_type,property_type,status,admin_status_override,source_status,price_amount,price_currency,surface_m2,terrain_m2,bedrooms,bathrooms,parking_count,garage_count,postal_code,dpe_label,city:cities(name,slug),images:property_images(source_url,sort_order),description"
+    : "id,title,slug,transaction_type,property_type,status,admin_status_override,source_status,price_amount,price_currency,surface_m2,terrain_m2,bedrooms,bathrooms,parking_count,garage_count,postal_code,dpe_label,city:cities(name,slug),images:property_images(source_url,sort_order)";
+
   let query = supabase
     .from("properties")
-    .select(
-      "id,title,slug,transaction_type,property_type,status,admin_status_override,source_status,price_amount,price_currency,surface_m2,terrain_m2,bedrooms,bathrooms,parking_count,garage_count,postal_code,dpe_label,city:cities(name,slug),images:property_images(source_url,sort_order)",
-      { count: "exact" },
-    )
+    .select(selectFields, { count: "exact" })
     .neq("status", "off_market")
     .neq("status", "sold")
     .eq("transaction_type", "vente")
@@ -368,7 +371,9 @@ export async function runSharedPropertySearchQuery(
     page,
     pageSize,
     total: count ?? (Array.isArray(data) ? data.length : 0),
-    rows: (data as SharedPropertySearchRow[] | null) ?? [],
+    // The description column is selected only for map requests, so Supabase's
+    // static select parser cannot infer one common row shape for both variants.
+    rows: (data as unknown as SharedPropertySearchRow[] | null) ?? [],
   };
 }
 
