@@ -6,7 +6,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { useUiStore } from "@/lib/state/useUiStore";
 import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
-import { searchGeographyGuides } from "@/features/content/utils/geographyGuideSearch";
 import { buildSearchParams, parseSearchParams } from "@/features/listings/utils/query";
 import { searchProperties } from "@/features/listings/api/properties.service";
 import { formatPrice, formatPropertyTypeLabel, normalizeKeyword, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
@@ -44,7 +43,6 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
     refetchOnWindowFocus: false,
   });
   const queryText = query.trim();
-  const guideSuggestions = useMemo(() => searchGeographyGuides(queryText), [queryText]);
   const searchableInventory = useMemo(() => {
     const itemsById = new Map<number, MainSearchSeedItem>();
     seedItems.forEach((item) => itemsById.set(item.id, item));
@@ -135,20 +133,8 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
   };
 
   const openSuggestion = (index: number) => {
-    if (index < guideSuggestions.length) {
-      const guide = guideSuggestions[index];
-      if (!guide) return;
-      navigate(`/immobilier/${guide.id}`);
-      setFocused(false);
-      return;
-    }
-
-    const propertyIndex = index - guideSuggestions.length;
-    const suggestion = suggestions[propertyIndex];
-    if (!suggestion) {
-      if (index === guideSuggestions.length + suggestions.length) navigateToResults();
-      return;
-    }
+    const suggestion = suggestions[index];
+    if (!suggestion) return;
     navigate(toCanonicalPropertyPath(suggestion), {
       state: createPropertyModalRouteState(location, suggestion, suggestions),
     });
@@ -170,7 +156,7 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
       return;
     }
 
-    const optionCount = guideSuggestions.length + suggestions.length + 1;
+    const optionCount = suggestions.length + 1;
     if (event.key === "ArrowDown") {
       event.preventDefault();
       setActiveSuggestionIndex((current) => (current + 1) % optionCount);
@@ -185,7 +171,7 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
 
     if (event.key === "Enter" && activeSuggestionIndex >= 0) {
       event.preventDefault();
-      if (activeSuggestionIndex < guideSuggestions.length + suggestions.length) {
+      if (activeSuggestionIndex < suggestions.length) {
         openSuggestion(activeSuggestionIndex);
       } else {
         navigateToResults();
@@ -195,10 +181,8 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
 
   const activeOptionId = activeSuggestionIndex < 0
     ? undefined
-    : activeSuggestionIndex < guideSuggestions.length
-      ? `main-search-guide-${guideSuggestions[activeSuggestionIndex]?.id}`
-      : activeSuggestionIndex < guideSuggestions.length + suggestions.length
-        ? `main-search-suggestion-${suggestions[activeSuggestionIndex - guideSuggestions.length]?.id}`
+    : activeSuggestionIndex < suggestions.length
+      ? `main-search-suggestion-${suggestions[activeSuggestionIndex]?.id}`
       : "main-search-browse-option";
 
   return (
@@ -237,7 +221,7 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
                 role="combobox"
                 aria-autocomplete="list"
                 aria-expanded={showSuggestions}
-                aria-controls={showSuggestions ? "main-search-suggestions" : undefined}
+                aria-controls="main-search-suggestions"
                 aria-activedescendant={showSuggestions ? activeOptionId : undefined}
                 value={query}
                 onChange={(event) => {
@@ -306,94 +290,58 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
                   />
                 </div>
               )}
-              <div id="main-search-suggestions" role="listbox" aria-label="Pages locales et biens correspondants" className="max-h-[min(24rem,60vh)] overflow-y-auto p-2">
-                {guideSuggestions.length > 0 && (
-                  <div role="group" aria-label="Pages locales" className="space-y-0.5">
-                    <p className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                      Pages locales
-                    </p>
-                    {guideSuggestions.map((guide, index) => (
-                      <button
-                        key={guide.id}
-                        id={`main-search-guide-${guide.id}`}
-                        type="button"
-                        role="option"
-                        aria-selected={activeSuggestionIndex === index}
-                        onMouseDown={(event) => event.preventDefault()}
-                        onClick={() => openSuggestion(index)}
-                        className={`flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left transition-colors ${
-                          activeSuggestionIndex === index ? "bg-brand-soft/70" : "hover:bg-muted/70"
-                        }`}
-                      >
-                        <span className="block truncate text-sm font-medium">{guide.name}</span>
-                        <span className="shrink-0 text-xs text-muted-foreground">Page locale</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {suggestions.length > 0 && (
-                  <div role="group" aria-label="Biens correspondants" className="space-y-0.5">
-                    <p className="px-3 pb-1 pt-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                      Biens correspondants
-                    </p>
-                    {suggestions.map((suggestion, index) => {
-                      const optionIndex = guideSuggestions.length + index;
-                      return (
-                        <button
-                          key={suggestion.id}
-                          id={`main-search-suggestion-${suggestion.id}`}
-                          type="button"
-                          role="option"
-                          aria-selected={activeSuggestionIndex === optionIndex}
-                          onMouseDown={(event) => event.preventDefault()}
-                          onClick={() => openSuggestion(optionIndex)}
-                          className={`grid w-full grid-cols-[3.5rem_minmax(0,1fr)_auto] items-center gap-3 rounded-xl px-2 py-2 text-left transition-colors hover:bg-muted/70 ${
-                            activeSuggestionIndex === optionIndex ? "bg-muted/70" : ""
-                          }`}
-                        >
-                          {suggestion.coverImageUrl ? (
-                            <img
-                              src={getPropertyImageUrl(suggestion.coverImageUrl, 200)}
-                              srcSet={getPropertyImageSrcSet(suggestion.coverImageUrl, [200, 400])}
-                              sizes="56px"
-                              alt=""
-                              className="h-11 w-14 rounded-lg object-cover"
-                              loading="lazy"
-                            />
-                          ) : (
-                            <span aria-hidden="true" className="h-11 w-14 rounded-lg bg-muted" />
-                          )}
-                          <span className="min-w-0">
-                            <span className="block truncate text-sm font-medium">{suggestion.title}</span>
-                            <span className="block truncate text-xs text-muted-foreground">
-                              {suggestion.city.name} · {formatPropertyTypeLabel(suggestion.type)}
-                            </span>
-                          </span>
-                          <span className="whitespace-nowrap text-right text-sm font-semibold">
-                            {formatPrice(suggestion.priceAmount, suggestion.transaction)}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-
+              <div id="main-search-suggestions" role="listbox" aria-label="Suggestions de biens" className="max-h-[min(24rem,60vh)] overflow-y-auto p-2">
                 {suggestions.length === 0 && inventoryQuery.isFetched && (
                   <p role="status" className="px-3 py-4 text-sm text-muted-foreground">
                     Aucun bien trouvé pour « {queryText} ».
                   </p>
                 )}
+                {suggestions.map((suggestion, index) => (
+                    <button
+                      key={suggestion.id}
+                      id={`main-search-suggestion-${suggestion.id}`}
+                      type="button"
+                      role="option"
+                      aria-selected={activeSuggestionIndex === index}
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => openSuggestion(index)}
+                      className={`grid w-full grid-cols-[3.5rem_minmax(0,1fr)_auto] items-center gap-3 rounded-xl px-2 py-2 text-left transition-colors hover:bg-muted/70 ${
+                        activeSuggestionIndex === index ? "bg-muted/70" : ""
+                      }`}
+                    >
+                      {suggestion.coverImageUrl ? (
+                        <img
+                          src={getPropertyImageUrl(suggestion.coverImageUrl, 200)}
+                          srcSet={getPropertyImageSrcSet(suggestion.coverImageUrl, [200, 400])}
+                          sizes="56px"
+                          alt=""
+                          className="h-11 w-14 rounded-lg object-cover"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <span aria-hidden="true" className="h-11 w-14 rounded-lg bg-muted" />
+                      )}
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-medium">{suggestion.title}</span>
+                        <span className="block truncate text-xs text-muted-foreground">
+                          {suggestion.city.name} · {formatPropertyTypeLabel(suggestion.type)}
+                        </span>
+                      </span>
+                      <span className="whitespace-nowrap text-right text-sm font-semibold">
+                        {formatPrice(suggestion.priceAmount, suggestion.transaction)}
+                      </span>
+                    </button>
+                ))}
 
                 <button
                   id="main-search-browse-option"
                   type="button"
                   role="option"
-                  aria-selected={activeSuggestionIndex === guideSuggestions.length + suggestions.length}
+                  aria-selected={activeSuggestionIndex === suggestions.length}
                   onMouseDown={(event) => event.preventDefault()}
                   onClick={navigateToResults}
                   className={`mt-1 flex w-full items-center gap-2 rounded-xl border-t border-border px-3 py-3 text-left text-sm text-brand-strong transition-colors hover:bg-brand-soft/60 ${
-                    activeSuggestionIndex === guideSuggestions.length + suggestions.length ? "bg-brand-soft/60" : ""
+                    activeSuggestionIndex === suggestions.length ? "bg-brand-soft/60" : ""
                   }`}
                 >
                   <Search className="h-4 w-4 shrink-0" />

@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter, useLocation } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -59,22 +59,11 @@ function expectListingSearchFor(query: string) {
   expect(route.searchParams.get("q")).toBe(query);
 }
 
-describe("local guide suggestions in public quick search", () => {
+describe("property suggestions in public quick search", () => {
   beforeEach(() => {
     localStorage.clear();
     vi.clearAllMocks();
     vi.mocked(searchProperties).mockResolvedValue(emptyResponse);
-  });
-
-  it("opens a local guide from the homepage suggestion by click", async () => {
-    renderSearch(<MainSearchHarness />);
-    const input = screen.getByRole("combobox", { name: "Ville, quartier, type de bien ou référence" });
-    fireEvent.focus(input);
-    fireEvent.change(input, { target: { value: "Honfleur" } });
-
-    fireEvent.click(await screen.findByRole("option", { name: "Honfleur Page locale" }));
-
-    expect(getRoute()).toBe("/immobilier/honfleur");
   });
 
   it("keeps matching property suggestions in the homepage autocomplete", async () => {
@@ -94,23 +83,9 @@ describe("local guide suggestions in public quick search", () => {
     fireEvent.focus(input);
     fireEvent.change(input, { target: { value: "Bordeaux" } });
 
-    expect(screen.queryByRole("option", { name: /Bordeaux Page locale/ })).not.toBeInTheDocument();
     fireEvent.click(await screen.findByRole("option", { name: /Voir tous les résultats pour/ }));
 
     expectListingSearchFor("Bordeaux");
-  });
-
-  it("opens a guide from the header search with ArrowDown and Enter", async () => {
-    renderSearch(<SpotlightSearchHarness />);
-    const input = screen.getByRole("combobox", { name: "Ville, quartier, type de bien ou référence" });
-    fireEvent.change(input, { target: { value: "Cauville sur Mer" } });
-    await screen.findByRole("option", { name: "Cauville-sur-Mer Page locale" });
-
-    fireEvent.keyDown(input, { key: "ArrowDown" });
-    expect(input).toHaveAttribute("aria-activedescendant", "spotlight-search-guide-cauville-sur-mer");
-    fireEvent.keyDown(input, { key: "Enter" });
-
-    await waitFor(() => expect(getRoute()).toBe("/immobilier/cauville-sur-mer"));
   });
 
   it("keeps unmatched header searches on the listings route", async () => {
@@ -118,7 +93,6 @@ describe("local guide suggestions in public quick search", () => {
     const input = screen.getByRole("combobox", { name: "Ville, quartier, type de bien ou référence" });
     fireEvent.change(input, { target: { value: "Bordeaux" } });
 
-    expect(screen.queryByRole("option", { name: /Bordeaux Page locale/ })).not.toBeInTheDocument();
     fireEvent.click(await screen.findByRole("option", { name: /Voir tous les résultats pour/ }));
 
     expectListingSearchFor("Bordeaux");
