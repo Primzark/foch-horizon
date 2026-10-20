@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type RefObjec
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowRight, Search, SlidersHorizontal, X } from "lucide-react";
+import { searchGeographyGuides } from "@/features/content/utils/geographyGuideSearch";
 import {
   Dialog,
   DialogClose,
@@ -71,6 +72,7 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
   });
 
   const queryText = query.trim();
+  const guideSuggestions = useMemo(() => searchGeographyGuides(queryText), [queryText]);
   const searchableInventory = useMemo(() => {
     const itemsById = new Map<number, SearchableProperty>();
     seedItems.forEach((item) => itemsById.set(item.id, item));
@@ -99,7 +101,7 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
       .slice(0, 6);
   }, [queryText, searchableInventory]);
   const showSuggestions = queryText.length >= 2;
-  const browseOptionIndex = suggestions.length;
+  const browseOptionIndex = guideSuggestions.length + suggestions.length;
   const resultCountFilters = useMemo<PropertySearchParams>(() => ({
     ...draftFilters,
     transaction: "vente",
@@ -188,7 +190,15 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
   };
 
   const openSuggestion = (index: number) => {
-    const suggestion = suggestions[index];
+    if (index < guideSuggestions.length) {
+      const guide = guideSuggestions[index];
+      if (!guide) return;
+      onOpenChange(false);
+      navigate(`/immobilier/${guide.id}`);
+      return;
+    }
+
+    const suggestion = suggestions[index - guideSuggestions.length];
     if (!suggestion) return;
 
     onOpenChange(false);
@@ -214,7 +224,7 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
       return;
     }
 
-    const optionCount = suggestions.length + 1;
+    const optionCount = guideSuggestions.length + suggestions.length + 1;
     if (event.key === "ArrowDown") {
       event.preventDefault();
       setActiveIndex((current) => (current + 1) % optionCount);
@@ -223,7 +233,7 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
       setActiveIndex((current) => (current <= 0 ? optionCount - 1 : current - 1));
     } else if (event.key === "Enter") {
       event.preventDefault();
-      if (activeIndex >= 0 && activeIndex < suggestions.length) {
+      if (activeIndex >= 0 && activeIndex < guideSuggestions.length + suggestions.length) {
         openSuggestion(activeIndex);
       } else {
         navigateToSearch({ q: queryText });
@@ -233,8 +243,10 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
 
   const activeOptionId = activeIndex < 0
     ? undefined
-    : activeIndex < suggestions.length
-      ? `spotlight-search-suggestion-${suggestions[activeIndex]?.id}`
+    : activeIndex < guideSuggestions.length
+      ? `spotlight-search-guide-${guideSuggestions[activeIndex]?.id}`
+      : activeIndex < guideSuggestions.length + suggestions.length
+        ? `spotlight-search-suggestion-${suggestions[activeIndex - guideSuggestions.length]?.id}`
       : "spotlight-search-browse-option";
 
   return (
@@ -294,13 +306,13 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
 
         <div className="flex items-center justify-between gap-4 px-5 pb-2 pt-4">
           <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-            {advancedOpen ? "Affiner votre recherche" : showSuggestions ? "Biens correspondants" : "Recherches populaires"}
+            {advancedOpen ? "Affiner votre recherche" : showSuggestions ? "Suggestions" : "Recherches populaires"}
           </p>
           {!advancedOpen && showSuggestions && (
             <p className="text-xs text-muted-foreground" aria-live="polite">
               {inventoryQuery.isLoading && suggestions.length === 0
                 ? "Recherche…"
-                : `${suggestions.length} suggestion${suggestions.length === 1 ? "" : "s"}`}
+                : `${guideSuggestions.length + suggestions.length} suggestion${guideSuggestions.length + suggestions.length === 1 ? "" : "s"}`}
             </p>
           )}
         </div>
@@ -335,41 +347,76 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
         ) : (
           <div className="max-h-[min(55vh,28rem)] min-h-44 overflow-y-auto px-2 pb-2">
           {showSuggestions ? (
-            <div id="spotlight-search-options" role="listbox" aria-label="Suggestions de biens" className="space-y-0.5">
-              {suggestions.map((suggestion, index) => (
-                <button
-                  key={suggestion.id}
-                  id={`spotlight-search-suggestion-${suggestion.id}`}
-                  type="button"
-                  role="option"
-                  aria-selected={activeIndex === index}
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => openSuggestion(index)}
-                  className={`grid w-full grid-cols-[3.75rem_minmax(0,1fr)_auto] items-center gap-3 rounded-xl px-2.5 py-2.5 text-left transition-colors ${activeIndex === index ? "bg-brand-soft/70" : "hover:bg-muted/70"}`}
-                >
-                  {suggestion.coverImageUrl ? (
-                    <img
-                      src={getPropertyImageUrl(suggestion.coverImageUrl, 200)}
-                      srcSet={getPropertyImageSrcSet(suggestion.coverImageUrl, [200, 400])}
-                      sizes="60px"
-                      alt=""
-                      className="h-12 w-[3.75rem] rounded-lg object-cover"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <span aria-hidden="true" className="h-12 w-[3.75rem] rounded-lg bg-muted" />
-                  )}
-                  <span className="min-w-0">
-                    <span className="block truncate text-sm font-medium">{suggestion.title}</span>
-                    <span className="mt-0.5 block truncate text-xs text-muted-foreground">
-                      {suggestion.city.name} · {formatPropertyTypeLabel(suggestion.type)}
-                    </span>
-                  </span>
-                  <span className="whitespace-nowrap text-right text-sm font-semibold tabular-nums">
-                    {formatPrice(suggestion.priceAmount, suggestion.transaction)}
-                  </span>
-                </button>
-              ))}
+            <div id="spotlight-search-options" role="listbox" aria-label="Pages locales et biens correspondants" className="space-y-0.5">
+              {guideSuggestions.length > 0 && (
+                <div role="group" aria-label="Pages locales" className="space-y-0.5">
+                  <p className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                    Pages locales
+                  </p>
+                  {guideSuggestions.map((guide, index) => (
+                    <button
+                      key={guide.id}
+                      id={`spotlight-search-guide-${guide.id}`}
+                      type="button"
+                      role="option"
+                      aria-selected={activeIndex === index}
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => openSuggestion(index)}
+                      className={`flex w-full items-center justify-between gap-3 rounded-xl px-3 py-3 text-left transition-colors ${
+                        activeIndex === index ? "bg-brand-soft/70" : "hover:bg-muted/70"
+                      }`}
+                    >
+                      <span className="block truncate text-sm font-medium">{guide.name}</span>
+                      <span className="shrink-0 text-xs text-muted-foreground">Page locale</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {suggestions.length > 0 && (
+                <div role="group" aria-label="Biens correspondants" className="space-y-0.5">
+                  <p className="px-3 pb-1 pt-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                    Biens correspondants
+                  </p>
+                  {suggestions.map((suggestion, index) => {
+                    const optionIndex = guideSuggestions.length + index;
+                    return (
+                      <button
+                        key={suggestion.id}
+                        id={`spotlight-search-suggestion-${suggestion.id}`}
+                        type="button"
+                        role="option"
+                        aria-selected={activeIndex === optionIndex}
+                        onMouseDown={(event) => event.preventDefault()}
+                        onClick={() => openSuggestion(optionIndex)}
+                        className={`grid w-full grid-cols-[3.75rem_minmax(0,1fr)_auto] items-center gap-3 rounded-xl px-2.5 py-2.5 text-left transition-colors ${activeIndex === optionIndex ? "bg-brand-soft/70" : "hover:bg-muted/70"}`}
+                      >
+                        {suggestion.coverImageUrl ? (
+                          <img
+                            src={getPropertyImageUrl(suggestion.coverImageUrl, 200)}
+                            srcSet={getPropertyImageSrcSet(suggestion.coverImageUrl, [200, 400])}
+                            sizes="60px"
+                            alt=""
+                            className="h-12 w-[3.75rem] rounded-lg object-cover"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <span aria-hidden="true" className="h-12 w-[3.75rem] rounded-lg bg-muted" />
+                        )}
+                        <span className="min-w-0">
+                          <span className="block truncate text-sm font-medium">{suggestion.title}</span>
+                          <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+                            {suggestion.city.name} · {formatPropertyTypeLabel(suggestion.type)}
+                          </span>
+                        </span>
+                        <span className="whitespace-nowrap text-right text-sm font-semibold tabular-nums">
+                          {formatPrice(suggestion.priceAmount, suggestion.transaction)}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
 
               {suggestions.length === 0 && inventoryQuery.isLoading && (
                 <p role="status" className="px-3 py-8 text-center text-sm text-muted-foreground">
