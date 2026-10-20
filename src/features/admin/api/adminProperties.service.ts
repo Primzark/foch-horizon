@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { PropertyStatus } from "@/types/domain";
+import type { PropertyStatus, PropertyType } from "@/types/domain";
 
 export const ADMIN_PROPERTIES_QUERY_KEY = ["admin-properties"] as const;
 
@@ -36,6 +36,25 @@ export interface UpdatedAdminPropertyStatus {
   updated_at: string;
 }
 
+export interface AdminPropertyLikeSummary {
+  property_id: number;
+  property_type: PropertyType;
+  like_count: number;
+  latest_liked_at: string;
+}
+
+export interface AdminPropertyLikeEvent {
+  id: string;
+  property_id: number;
+  property_type: PropertyType;
+  visitor_id: string;
+  action: "like" | "unlike";
+  occurred_at: string;
+}
+
+export const ADMIN_PROPERTY_LIKES_QUERY_KEY = ["admin-property-likes"] as const;
+export const ADMIN_PROPERTY_LIKE_HISTORY_QUERY_KEY = ["admin-property-like-history"] as const;
+
 export class AdminPropertiesError extends Error {
   constructor(message: string, public status?: number) {
     super(message);
@@ -45,9 +64,15 @@ export class AdminPropertiesError extends Error {
 
 async function invokeAdminProperties<T>(
   client: SupabaseClient,
-  options: { method: "GET" | "PATCH"; body?: Record<string, unknown> },
+  options: { method: "GET" | "PATCH"; body?: Record<string, unknown>; query?: Record<string, string> },
 ): Promise<T> {
-  const { data, error } = await client.functions.invoke<T>("admin-properties", options);
+  const query = new URLSearchParams(options.query ?? {}).toString();
+  const functionName = query ? `admin-properties?${query}` : "admin-properties";
+  const invokeOptions = {
+    method: options.method,
+    ...(options.body ? { body: options.body } : {}),
+  };
+  const { data, error } = await client.functions.invoke<T>(functionName, invokeOptions);
   if (error) {
     const response = (error as { context?: Response }).context;
     let message = error.message;
@@ -67,6 +92,25 @@ async function invokeAdminProperties<T>(
 export async function getAdminProperties(client: SupabaseClient): Promise<AdminProperty[]> {
   const response = await invokeAdminProperties<{ properties: AdminProperty[] }>(client, { method: "GET" });
   return response.properties;
+}
+
+export async function getAdminPropertyLikeSummary(client: SupabaseClient): Promise<AdminPropertyLikeSummary[]> {
+  const response = await invokeAdminProperties<{ likes: AdminPropertyLikeSummary[] }>(client, {
+    method: "GET",
+    query: { view: "likes-summary" },
+  });
+  return response.likes;
+}
+
+export async function getAdminPropertyLikeHistory(
+  client: SupabaseClient,
+  propertyId: number,
+): Promise<AdminPropertyLikeEvent[]> {
+  const response = await invokeAdminProperties<{ events: AdminPropertyLikeEvent[] }>(client, {
+    method: "GET",
+    query: { view: "likes-history", propertyId: String(propertyId) },
+  });
+  return response.events;
 }
 
 export async function updateAdminPropertyStatus(

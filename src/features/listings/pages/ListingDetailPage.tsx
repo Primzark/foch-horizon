@@ -741,8 +741,7 @@ export default function ListingDetailPage({
           aria-pressed={isFavorite}
           title={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
           onClick={() => {
-            toggleFavorite(property.id);
-            trackEvent("listing_viewed", { propertyId: property.id, action: isFavorite ? "favorite_removed" : "favorite_added" });
+            toggleFavorite(property.id, property.propertyType);
           }}
         >
           <Heart aria-hidden="true" className={`h-5 w-5 ${isFavorite ? "fill-current" : ""}`} />
@@ -846,11 +845,10 @@ export default function ListingDetailPage({
                         : undefined
                     }
                     onClick={() => {
-                      const action = isFavorite ? "favorite_removed" : "favorite_added";
-                      toggleFavorite(property.id);
-                      trackEvent("listing_viewed", { propertyId: property.id, action });
+                      toggleFavorite(property.id, property.propertyType);
                     }}
                     aria-label={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+                    aria-pressed={isFavorite}
                   >
                     <Heart className={isFavorite ? "fill-brand text-brand" : undefined} />
                     {isFavorite ? "Sauvegardé" : "Sauvegarder"}
@@ -1042,9 +1040,7 @@ export default function ListingDetailPage({
                     className={`absolute right-3 top-3 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full border border-background/70 bg-background/90 text-foreground shadow-sm backdrop-blur-sm transition-colors hover:bg-background ${favorite ? "text-brand-strong" : ""}`}
                     onClick={(event) => {
                       event.stopPropagation();
-                      const action = favorite ? "favorite_removed" : "favorite_added";
-                      toggleFavorite(item.id);
-                      trackEvent("listing_viewed", { propertyId: item.id, action });
+                      toggleFavorite(item.id, item.type);
                     }}
                     aria-label={favorite ? "Retirer des favoris" : "Ajouter aux favoris"}
                     aria-pressed={favorite}

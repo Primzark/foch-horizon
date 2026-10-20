@@ -10,6 +10,8 @@ export type AnalyticsEventName =
   | "phone_clicked"
   | "extranet_clicked"
   | "favorites_opened"
+  | "property_liked"
+  | "property_unliked"
   | "comparison_add"
   | "comparison_remove"
   | "comparison_open"

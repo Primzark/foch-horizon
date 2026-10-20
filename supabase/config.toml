@@ -12,3 +12,8 @@ entrypoint = "./functions/admin-properties/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/admin-properties/*.html" ]
+
+[functions.property-likes]
+enabled = true
+verify_jwt = true
+entrypoint = "./functions/property-likes/index.ts"

@@ -129,9 +129,10 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, eagerIma
                   onClick={(event) => {
                     event.preventDefault();
                     event.stopPropagation();
-                    toggleFavorite(item.id);
+                    toggleFavorite(item.id, item.type);
                   }}
                   aria-label={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+                  aria-pressed={isFavorite}
                 >
                   <Heart className={cn("h-4 w-4", isFavorite && "fill-brand text-brand")} />
                   <span className="hidden sm:inline">Sauvegarder</span>
@@ -183,9 +184,10 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, eagerIma
             onClick={(event) => {
               event.preventDefault();
               event.stopPropagation();
-              toggleFavorite(item.id);
+              toggleFavorite(item.id, item.type);
             }}
             aria-label={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+            aria-pressed={isFavorite}
           >
             <Heart className={cn("h-4 w-4", isFavorite && "fill-brand text-brand")} />
           </button>

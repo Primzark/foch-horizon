@@ -3,6 +3,8 @@
 This folder contains Phase 1 backend scaffolding:
 
 - `migrations/20260216_phase1_schema.sql`: PostgreSQL schema + RLS policies.
+- `migrations/20261020071900_property_likes_tracking.sql`: active visitor/property likes and append-only like/unlike history, with service-role-only state and reporting functions.
+- `migrations/20261020072539_include_previously_liked_properties.sql`: includes properties with a prior like in admin summaries after their active count reaches zero.
 - `migrations/20260228123000_market_counters_manual_override.sql`: manual homepage counters table (`market_counters`) + RLS policies.
 - `migrations/20260223_chatbot_rag.sql`: `pgvector`-backed content chunks + `match_chatbot_content_chunks(...)` RPC for chatbot RAG.
 - `migrations/20260225_chatbot_rag_hybrid_retrieval.sql`: keyword/FTS RPC `match_chatbot_content_chunks_keyword(...)` for hybrid retrieval + reranking.
@@ -14,6 +16,7 @@ This folder contains Phase 1 backend scaffolding:
 - `functions/city-properties`: `GET /api/cities/:slug/properties` contract.
 - `functions/properties-stats`: `GET /api/properties/stats` (public snapshot) + `PUT /api/properties/stats` (admin update).
 - `functions/leads-create`: `POST /api/leads` contract.
+- `functions/property-likes`: rate-limited public like-state updates keyed by a random browser-scoped visitor ID.
 - `functions/chatbot-feedback`: `POST /api/chatbot-feedback` telemetry/feedback batch ingest for chatbot QA dashboards.
 - `workers/provider-sync.ts`: scheduled feed sync worker (remote/local JSON feed -> cities/properties/images/features upsert + reconciliation).
 
@@ -21,6 +24,8 @@ This folder contains Phase 1 backend scaffolding:
 - Endpoint validation is server-side.
 - Lead insert requires consent.
 - RLS policies include service-role management and public read limitations.
+- Like tables have RLS enabled and are inaccessible to public/authenticated roles; the public endpoint can only update its visitor/property state, while admin reports remain behind the existing administrator allowlist.
+- Analytics emits `property_liked` and `property_unliked` with property ID/type and client timestamp when analytics consent is accepted. Database event timestamps are recorded server-side.
 
 ## Deployment notes
 - Bind each function to your hosting routing layer (for example Vercel rewrites) or call Supabase Edge Functions directly.

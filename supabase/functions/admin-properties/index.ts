@@ -85,6 +85,37 @@ async function listProperties(supabase: ReturnType<typeof createServiceClient>) 
   return properties;
 }
 
+async function listPropertyLikeSummary(supabase: ReturnType<typeof createServiceClient>) {
+  const { data, error } = await supabase.rpc("admin_property_like_summary");
+  if (error) throw error;
+  return data ?? [];
+}
+
+async function listPropertyLikeHistory(
+  supabase: ReturnType<typeof createServiceClient>,
+  propertyId: number,
+) {
+  const events = [];
+  let offset = 0;
+
+  while (true) {
+    const { data, error } = await supabase
+      .from("property_like_events")
+      .select("id,property_id,property_type,visitor_id,action,occurred_at")
+      .eq("property_id", propertyId)
+      .order("occurred_at", { ascending: false })
+      .order("id", { ascending: false })
+      .range(offset, offset + PAGE_SIZE - 1);
+
+    if (error) throw error;
+    events.push(...(data ?? []));
+    if ((data?.length ?? 0) < PAGE_SIZE) break;
+    offset += PAGE_SIZE;
+  }
+
+  return events;
+}
+
 async function updatePropertyStatus(
   request: Request,
   supabase: ReturnType<typeof createServiceClient>,
@@ -136,8 +167,25 @@ Deno.serve(async (request) => {
     await requireAdmin(request, supabase);
 
     if (request.method === "GET") {
-      if (new URL(request.url).searchParams.get("check") === "admin-access") {
+      const url = new URL(request.url);
+      const query = url.searchParams;
+
+      if (query.get("check") === "admin-access") {
         return jsonResponse({ authorized: true });
+      }
+
+      if (query.get("view") === "likes-summary") {
+        const likes = await listPropertyLikeSummary(supabase);
+        return jsonResponse({ likes });
+      }
+
+      if (query.get("view") === "likes-history") {
+        const propertyId = Number(query.get("propertyId"));
+        if (!Number.isSafeInteger(propertyId) || propertyId <= 0) {
+          throw new HttpError(400, "Invalid property reference.");
+        }
+        const events = await listPropertyLikeHistory(supabase, propertyId);
+        return jsonResponse({ events });
       }
 
       const properties = await listProperties(supabase);

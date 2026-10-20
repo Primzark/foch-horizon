@@ -5,11 +5,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import {
   ArrowUpRight,
+  ArrowLeft,
   Building2,
   Check,
   CircleAlert,
   Eye,
   EyeOff,
+  Heart,
   KeyRound,
   LogOut,
   Search,
@@ -17,7 +19,7 @@ import {
   SlidersHorizontal,
   X,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { Button, type ButtonProps } from "@/components/ui/button";
 import { FormErrorSummary, type FormErrorItem } from "@/components/forms/FormErrorSummary";
 import {
@@ -47,11 +49,16 @@ import { formatPrice, toCanonicalPropertyPath } from "@/features/listings/utils/
 import type { PropertyStatus } from "@/types/domain";
 import {
   ADMIN_PROPERTIES_QUERY_KEY,
+  ADMIN_PROPERTY_LIKES_QUERY_KEY,
+  ADMIN_PROPERTY_LIKE_HISTORY_QUERY_KEY,
   ADMIN_PROPERTY_STATUS_OPTIONS,
   AdminPropertiesError,
+  getAdminPropertyLikeHistory,
+  getAdminPropertyLikeSummary,
   getAdminProperties,
   updateAdminPropertyStatus,
   type AdminProperty,
+  type AdminPropertyLikeSummary,
 } from "@/features/admin/api/adminProperties.service";
 
 type StatusFilter = "all" | PropertyStatus;
@@ -131,6 +138,25 @@ function formatDate(value: string): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "—";
   return new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short", year: "numeric" }).format(date);
+}
+
+function formatDateTime(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Date inconnue";
+  return new Intl.DateTimeFormat("fr-FR", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    timeZone: "Europe/Paris",
+    timeZoneName: "short",
+  }).format(date);
+}
+
+function visitorLabel(visitorId: string): string {
+  return `Visiteur · ${visitorId.slice(0, 8).toUpperCase()}`;
 }
 
 function formatPropertyType(value: AdminProperty["property_type"]): string {
@@ -476,6 +502,15 @@ export default function AdminPropertiesPage() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const supabaseClient = useMemo(() => getBrowserSupabaseClient(), []);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const likesSection = searchParams.get("section") === "likes";
+  const selectedLikePropertyIdValue = searchParams.get("propertyId");
+  const parsedLikePropertyId = selectedLikePropertyIdValue && /^\d+$/.test(selectedLikePropertyIdValue)
+    ? Number(selectedLikePropertyIdValue)
+    : NaN;
+  const selectedLikePropertyId = Number.isSafeInteger(parsedLikePropertyId) && parsedLikePropertyId > 0
+    ? parsedLikePropertyId
+    : null;
   const [session, setSession] = useState<Session | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
@@ -526,6 +561,24 @@ export default function AdminPropertiesPage() {
     staleTime: 0,
   });
 
+  const propertyLikesQuery = useQuery({
+    queryKey: ADMIN_PROPERTY_LIKES_QUERY_KEY,
+    queryFn: () => getAdminPropertyLikeSummary(supabaseClient!),
+    enabled: Boolean(session?.access_token && likesSection),
+    retry: false,
+    staleTime: 0,
+    refetchInterval: likesSection ? 30_000 : false,
+  });
+
+  const propertyLikeHistoryQuery = useQuery({
+    queryKey: [...ADMIN_PROPERTY_LIKE_HISTORY_QUERY_KEY, selectedLikePropertyId],
+    queryFn: () => getAdminPropertyLikeHistory(supabaseClient!, selectedLikePropertyId!),
+    enabled: Boolean(session?.access_token && likesSection && selectedLikePropertyId),
+    retry: false,
+    staleTime: 0,
+    refetchInterval: likesSection && selectedLikePropertyId ? 30_000 : false,
+  });
+
   const loginMutation = useMutation({
     mutationFn: async (credentials: { email: string; password: string }) => {
       if (!supabaseClient) throw new Error("Configuration Supabase manquante.");
@@ -544,6 +597,8 @@ export default function AdminPropertiesPage() {
       return;
     }
     queryClient.removeQueries({ queryKey: ADMIN_PROPERTIES_QUERY_KEY });
+    queryClient.removeQueries({ queryKey: ADMIN_PROPERTY_LIKES_QUERY_KEY });
+    queryClient.removeQueries({ queryKey: ADMIN_PROPERTY_LIKE_HISTORY_QUERY_KEY });
     setOptimisticStatuses({});
     setLoginError(null);
   };
@@ -670,6 +725,17 @@ export default function AdminPropertiesPage() {
     acc[property.status] += 1;
     return acc;
   }, { active: 0, under_offer: 0, reserved: 0, sold: 0, rented: 0, off_market: 0 });
+  const propertyById = new Map(allProperties.map((property) => [property.id, property]));
+  const propertyLikes = propertyLikesQuery.data ?? [];
+  const totalActiveLikes = propertyLikes.reduce((sum, item) => sum + item.like_count, 0);
+  const likeSummaryRows = propertyLikes
+    .map((summary) => ({ summary, property: propertyById.get(summary.property_id) }))
+    .filter((row): row is { summary: AdminPropertyLikeSummary; property: AdminProperty } => Boolean(row.property));
+  const selectedLikeProperty = selectedLikePropertyId ? propertyById.get(selectedLikePropertyId) : undefined;
+  const selectedLikeSummary = selectedLikePropertyId
+    ? propertyLikes.find((item) => item.property_id === selectedLikePropertyId)
+    : undefined;
+  const likeHistory = propertyLikeHistoryQuery.data ?? [];
   const userEmail = session.user.email ?? "Administrateur";
 
   return (
@@ -694,11 +760,24 @@ export default function AdminPropertiesPage() {
           </Link>
 
           <p className="mb-3 mt-12 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Espace de travail</p>
-          <div className="flex items-center gap-3 rounded-xl bg-brand-soft px-3 py-3 text-sm font-medium text-brand-strong">
-            <Building2 className="h-4 w-4" aria-hidden="true" />
-            <span className="flex-1">Annonces</span>
-            <span className="text-xs tabular-nums opacity-70">{allProperties.length}</span>
-          </div>
+          <nav aria-label="Administration" className="space-y-1">
+            <Link
+              to="/admin"
+              className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-colors ${!likesSection ? "bg-brand-soft text-brand-strong" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}
+            >
+              <Building2 className="h-4 w-4" aria-hidden="true" />
+              <span className="flex-1">Annonces</span>
+              <span className="text-xs tabular-nums opacity-70">{allProperties.length}</span>
+            </Link>
+            <Link
+              to="/admin?section=likes"
+              className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-colors ${likesSection ? "bg-brand-soft text-brand-strong" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}
+            >
+              <Heart className="h-4 w-4" aria-hidden="true" />
+              <span className="flex-1">Historique des likes</span>
+              <span className="text-xs tabular-nums opacity-70">{propertyLikes.length}</span>
+            </Link>
+          </nav>
 
           <div className="mt-auto border-t border-border/70 pt-5">
             <p className="truncate text-xs font-medium" title={userEmail}>{userEmail}</p>
@@ -731,7 +810,183 @@ export default function AdminPropertiesPage() {
             </div>
           </header>
 
+          <nav aria-label="Administration" className="flex gap-2 border-b border-border/70 bg-card/40 px-5 py-2 lg:hidden">
+            <Link
+              to="/admin"
+              className={`rounded-lg px-3 py-2 text-xs font-medium ${!likesSection ? "bg-brand-soft text-brand-strong" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}
+            >
+              Annonces
+            </Link>
+            <Link
+              to="/admin?section=likes"
+              className={`rounded-lg px-3 py-2 text-xs font-medium ${likesSection ? "bg-brand-soft text-brand-strong" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}
+            >
+              Historique des likes
+            </Link>
+          </nav>
+
           <div className="mx-auto max-w-[1380px] px-5 py-7 sm:px-7 sm:py-9 lg:px-10 lg:py-10">
+            {likesSection ? (
+              <section aria-labelledby="admin-likes-title">
+                <div className="flex flex-wrap items-end justify-between gap-4">
+                  <div>
+                    {selectedLikePropertyId && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="mb-3 -ml-3 gap-2 text-muted-foreground"
+                        onClick={() => setSearchParams({ section: "likes" })}
+                      >
+                        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+                        Tous les biens aimés
+                      </Button>
+                    )}
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-brand">Engagement des visiteurs</p>
+                    <h1 id="admin-likes-title" className="mt-2 font-display text-4xl leading-none tracking-tight sm:text-[2.75rem]">
+                      {selectedLikeProperty ? "Historique du bien" : "Historique des likes"}
+                    </h1>
+                    <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
+                      Retrouvez les biens les plus appréciés et consultez chaque ajout ou retrait avec son horodatage.
+                    </p>
+                  </div>
+                  <p className="mb-1 text-xs text-muted-foreground">
+                    <span className="mr-2 inline-block h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true" />
+                    Connecté en tant que <span className="font-medium text-foreground">{userEmail}</span>
+                  </p>
+                </div>
+
+                {!selectedLikePropertyId && (
+                  <section aria-label="Synthèse des likes" className="mt-8 grid grid-cols-2 gap-y-5 border-y border-border/70 py-5 sm:grid-cols-3">
+                    <SummaryItem label="Likes actifs" value={totalActiveLikes} />
+                    <SummaryItem label="Biens concernés" value={propertyLikes.length} />
+                  </section>
+                )}
+
+                {selectedLikePropertyId ? (
+                  selectedLikeProperty ? (
+                    <div className="mt-8">
+                      <div className="flex flex-col gap-5 rounded-2xl border border-border/70 bg-card p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+                        <div className="min-w-0 flex-1">
+                          <PropertyIdentity property={selectedLikeProperty} />
+                          <p className="mt-3 text-xs text-muted-foreground">
+                            {formatPropertyType(selectedLikeProperty.property_type)} · {selectedLikeProperty.transaction_type === "location" ? "Location" : "Vente"} · {formatPrice(selectedLikeProperty.price_amount, selectedLikeProperty.transaction_type)}
+                          </p>
+                        </div>
+                        <div className="shrink-0 sm:text-right">
+                          <p className="text-2xl font-semibold tabular-nums tracking-tight">{selectedLikeSummary?.like_count ?? 0}</p>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            like{selectedLikeSummary?.like_count === 1 ? "" : "s"} actif{selectedLikeSummary?.like_count === 1 ? "" : "s"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mb-4 mt-8 flex flex-wrap items-end justify-between gap-3">
+                        <div>
+                          <h2 className="text-base font-semibold">Activité des visiteurs</h2>
+                          <p className="mt-1 text-xs text-muted-foreground">Chaque ajout et retrait est horodaté à la seconde, heure de Paris.</p>
+                        </div>
+                        <span className="text-xs tabular-nums text-muted-foreground">{likeHistory.length} événement{likeHistory.length === 1 ? "" : "s"}</span>
+                      </div>
+
+                      {propertyLikeHistoryQuery.isLoading ? (
+                        <div className="grid min-h-48 place-items-center rounded-2xl border border-border/70 bg-card text-sm text-muted-foreground" role="status">
+                          Chargement de l’historique…
+                        </div>
+                      ) : propertyLikeHistoryQuery.isError ? (
+                        <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-5 text-sm text-destructive" role="alert">
+                          <p>Impossible de charger l’historique de ce bien.</p>
+                          <Button variant="outline" size="sm" className="mt-3" onClick={() => void propertyLikeHistoryQuery.refetch()}>Réessayer</Button>
+                        </div>
+                      ) : likeHistory.length === 0 ? (
+                        <div className="grid min-h-48 place-items-center rounded-2xl border border-dashed border-border bg-card/50 px-5 py-10 text-center">
+                          <p className="text-sm font-medium">Aucune activité enregistrée pour ce bien.</p>
+                        </div>
+                      ) : (
+                        <div className="overflow-hidden rounded-2xl border border-border/70 bg-card">
+                          <div className="overflow-x-auto">
+                            <table className="w-full min-w-[620px] border-collapse text-left">
+                              <thead>
+                                <tr className="border-b border-border/70 bg-secondary/35 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                                  <th scope="col" className="px-5 py-3.5">Action</th>
+                                  <th scope="col" className="px-5 py-3.5">Date et heure</th>
+                                  <th scope="col" className="px-5 py-3.5">Visiteur</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {likeHistory.map((event) => (
+                                  <tr key={event.id} className="border-b border-border/50 last:border-b-0">
+                                    <td className="px-5 py-4">
+                                      <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${event.action === "like" ? "bg-brand-soft text-brand-strong" : "bg-secondary text-muted-foreground"}`}>
+                                        {event.action === "like" ? "Like ajouté" : "Like retiré"}
+                                      </span>
+                                    </td>
+                                    <td className="px-5 py-4 text-sm tabular-nums">{formatDateTime(event.occurred_at)}</td>
+                                    <td className="px-5 py-4 font-mono text-xs text-muted-foreground">{visitorLabel(event.visitor_id)}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="mt-8 rounded-2xl border border-destructive/30 bg-destructive/5 p-5 text-sm text-destructive" role="alert">
+                      Ce bien n’est pas présent dans l’inventaire actuel.
+                    </div>
+                  )
+                ) : (
+                  <div className="mt-8">
+                    <div className="mb-4">
+                      <h2 className="text-base font-semibold">Biens appréciés</h2>
+                      <p className="mt-1 text-xs text-muted-foreground">Le total correspond aux visiteurs ayant actuellement aimé chaque bien.</p>
+                    </div>
+
+                    {propertyLikesQuery.isLoading ? (
+                      <div className="grid min-h-48 place-items-center rounded-2xl border border-border/70 bg-card text-sm text-muted-foreground" role="status">
+                        Chargement des likes…
+                      </div>
+                    ) : propertyLikesQuery.isError ? (
+                      <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-5 text-sm text-destructive" role="alert">
+                        <p>Impossible de charger les likes.</p>
+                        <Button variant="outline" size="sm" className="mt-3" onClick={() => void propertyLikesQuery.refetch()}>Réessayer</Button>
+                      </div>
+                    ) : likeSummaryRows.length === 0 ? (
+                      <div className="grid min-h-56 place-items-center rounded-2xl border border-dashed border-border bg-card/50 px-5 py-10 text-center">
+                        <div>
+                          <Heart className="mx-auto h-6 w-6 text-brand" aria-hidden="true" />
+                          <h3 className="mt-3 text-sm font-semibold">Aucun like enregistré</h3>
+                          <p className="mt-1 text-xs text-muted-foreground">Les biens apparaîtront ici dès qu’un visiteur cliquera sur un cœur.</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-border/60 overflow-hidden rounded-2xl border border-border/70 bg-card">
+                        {likeSummaryRows.map(({ summary, property }) => (
+                          <article key={property.id} className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+                            <div className="min-w-0 flex-1">
+                              <PropertyIdentity property={property} />
+                              <p className="mt-3 text-xs text-muted-foreground">
+                                {formatPropertyType(property.property_type)} · {property.transaction_type === "location" ? "Location" : "Vente"} · {formatPrice(property.price_amount, property.transaction_type)}
+                              </p>
+                            </div>
+                            <div className="flex items-center justify-between gap-5 sm:justify-end">
+                              <div className="sm:text-right">
+                                <p className="text-xl font-semibold tabular-nums">{summary.like_count} like{summary.like_count === 1 ? "" : "s"}</p>
+                                <p className="mt-1 text-xs text-muted-foreground">Dernier like · {formatDateTime(summary.latest_liked_at)}</p>
+                              </div>
+                              <Button variant="outline" size="sm" onClick={() => setSearchParams({ section: "likes", propertyId: String(property.id) })}>
+                                Voir l’historique
+                              </Button>
+                            </div>
+                          </article>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </section>
+            ) : (
+              <>
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-brand">Inventaire immobilier</p>
@@ -888,6 +1143,8 @@ export default function AdminPropertiesPage() {
                 Chaque changement de statut est enregistré dans la base et pris en compte par le site public.
               </p>
             </section>
+              </>
+            )}
           </div>
         </div>
       </div>
