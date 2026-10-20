@@ -58,6 +58,12 @@ const LOCATION_HINTS: LocationHint[] = [
     label: "secteur Saint-Roch–plage",
     position: [49.4935, 0.0974],
   },
+  {
+    citySlug: "le-havre",
+    terms: ["a 2 pas de la plage", "a deux pas de la plage"],
+    label: "Plage du Havre",
+    position: [49.49571, 0.08974],
+  },
   { citySlug: "le-havre", terms: ["dollemard"], label: "Dollemard", position: [49.5204158, 0.0778852] },
   { citySlug: "le-havre", terms: ["place de bleville", "bleville"], label: "Bléville", position: [49.5174437, 0.097968] },
   { citySlug: "le-havre", terms: ["sainte cecile"], label: "Sainte-Cécile", position: [49.5087909, 0.1474464] },
