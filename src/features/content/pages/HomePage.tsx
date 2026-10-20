@@ -12,7 +12,7 @@ import { ListingCard } from "@/features/listings/components/ListingCard";
 import { properties } from "@/features/listings/data/properties";
 import { toSearchItem } from "@/features/listings/utils/mappers";
 import { cities } from "@/features/cities/data/cities";
-import { getSiteUrl, useSeo } from "@/lib/seo/useSeo";
+import { useSeo } from "@/lib/seo/useSeo";
 import { getAgencyReviews } from "@/features/content/api/googleReviews.service";
 import { inferPlaceImageMood } from "@/lib/visuals/placeImageMotion";
 import { ScrollReveal } from "@/components/visuals/ScrollReveal";
@@ -64,7 +64,6 @@ export default function HomePage() {
     [],
   );
   const reviewsQuery = useQuery({ queryKey: ["agency-google-reviews-home"], queryFn: getAgencyReviews });
-  const siteUrl = getSiteUrl();
   const heroMood = inferPlaceImageMood("Le Havre");
   const heroMotionDirector = useMemo(() => getMotionDirectorProfile(heroMood), [heroMood]);
   const ctaSweepStyle = useMemo(

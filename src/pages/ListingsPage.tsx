@@ -4,7 +4,7 @@ import { LayoutGrid, List, SlidersHorizontal } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 import PropertyCard from "@/components/property/PropertyCard";
 import SearchBar from "@/components/property/SearchBar";
-import { properties, cities } from "@/data/mock-data";
+import { properties } from "@/data/mock-data";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";

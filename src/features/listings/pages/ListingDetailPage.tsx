@@ -292,7 +292,6 @@ export default function ListingDetailPage({
     ? navigationItems[navigationIndex + 1]
     : navigationMode === "selection" ? nextPageProperty : undefined;
   const nextPropertyToDiscover = nextProperty;
-  const discoveryBrowseItems = navigationItems;
   const navigationPosition = navigationMode === "selection"
     ? Math.min(navigationTotal, (startPage - 1) * pageSize + navigationIndex + 1)
     : navigationIndex + 1;

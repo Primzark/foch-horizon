@@ -92,10 +92,6 @@ export const geographyPhotoCredits = {
 };
 
 const havrePanoramaCredit = geographyPhotoCredits.panorama;
-const regionalIllustration = {
-  src: "/images/geography/pays-de-caux-original.svg",
-  alt: "Illustration originale évoquant un bourg et les paysages du pays de Caux",
-};
 
 export const geographyGuides: GeographyGuide[] = [
   {
@@ -370,9 +366,7 @@ type AdditionalGuideInput = {
   placeType: "quartier" | "commune";
 };
 
-const lhsmCommunesLink = "https://www.lehavreseinemetropole.fr/54-communes";
 const lhsmTown = (slug: string) => `https://www.lehavreseinemetropole.fr/annuaire-des-communes/${slug}`;
-const cityscape = regionalIllustration;
 
 function additionalGuide(input: AdditionalGuideInput): GeographyGuide {
   return { ...input };
