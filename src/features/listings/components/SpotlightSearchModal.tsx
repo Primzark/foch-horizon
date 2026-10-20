@@ -2,15 +2,6 @@ import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type RefObjec
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowRight, Search, SlidersHorizontal, X } from "lucide-react";
-import {
-  AnimatedGuideSuggestionGroup,
-  AnimatedPropertySuggestionGroup,
-  SearchSuggestionCategorySwitch,
-  SearchSuggestionCrossfade,
-  SearchSuggestionPanel,
-  SearchSuggestionResults,
-  type SearchSuggestionCategory,
-} from "@/features/content/components/AnimatedSearchSuggestions";
 import { searchGeographyGuides } from "@/features/content/utils/geographyGuideSearch";
 import {
   Dialog,
@@ -20,13 +11,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { formatPropertyTypeLabel, normalizeKeyword, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
+import { formatPrice, formatPropertyTypeLabel, normalizeKeyword, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
 import { buildSearchParams, parseSearchParams } from "@/features/listings/utils/query";
 import { searchProperties } from "@/features/listings/api/properties.service";
 import { properties } from "@/features/listings/data/properties";
 import { toSearchItem } from "@/features/listings/utils/mappers";
 import { createPropertyModalRouteState } from "@/features/listings/navigation/propertyModalNavigation";
 import { persistAppliedPropertySearchFilters, resolvePropertySearchFilters } from "@/features/listings/utils/searchFilterPersistence";
+import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
 import { SpotlightSearchCriteria } from "@/features/listings/components/SpotlightSearchCriteria";
 import type { PropertySearchItem, PropertySearchParams, PropertySearchResponse } from "@/types/api";
 import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
@@ -61,7 +53,6 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
   const { reducedMotion } = useMotionPreference();
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(-1);
-  const [suggestionCategory, setSuggestionCategory] = useState<SearchSuggestionCategory>("all");
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [draftFilters, setDraftFilters] = useState<PropertySearchParams>(defaultSearchFilters);
 
@@ -109,11 +100,8 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
       .map(({ item }) => item)
       .slice(0, 6);
   }, [queryText, searchableInventory]);
-  const visibleGuideSuggestions = suggestionCategory === "properties" ? [] : guideSuggestions;
-  const visiblePropertySuggestions = suggestionCategory === "guides" ? [] : suggestions;
   const showSuggestions = queryText.length >= 2;
-  const browseOptionIndex = visibleGuideSuggestions.length + visiblePropertySuggestions.length;
-  const visibleSuggestionCount = browseOptionIndex;
+  const browseOptionIndex = guideSuggestions.length + suggestions.length;
   const resultCountFilters = useMemo<PropertySearchParams>(() => ({
     ...draftFilters,
     transaction: "vente",
@@ -142,7 +130,6 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
   useEffect(() => {
     if (!open) {
       setQuery("");
-      setSuggestionCategory("all");
       setDraftFilters(defaultSearchFilters);
       setAdvancedOpen(false);
       return;
@@ -220,10 +207,6 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
     });
   };
 
-  const openVisibleSuggestion = (index: number) => {
-    openSuggestion(suggestionCategory === "properties" ? index + guideSuggestions.length : index);
-  };
-
   const handleInputKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (advancedOpen) {
       if (event.key === "Enter") {
@@ -241,7 +224,7 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
       return;
     }
 
-    const optionCount = browseOptionIndex + 1;
+    const optionCount = guideSuggestions.length + suggestions.length + 1;
     if (event.key === "ArrowDown") {
       event.preventDefault();
       setActiveIndex((current) => (current + 1) % optionCount);
@@ -250,9 +233,9 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
       setActiveIndex((current) => (current <= 0 ? optionCount - 1 : current - 1));
     } else if (event.key === "Enter") {
       event.preventDefault();
-      if (activeIndex >= 0 && activeIndex < browseOptionIndex) {
-        openVisibleSuggestion(activeIndex);
-      } else if (activeIndex === browseOptionIndex || activeIndex < 0) {
+      if (activeIndex >= 0 && activeIndex < guideSuggestions.length + suggestions.length) {
+        openSuggestion(activeIndex);
+      } else {
         navigateToSearch({ q: queryText });
       }
     }
@@ -260,19 +243,17 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
 
   const activeOptionId = activeIndex < 0
     ? undefined
-    : activeIndex < visibleGuideSuggestions.length
-      ? `spotlight-search-guide-${visibleGuideSuggestions[activeIndex]?.id}`
-      : activeIndex < browseOptionIndex
-        ? `spotlight-search-suggestion-${visiblePropertySuggestions[activeIndex - visibleGuideSuggestions.length]?.id}`
-        : activeIndex === browseOptionIndex
-          ? "spotlight-search-browse-option"
-          : undefined;
+    : activeIndex < guideSuggestions.length
+      ? `spotlight-search-guide-${guideSuggestions[activeIndex]?.id}`
+      : activeIndex < guideSuggestions.length + suggestions.length
+        ? `spotlight-search-suggestion-${suggestions[activeIndex - guideSuggestions.length]?.id}`
+      : "spotlight-search-browse-option";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         hideCloseButton
-        className={`max-h-[calc(100dvh-1rem)] w-[calc(100%-1.25rem)] max-w-2xl gap-0 overflow-hidden rounded-2xl border border-border/80 bg-background/95 p-0 text-foreground shadow-[0_28px_100px_-30px_rgba(0,0,0,0.7)] backdrop-blur-xl sm:rounded-[1.4rem] ${showSuggestions && !advancedOpen ? "flex h-[min(28rem,calc(100dvh-1rem))] flex-col" : ""} ${reducedMotion ? "data-[state=open]:animate-none data-[state=closed]:animate-none" : ""}`}
+        className={`max-h-[calc(100dvh-1rem)] w-[calc(100%-1.25rem)] max-w-2xl gap-0 overflow-hidden rounded-2xl border border-border/80 bg-background/95 p-0 text-foreground shadow-[0_28px_100px_-30px_rgba(0,0,0,0.7)] backdrop-blur-xl sm:rounded-[1.4rem] ${reducedMotion ? "data-[state=open]:animate-none data-[state=closed]:animate-none" : ""}`}
         overlayClassName="bg-slate-950/55 backdrop-blur-[2px]"
         onOpenAutoFocus={(event) => {
           event.preventDefault();
@@ -288,7 +269,7 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
           <DialogDescription>Recherchez par ville, quartier, type de bien ou référence.</DialogDescription>
         </DialogHeader>
 
-        <div className="flex shrink-0 items-center gap-3 border-b border-border/80 px-4 sm:px-5">
+        <div className="flex items-center gap-3 border-b border-border/80 px-4 sm:px-5">
           <Search aria-hidden="true" className="h-5 w-5 shrink-0 text-brand-strong" />
           <label htmlFor="spotlight-property-search" className="sr-only">
             Ville, quartier, type de bien ou référence
@@ -323,15 +304,15 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
           </DialogClose>
         </div>
 
-        <div className="flex shrink-0 items-center justify-between gap-4 px-5 pb-2 pt-4">
+        <div className="flex items-center justify-between gap-4 px-5 pb-2 pt-4">
           <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
             {advancedOpen ? "Affiner votre recherche" : showSuggestions ? "Suggestions" : "Recherches populaires"}
           </p>
           {!advancedOpen && showSuggestions && (
             <p className="text-xs text-muted-foreground" aria-live="polite">
-              {inventoryQuery.isLoading && visiblePropertySuggestions.length === 0 && suggestionCategory !== "guides"
+              {inventoryQuery.isLoading && suggestions.length === 0
                 ? "Recherche…"
-                : `${visibleSuggestionCount} suggestion${visibleSuggestionCount === 1 ? "" : "s"}`}
+                : `${guideSuggestions.length + suggestions.length} suggestion${guideSuggestions.length + suggestions.length === 1 ? "" : "s"}`}
             </p>
           )}
         </div>
@@ -364,86 +345,109 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
             />
           </form>
         ) : (
-          <div className={`${showSuggestions ? "min-h-0 flex-1" : "max-h-[min(55vh,28rem)] min-h-44"} overflow-y-auto px-2 pb-2`}>
-          <SearchSuggestionPanel isVisible={showSuggestions}>
-            <SearchSuggestionCategorySwitch
-              activeCategory={suggestionCategory}
-              guideCount={guideSuggestions.length}
-              propertyCount={suggestions.length}
-              reducedMotion={reducedMotion}
-              className="sticky top-0 z-10 mx-2 mb-1 bg-background/95 py-1 backdrop-blur"
-              onChange={(category) => {
-                setSuggestionCategory(category);
-                setActiveIndex(-1);
-              }}
-            />
-            <SearchSuggestionResults reducedMotion={reducedMotion}>
-            <div id="spotlight-search-options" role="listbox" aria-label="Pages locales et biens correspondants" className="grid grid-cols-1">
-              <SearchSuggestionCrossfade category={suggestionCategory} reducedMotion={reducedMotion}>
-                <AnimatedGuideSuggestionGroup
-                  guides={visibleGuideSuggestions}
-                  activeIndex={activeIndex}
-                  idPrefix="spotlight-search-guide"
-                  reducedMotion={reducedMotion}
-                  showHeading={suggestionCategory === "all"}
-                  onSelect={openVisibleSuggestion}
-                />
-
-                <AnimatedPropertySuggestionGroup
-                  properties={visiblePropertySuggestions}
-                  activeIndex={activeIndex}
-                  optionIndexOffset={visibleGuideSuggestions.length}
-                  staggerIndexOffset={suggestionCategory === "all" ? visibleGuideSuggestions.length : 0}
-                  idPrefix="spotlight-search-suggestion"
-                  reducedMotion={reducedMotion}
-                  variant="spotlight"
-                  showHeading={suggestionCategory === "all"}
-                  onSelect={openVisibleSuggestion}
-                />
-
-                {visiblePropertySuggestions.length === 0 && suggestionCategory !== "guides" && inventoryQuery.isLoading && (
-                  <p role="status" className="px-3 py-8 text-center text-sm text-muted-foreground">
-                    Recherche dans les annonces…
+          <div className="max-h-[min(55vh,28rem)] min-h-44 overflow-y-auto px-2 pb-2">
+          {showSuggestions ? (
+            <div id="spotlight-search-options" role="listbox" aria-label="Pages locales et biens correspondants" className="space-y-0.5">
+              {guideSuggestions.length > 0 && (
+                <div role="group" aria-label="Pages locales" className="space-y-0.5">
+                  <p className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                    Pages locales
                   </p>
-                )}
+                  {guideSuggestions.map((guide, index) => (
+                    <button
+                      key={guide.id}
+                      id={`spotlight-search-guide-${guide.id}`}
+                      type="button"
+                      role="option"
+                      aria-selected={activeIndex === index}
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => openSuggestion(index)}
+                      className={`flex w-full items-center justify-between gap-3 rounded-xl px-3 py-3 text-left transition-colors ${
+                        activeIndex === index ? "bg-brand-soft/70" : "hover:bg-muted/70"
+                      }`}
+                    >
+                      <span className="block truncate text-sm font-medium">{guide.name}</span>
+                      <span className="shrink-0 text-xs text-muted-foreground">Page locale</span>
+                    </button>
+                  ))}
+                </div>
+              )}
 
-                {visiblePropertySuggestions.length === 0 &&
-                  visibleGuideSuggestions.length === 0 &&
-                  suggestionCategory !== "guides" &&
-                  inventoryQuery.isFetched && (
-                    <p role="status" className="px-3 py-8 text-center text-sm text-muted-foreground">
-                      Aucun bien trouvé pour « {queryText} ».
-                    </p>
-                  )}
-
-                {suggestionCategory === "guides" && visibleGuideSuggestions.length === 0 && (
-                  <p role="status" className="px-3 py-8 text-center text-sm text-muted-foreground">
-                    Aucune page locale trouvée pour « {queryText} ».
+              {suggestions.length > 0 && (
+                <div role="group" aria-label="Biens correspondants" className="space-y-0.5">
+                  <p className="px-3 pb-1 pt-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                    Biens correspondants
                   </p>
-                )}
+                  {suggestions.map((suggestion, index) => {
+                    const optionIndex = guideSuggestions.length + index;
+                    return (
+                      <button
+                        key={suggestion.id}
+                        id={`spotlight-search-suggestion-${suggestion.id}`}
+                        type="button"
+                        role="option"
+                        aria-selected={activeIndex === optionIndex}
+                        onMouseDown={(event) => event.preventDefault()}
+                        onClick={() => openSuggestion(optionIndex)}
+                        className={`grid w-full grid-cols-[3.75rem_minmax(0,1fr)_auto] items-center gap-3 rounded-xl px-2.5 py-2.5 text-left transition-colors ${activeIndex === optionIndex ? "bg-brand-soft/70" : "hover:bg-muted/70"}`}
+                      >
+                        {suggestion.coverImageUrl ? (
+                          <img
+                            src={getPropertyImageUrl(suggestion.coverImageUrl, 200)}
+                            srcSet={getPropertyImageSrcSet(suggestion.coverImageUrl, [200, 400])}
+                            sizes="60px"
+                            alt=""
+                            className="h-12 w-[3.75rem] rounded-lg object-cover"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <span aria-hidden="true" className="h-12 w-[3.75rem] rounded-lg bg-muted" />
+                        )}
+                        <span className="min-w-0">
+                          <span className="block truncate text-sm font-medium">{suggestion.title}</span>
+                          <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+                            {suggestion.city.name} · {formatPropertyTypeLabel(suggestion.type)}
+                          </span>
+                        </span>
+                        <span className="whitespace-nowrap text-right text-sm font-semibold tabular-nums">
+                          {formatPrice(suggestion.priceAmount, suggestion.transaction)}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
 
-                <button
-                  id="spotlight-search-browse-option"
-                  type="button"
-                  role="option"
-                  aria-selected={activeIndex === browseOptionIndex}
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => navigateToSearch({ q: queryText })}
-                  className={`mt-1 flex w-full items-center justify-between gap-3 border-t border-border px-3 py-3 text-left text-sm text-brand-strong transition-colors hover:bg-brand-soft/60 focus-visible:bg-brand-soft/60 ${activeIndex === browseOptionIndex ? "bg-brand-soft/70" : ""}`}
-                  style={{ transitionDuration: reducedMotion ? "0ms" : "160ms" }}
-                >
-                  <span>Voir tous les résultats pour « {queryText} »</span>
-                  <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
-                </button>
-              </SearchSuggestionCrossfade>
+              {suggestions.length === 0 && inventoryQuery.isLoading && (
+                <p role="status" className="px-3 py-8 text-center text-sm text-muted-foreground">
+                  Recherche dans les annonces…
+                </p>
+              )}
+
+              {suggestions.length === 0 && inventoryQuery.isFetched && (
+                <p role="status" className="px-3 py-8 text-center text-sm text-muted-foreground">
+                  Aucun bien trouvé pour « {queryText} ».
+                </p>
+              )}
+
+              <button
+                id="spotlight-search-browse-option"
+                type="button"
+                role="option"
+                aria-selected={activeIndex === browseOptionIndex}
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => navigateToSearch({ q: queryText })}
+                className={`mt-1 flex w-full items-center justify-between gap-3 border-t border-border px-3 py-3 text-left text-sm text-brand-strong transition-colors ${activeIndex === browseOptionIndex ? "bg-brand-soft/70" : "hover:bg-brand-soft/50"}`}
+              >
+                <span>Voir tous les résultats pour « {queryText} »</span>
+                <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
+              </button>
             </div>
-            </SearchSuggestionResults>
-          </SearchSuggestionPanel>
-          {!showSuggestions && queryText.length > 0 ? (
+          ) : queryText.length > 0 ? (
             <p className="px-3 py-8 text-center text-sm text-muted-foreground">
               Continuez à saisir pour rechercher dans les annonces.
             </p>
-          ) : !showSuggestions ? (
+          ) : (
             <div className="flex flex-wrap gap-2 px-2 pb-2">
               {popularSearches.map((search) => (
                 <button
@@ -457,11 +461,11 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
                 </button>
               ))}
             </div>
-          ) : null}
+          )}
           </div>
         )}
 
-        <div className="flex shrink-0 items-center justify-between gap-3 border-t border-border/80 bg-muted/20 px-4 py-3 text-[11px] text-muted-foreground sm:px-5">
+        <div className="flex items-center justify-between gap-3 border-t border-border/80 bg-muted/20 px-4 py-3 text-[11px] text-muted-foreground sm:px-5">
           <span className="hidden sm:inline">
             {advancedOpen ? "Choisissez vos critères" : "↑ ↓ naviguer · Entrée ouvrir"}
           </span>
