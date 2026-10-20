@@ -216,7 +216,7 @@ function PropertyCarouselCard({ property, browseItems, isSold }: { property: Pro
             {property.dpeLabel && <span className="ml-auto rounded-md border border-border px-2 py-0.5 text-xs font-semibold">DPE {property.dpeLabel}</span>}
           </div>
           <div className="mt-5 flex items-center justify-between border-t border-border pt-4">
-            <span className="font-display text-2xl">{isSold ? "Vendu" : formatPrice(property.priceAmount, property.transaction)}</span>
+            <span className="font-display text-2xl">{isSold ? "Vendu par l’agence" : formatPrice(property.priceAmount, property.transaction)}</span>
             <span className="inline-flex items-center gap-2 text-sm font-semibold text-brand-strong">
               Voir le bien <ArrowRight aria-hidden="true" className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </span>

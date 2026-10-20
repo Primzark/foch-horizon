@@ -12,6 +12,7 @@ import { FiltersBar } from "@/features/listings/components/FiltersBar";
 import { ListingCard } from "@/features/listings/components/ListingCard";
 import { PropertyMapSplitView } from "@/features/listings/components/PropertyMapSplitView";
 import { PaginationBar } from "@/features/listings/components/PaginationBar";
+import { PropertyAlertsDialog } from "@/features/listings/components/PropertyAlertsDialog";
 import { buildSearchParams, parseSearchParams } from "@/features/listings/utils/query";
 import type { PropertySearchParams } from "@/types/api";
 import { useFavoritesStore } from "@/features/favorites/useFavoritesStore";
@@ -260,6 +261,14 @@ export default function ListingsIndexPage() {
           setSearchParams(buildContextualSearchParams(defaultParams));
         }}
       />
+
+      <aside className="my-5 flex flex-col gap-3 rounded-2xl border border-brand-border bg-brand-soft/45 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+        <div>
+          <h2 className="font-display text-xl">Ne manquez pas les prochaines annonces</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Recevez un e-mail lorsqu’un nouveau bien correspond à vos critères.</p>
+        </div>
+        <PropertyAlertsDialog filters={filters} />
+      </aside>
 
       <aside className="my-5 flex flex-col gap-4 rounded-2xl border border-brand-border bg-brand-soft/50 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
         <div className="flex items-start gap-3">

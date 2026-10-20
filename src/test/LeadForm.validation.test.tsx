@@ -67,7 +67,8 @@ describe("LeadForm validation", () => {
     expect(submitLeadMock).not.toHaveBeenCalled();
     expect(screen.getByLabelText(/Prénom/)).toHaveAttribute("aria-invalid", "true");
 
-    fireEvent.click(screen.getByRole("link", { name: /Prénom: Indiquez votre prénom/i }));
+    await waitFor(() => expect(summary).toHaveFocus());
+    fireEvent.click(screen.getByRole("link", { name: /Prénom: Obligatoire/i }));
     expect(screen.getByLabelText(/Prénom/)).toHaveFocus();
 
     fireEvent.change(screen.getByLabelText(/Prénom/), { target: { value: "Camille" } });

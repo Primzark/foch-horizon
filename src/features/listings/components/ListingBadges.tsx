@@ -23,7 +23,7 @@ const badgeStyles: Record<string, { icon: typeof Star; className: string }> = {
     icon: Handshake,
     className: "bg-sky-100 text-sky-950",
   },
-  "Vendu": {
+  "Vendu par l’agence": {
     icon: BadgeCheck,
     className: "bg-slate-100 text-slate-900",
   },
@@ -39,7 +39,7 @@ export function ListingBadges({ labels, className }: ListingBadgesProps) {
   return (
     <div className={cn("pointer-events-none flex flex-wrap gap-1.5", className)}>
       {labels.map((label) => {
-        const presentation = badgeStyles[label] ?? badgeStyles["Vendu"];
+        const presentation = badgeStyles[label] ?? badgeStyles["Vendu par l’agence"];
         const Icon = presentation.icon;
 
         return (

@@ -1,6 +1,7 @@
 import { render, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { useSeo } from "@/lib/seo/useSeo";
+import { LanguageProvider } from "@/lib/i18n/LanguageProvider";
 
 function SeoProbe() {
   useSeo({
@@ -20,7 +21,7 @@ describe("useSeo canonical behavior without public site URL", () => {
   it("does not emit canonical or og:url when VITE_PUBLIC_SITE_URL is missing", async () => {
     vi.stubEnv("VITE_PUBLIC_SITE_URL", "");
 
-    render(<SeoProbe />);
+    render(<LanguageProvider><SeoProbe /></LanguageProvider>);
 
     await waitFor(() => {
       expect(document.title).toBe("SEO Test");
@@ -33,7 +34,7 @@ describe("useSeo canonical behavior without public site URL", () => {
   it("emits canonical and og:url when VITE_PUBLIC_SITE_URL is configured", async () => {
     vi.stubEnv("VITE_PUBLIC_SITE_URL", "https://preview.example.test");
 
-    render(<SeoProbe />);
+    render(<LanguageProvider><SeoProbe /></LanguageProvider>);
 
     await waitFor(() => {
       const canonical = document.querySelector("link[rel='canonical']") as HTMLLinkElement | null;

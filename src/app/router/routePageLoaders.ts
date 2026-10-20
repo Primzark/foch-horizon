@@ -3,6 +3,7 @@ export const routePageLoaders = {
   legacyProperty: () => import("@/app/router/LegacyRedirects").then((module) => ({ default: module.LegacyPropertySlugRedirect })),
   home: () => import("@/features/content/pages/HomePage"),
   listings: () => import("@/features/listings/pages/ListingsIndexPage"),
+  propertyAlertAction: () => import("@/features/listings/pages/PropertyAlertActionPage"),
   listingDetail: () => import("@/features/listings/pages/ListingDetailPage"),
   propertyCompare: () => import("@/features/listings/pages/PropertyComparePage"),
   about: () => import("@/features/content/pages/AboutPageV2"),
@@ -39,6 +40,8 @@ export function getRoutePageKey(pathname: string): RoutePageKey {
     case "/buy":
     case "/rent": return "listings";
     case "/biens/comparer": return "propertyCompare";
+    case "/alertes/confirmation":
+    case "/alertes/desabonnement": return "propertyAlertAction";
     case "/apropos": return "about";
     case "/contact": return "contact";
     case "/honoraires":

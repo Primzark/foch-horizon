@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
+import { LanguageProvider } from "@/lib/i18n/LanguageProvider";
 
 const {
   askAgencyChatbotMock,
@@ -47,9 +48,11 @@ let SiteChatbotComponent: (typeof import("@/features/content/components/SiteChat
 
 async function renderChatbot() {
   return render(
-    <MemoryRouter>
-      <SiteChatbotComponent />
-    </MemoryRouter>,
+    <LanguageProvider>
+      <MemoryRouter>
+        <SiteChatbotComponent />
+      </MemoryRouter>
+    </LanguageProvider>,
   );
 }
 

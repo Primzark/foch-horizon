@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSeo } from "@/lib/seo/useSeo";
 import { StorefrontPageHero } from "@/features/content/components/StorefrontPageHero";
@@ -22,19 +21,17 @@ export default function SellPage() {
     <>
       <StorefrontPageHero
         title="Vendre votre bien"
+        titleClassName="text-4xl sm:text-5xl md:text-6xl"
         description="Le cabinet est à votre disposition dans le cadre de la mise en vente de votre bien avec des négociateurs expérimentés et un large carnet d’adresses et de recherches."
       />
 
       <section className="container mx-auto px-4 py-10">
       <div className="rounded-2xl border border-border bg-card p-6">
-        <ul className="grid gap-3 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-2">
           {points.map((point) => (
-            <li key={point} className="inline-flex items-start gap-2 text-sm">
-              <CheckCircle2 className="mt-0.5 h-4 w-4" />
-              {point}
-            </li>
+            <p key={point} className="text-sm leading-relaxed">{point}</p>
           ))}
-        </ul>
+        </div>
       </div>
 
       <p className="mt-8 max-w-3xl border-l-2 border-brand pl-5 font-display text-xl leading-relaxed">

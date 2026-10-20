@@ -37,6 +37,6 @@ describe("French location labels and geography entities", () => {
 
   it("describes one business identity with its actual address and contact", () => {
     const entity = siteEntities(origin)[0];
-    expect(entity).toMatchObject({ "@type": "RealEstateAgent", "@id": `${origin}/#agency`, telephone: "+33235425176", email: "vendre@fochimmobilier.com", address: { streetAddress: "109 Av. Foch", addressLocality: "Le Havre" } });
+    expect(entity).toMatchObject({ "@type": "RealEstateAgent", "@id": `${origin}/#agency`, telephone: "+33235425176", email: "vendre@fochimmobilier.com", address: { streetAddress: "109 avenue Foch", addressLocality: "Le Havre" } });
   });
 });

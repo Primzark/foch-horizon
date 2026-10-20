@@ -86,6 +86,19 @@ export default function ContactPageV2() {
       </div>
       </section>
 
+      <section className="container mx-auto px-4 pb-4" aria-labelledby="contact-areas-title">
+        <div className="rounded-2xl border border-border bg-card p-6 sm:p-8">
+          <h2 id="contact-areas-title" className="font-display text-2xl">Secteurs desservis</h2>
+          <div className="mt-4 flex flex-wrap gap-2 text-sm">
+            {["Cauville-sur-Mer", "Les Docks", "Honfleur"].map((area) => (
+              <span key={area} className="rounded-full border border-brand-border bg-brand-soft/50 px-4 py-2 font-medium text-brand-strong">
+                {area}
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <AgencyTeamSection mood="urban" />
     </>
   );

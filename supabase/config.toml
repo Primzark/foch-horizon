@@ -17,3 +17,8 @@ entrypoint = "./functions/admin-properties/index.ts"
 enabled = true
 verify_jwt = true
 entrypoint = "./functions/property-likes/index.ts"
+
+[functions.property-alerts]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/property-alerts/index.ts"

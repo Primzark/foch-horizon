@@ -3,12 +3,13 @@ import type { ReactNode } from "react";
 type StorefrontPageHeroProps = {
   eyebrow?: string;
   title: string;
+  titleClassName?: string;
   description: string;
   children?: ReactNode;
 };
 
 /** Full-bleed storefront hero shared by the primary navigation pages. */
-export function StorefrontPageHero({ eyebrow, title, description, children }: StorefrontPageHeroProps) {
+export function StorefrontPageHero({ eyebrow, title, titleClassName, description, children }: StorefrontPageHeroProps) {
   const backgroundImage = "/images/geography/foch-storefront.webp";
 
   return (
@@ -28,7 +29,7 @@ export function StorefrontPageHero({ eyebrow, title, description, children }: St
       <div className="page-banner storefront-page-hero__content container mx-auto flex items-center px-4 py-6 md:py-8">
         <header className="max-w-3xl">
           {eyebrow && <p className="text-xs uppercase tracking-[0.22em] text-white/80">{eyebrow}</p>}
-          <h1 className={`${eyebrow ? "mt-4" : "mt-0"} font-display text-3xl leading-tight text-white md:text-5xl`}>{title}</h1>
+          <h1 className={`${eyebrow ? "mt-4" : "mt-0"} font-display text-3xl leading-tight text-white md:text-5xl ${titleClassName ?? ""}`}>{title}</h1>
           <p className="mt-4 max-w-xl text-base leading-relaxed text-white/85">{description}</p>
           {children}
         </header>

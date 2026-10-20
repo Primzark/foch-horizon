@@ -62,7 +62,7 @@ export function getPropertyStatusLabel(
     case "reserved":
       return "Réservé";
     case "sold":
-      return "Vendu";
+      return "Vendu par l’agence";
     case "rented":
       return "Loué";
     case "off_market":

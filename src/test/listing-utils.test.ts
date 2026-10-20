@@ -77,6 +77,6 @@ describe("listing formatting helpers", () => {
       "Sous offre",
       "Exclusivité",
     ]);
-    expect(getPropertyCardLabels({ status: "sold", title: "NOUVEAUTÉ EXCLUSIVITÉ Maison" })).toEqual(["Vendu"]);
+    expect(getPropertyCardLabels({ status: "sold", title: "NOUVEAUTÉ EXCLUSIVITÉ Maison" })).toEqual(["Vendu par l’agence"]);
   });
 });
