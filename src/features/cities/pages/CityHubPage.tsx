@@ -24,6 +24,7 @@ import { useSiteLanguage } from "@/lib/i18n/LanguageProvider";
 
 type LocationHeroProps = {
   pageTitle: string;
+  description?: string;
   locationName: string;
   locationSlug: string;
   locationLabel: string;
@@ -69,7 +70,7 @@ function RelatedGeographyLinks({ guide, listingHref, estimateCity }: { guide: (t
   );
 }
 
-function LocationHero({ pageTitle, locationName, locationSlug, locationLabel, imageUrl, imageAlt, imagePosition, credit, reducedMotion }: LocationHeroProps) {
+function LocationHero({ pageTitle, description, locationName, locationSlug, locationLabel, imageUrl, imageAlt, imagePosition, credit, reducedMotion }: LocationHeroProps) {
   const heroMood = inferPlaceImageMood(locationName, locationSlug);
   const heroMotionPreset = getPlaceImageMotionPreset(heroMood);
   const motionDirector = getMotionDirectorProfile(heroMood);
@@ -116,7 +117,7 @@ function LocationHero({ pageTitle, locationName, locationSlug, locationLabel, im
         </p>
         <h1 className="mt-2 break-words font-display text-3xl sm:text-4xl md:text-5xl">{pageTitle}</h1>
         <p className="mt-2 text-sm text-white/85">
-          Une sélection de biens et un accompagnement local sur mesure pour vendre ou acheter dans ce secteur.
+          {description ?? "Une sélection de biens et un accompagnement local sur mesure pour vendre ou acheter dans ce secteur."}
         </p>
       </div>
     </header>
@@ -168,7 +169,7 @@ export default function CityHubPage() {
     title: cityGuide || city ? `${pageTitle} | Foch Immobilier` : "Ville introuvable | Foch Immobilier",
     description: cityGuide ? `${cityGuide.subtitle}. Habitat, écoles, commerces, déplacements et repères immobiliers.` : `Découvrez nos biens et notre accompagnement immobilier ${atLocation(city?.name ?? "Le Havre")}.`,
     canonicalPath: `/immobilier/${cityGuide?.id ?? citySlug}`,
-    image: "/images/agence-foch.jpg",
+    image: cityGuide?.heroImage.src ?? city?.heroImageUrl ?? "/images/agence-foch.jpg",
     noIndex: !cityGuide && !city,
     jsonLd: cityGuide ? {
       "@context": "https://schema.org",
@@ -200,7 +201,7 @@ export default function CityHubPage() {
 
   const cityProperties = propertiesQuery.data ?? [];
   const allResultsParams = new URLSearchParams({
-    ...(cityGuide?.listingSearch.city ? { city: cityGuide.listingSearch.city } : city?.slug ? { city: city.slug } : {}),
+    ...(cityGuide ? (cityGuide.listingSearch.city ? { city: cityGuide.listingSearch.city } : {}) : city?.slug ? { city: city.slug } : {}),
     ...(cityGuide?.listingSearch.query ? { q: cityGuide.listingSearch.query } : {}),
     ...(cityGuide ? { guide: cityGuide.id } : {}),
   });
@@ -211,6 +212,7 @@ export default function CityHubPage() {
       <section className="container mx-auto px-4 py-10">
         <LocationHero
           pageTitle={cityGuide.pageTitle}
+          description={cityGuide.subtitle}
           locationName={cityGuide.name}
           locationSlug={cityGuide.id}
           locationLabel={getLocationLabel(cityGuide)}
@@ -268,6 +270,7 @@ export default function CityHubPage() {
     <section className="container mx-auto px-4 py-10">
       <LocationHero
         pageTitle={pageTitle}
+        description={cityGuide?.subtitle}
         locationName={cityGuide?.name ?? city.name}
         locationSlug={cityGuide?.id ?? city.slug}
         locationLabel={getLocationLabel(cityGuide)}
@@ -282,7 +285,6 @@ export default function CityHubPage() {
           <header className="mb-6 max-w-3xl">
             <p className="text-xs font-medium uppercase tracking-[0.18em] text-brand-strong">Repères sur le secteur · {cityGuide.area}</p>
             <h2 id="city-guide-title" className="mt-2 font-display text-3xl">Vivre {atLocation(cityGuide.name)}</h2>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{cityGuide.subtitle}</p>
           </header>
           <GeographyGuideDetails guide={cityGuide} />
         </section>

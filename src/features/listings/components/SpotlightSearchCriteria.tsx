@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { geographyGuideOptions } from "@/features/content/data/geographyGuideOptions";
+import { listingLocationOptions } from "@/features/listings/data/listingLocationOptions";
 import { featureOptions, propertyTypeOptions } from "@/features/listings/data/options";
 import type { PropertySearchParams } from "@/types/api";
 
@@ -21,8 +21,8 @@ interface SpotlightSearchCriteriaProps {
   onQueryChange: (query: string) => void;
 }
 
-const havreAreas = geographyGuideOptions.filter((area) => area.city === "le-havre");
-const otherAreas = geographyGuideOptions.filter((area) => area.city !== "le-havre");
+const havreAreas = listingLocationOptions.filter((area) => area.city === "le-havre");
+const otherAreas = listingLocationOptions.filter((area) => area.city !== "le-havre");
 const numberFields: Array<{
   key: "bedroomsMin" | "bathroomsMin" | "garagesMin" | "priceMin" | "priceMax" | "surfaceMin" | "terrainMin";
   label: string;
@@ -39,8 +39,8 @@ const numberFields: Array<{
 ];
 
 function getSelectedArea(filters: Pick<PropertySearchParams, "city" | "q">) {
-  return geographyGuideOptions.find((area) => area.city === filters.city && area.query === filters.q)
-    ?? geographyGuideOptions.find((area) => area.city === filters.city && !area.query);
+  return listingLocationOptions.find((area) => area.city === filters.city && area.query === filters.q)
+    ?? listingLocationOptions.find((area) => area.city === filters.city && !area.query);
 }
 
 function formatAreaAvailability(count: number): string {
@@ -50,7 +50,7 @@ function formatAreaAvailability(count: number): string {
 export function SpotlightSearchCriteria({ filters, onChange, onQueryChange }: SpotlightSearchCriteriaProps) {
   const selectedArea = getSelectedArea(filters);
   const selectedFeatures = new Set(filters.features ?? []);
-  const genericQuery = geographyGuideOptions.some((area) => area.query === filters.q) ? undefined : filters.q;
+  const genericQuery = listingLocationOptions.some((area) => area.query === filters.q) ? undefined : filters.q;
   const areaCounts = useQuery({
     queryKey: ["geography-area-property-counts", {
       type: filters.type,
@@ -87,17 +87,17 @@ export function SpotlightSearchCriteria({ filters, onChange, onQueryChange }: Sp
 
   const updateArea = (value: string) => {
     if (value === "all") {
-      const hasAreaQuery = geographyGuideOptions.some((area) => area.query === filters.q);
+      const hasAreaQuery = listingLocationOptions.some((area) => area.query === filters.q);
       const nextQuery = hasAreaQuery ? undefined : filters.q;
       onChange({ city: undefined, q: nextQuery });
       onQueryChange(nextQuery ?? "");
       return;
     }
 
-    const area = geographyGuideOptions.find((option) => option.id === value);
+    const area = listingLocationOptions.find((option) => option.id === value);
     if (!area) return;
 
-    const hasAreaQuery = geographyGuideOptions.some((option) => option.query === filters.q);
+    const hasAreaQuery = listingLocationOptions.some((option) => option.query === filters.q);
     const nextQuery = area.query ?? (hasAreaQuery ? undefined : filters.q);
     onChange({ city: area.city, q: nextQuery });
     onQueryChange(nextQuery ?? "");

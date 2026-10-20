@@ -10,18 +10,18 @@ import { GeographyGuideDetails } from "@/features/content/components/GeographyGu
 import { GeographyMap } from "@/features/content/components/GeographyMap";
 
 const guideSections = [
-  { number: "01", title: "Le Havre et ses quartiers", description: "Du centre reconstruit aux quartiers historiques, résidentiels et au front de mer.", guideIds: ["le-havre", "centre-ville", "avenue-foch", "halles-centrales", "hotel-de-ville", "notre-dame", "saint-francois", "perrey", "danton", "bleville", "la-plage", "gobelins", "saint-michel"] },
-  { number: "02", title: "Le littoral et les coteaux", description: "Des communes résidentielles à la côte d’Albâtre.", guideIds: ["sainte-adresse", "octeville-sur-mer", "etretat"] },
+  { number: "01", title: "Le Havre et ses quartiers", description: "Du centre reconstruit aux quartiers historiques, résidentiels, portuaires et au front de mer.", guideIds: ["le-havre", "centre-ville", "avenue-foch", "halles-centrales", "hotel-de-ville", "notre-dame", "saint-francois", "perrey", "danton", "bleville", "les-docks", "la-plage", "gobelins", "saint-michel"] },
+  { number: "02", title: "Le littoral et les coteaux", description: "Des villages agricoles et communes résidentielles jusqu’à la côte d’Albâtre.", guideIds: ["sainte-adresse", "octeville-sur-mer", "cauville-sur-mer", "etretat"] },
   { number: "03", title: "L’agglomération havraise", description: "Villes et communes proches, reliées au Havre par les transports et les services du quotidien.", guideIds: ["montivilliers", "harfleur", "gainneville", "gonfreville-l-orcher", "rogerville", "saint-laurent-de-brevedent", "maneglise"] },
   { number: "04", title: "Entre Le Havre et Saint-Romain", description: "Des bourgs et villages du pays de Caux, à découvrir selon les trajets et les services recherchés.", guideIds: ["saint-romain", "etainhus", "epretot", "saint-aubin-routot", "la-remuee", "gommerville", "la-cerlangue", "les-trois-pierres"] },
-  { number: "05", title: "Deauville et Trouville-sur-Mer", description: "Deux stations balnéaires également citées dans les secteurs de l’agence.", guideIds: ["deauville", "trouville"] },
+  { number: "05", title: "L’estuaire et la Côte Fleurie", description: "Honfleur, Deauville et Trouville-sur-Mer : trois villes portuaires et balnéaires aux ambiances distinctes.", guideIds: ["honfleur", "deauville", "trouville"] },
 ];
 
 const mapPoints: Record<string, [number, number]> = {
   "halles-centrales": [49.4897, 0.1089], "hotel-de-ville": [49.493132, 0.10811], "le-havre": [49.4944, 0.1072], "centre-ville": [49.4984, 0.116], "avenue-foch": [49.4934, 0.1005], "notre-dame": [49.487, 0.108333],
   "saint-francois": [49.4895, 0.120], perrey: [49.488611, 0.099467], danton: [49.494242, 0.121804], bleville: [49.520324, 0.099586], "la-plage": [49.495, 0.080],
-  gobelins: [49.49684, 0.10049], "saint-michel": [49.500, 0.098], "sainte-adresse": [49.5055, 0.084],
-  "octeville-sur-mer": [49.554, 0.145], montivilliers: [49.545, 0.188], maneglise: [49.552, 0.299],
+  gobelins: [49.49684, 0.10049], "saint-michel": [49.500, 0.098], "les-docks": [49.49, 0.1291], "sainte-adresse": [49.5055, 0.084],
+  "octeville-sur-mer": [49.554, 0.145], "cauville-sur-mer": [49.5954, 0.1307], montivilliers: [49.545, 0.188], maneglise: [49.552, 0.299],
   gainneville: [49.505, 0.25], harfleur: [49.507, 0.20], "gonfreville-l-orcher": [49.506, 0.232],
   rogerville: [49.516, 0.28], "saint-laurent-de-brevedent": [49.535, 0.23], "saint-romain": [49.531, 0.357],
   etainhus: [49.552, 0.321], epretot: [49.559, 0.296], "saint-aubin-routot": [49.551, 0.322],
@@ -115,9 +115,9 @@ export default function GeographyPage() {
   const siteUrl = getSiteUrl();
 
   useSeo({
-    title: "Nos secteurs immobiliers au Havre et alentours | Foch Immobilier",
+    title: "Nos secteurs immobiliers au Havre, à Honfleur et alentours | Foch Immobilier",
     description:
-      "Découvrez l’histoire, l’architecture, les écoles, les projets, les transports et les repères de prix au Havre, à Sainte-Adresse, dans les communes voisines et sur le littoral normand.",
+      "Découvrez l’histoire, l’architecture, les écoles, les transports et les repères immobiliers au Havre, à Honfleur, à Cauville-sur-Mer et dans les communes voisines.",
     canonicalPath: "/geographie",
     image: "/images/geography/foch-storefront.png",
     jsonLd: [
@@ -126,9 +126,9 @@ export default function GeographyPage() {
         "@type": "CollectionPage",
         "@id": `${siteUrl}/geographie#webpage`,
         publisher: { "@id": `${siteUrl}/#agency` },
-        name: "Nos secteurs immobiliers au Havre et alentours",
+        name: "Nos secteurs immobiliers au Havre, à Honfleur et alentours",
         description:
-          "Guides de vie locale et repères immobiliers pour les villes et quartiers autour du Havre, de Sainte-Adresse et du littoral normand.",
+          "Guides de vie locale et repères immobiliers pour les villes et quartiers du Havre, de Honfleur, de Cauville-sur-Mer et du littoral normand.",
         url: `${siteUrl}/geographie`,
         inLanguage: "fr-FR",
         mainEntity: {
@@ -154,8 +154,8 @@ export default function GeographyPage() {
   return (
     <div>
       <StorefrontPageHero
-        title="Immobilier au Havre et alentours"
-        description="Du Havre et de Sainte-Adresse aux communes et stations du littoral citées par notre agence, explorez les lieux de votre projet."
+        title="Immobilier au Havre, à Honfleur et alentours"
+        description="Du Havre et de ses quartiers portuaires à Honfleur, Cauville-sur-Mer et aux communes du littoral, explorez les lieux de votre projet."
       >
         <div className="mt-7 flex flex-wrap gap-3">
           <Button asChild variant="brand">

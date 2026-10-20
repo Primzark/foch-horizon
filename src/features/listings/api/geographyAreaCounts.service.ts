@@ -1,10 +1,10 @@
-import { geographyGuideOptions } from "@/features/content/data/geographyGuideOptions";
+import { listingLocationOptions } from "@/features/listings/data/listingLocationOptions";
 import { isEdgeApiEnabled } from "@/lib/api/client";
 import { normalizeKeyword } from "@/features/listings/utils/formatting";
 import { searchProperties } from "@/features/listings/api/properties.service";
 import type { PropertySearchItem, PropertySearchParams } from "@/types/api";
 
-type AreaOption = (typeof geographyGuideOptions)[number];
+type AreaOption = (typeof listingLocationOptions)[number];
 
 export interface GeographyAreaPropertyCounts {
   all: number;
@@ -12,7 +12,7 @@ export interface GeographyAreaPropertyCounts {
 }
 
 function isAreaQuery(currentQuery: string | undefined): boolean {
-  return geographyGuideOptions.some((option) => option.query === currentQuery);
+  return listingLocationOptions.some((option) => option.query === currentQuery);
 }
 
 function getAreaQuery(area: Pick<AreaOption, "query">, currentQuery: string | undefined): string | undefined {
@@ -75,7 +75,7 @@ export async function getGeographyAreaPropertyCounts(
   if (!isEdgeApiEnabled()) {
     const [allResults, ...areaResults] = await Promise.all([
       searchProperties({ ...countFilters, q: isAreaQuery(filters.q) ? undefined : filters.q, page: 1, pageSize: 1 }),
-      ...geographyGuideOptions.map((area) =>
+      ...listingLocationOptions.map((area) =>
         searchProperties({
           ...countFilters,
           city: area.city,
@@ -86,7 +86,7 @@ export async function getGeographyAreaPropertyCounts(
       ),
     ]);
 
-    geographyGuideOptions.forEach((area, index) => {
+    listingLocationOptions.forEach((area, index) => {
       byArea[area.id] = areaResults[index].total;
     });
 
@@ -110,7 +110,7 @@ export async function getGeographyAreaPropertyCounts(
   const allQuery = isAreaQuery(filters.q) ? undefined : filters.q;
   const all = allQuery ? allItems.filter((item) => matchesTextQuery(item, allQuery)).length : total;
 
-  geographyGuideOptions.forEach((area) => {
+  listingLocationOptions.forEach((area) => {
     const query = getAreaQuery(area, filters.q);
     byArea[area.id] = allItems.filter((item) => matchesArea(item, area, query)).length;
   });

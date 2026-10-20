@@ -210,5 +210,25 @@
       "76430"
     ],
     "source": "https://geo.api.gouv.fr/communes/76714?fields=nom,code,centre,mairie,codesPostaux"
+  },
+  "cauville-sur-mer": {
+    "code": "76167",
+    "name": "Cauville-sur-Mer",
+    "latitude": 49.5954,
+    "longitude": 0.1307,
+    "postalCodes": [
+      "76930"
+    ],
+    "source": "https://geo.api.gouv.fr/communes/76167?fields=nom,code,centre,mairie,codesPostaux"
+  },
+  "honfleur": {
+    "code": "14333",
+    "name": "Honfleur",
+    "latitude": 49.4202,
+    "longitude": 0.2345,
+    "postalCodes": [
+      "14600"
+    ],
+    "source": "https://geo.api.gouv.fr/communes/14333?fields=nom,code,centre,mairie,codesPostaux"
   }
 }

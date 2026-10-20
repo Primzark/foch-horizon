@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { geographyGuideOptions } from "@/features/content/data/geographyGuideOptions";
+import { listingLocationOptions } from "@/features/listings/data/listingLocationOptions";
 import { featureOptions, propertyTypeOptions } from "@/features/listings/data/options";
 import { parseReferenceFromQuery, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
 import { toSearchItem } from "@/features/listings/utils/mappers";
@@ -27,17 +27,17 @@ const defaultFilters: PropertySearchParams = {
   sort: "newest",
 };
 
-const havreAreas = geographyGuideOptions.filter((area) => area.city === "le-havre");
-const otherAreas = geographyGuideOptions.filter((area) => area.city !== "le-havre");
+const havreAreas = listingLocationOptions.filter((area) => area.city === "le-havre");
+const otherAreas = listingLocationOptions.filter((area) => area.city !== "le-havre");
 
 function getSelectedArea(filters: Pick<PropertySearchParams, "city" | "q">) {
-  const exactMatch = geographyGuideOptions.find(
+  const exactMatch = listingLocationOptions.find(
     (area) => area.city === filters.city && area.query === filters.q,
   );
   if (exactMatch) return exactMatch;
 
   // Keep a city selected when the keyword filter is being used independently.
-  return geographyGuideOptions.find((area) => area.city === filters.city && !area.query);
+  return listingLocationOptions.find((area) => area.city === filters.city && !area.query);
 }
 
 function normalizeFilters(filters: PropertySearchParams): PropertySearchParams {
@@ -93,7 +93,7 @@ export function SearchDrawer() {
 
   const selectedFeatures = useMemo(() => new Set(draft.features ?? []), [draft.features]);
   const selectedArea = getSelectedArea(draft);
-  const genericQuery = geographyGuideOptions.some((area) => area.query === draft.q) ? undefined : draft.q;
+  const genericQuery = listingLocationOptions.some((area) => area.query === draft.q) ? undefined : draft.q;
   const areaCounts = useQuery({
     queryKey: ["geography-area-property-counts", {
       type: draft.type,
@@ -186,7 +186,7 @@ export function SearchDrawer() {
               onValueChange={(value) => {
                 if (value === "all") {
                   setDraft((current) => {
-                    const hasAreaQuery = geographyGuideOptions.some((area) => area.query === current.q);
+                    const hasAreaQuery = listingLocationOptions.some((area) => area.query === current.q);
                     return {
                       ...current,
                       city: undefined,
@@ -196,10 +196,10 @@ export function SearchDrawer() {
                   return;
                 }
 
-                const area = geographyGuideOptions.find((option) => option.id === value);
+                const area = listingLocationOptions.find((option) => option.id === value);
                 if (!area) return;
                 setDraft((current) => {
-                  const hasAreaQuery = geographyGuideOptions.some((option) => option.query === current.q);
+                  const hasAreaQuery = listingLocationOptions.some((option) => option.query === current.q);
                   return {
                     ...current,
                     city: area.city,

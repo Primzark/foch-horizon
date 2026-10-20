@@ -1,5 +1,5 @@
 import type { PropertySearchParams } from "@/types/api";
-import { geographyGuideOptions } from "@/features/content/data/geographyGuideOptions";
+import { listingLocationOptions } from "@/features/listings/data/listingLocationOptions";
 
 interface ActiveFiltersChipsProps {
   filters: PropertySearchParams;
@@ -10,7 +10,7 @@ interface ActiveFiltersChipsProps {
 
 export function ActiveFiltersChips({ filters, onClear, onClearArea, onClearAll }: ActiveFiltersChipsProps) {
   const entries: Array<{ key: keyof PropertySearchParams | "area"; label: string }> = [];
-  const selectedArea = geographyGuideOptions.find(
+  const selectedArea = listingLocationOptions.find(
     (area) => area.city === filters.city && area.query === filters.q,
   );
 

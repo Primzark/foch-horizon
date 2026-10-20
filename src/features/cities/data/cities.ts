@@ -71,7 +71,15 @@ export const cities: City[] = [
     slug: "honfleur",
     postalCodes: ["14600"],
     isActive: true,
-    heroImageUrl: "/images/geography/pays-de-caux-original.svg",
+    heroImageUrl: "/images/geography/honfleur-vieux-bassin.webp",
+  },
+  {
+    id: "city-cauville-sur-mer",
+    name: "Cauville-sur-Mer",
+    slug: "cauville-sur-mer",
+    postalCodes: ["76930"],
+    isActive: true,
+    heroImageUrl: "/images/geography/cauville-eglise-saint-nicolas.webp",
   },
   {
     id: "city-saint-romain-de-colbosc",
