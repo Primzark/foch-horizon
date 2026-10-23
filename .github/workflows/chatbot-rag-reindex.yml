@@ -13,8 +13,14 @@ on:
       - "src/features/content/**"
       - "src/features/cities/data/**"
       - "src/features/listings/data/**"
+      - "src/app/router/**"
+      - "scripts/seo/**"
       - "scripts/chatbot/**"
       - ".github/workflows/chatbot-rag-reindex.yml"
+
+concurrency:
+  group: chatbot-rag-reindex
+  cancel-in-progress: false
 
 jobs:
   reindex:
@@ -56,5 +62,12 @@ jobs:
           done
           exit "$missing"
 
-      - name: Re-index website content (headless)
-        run: npm run chatbot:index:site -- --headless
+      - name: Build current site routes and sitemap
+        run: npm run build
+
+      - name: Re-index website content from the generated sitemap
+        run: >-
+          npm run chatbot:index:site -- --render http
+          --sitemap dist/sitemap.xml
+          --base-url "$RAG_INDEX_BASE_URL"
+          --prune-stale

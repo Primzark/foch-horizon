@@ -28,6 +28,7 @@ function parseArgs(argv) {
     skipUpload: false,
     skipEmbeddings: false,
     includeRows: false,
+    pruneStale: false,
     pathPrefix: process.env.RAG_INDEX_PATH_PREFIX ?? "",
     verbose: false,
   };
@@ -108,6 +109,11 @@ function parseArgs(argv) {
       continue;
     }
 
+    if (arg === "--prune-stale") {
+      args.pruneStale = true;
+      continue;
+    }
+
     if (arg === "--verbose") {
       args.verbose = true;
       continue;
@@ -144,6 +150,7 @@ Options:
   --path-prefix <path>  Index only paths starting with this prefix (ex: /immobilier/)
   --skip-embeddings     Skip Gemini embeddings (rows are stored with null embedding)
   --include-rows        Include every extracted chunk in the JSON preview
+  --prune-stale         Delete old documents after a complete, successful full-sitemap crawl
   --skip-upload         Do not upload to Supabase (still writes preview file)
   --dry-run             Shortcut for --skip-upload
   --verbose             Print per-page progress
@@ -152,7 +159,7 @@ Environment used for upload:
   SUPABASE_URL
   SUPABASE_SERVICE_ROLE_KEY
   GEMINI_API_KEY (unless --skip-embeddings)
-  GEMINI_EMBEDDING_MODEL (optional, default: gemini-embedding-001)
+  GEMINI_EMBEDDING_MODEL (optional, default: ${CHATBOT_EMBEDDING_MODEL})
   RAG_ALLOW_KEYWORD_ONLY_ON_EMBEDDING_QUOTA=true (allow indexing if Gemini returns quota/billing HTTP 402)
   RAG_INDEX_RENDER_MODE=http|headless
 `);
@@ -728,6 +735,62 @@ async function deleteDocumentChunks(supabaseUrl, serviceRoleKey, documentKey) {
   }
 }
 
+async function listIndexedDocumentKeys(supabaseUrl, serviceRoleKey) {
+  const pageSize = 500;
+  const documentKeys = new Set();
+  let offset = 0;
+
+  while (true) {
+    const endpoint = new URL(`${supabaseUrl.replace(/\/$/, "")}/rest/v1/chatbot_content_chunks`);
+    endpoint.searchParams.set("select", "document_key");
+    endpoint.searchParams.set("order", "document_key.asc,chunk_index.asc");
+    endpoint.searchParams.set("limit", String(pageSize));
+    endpoint.searchParams.set("offset", String(offset));
+    const response = await fetch(endpoint, {
+      headers: {
+        apikey: serviceRoleKey,
+        Authorization: `Bearer ${serviceRoleKey}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => "");
+      throw new Error(`Listing indexed documents failed (${response.status}): ${errorText.slice(0, 240)}`);
+    }
+
+    const rows = await response.json();
+    if (!Array.isArray(rows)) {
+      throw new Error("Listing indexed documents returned an invalid response.");
+    }
+
+    for (const row of rows) {
+      if (typeof row.document_key === "string" && row.document_key.length > 0) {
+        documentKeys.add(row.document_key);
+      }
+    }
+
+    if (rows.length < pageSize) break;
+    offset += rows.length;
+  }
+
+  return documentKeys;
+}
+
+async function pruneStaleDocumentChunks(supabaseUrl, serviceRoleKey, currentDocumentKeys) {
+  const existingDocumentKeys = await listIndexedDocumentKeys(supabaseUrl, serviceRoleKey);
+  const retainedDocumentKeys = new Set(currentDocumentKeys);
+  const staleDocumentKeys = [...existingDocumentKeys]
+    .filter((documentKey) => !retainedDocumentKeys.has(documentKey))
+    .sort();
+
+  for (const documentKey of staleDocumentKeys) {
+    await deleteDocumentChunks(supabaseUrl, serviceRoleKey, documentKey);
+    console.log(`[prune] removed stale document ${documentKey}`);
+  }
+
+  console.log(`[prune] removed ${staleDocumentKeys.length} stale documents`);
+}
+
 async function insertDocumentChunks(supabaseUrl, serviceRoleKey, rows) {
   if (rows.length === 0) return;
 
@@ -749,7 +812,7 @@ async function insertDocumentChunks(supabaseUrl, serviceRoleKey, rows) {
   }
 }
 
-async function uploadRowsToSupabase(rows) {
+async function uploadRowsToSupabase(rows, { pruneStale = false } = {}) {
   const { supabaseUrl, serviceRoleKey } = resolveRequiredSupabaseServiceRoleConfig();
 
   const rowsByDocument = new Map();
@@ -768,6 +831,10 @@ async function uploadRowsToSupabase(rows) {
     await insertDocumentChunks(supabaseUrl, serviceRoleKey, documentRows);
     documentCount += 1;
     console.log(`[upload] ${documentKey}: ${documentRows.length} chunks`);
+  }
+
+  if (pruneStale) {
+    await pruneStaleDocumentChunks(supabaseUrl, serviceRoleKey, rowsByDocument.keys());
   }
 
   return { documentCount, rowCount: rows.length };
@@ -799,6 +866,10 @@ async function main() {
   }
 
   const selectedUrls = args.limit ? uniqueUrls.slice(0, args.limit) : uniqueUrls;
+
+  if (args.pruneStale && (args.pathPrefix || args.limit)) {
+    throw new Error("--prune-stale requires a full sitemap run without --path-prefix or --limit.");
+  }
 
   if (selectedUrls.length === 0) {
     throw new Error("No URLs found in sitemap after filtering.");
@@ -886,6 +957,17 @@ async function main() {
       existingPaths.add(routePath);
     }
 
+    const selectedPaths = new Set(selectedUrls.map(normalizeInternalPath));
+    const indexedPaths = new Set(successfulPages.map((page) => page.path));
+    const unindexedPaths = [...selectedPaths].filter((routePath) => !indexedPaths.has(routePath));
+
+    if (args.pruneStale && (failures.length > 0 || unindexedPaths.length > 0)) {
+      const failedUrls = failures.map((failure) => failure.url).join(", ");
+      throw new Error(
+        `Refusing to prune stale documents after an incomplete crawl (${failures.length} failed URLs, ${unindexedPaths.length} sitemap paths without content).${failedUrls ? ` Failed URLs: ${failedUrls}` : ""}`,
+      );
+    }
+
     for (const failure of failures) {
       console.warn(`[warn] failed ${failure.url}: ${failure.error}`);
     }
@@ -927,7 +1009,7 @@ async function main() {
     console.log(`[index] preview written: ${args.outFile}`);
 
     if (!args.skipUpload) {
-      const result = await uploadRowsToSupabase(rows);
+      const result = await uploadRowsToSupabase(rows, { pruneStale: args.pruneStale });
       console.log(`[upload] complete: ${result.documentCount} documents, ${result.rowCount} chunks`);
     } else {
       console.log("[upload] skipped");
