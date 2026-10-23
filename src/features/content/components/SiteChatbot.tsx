@@ -34,6 +34,7 @@ import { cn } from "@/lib/utils";
 import { SearchThinkingState } from "@/features/content/components/SearchThinkingState";
 import { createPropertyModalRouteState } from "@/features/listings/navigation/propertyModalNavigation";
 import { useSiteLanguage } from "@/lib/i18n/LanguageProvider";
+import { isStandaloneInternalPath, splitChatbotMessageContent } from "@/features/content/utils/chatbotMessageLinks";
 
 type ChatRole = "assistant" | "user";
 
@@ -185,8 +186,6 @@ const CHATBOT_MULTIMODAL_CARDS_ENABLED =
 const CHATBOT_PERSISTENT_MEMORY_ENABLED =
   ((import.meta.env.VITE_CHATBOT_PERSISTENT_MEMORY_ENABLED as string | undefined) ?? "false").toLowerCase() === "true";
 
-const internalPathSplitPattern = /(\/[a-z0-9-]+(?:\/[a-z0-9-]+)*(?:\?[a-z0-9=&_-]+)?)/gi;
-const internalPathMatchPattern = /^\/[a-z0-9-]+(?:\/[a-z0-9-]+)*(?:\?[a-z0-9=&_-]+)?$/i;
 const chatbotFeedbackReasonOptions = [
   "Hors sujet",
   "Source/lien incorrect",
@@ -2298,12 +2297,12 @@ export function SiteChatbot({ initiallyOpen = false }: { initiallyOpen?: boolean
 
   const renderMessageContent = useCallback(
     (content: string) => {
-      const segments = content.split(internalPathSplitPattern);
+      const segments = splitChatbotMessageContent(content);
 
       return segments.map((segment, index) => {
         const trimmed = segment.trim();
 
-        if (internalPathMatchPattern.test(trimmed)) {
+        if (isStandaloneInternalPath(trimmed)) {
           return (
             <Link
               key={`path-${trimmed}-${index}`}
