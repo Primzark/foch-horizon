@@ -13,6 +13,7 @@ import {
   DEFAULT_TAVILY_MIN_RELEVANCE_SCORE,
   isTavilyResultRelevant,
 } from "../_shared/chatbot-web-search-relevance.ts";
+import { removeUnsolicitedAgencyPromotion } from "../_shared/chatbot-live-web-answer.ts";
 import {
   computeSharedPropertyAggregateMetrics,
   fetchAggregateRowsByIds,
@@ -6196,7 +6197,9 @@ Deno.serve(async (request) => {
     return secureJsonResponse(request, {
       source: generationResult.provider,
       edgeProvider: generationResult.provider,
-      answer: generationResult.answer,
+      answer: webSearch?.used
+        ? removeUnsolicitedAgencyPromotion(generationResult.answer, payload.question, payload.language ?? "fr")
+        : generationResult.answer,
       suggestedPrompts:
         citationPrompts.length > 0
           ? [
