@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type RefObjec
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowRight, Search, SlidersHorizontal, X } from "lucide-react";
+import { PropertySearchSuggestion } from "@/features/listings/components/PropertySearchSuggestion";
 import {
   Dialog,
   DialogClose,
@@ -10,14 +11,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { formatPrice, formatPropertyTypeLabel, normalizeKeyword, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
+import { formatPropertyTypeLabel, normalizeKeyword, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
 import { buildSearchParams, parseSearchParams } from "@/features/listings/utils/query";
 import { searchProperties } from "@/features/listings/api/properties.service";
 import { properties } from "@/features/listings/data/properties";
 import { toSearchItem } from "@/features/listings/utils/mappers";
 import { createPropertyModalRouteState } from "@/features/listings/navigation/propertyModalNavigation";
 import { persistAppliedPropertySearchFilters, resolvePropertySearchFilters } from "@/features/listings/utils/searchFilterPersistence";
-import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
 import { SpotlightSearchCriteria } from "@/features/listings/components/SpotlightSearchCriteria";
 import type { PropertySearchItem, PropertySearchParams, PropertySearchResponse } from "@/types/api";
 import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
@@ -337,38 +337,15 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
           {showSuggestions ? (
             <div id="spotlight-search-options" role="listbox" aria-label="Suggestions de biens" className="space-y-0.5">
               {suggestions.map((suggestion, index) => (
-                <button
+                <PropertySearchSuggestion
                   key={suggestion.id}
-                  id={`spotlight-search-suggestion-${suggestion.id}`}
-                  type="button"
-                  role="option"
-                  aria-selected={activeIndex === index}
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => openSuggestion(index)}
-                  className={`grid w-full grid-cols-[3.75rem_minmax(0,1fr)_auto] items-center gap-3 rounded-xl px-2.5 py-2.5 text-left transition-colors ${activeIndex === index ? "bg-brand-soft/70" : "hover:bg-muted/70"}`}
-                >
-                  {suggestion.coverImageUrl ? (
-                    <img
-                      src={getPropertyImageUrl(suggestion.coverImageUrl, 200)}
-                      srcSet={getPropertyImageSrcSet(suggestion.coverImageUrl, [200, 400])}
-                      sizes="60px"
-                      alt=""
-                      className="h-12 w-[3.75rem] rounded-lg object-cover"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <span aria-hidden="true" className="h-12 w-[3.75rem] rounded-lg bg-muted" />
-                  )}
-                  <span className="min-w-0">
-                    <span className="block truncate text-sm font-medium">{suggestion.title}</span>
-                    <span className="mt-0.5 block truncate text-xs text-muted-foreground">
-                      {suggestion.city.name} · {formatPropertyTypeLabel(suggestion.type)}
-                    </span>
-                  </span>
-                  <span className="whitespace-nowrap text-right text-sm font-semibold tabular-nums">
-                    {formatPrice(suggestion.priceAmount, suggestion.transaction)}
-                  </span>
-                </button>
+                  property={suggestion}
+                  idPrefix="spotlight-search-suggestion"
+                  isActive={activeIndex === index}
+                  reducedMotion={reducedMotion}
+                  variant="spotlight"
+                  onSelect={() => openSuggestion(index)}
+                />
               ))}
 
               {suggestions.length === 0 && inventoryQuery.isLoading && (

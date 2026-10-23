@@ -4,14 +4,14 @@ import { ArrowRight, House, Search, SlidersHorizontal } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { PropertySearchSuggestion } from "@/features/listings/components/PropertySearchSuggestion";
 import { useUiStore } from "@/lib/state/useUiStore";
 import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
 import { buildSearchParams, parseSearchParams } from "@/features/listings/utils/query";
 import { searchProperties } from "@/features/listings/api/properties.service";
-import { formatPrice, formatPropertyTypeLabel, normalizeKeyword, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
+import { formatPropertyTypeLabel, normalizeKeyword, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
 import type { PropertySearchItem, PropertySearchParams, PropertySearchResponse } from "@/types/api";
 import type { TransactionType } from "@/types/domain";
-import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
 import { createPropertyModalRouteState } from "@/features/listings/navigation/propertyModalNavigation";
 import { persistAppliedPropertySearchFilters, readLastAppliedPropertySearchFilters } from "@/features/listings/utils/searchFilterPersistence";
 import { SearchThinkingState } from "@/features/content/components/SearchThinkingState";
@@ -297,40 +297,15 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
                   </p>
                 )}
                 {suggestions.map((suggestion, index) => (
-                    <button
+                    <PropertySearchSuggestion
                       key={suggestion.id}
-                      id={`main-search-suggestion-${suggestion.id}`}
-                      type="button"
-                      role="option"
-                      aria-selected={activeSuggestionIndex === index}
-                      onMouseDown={(event) => event.preventDefault()}
-                      onClick={() => openSuggestion(index)}
-                      className={`grid w-full grid-cols-[3.5rem_minmax(0,1fr)_auto] items-center gap-3 rounded-xl px-2 py-2 text-left transition-colors hover:bg-muted/70 ${
-                        activeSuggestionIndex === index ? "bg-muted/70" : ""
-                      }`}
-                    >
-                      {suggestion.coverImageUrl ? (
-                        <img
-                          src={getPropertyImageUrl(suggestion.coverImageUrl, 200)}
-                          srcSet={getPropertyImageSrcSet(suggestion.coverImageUrl, [200, 400])}
-                          sizes="56px"
-                          alt=""
-                          className="h-11 w-14 rounded-lg object-cover"
-                          loading="lazy"
-                        />
-                      ) : (
-                        <span aria-hidden="true" className="h-11 w-14 rounded-lg bg-muted" />
-                      )}
-                      <span className="min-w-0">
-                        <span className="block truncate text-sm font-medium">{suggestion.title}</span>
-                        <span className="block truncate text-xs text-muted-foreground">
-                          {suggestion.city.name} · {formatPropertyTypeLabel(suggestion.type)}
-                        </span>
-                      </span>
-                      <span className="whitespace-nowrap text-right text-sm font-semibold">
-                        {formatPrice(suggestion.priceAmount, suggestion.transaction)}
-                      </span>
-                    </button>
+                      idPrefix="main-search-suggestion"
+                      property={suggestion}
+                      isActive={activeSuggestionIndex === index}
+                      reducedMotion={reducedMotion}
+                      variant="main"
+                      onSelect={() => openSuggestion(index)}
+                    />
                 ))}
 
                 <button
