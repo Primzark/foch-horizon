@@ -16,7 +16,7 @@ import type { PropertySearchItem } from "@/types/api";
 import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
 
 export function RecentSales({ compact = false }: { compact?: boolean }) {
-  const query = useQuery({ queryKey: ["recent-sales"], queryFn: getRecentSales, staleTime: 300_000 });
+  const query = useQuery({ queryKey: ["recent-sales", "sold"], queryFn: getRecentSales, staleTime: 300_000 });
   const sales = compact ? query.data?.slice(0, 3) : query.data;
   const availablePropertiesQuery = useQuery({
     queryKey: ["recent-sales", "available-properties"],
@@ -36,7 +36,7 @@ export function RecentSales({ compact = false }: { compact?: boolean }) {
     <section className={compact ? "border-b border-border bg-card" : ""}>
       <div className={compact ? "container mx-auto px-4 py-10 md:py-12" : "pt-4 pb-10"}>
         <ScrollReveal>
-          <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(16rem,0.72fr)] sm:items-end">
+          <div className={compact ? "grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(16rem,0.72fr)] sm:items-end" : undefined}>
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-brand-strong">
                 {!compact && query.data?.length === 0
@@ -47,14 +47,10 @@ export function RecentSales({ compact = false }: { compact?: boolean }) {
                 {carouselShowsSales ? "Nos dernières ventes" : "Biens actuellement à vendre"}
               </h2>
             </div>
-            {compact ? (
+            {compact && (
               <Link to="/nos-dernieres-ventes" className="inline-flex items-center gap-2 text-sm hover:underline sm:justify-self-end">
                 Nos dernières ventes <ArrowRight className="h-4 w-4" />
               </Link>
-            ) : (
-              <p className="max-w-md text-sm leading-relaxed text-muted-foreground sm:justify-self-end">
-                Biens actuellement à vendre.
-              </p>
             )}
           </div>
           {query.isLoading && (

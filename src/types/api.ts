@@ -2,6 +2,7 @@ import type { Property, TransactionType, PropertyType, City } from "@/types/doma
 
 export interface PropertySearchParams {
   transaction?: TransactionType;
+  status?: "sold";
   type?: PropertyType;
   city?: string;
   q?: string;

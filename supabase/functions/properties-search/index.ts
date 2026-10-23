@@ -66,6 +66,7 @@ Deno.serve(async (request) => {
       {
         slug: params.get("slug") ?? undefined,
         transaction: params.get("transaction") ?? undefined,
+        status: params.get("status") === "sold" ? "sold" : undefined,
         type: params.get("type") ?? undefined,
         city: params.get("city") ?? undefined,
         q: params.get("q") ?? undefined,

@@ -172,7 +172,11 @@ function readCounterEnv(name: string): number | null {
 
 function applyFilters(items: Property[], params: PropertySearchParams): Property[] {
   let result = items.filter(
-    (property) => property.transactionType === "vente" && property.status !== "off_market" && property.status !== "sold",
+    (property) =>
+      property.transactionType === "vente" &&
+      (params.status === "sold"
+        ? property.status === "sold"
+        : property.status !== "off_market" && property.status !== "sold"),
   );
 
   if (params.transaction && params.transaction !== "vente") return [];
@@ -295,6 +299,7 @@ export async function searchProperties(
   if (isEdgeApiEnabled()) {
     const query = new URLSearchParams();
     query.set("transaction", "vente");
+    if (params.status) query.set("status", params.status);
     if (params.type) query.set("type", params.type);
     if (params.city) query.set("city", params.city);
     if (params.q) query.set("q", params.q);

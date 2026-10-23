@@ -7,7 +7,7 @@ export async function getRecentSales(): Promise<PropertySearchItem[]> {
   let page = 1;
   let loaded = 0;
   while (true) {
-    const result = await searchProperties({ transaction: "vente", sort: "newest", page, pageSize: 100 });
+    const result = await searchProperties({ transaction: "vente", status: "sold", sort: "newest", page, pageSize: 100 });
     sales.push(...result.items.filter((item) => item.transaction === "vente" && item.status === "sold"));
     loaded += result.items.length;
     if (loaded >= result.total || result.items.length === 0) break;

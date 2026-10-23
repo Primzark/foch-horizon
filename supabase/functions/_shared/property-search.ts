@@ -3,6 +3,7 @@ import { createServiceClient } from "./client.ts";
 export interface SharedPropertySearchQueryParams {
   slug?: string;
   transaction?: string;
+  status?: "sold";
   type?: string;
   city?: string;
   q?: string;
@@ -84,6 +85,7 @@ function intersectNumberArrays(left: number[], right: number[]): number[] {
 export async function collectPropertyIdsForTextQuery(
   supabase: ServiceClient,
   rawQuery: string,
+  status?: "sold",
 ): Promise<number[]> {
   const q = normalizeTerm(rawQuery);
   if (!q) return [];
@@ -92,13 +94,13 @@ export async function collectPropertyIdsForTextQuery(
   const collectedIds = new Set<number>();
 
   for (const field of ["title", "slug", "postal_code"] as const) {
-    const { data, error } = await supabase
+    let query = supabase
       .from("properties")
-      .select("id")
-      .neq("status", "off_market")
-      .neq("status", "sold")
-      .ilike(field, likePattern)
-      .limit(200);
+      .select("id");
+    query = status === "sold"
+      ? query.eq("status", "sold")
+      : query.neq("status", "off_market").neq("status", "sold");
+    const { data, error } = await query.ilike(field, likePattern).limit(200);
 
     if (error) throw error;
     for (const row of (data ?? []) as Array<{ id: number }>) {
@@ -110,13 +112,13 @@ export async function collectPropertyIdsForTextQuery(
   if (numericQuery.length >= 3) {
     const propertyId = Number(numericQuery);
     if (Number.isInteger(propertyId)) {
-      const { data, error } = await supabase
+      let query = supabase
         .from("properties")
-        .select("id")
-        .neq("status", "off_market")
-        .neq("status", "sold")
-        .eq("id", propertyId)
-        .limit(1);
+        .select("id");
+      query = status === "sold"
+        ? query.eq("status", "sold")
+        : query.neq("status", "off_market").neq("status", "sold");
+      const { data, error } = await query.eq("id", propertyId).limit(1);
       if (error) throw error;
       for (const row of (data ?? []) as Array<{ id: number }>) collectedIds.add(row.id);
     }
@@ -135,13 +137,13 @@ export async function collectPropertyIdsForTextQuery(
   }
 
   if (cityIds.size > 0) {
-    const { data, error } = await supabase
+    let query = supabase
       .from("properties")
-      .select("id")
-      .neq("status", "off_market")
-      .neq("status", "sold")
-      .in("city_id", Array.from(cityIds))
-      .limit(400);
+      .select("id");
+    query = status === "sold"
+      ? query.eq("status", "sold")
+      : query.neq("status", "off_market").neq("status", "sold");
+    const { data, error } = await query.in("city_id", Array.from(cityIds)).limit(400);
     if (error) throw error;
     for (const row of (data ?? []) as Array<{ id: number }>) collectedIds.add(row.id);
   }
@@ -188,6 +190,7 @@ export async function collectPropertyIdsForFeatureFilters(
 export async function resolveCityFilterPropertyIds(
   supabase: ServiceClient,
   rawCity: string,
+  status?: "sold",
 ): Promise<number[] | null> {
   const cityQuery = normalizeTerm(rawCity);
   if (!cityQuery) return null;
@@ -203,11 +206,13 @@ export async function resolveCityFilterPropertyIds(
   if (exactCityError) throw exactCityError;
   if ((exactCityRows ?? []).length > 0) {
     const cityIds = (exactCityRows as Array<{ id: string }>).map((row) => row.id);
-    const { data: exactPropertyRows, error: exactPropertyError } = await supabase
+    let exactPropertyQuery = supabase
       .from("properties")
-      .select("id")
-      .neq("status", "off_market")
-      .neq("status", "sold")
+      .select("id");
+    exactPropertyQuery = status === "sold"
+      ? exactPropertyQuery.eq("status", "sold")
+      : exactPropertyQuery.neq("status", "off_market").neq("status", "sold");
+    const { data: exactPropertyRows, error: exactPropertyError } = await exactPropertyQuery
       .in("city_id", cityIds)
       .limit(4000);
 
@@ -228,24 +233,24 @@ export async function resolveCityFilterPropertyIds(
 
   const propertyIds = new Set<number>();
   if (cityIdMatches.size > 0) {
-    const { data, error } = await supabase
+    let query = supabase
       .from("properties")
-      .select("id")
-      .neq("status", "off_market")
-      .neq("status", "sold")
-      .in("city_id", Array.from(cityIdMatches))
-      .limit(4000);
+      .select("id");
+    query = status === "sold"
+      ? query.eq("status", "sold")
+      : query.neq("status", "off_market").neq("status", "sold");
+    const { data, error } = await query.in("city_id", Array.from(cityIdMatches)).limit(4000);
     if (error) throw error;
     for (const row of (data ?? []) as Array<{ id: number }>) propertyIds.add(row.id);
   }
 
-  const { data: postalRows, error: postalError } = await supabase
+  let postalQuery = supabase
     .from("properties")
-    .select("id")
-    .neq("status", "off_market")
-    .neq("status", "sold")
-    .ilike("postal_code", likePattern)
-    .limit(2000);
+    .select("id");
+  postalQuery = status === "sold"
+    ? postalQuery.eq("status", "sold")
+    : postalQuery.neq("status", "off_market").neq("status", "sold");
+  const { data: postalRows, error: postalError } = await postalQuery.ilike("postal_code", likePattern).limit(2000);
   if (postalError) throw postalError;
   for (const row of (postalRows ?? []) as Array<{ id: number }>) propertyIds.add(row.id);
 
@@ -313,10 +318,11 @@ export async function runSharedPropertySearchQuery(
   let query = supabase
     .from("properties")
     .select(selectFields, { count: "exact" })
-    .neq("status", "off_market")
-    .neq("status", "sold")
     .eq("transaction_type", "vente")
     .range(from, to);
+  query = input.status === "sold"
+    ? query.eq("status", "sold")
+    : query.neq("status", "off_market").neq("status", "sold");
 
   if (exactSlug) {
     query = query.eq("slug", exactSlug);
@@ -325,7 +331,7 @@ export async function runSharedPropertySearchQuery(
   if (input.type) query = query.eq("property_type", input.type);
 
   if (input.city) {
-    const cityPropertyIds = await resolveCityFilterPropertyIds(supabase, input.city);
+    const cityPropertyIds = await resolveCityFilterPropertyIds(supabase, input.city, input.status);
     if (cityPropertyIds && cityPropertyIds.length === 0) {
       return { page, pageSize, total: 0, rows: [] };
     }
@@ -345,7 +351,7 @@ export async function runSharedPropertySearchQuery(
   if (typeof input.terrainMax === "number" && Number.isFinite(input.terrainMax)) query = query.lte("terrain_m2", input.terrainMax);
 
   if (q) {
-    const matchingIds = dedupePositiveIntegers(await collectPropertyIdsForTextQuery(supabase, q));
+    const matchingIds = dedupePositiveIntegers(await collectPropertyIdsForTextQuery(supabase, q, input.status));
     if (matchingIds.length === 0) {
       return { page, pageSize, total: 0, rows: [] };
     }
