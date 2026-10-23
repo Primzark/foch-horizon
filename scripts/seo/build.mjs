@@ -13,11 +13,12 @@ let guides;
 let properties;
 let cities;
 let toCanonicalPropertyPath;
+let sanitizePropertySlug;
 try {
   ({ geographyGuides: guides } = await loader.ssrLoadModule('/src/features/content/data/geographyGuides.ts'));
   ({ properties } = await loader.ssrLoadModule('/src/features/listings/data/properties.ts'));
   ({ cities } = await loader.ssrLoadModule('/src/features/cities/data/cities.ts'));
-  ({ toCanonicalPropertyPath } = await loader.ssrLoadModule('/src/features/listings/utils/formatting.ts'));
+  ({ toCanonicalPropertyPath, sanitizePropertySlug } = await loader.ssrLoadModule('/src/features/listings/utils/formatting.ts'));
 } finally {
   await loader.close();
 }
@@ -25,6 +26,9 @@ try {
 const cityById = new Map(cities.map(city => [city.id, city]));
 const publicListingProperties = properties.filter(property =>
   property.transactionType === 'vente' && property.status === 'active' && property.title.trim(),
+);
+const publicPropertyDetails = properties.filter(property =>
+  property.transactionType === 'vente' && property.status !== 'off_market' && property.title.trim(),
 );
 
 const normalizeSearchText = value => String(value ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
@@ -183,8 +187,20 @@ const propertyImagePreload = [
 ].join("\n");
 await writeFile('dist/spa.html', templateWithRobots.replace('</head>', `${propertyImagePreload}\n</head>`));
 // Capture the same React pages for every visitor. No bot detection or separate AI content.
-const propertyRoutes = publicListingProperties.map(toCanonicalPropertyPath);
-const routes = ['/', '/geographie', '/services', '/vendre', '/estimation', '/apropos', '/contact', '/honoraires', '/reglementation-immobiliere', '/plan-du-site', '/mentions-legales', '/confidentialite', '/cookies', '/accessibilite', '/biens', '/avis', '/nos-dernieres-ventes', ...guides.map(guide => `/immobilier/${guide.id}`), ...propertyRoutes];
+const staticRoutes = ['/', '/geographie', '/services', '/vendre', '/estimation', '/apropos', '/contact', '/honoraires', '/reglementation-immobiliere', '/plan-du-site', '/mentions-legales', '/confidentialite', '/cookies', '/accessibilite', '/biens', '/avis', '/nos-dernieres-ventes'];
+const guideRoutes = guides.map(guide => `/immobilier/${guide.id}`);
+const propertyRoutes = publicPropertyDetails.map(toCanonicalPropertyPath);
+const routes = [...new Set([...staticRoutes, ...guideRoutes, ...propertyRoutes])];
+const propertyAliases = publicPropertyDetails.flatMap(property => {
+  const canonicalRoute = toCanonicalPropertyPath(property);
+  const compatibilityRoutes = new Set([
+    `/biens/${property.id}-${sanitizePropertySlug(property.slug)}`,
+    `${canonicalRoute}-${property.id}`,
+  ]);
+  return [...compatibilityRoutes]
+    .filter(route => route !== canonicalRoute)
+    .map(route => ({ route, canonicalRoute }));
+});
 const server = await preview({ preview: { host: '127.0.0.1', port: 4175, strictPort: true } });
 let browser;
 const snapshots = [];
@@ -272,7 +288,19 @@ try {
     await mkdir(path.dirname(filename), { recursive: true });
     await writeFile(filename, snapshot.html);
   }
-  const sitemapRoutes = routes;
+  const snapshotsByRoute = new Map(snapshots.map(snapshot => [snapshot.route, snapshot]));
+  for (const alias of propertyAliases) {
+    const snapshot = snapshotsByRoute.get(alias.canonicalRoute);
+    if (!snapshot) throw new Error(`Missing canonical property snapshot for ${alias.canonicalRoute}`);
+    const filename = path.join('dist', alias.route, 'index.html');
+    await mkdir(path.dirname(filename), { recursive: true });
+    await writeFile(filename, snapshot.html);
+  }
+  const sitemapRoutes = [...new Set([
+    ...staticRoutes,
+    ...guideRoutes,
+    ...publicListingProperties.map(toCanonicalPropertyPath),
+  ])];
   const escape = value => value.replaceAll('&', '&amp;').replaceAll('<', '&lt;');
   await writeFile('dist/sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sitemapRoutes.map(route => {
     const reviewed = guides.find(guide => route === `/immobilier/${guide.id}`)?.reviewedAt;
@@ -280,7 +308,7 @@ try {
   }).join('\n')}\n</urlset>\n`);
   const robots = (await readFile('public/robots.txt', 'utf8')).replace(/^Sitemap:.*$/m, `Sitemap: ${siteUrl}/sitemap.xml`);
   await writeFile('dist/robots.txt', robots);
-  console.log(`Prerendered ${snapshots.length} public pages; sitemap and robots use ${siteUrl}.`);
+  console.log(`Prerendered ${snapshots.length} public pages and ${propertyAliases.length} property URL aliases; sitemap and robots use ${siteUrl}.`);
 } finally {
   await browser?.close();
   await new Promise(resolve => server.httpServer.close(resolve));

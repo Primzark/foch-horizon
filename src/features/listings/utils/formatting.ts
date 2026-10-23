@@ -18,8 +18,16 @@ export function sanitizePropertySlug(slug: string): string {
   return sanitized || "annonce";
 }
 
+export function getCanonicalPropertySlug(property: Pick<Property, "id" | "slug">): string {
+  const slug = sanitizePropertySlug(property.slug);
+  const propertyIdSuffix = `-${property.id}`;
+  return slug.endsWith(propertyIdSuffix)
+    ? slug.slice(0, -propertyIdSuffix.length) || "annonce"
+    : slug;
+}
+
 export function toCanonicalPropertyPath(property: Pick<Property, "id" | "slug">): string {
-  return `/biens/${property.id}-${sanitizePropertySlug(property.slug)}`;
+  return `/biens/${property.id}-${getCanonicalPropertySlug(property)}`;
 }
 
 export function normalizePropertyDescription(description: string | null | undefined): string {

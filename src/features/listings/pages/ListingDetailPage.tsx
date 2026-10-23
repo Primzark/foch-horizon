@@ -20,6 +20,7 @@ import { LeadForm } from "@/features/leads/components/LeadForm";
 import {
   formatPrice,
   formatPropertyTypeLabel,
+  getCanonicalPropertySlug,
   getPropertyCardLabels,
   getPropertyStatusLabel,
   normalizePropertyDescription,
@@ -690,7 +691,7 @@ export default function ListingDetailPage({
     );
   }
 
-  const canonicalSlug = sanitizePropertySlug(property.slug);
+  const canonicalSlug = getCanonicalPropertySlug(property);
   const routeSlug = parsedRoute?.slug ? sanitizePropertySlug(parsedRoute.slug) : null;
 
   // Keep modal transitions stable while still canonicalizing full-page detail routes.
