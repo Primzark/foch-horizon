@@ -36,23 +36,25 @@ export function RecentSales({ compact = false }: { compact?: boolean }) {
     <section className={compact ? "border-b border-border bg-card" : ""}>
       <div className={compact ? "container mx-auto px-4 py-10 md:py-12" : "pt-4 pb-10"}>
         <ScrollReveal>
-          <div className={compact ? "grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(16rem,0.72fr)] sm:items-end" : undefined}>
-            <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-brand-strong">
-                {!compact && query.data?.length === 0
-                  ? "Aucune vente enregistrée n’est publiée pour le moment"
-                  : "Des projets accompagnés"}
-              </p>
-              <h2 className="mt-2 max-w-3xl font-display text-3xl leading-tight sm:text-4xl md:text-5xl">
-                {carouselShowsSales ? "Nos dernières ventes" : "Biens actuellement à vendre"}
-              </h2>
+          {(compact || (query.isSuccess && !carouselShowsSales)) && (
+            <div className={compact ? "grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(16rem,0.72fr)] sm:items-end" : undefined}>
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-brand-strong">
+                  {!compact && query.data?.length === 0
+                    ? "Aucune vente enregistrée n’est publiée pour le moment"
+                    : "Des projets accompagnés"}
+                </p>
+                <h2 className="mt-2 max-w-3xl font-display text-3xl leading-tight sm:text-4xl md:text-5xl">
+                  {carouselShowsSales ? "Nos dernières ventes" : "Biens actuellement à vendre"}
+                </h2>
+              </div>
+              {compact && (
+                <Link to="/nos-dernieres-ventes" className="inline-flex items-center gap-2 text-sm hover:underline sm:justify-self-end">
+                  Nos dernières ventes <ArrowRight className="h-4 w-4" />
+                </Link>
+              )}
             </div>
-            {compact && (
-              <Link to="/nos-dernieres-ventes" className="inline-flex items-center gap-2 text-sm hover:underline sm:justify-self-end">
-                Nos dernières ventes <ArrowRight className="h-4 w-4" />
-              </Link>
-            )}
-          </div>
+          )}
           {query.isLoading && (
             <SearchThinkingState
               label="Chargement des dernières ventes"
