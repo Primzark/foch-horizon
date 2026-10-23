@@ -184,94 +184,115 @@ export function RecentSales({ compact = false }: { compact?: boolean }) {
 
 function PropertyCarouselCard({ property, browseItems, isSold }: { property: PropertySearchItem; browseItems: PropertySearchItem[]; isSold: boolean }) {
   const labels = getPropertyCardLabels(property);
-
-  return (
-    <article className="h-full">
-      <PropertyPreviewLink
-        item={property}
-        browseItems={browseItems}
-        aria-label={`Voir le bien : ${property.title}`}
-        className="group block h-full overflow-hidden rounded-2xl border border-border bg-card transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-1 hover:border-brand-border hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-      >
-        <div className="relative aspect-[4/3] overflow-hidden bg-muted">
-          <img
-            src={getPropertyImageUrl(property.coverImageUrl, 400)}
-            srcSet={getPropertyImageSrcSet(property.coverImageUrl)}
-            sizes="(max-width: 767px) 86vw, (max-width: 1279px) 45vw, 33vw"
-            alt={property.title}
-            className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
-            loading="lazy"
-          />
-          <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-slate-950/35 via-transparent to-transparent opacity-80" />
-          {isSold ? (
-            <ListingBadges labels={labels} className="absolute left-4 top-4 z-[2]" />
-          ) : (
-            <>
-              <span className="absolute left-4 top-4 rounded-full border border-white/70 bg-background/95 px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm">
-                À la vente
-              </span>
-              <ListingBadges labels={labels} className="absolute left-4 right-4 top-14 z-[2]" />
-            </>
-          )}
-          <span className="absolute bottom-4 left-4 inline-flex items-center gap-1.5 text-sm font-medium text-white drop-shadow">
-            <MapPin aria-hidden="true" className="h-4 w-4" /> {property.city.name}
-          </span>
+  const content = (
+    <>
+      <div className="relative aspect-[4/3] overflow-hidden bg-muted">
+        <img
+          src={getPropertyImageUrl(property.coverImageUrl, 400)}
+          srcSet={getPropertyImageSrcSet(property.coverImageUrl)}
+          sizes="(max-width: 767px) 86vw, (max-width: 1279px) 45vw, 33vw"
+          alt={property.title}
+          className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+          loading="lazy"
+        />
+        <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-slate-950/35 via-transparent to-transparent opacity-80" />
+        {isSold ? (
+          <ListingBadges labels={labels} className="absolute left-4 top-4 z-[2]" />
+        ) : (
+          <>
+            <span className="absolute left-4 top-4 rounded-full border border-white/70 bg-background/95 px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm">
+              À la vente
+            </span>
+            <ListingBadges labels={labels} className="absolute left-4 right-4 top-14 z-[2]" />
+          </>
+        )}
+        <span className="absolute bottom-4 left-4 inline-flex items-center gap-1.5 text-sm font-medium text-white drop-shadow">
+          <MapPin aria-hidden="true" className="h-4 w-4" /> {property.city.name}
+        </span>
+      </div>
+      <div className="p-4 sm:p-5">
+        <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">{formatPropertyTypeLabel(property.type)}</p>
+        <h3 className={`mt-2 line-clamp-2 min-h-[3.5rem] font-display text-xl leading-snug ${isSold ? "" : "group-hover:text-brand-strong"}`}>{property.title}</h3>
+        <div className="mt-4 flex items-center gap-4 text-sm text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5"><Maximize aria-hidden="true" className="h-4 w-4" /> {property.surfaceM2} m²</span>
+          {property.bedrooms != null && <span className="inline-flex items-center gap-1.5"><BedDouble aria-hidden="true" className="h-4 w-4" /> {property.bedrooms}</span>}
+          {property.dpeLabel && <span className="ml-auto rounded-md border border-border px-2 py-0.5 text-xs font-semibold">DPE {property.dpeLabel}</span>}
         </div>
-        <div className="p-4 sm:p-5">
-          <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">{formatPropertyTypeLabel(property.type)}</p>
-          <h3 className="mt-2 line-clamp-2 min-h-[3.5rem] font-display text-xl leading-snug group-hover:text-brand-strong">{property.title}</h3>
-          <div className="mt-4 flex items-center gap-4 text-sm text-muted-foreground">
-            <span className="inline-flex items-center gap-1.5"><Maximize aria-hidden="true" className="h-4 w-4" /> {property.surfaceM2} m²</span>
-            {property.bedrooms != null && <span className="inline-flex items-center gap-1.5"><BedDouble aria-hidden="true" className="h-4 w-4" /> {property.bedrooms}</span>}
-            {property.dpeLabel && <span className="ml-auto rounded-md border border-border px-2 py-0.5 text-xs font-semibold">DPE {property.dpeLabel}</span>}
-          </div>
-          <div className="mt-5 flex items-center justify-between border-t border-border pt-4">
-            <span className="font-display text-2xl">{isSold ? "Vendu par l’agence" : formatPrice(property.priceAmount, property.transaction)}</span>
+        <div className="mt-5 flex items-center justify-between border-t border-border pt-4">
+          <span className="font-display text-2xl">{isSold ? "Vendu par l’agence" : formatPrice(property.priceAmount, property.transaction)}</span>
+          {!isSold && (
             <span className="inline-flex items-center gap-2 text-sm font-semibold text-brand-strong">
               Voir le bien <ArrowRight aria-hidden="true" className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </span>
-          </div>
+          )}
         </div>
-      </PropertyPreviewLink>
+      </div>
+    </>
+  );
+
+  return (
+    <article className="h-full">
+      {isSold ? (
+        <div className="h-full overflow-hidden rounded-2xl border border-border bg-card">{content}</div>
+      ) : (
+        <PropertyPreviewLink
+          item={property}
+          browseItems={browseItems}
+          aria-label={`Voir le bien : ${property.title}`}
+          className="group block h-full overflow-hidden rounded-2xl border border-border bg-card transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-1 hover:border-brand-border hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        >
+          {content}
+        </PropertyPreviewLink>
+      )}
     </article>
   );
 }
 
 function PropertyListRow({ property, browseItems, isSold }: { property: PropertySearchItem; browseItems: PropertySearchItem[]; isSold: boolean }) {
+  const content = (
+    <>
+      <img
+        src={getPropertyImageUrl(property.coverImageUrl, 200)}
+        srcSet={getPropertyImageSrcSet(property.coverImageUrl)}
+        sizes="88px"
+        alt={property.title}
+        className="aspect-[4/3] w-full rounded-lg bg-muted object-cover"
+        loading="lazy"
+        decoding="async"
+      />
+      <div className="min-w-0">
+        <p className="truncate text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+          {property.city.name} · {formatPropertyTypeLabel(property.type)}
+        </p>
+        <h3 className={`mt-1 line-clamp-2 font-display text-lg leading-snug ${isSold ? "" : "group-hover:text-brand-strong"}`}>{property.title}</h3>
+        <div className="mt-1.5 flex items-center gap-3 text-xs text-muted-foreground">
+          <span className="inline-flex items-center gap-1"><Maximize aria-hidden="true" className="h-3.5 w-3.5" /> {property.surfaceM2} m²</span>
+          {property.bedrooms != null && <span className="inline-flex items-center gap-1"><BedDouble aria-hidden="true" className="h-3.5 w-3.5" /> {property.bedrooms}</span>}
+        </div>
+        <div className="mt-2 flex items-center justify-between gap-2">
+          <span className={`truncate text-sm font-semibold ${isSold ? "" : "group-hover:text-brand-strong"}`}>
+            {isSold ? "Vendu par l’agence" : formatPrice(property.priceAmount, property.transaction)}
+          </span>
+          {!isSold && <ArrowRight aria-hidden="true" className="h-4 w-4 shrink-0 text-brand-strong transition-transform group-hover:translate-x-1" />}
+        </div>
+      </div>
+    </>
+  );
+
   return (
     <article>
-      <PropertyPreviewLink
-        item={property}
-        browseItems={browseItems}
-        aria-label={`Voir le bien : ${property.title}`}
-        className="group grid grid-cols-[5.5rem_minmax(0,1fr)] items-center gap-3 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-      >
-        <img
-          src={getPropertyImageUrl(property.coverImageUrl, 200)}
-          srcSet={getPropertyImageSrcSet(property.coverImageUrl)}
-          sizes="88px"
-          alt={property.title}
-          className="aspect-[4/3] w-full rounded-lg bg-muted object-cover"
-          loading="lazy"
-          decoding="async"
-        />
-        <div className="min-w-0">
-          <p className="truncate text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-            {property.city.name} · {formatPropertyTypeLabel(property.type)}
-          </p>
-          <h3 className="mt-1 line-clamp-2 font-display text-lg leading-snug group-hover:text-brand-strong">{property.title}</h3>
-          <div className="mt-1.5 flex items-center gap-3 text-xs text-muted-foreground">
-            <span className="inline-flex items-center gap-1"><Maximize aria-hidden="true" className="h-3.5 w-3.5" /> {property.surfaceM2} m²</span>
-            {property.bedrooms != null && <span className="inline-flex items-center gap-1"><BedDouble aria-hidden="true" className="h-3.5 w-3.5" /> {property.bedrooms}</span>}
-          </div>
-          <div className="mt-2 flex items-center justify-between gap-2">
-            <span className="truncate text-sm font-semibold group-hover:text-brand-strong">
-              {isSold ? "Vendu par l’agence" : formatPrice(property.priceAmount, property.transaction)}
-            </span>
-            <ArrowRight aria-hidden="true" className="h-4 w-4 shrink-0 text-brand-strong transition-transform group-hover:translate-x-1" />
-          </div>
-        </div>
-      </PropertyPreviewLink>
+      {isSold ? (
+        <div className="grid grid-cols-[5.5rem_minmax(0,1fr)] items-center gap-3 py-4">{content}</div>
+      ) : (
+        <PropertyPreviewLink
+          item={property}
+          browseItems={browseItems}
+          aria-label={`Voir le bien : ${property.title}`}
+          className="group grid grid-cols-[5.5rem_minmax(0,1fr)] items-center gap-3 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        >
+          {content}
+        </PropertyPreviewLink>
+      )}
     </article>
   );
 }
