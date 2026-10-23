@@ -4,6 +4,12 @@ import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { resolveRequiredSupabaseServiceRoleConfig } from "./supabase-env.mjs";
+import {
+  CHATBOT_EMBEDDING_DIMENSION,
+  CHATBOT_EMBEDDING_MODEL,
+  formatChatbotDocumentEmbeddingText,
+  isChatbotEmbeddingVector,
+} from "../../supabase/functions/_shared/chatbot-embedding.mjs";
 
 const DEFAULT_SITEMAP_PATH = "public/sitemap.xml";
 const DEFAULT_OUT_FILE = "docs/chatbot/rag-index-preview.json";
@@ -346,7 +352,7 @@ function vectorToPgLiteral(vector) {
 function resolveIndexerEmbeddingProvider() {
   const geminiKey = (process.env.GEMINI_API_KEY ?? "").trim();
   return geminiKey
-    ? { provider: "gemini", apiKey: geminiKey, model: process.env.GEMINI_EMBEDDING_MODEL ?? "gemini-embedding-001" }
+    ? { provider: "gemini", apiKey: geminiKey, model: CHATBOT_EMBEDDING_MODEL }
     : null;
 }
 
@@ -595,40 +601,65 @@ function buildRowsForDocument(document) {
   return rows;
 }
 
+function readGeminiEmbeddingErrorCode(errorText) {
+  try {
+    const payload = JSON.parse(errorText);
+    const error = payload?.error;
+    const code = error?.status ?? error?.code ?? error?.reason;
+    return typeof code === "string" || typeof code === "number"
+      ? String(code).replace(/[^a-zA-Z0-9_.-]/g, "_").slice(0, 100)
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function isRetryableEmbeddingStatus(status) {
+  return status === 408 || status === 429 || status >= 500;
+}
+
 async function createGeminiEmbeddingsForRows(rows, model, apiKey) {
   if (rows.length === 0) return;
-
-  const outputDimensionality = Number.isFinite(Number(process.env.RAG_EMBEDDING_OUTPUT_DIMENSION))
-    ? Math.max(128, Math.min(Math.floor(Number(process.env.RAG_EMBEDDING_OUTPUT_DIMENSION)), 3072))
-    : 1536;
 
   const batchSize = 20;
   for (let start = 0; start < rows.length; start += batchSize) {
     const batch = rows.slice(start, start + batchSize);
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:batchEmbedContents`;
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-goog-api-key": apiKey,
-      },
-      body: JSON.stringify({
-        requests: batch.map((row) => ({
-          model: `models/${model}`,
-          content: {
-            parts: [{ text: row.content }],
-          },
-          taskType: "RETRIEVAL_DOCUMENT",
-          title: row.title || row.path,
-          outputDimensionality,
-        })),
-      }),
-    });
+    let response;
+    let errorText = "";
+    let errorCode;
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": apiKey,
+        },
+        signal: AbortSignal.timeout(30_000),
+        body: JSON.stringify({
+          requests: batch.map((row) => ({
+            model: `models/${model}`,
+            content: {
+              parts: [{ text: formatChatbotDocumentEmbeddingText(row.title || row.path, row.content) }],
+            },
+            outputDimensionality: CHATBOT_EMBEDDING_DIMENSION,
+          })),
+        }),
+      });
 
-    if (!response.ok) {
-      const errorText = await response.text().catch(() => "");
-      const error = new Error(`Gemini embeddings failed (${response.status}): ${errorText.slice(0, 240)}`);
-      error.status = response.status;
+      if (response.ok) break;
+
+      errorText = await response.text().catch(() => "");
+      errorCode = readGeminiEmbeddingErrorCode(errorText);
+      if (!isRetryableEmbeddingStatus(response.status) || attempt === 3) break;
+      const backoffMs = Math.min(8_000, 500 * 2 ** attempt) + Math.floor(Math.random() * 250);
+      await new Promise((resolve) => setTimeout(resolve, backoffMs));
+    }
+
+    if (!response?.ok) {
+      const error = new Error(`Gemini embeddings failed (${response?.status ?? "network"}${errorCode ? ` ${errorCode}` : ""}).`);
+      error.status = response?.status;
+      error.providerCode = errorCode;
       throw error;
     }
 
@@ -641,7 +672,7 @@ async function createGeminiEmbeddingsForRows(rows, model, apiKey) {
 
     for (let index = 0; index < batch.length; index += 1) {
       const embedding = vectors[index]?.values;
-      if (!Array.isArray(embedding) || embedding.length === 0) {
+      if (!isChatbotEmbeddingVector(embedding)) {
         throw new Error(`Missing Gemini embedding at batch row ${start + index}.`);
       }
       batch[index].embedding = vectorToPgLiteral(embedding);
@@ -662,7 +693,9 @@ async function createEmbeddingsForRows(rows) {
     return { provider: "gemini", model: providerConfig.model };
   } catch (error) {
     const allowQuotaFallback = process.env.RAG_ALLOW_KEYWORD_ONLY_ON_EMBEDDING_QUOTA === "true";
-    if (!allowQuotaFallback || error?.status !== 402) {
+    const isQuotaOrBillingFailure = error?.status === 402 || error?.status === 429 ||
+      (error?.status === 403 && /BILLING|QUOTA|PAYMENT|PREPAY/i.test(error?.providerCode ?? ""));
+    if (!allowQuotaFallback || !isQuotaOrBillingFailure) {
       throw error;
     }
 
@@ -672,7 +705,7 @@ async function createEmbeddingsForRows(rows) {
       row.embedding = null;
     }
     console.warn(
-      "[embed] Gemini returned HTTP 402; continuing with a keyword-only index. Restore Gemini quota to re-enable vector retrieval.",
+      `[embed] Gemini returned HTTP ${error.status}${error.providerCode ? ` (${error.providerCode})` : ""}; continuing with a keyword-only index. Restore Gemini embedding access to re-enable vector retrieval.`,
     );
     return { provider: "keyword-only", model: null };
   }

@@ -3,6 +3,17 @@ import { createServiceClient } from "../_shared/client.ts";
 import { consumeRequestLimit, isAllowedSiteOrigin, secureJsonResponse, secureOptionsResponse } from "../_shared/request-security.ts";
 import { parseBedroomsMin, parsePriceHints } from "../_shared/chatbot-search-criteria.ts";
 import {
+  CHATBOT_EMBEDDING_DIMENSION,
+  CHATBOT_EMBEDDING_MODEL,
+  formatChatbotQueryEmbeddingText,
+  isChatbotEmbeddingVector,
+} from "../_shared/chatbot-embedding.mjs";
+import {
+  buildTavilySearchQuery,
+  DEFAULT_TAVILY_MIN_RELEVANCE_SCORE,
+  isTavilyResultRelevant,
+} from "../_shared/chatbot-web-search-relevance.ts";
+import {
   computeSharedPropertyAggregateMetrics,
   fetchAggregateRowsByIds,
   fetchAggregateRowsForSearchFilters,
@@ -730,12 +741,7 @@ function normalizeHistoryForModel(
 }
 
 async function createGeminiQueryEmbedding(question: string, apiKey: string): Promise<number[] | null> {
-  const embeddingModel = Deno.env.get("GEMINI_EMBEDDING_MODEL") ?? "gemini-embedding-001";
-  const outputDimensionality = clamp(
-    Math.floor(parseNumberEnv("CHATBOT_RAG_EMBEDDING_DIMENSION", 1536)),
-    128,
-    3072,
-  );
+  const embeddingModel = CHATBOT_EMBEDDING_MODEL;
   const timeoutMs = clamp(Math.floor(parseNumberEnv("CHATBOT_RAG_EMBEDDING_TIMEOUT_MS", 5_000)), 1_000, 12_000);
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${embeddingModel}:embedContent`;
   const controller = new AbortController();
@@ -751,10 +757,9 @@ async function createGeminiQueryEmbedding(question: string, apiKey: string): Pro
       body: JSON.stringify({
         model: `models/${embeddingModel}`,
         content: {
-          parts: [{ text: question }],
+          parts: [{ text: formatChatbotQueryEmbeddingText(question) }],
         },
-        taskType: "RETRIEVAL_QUERY",
-        outputDimensionality,
+        outputDimensionality: CHATBOT_EMBEDDING_DIMENSION,
       }),
     });
 
@@ -770,12 +775,12 @@ async function createGeminiQueryEmbedding(question: string, apiKey: string): Pro
     const payload = (await response.json()) as GeminiEmbedContentResponse;
     const embedding = payload.embedding?.values;
 
-    if (!Array.isArray(embedding) || embedding.length === 0 || !embedding.every((item) => typeof item === "number")) {
+    if (!isChatbotEmbeddingVector(embedding)) {
       console.error("Chatbot Gemini query embedding returned no usable vector.", { model: embeddingModel });
       return null;
     }
 
-    return embedding;
+    return embedding as number[];
   } catch (error) {
     console.error("Chatbot Gemini query embedding request failed.", {
       reason: error instanceof DOMException && error.name === "AbortError" ? "provider_timeout" : "provider_request_error",
@@ -1863,12 +1868,17 @@ async function searchTavilyWeb(
 
   const query = officialPolicy
     ? buildOfficialTavilyQuery(question, officialPolicy)
-    : truncateText(question.trim().replace(/\s+/g, " "), 400);
+    : buildTavilySearchQuery(question);
   if (!query) return failureResult("unavailable");
 
   const maxResults = clamp(Math.floor(parseNumberEnv("CHATBOT_WEB_SEARCH_MAX_RESULTS", 5)), 1, 10);
   const configuredMaxCitations = clamp(Math.floor(parseNumberEnv("CHATBOT_WEB_SEARCH_MAX_CITATIONS", 4)), 1, 8);
   const maxCitations = officialPolicy ? Math.min(3, configuredMaxCitations) : configuredMaxCitations;
+  const minimumRelevanceScore = clamp(
+    parseNumberEnv("CHATBOT_WEB_SEARCH_MIN_SCORE", DEFAULT_TAVILY_MIN_RELEVANCE_SCORE),
+    0,
+    1,
+  );
   const timeoutMs = clamp(Math.floor(parseNumberEnv("CHATBOT_WEB_SEARCH_TIMEOUT_MS", 8_000)), 1_500, 20_000);
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
@@ -1912,27 +1922,37 @@ async function searchTavilyWeb(
       disallowedHost: 0,
       missingLocation: 0,
       irrelevantEvidence: 0,
+      lowScore: 0,
     };
     const observedOfficialHosts = new Set<string>();
+    const rankedResults = [...rawResults].sort((left, right) => {
+      const leftScore = typeof (left as Record<string, unknown>)?.score === "number"
+        ? (left as Record<string, number>).score
+        : 0;
+      const rightScore = typeof (right as Record<string, unknown>)?.score === "number"
+        ? (right as Record<string, number>).score
+        : 0;
+      return rightScore - leftScore;
+    });
 
-    for (const rawResult of rawResults) {
+    for (const rawResult of rankedResults) {
+      if (citations.length >= maxCitations) break;
       if (!rawResult || typeof rawResult !== "object") continue;
       const result = rawResult as Record<string, unknown>;
       const url = sanitizeHttpUrl(result.url);
       const content = typeof result.content === "string" ? result.content.trim() : "";
       if (!url) {
-        if (officialPolicy) rejectedResults.invalidUrl += 1;
+        rejectedResults.invalidUrl += 1;
         continue;
       }
       if (!content) {
-        if (officialPolicy) rejectedResults.missingContent += 1;
+        rejectedResults.missingContent += 1;
         continue;
       }
       if (seenUrls.has(url)) {
-        if (officialPolicy) rejectedResults.duplicateUrl += 1;
+        rejectedResults.duplicateUrl += 1;
         continue;
       }
-      if (citations.length >= maxCitations) continue;
       const title = typeof result.title === "string" ? truncateText(result.title.trim(), 240) : "";
       if (officialPolicy) {
         let parsedUrl: URL;
@@ -1963,6 +1983,16 @@ async function searchTavilyWeb(
           rejectedResults.irrelevantEvidence += 1;
           continue;
         }
+      } else {
+        const score = typeof result.score === "number" ? result.score : Number.NaN;
+        if (!Number.isFinite(score) || score < minimumRelevanceScore) {
+          rejectedResults.lowScore += 1;
+          continue;
+        }
+        if (!isTavilyResultRelevant(question, { title, content, score }, minimumRelevanceScore)) {
+          rejectedResults.irrelevantEvidence += 1;
+          continue;
+        }
       }
       seenUrls.add(url);
 
@@ -1982,12 +2012,20 @@ async function searchTavilyWeb(
       ].filter(Boolean).join("\n"));
     }
 
+    if (Object.values(rejectedResults).some((count) => count > 0)) {
+      console.info("Chatbot Tavily candidate filtering summary.", {
+        resultCount: rawResults.length,
+        acceptedCount: citations.length,
+        officialOnly: Boolean(officialPolicy),
+        rejectedResults,
+      });
+    }
+
     if (sourceBlocks.length === 0) {
       console.error("Chatbot Tavily search returned no usable sources.", {
         resultCount: rawResults.length,
-        ...(officialPolicy
-          ? { rejectedResults, observedHosts: [...observedOfficialHosts].slice(0, 8) }
-          : {}),
+        rejectedResults,
+        ...(officialPolicy ? { observedHosts: [...observedOfficialHosts].slice(0, 8) } : {}),
       });
       return failureResult("no_usable_sources");
     }
