@@ -45,7 +45,10 @@ interface ChatMessage {
   citations?: ChatbotCitation[];
   suggestedPrompts?: string[];
   source?: "local" | "edge";
-  edgeProvider?: "gemini" | "openai" | "fallback";
+  edgeProvider?: "gemini" | "fallback";
+  webSearchUsed?: boolean;
+  webSearchStatus?: "used" | "no_usable_sources" | "unavailable";
+  webSearchProvider?: "tavily_search" | "official_dvf_dataset";
   ragUsed?: boolean;
   retrievalMode?: "none" | "vector" | "keyword" | "hybrid";
   routeDecision?: string;
@@ -167,8 +170,8 @@ const CHATBOT_STORAGE_KEY = "foch_chatbot_messages_v1";
 const CHATBOT_STORAGE_VERSION = 2;
 const CHATBOT_STATE_STORAGE_KEY = "foch_chatbot_state_v1";
 const CHATBOT_SESSION_STORAGE_KEY = "foch_chatbot_session_id_v1";
-const CHATBOT_REQUEST_TIMEOUT_MS = 18000;
-const CHATBOT_HARD_UNLOCK_MS = 32000;
+const CHATBOT_REQUEST_TIMEOUT_MS = 50000;
+const CHATBOT_HARD_UNLOCK_MS = 55000;
 const CHATBOT_MEMORY_LIMIT = 44;
 const CHATBOT_HISTORY_LIMIT = 24;
 const CHATBOT_HISTORY_CHAR_LIMIT = 12000;
@@ -503,6 +506,9 @@ function sanitizeStoredMessages(raw: unknown): ChatMessage[] {
       suggestedPrompts?: unknown;
       source?: unknown;
       edgeProvider?: unknown;
+      webSearchUsed?: unknown;
+      webSearchStatus?: unknown;
+      webSearchProvider?: unknown;
       ragUsed?: unknown;
       retrievalMode?: unknown;
       routeDecision?: unknown;
@@ -534,9 +540,20 @@ function sanitizeStoredMessages(raw: unknown): ChatMessage[] {
       suggestedPrompts: sanitizePromptList(candidate.suggestedPrompts),
       source: candidate.source === "local" || candidate.source === "edge" ? candidate.source : undefined,
       edgeProvider:
-        candidate.edgeProvider === "gemini" || candidate.edgeProvider === "openai" || candidate.edgeProvider === "fallback"
+        candidate.edgeProvider === "gemini" || candidate.edgeProvider === "fallback"
           ? candidate.edgeProvider
           : undefined,
+      webSearchUsed: typeof candidate.webSearchUsed === "boolean" ? candidate.webSearchUsed : undefined,
+      webSearchStatus:
+        candidate.webSearchStatus === "used" ||
+        candidate.webSearchStatus === "no_usable_sources" ||
+        candidate.webSearchStatus === "unavailable"
+          ? candidate.webSearchStatus
+          : undefined,
+      webSearchProvider: candidate.webSearchProvider === "tavily_search" ||
+          candidate.webSearchProvider === "official_dvf_dataset"
+        ? candidate.webSearchProvider
+        : undefined,
       ragUsed: typeof candidate.ragUsed === "boolean" ? candidate.ragUsed : undefined,
       retrievalMode:
         candidate.retrievalMode === "none" ||
@@ -1256,6 +1273,9 @@ export function SiteChatbot({ initiallyOpen = false }: { initiallyOpen?: boolean
         suggestedPrompts: reply.suggestedPrompts,
         source: reply.source,
         edgeProvider: reply.edgeProvider,
+        webSearchUsed: reply.webSearchUsed,
+        webSearchStatus: reply.webSearchStatus,
+        webSearchProvider: reply.webSearchProvider,
         ragUsed: reply.ragUsed,
         retrievalMode: reply.retrievalMode,
         routeDecision: reply.routeDecision,
@@ -3032,6 +3052,18 @@ export function SiteChatbot({ initiallyOpen = false }: { initiallyOpen?: boolean
                 >
                   <p>{renderMessageContent(message.content)}</p>
 
+                  {message.webSearchStatus && message.role === "assistant" && (
+                    <p className="mt-2 text-[10px] font-medium text-muted-foreground">
+                      {message.webSearchStatus === "used"
+                        ? message.webSearchProvider === "official_dvf_dataset"
+                          ? language === "en" ? "Official DVF statistics · data.gouv.fr" : "Statistiques DVF officielles · data.gouv.fr"
+                          : language === "en" ? "Live web research · Tavily" : "Recherche web en direct · Tavily"
+                        : message.webSearchStatus === "no_usable_sources"
+                          ? language === "en" ? "Live web search · no reliable sources found" : "Recherche web en direct · aucune source fiable trouvée"
+                          : language === "en" ? "Live web search unavailable" : "Recherche web en direct indisponible"}
+                    </p>
+                  )}
+
                   {message.propertySuggestions && message.propertySuggestions.length > 0 && (
                     <div className="mt-3 space-y-2">
                       {message.propertySuggestions.map((property) => (
@@ -3426,6 +3458,10 @@ export function SiteChatbot({ initiallyOpen = false }: { initiallyOpen?: boolean
                   Propulsé par Gemini
                 </span>
               </div>
+              <p className="mt-1 text-[10px] leading-4 text-muted-foreground">
+                Vos messages sont traités par Gemini ; les questions soumises à la recherche web sont transmises à Tavily. L’historique est enregistré dans ce navigateur.{" "}
+                <Link to="/confidentialite" className="underline underline-offset-2 hover:text-foreground">Confidentialité</Link>
+              </p>
             </div>
         </motion.section>
       )}

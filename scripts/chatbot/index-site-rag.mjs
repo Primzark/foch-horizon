@@ -7,7 +7,6 @@ import { resolveRequiredSupabaseServiceRoleConfig } from "./supabase-env.mjs";
 
 const DEFAULT_SITEMAP_PATH = "public/sitemap.xml";
 const DEFAULT_OUT_FILE = "docs/chatbot/rag-index-preview.json";
-const DEFAULT_EMBEDDING_MODEL = "text-embedding-3-small";
 const MIN_RENDERED_WORD_COUNT = 40;
 
 function parseArgs(argv) {
@@ -22,6 +21,7 @@ function parseArgs(argv) {
     dryRun: false,
     skipUpload: false,
     skipEmbeddings: false,
+    includeRows: false,
     pathPrefix: process.env.RAG_INDEX_PATH_PREFIX ?? "",
     verbose: false,
   };
@@ -97,6 +97,11 @@ function parseArgs(argv) {
       continue;
     }
 
+    if (arg === "--include-rows") {
+      args.includeRows = true;
+      continue;
+    }
+
     if (arg === "--verbose") {
       args.verbose = true;
       continue;
@@ -131,7 +136,8 @@ Options:
   --limit <n>           Limit number of pages for a test run
   --concurrency <n>     Fetch concurrency (default: 4)
   --path-prefix <path>  Index only paths starting with this prefix (ex: /immobilier/)
-  --skip-embeddings     Skip OpenAI embeddings (rows are stored with null embedding)
+  --skip-embeddings     Skip Gemini embeddings (rows are stored with null embedding)
+  --include-rows        Include every extracted chunk in the JSON preview
   --skip-upload         Do not upload to Supabase (still writes preview file)
   --dry-run             Shortcut for --skip-upload
   --verbose             Print per-page progress
@@ -139,10 +145,9 @@ Options:
 Environment used for upload:
   SUPABASE_URL
   SUPABASE_SERVICE_ROLE_KEY
-  OPENAI_API_KEY or GEMINI_API_KEY (unless --skip-embeddings)
-  OPENAI_EMBEDDING_MODEL (optional, default: ${DEFAULT_EMBEDDING_MODEL})
+  GEMINI_API_KEY (unless --skip-embeddings)
   GEMINI_EMBEDDING_MODEL (optional, default: gemini-embedding-001)
-  RAG_EMBEDDING_PROVIDER=openai|gemini
+  RAG_ALLOW_KEYWORD_ONLY_ON_EMBEDDING_QUOTA=true (allow indexing if Gemini returns quota/billing HTTP 402)
   RAG_INDEX_RENDER_MODE=http|headless
 `);
 }
@@ -338,37 +343,11 @@ function vectorToPgLiteral(vector) {
   return `[${vector.map((value) => Number(value).toFixed(8)).join(",")}]`;
 }
 
-function parseEmbeddingProviderValue(raw) {
-  const normalized = String(raw ?? "").trim().toLowerCase();
-  return normalized === "gemini" || normalized === "openai" ? normalized : null;
-}
-
 function resolveIndexerEmbeddingProvider() {
-  const explicit = parseEmbeddingProviderValue(process.env.RAG_EMBEDDING_PROVIDER);
   const geminiKey = (process.env.GEMINI_API_KEY ?? "").trim();
-  const openAiKey = (process.env.OPENAI_API_KEY ?? "").trim();
-
-  if (explicit === "gemini") {
-    return geminiKey
-      ? { provider: "gemini", apiKey: geminiKey, model: process.env.GEMINI_EMBEDDING_MODEL ?? "gemini-embedding-001" }
-      : null;
-  }
-
-  if (explicit === "openai") {
-    return openAiKey
-      ? { provider: "openai", apiKey: openAiKey, model: process.env.OPENAI_EMBEDDING_MODEL ?? DEFAULT_EMBEDDING_MODEL }
-      : null;
-  }
-
-  if (geminiKey) {
-    return { provider: "gemini", apiKey: geminiKey, model: process.env.GEMINI_EMBEDDING_MODEL ?? "gemini-embedding-001" };
-  }
-
-  if (openAiKey) {
-    return { provider: "openai", apiKey: openAiKey, model: process.env.OPENAI_EMBEDDING_MODEL ?? DEFAULT_EMBEDDING_MODEL };
-  }
-
-  return null;
+  return geminiKey
+    ? { provider: "gemini", apiKey: geminiKey, model: process.env.GEMINI_EMBEDDING_MODEL ?? "gemini-embedding-001" }
+    : null;
 }
 
 function parseJsStringLiteralValue(raw) {
@@ -616,46 +595,6 @@ function buildRowsForDocument(document) {
   return rows;
 }
 
-async function createOpenAIEmbeddingsForRows(rows, model, apiKey) {
-  if (rows.length === 0) return;
-
-  const batchSize = 50;
-  for (let start = 0; start < rows.length; start += batchSize) {
-    const batch = rows.slice(start, start + batchSize);
-    const response = await fetch("https://api.openai.com/v1/embeddings", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model,
-        input: batch.map((row) => row.content),
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text().catch(() => "");
-      throw new Error(`OpenAI embeddings failed (${response.status}): ${errorText.slice(0, 240)}`);
-    }
-
-    const payload = await response.json();
-    const vectors = Array.isArray(payload?.data) ? payload.data : [];
-
-    if (vectors.length !== batch.length) {
-      throw new Error(`Embeddings response size mismatch (${vectors.length} for ${batch.length} chunks).`);
-    }
-
-    for (let index = 0; index < batch.length; index += 1) {
-      const embedding = vectors[index]?.embedding;
-      if (!Array.isArray(embedding) || embedding.length === 0) {
-        throw new Error(`Missing embedding at batch row ${start + index}.`);
-      }
-      batch[index].embedding = vectorToPgLiteral(embedding);
-    }
-  }
-}
-
 async function createGeminiEmbeddingsForRows(rows, model, apiKey) {
   if (rows.length === 0) return;
 
@@ -688,7 +627,9 @@ async function createGeminiEmbeddingsForRows(rows, model, apiKey) {
 
     if (!response.ok) {
       const errorText = await response.text().catch(() => "");
-      throw new Error(`Gemini embeddings failed (${response.status}): ${errorText.slice(0, 240)}`);
+      const error = new Error(`Gemini embeddings failed (${response.status}): ${errorText.slice(0, 240)}`);
+      error.status = response.status;
+      throw error;
     }
 
     const payload = await response.json();
@@ -713,16 +654,28 @@ async function createEmbeddingsForRows(rows) {
 
   const providerConfig = resolveIndexerEmbeddingProvider();
   if (!providerConfig) {
-    throw new Error("Missing embedding provider credentials. Set GEMINI_API_KEY or OPENAI_API_KEY (or use --skip-embeddings).");
+    throw new Error("Missing Gemini embedding credentials. Set GEMINI_API_KEY (or use --skip-embeddings).");
   }
 
-  if (providerConfig.provider === "gemini") {
+  try {
     await createGeminiEmbeddingsForRows(rows, providerConfig.model, providerConfig.apiKey);
     return { provider: "gemini", model: providerConfig.model };
-  }
+  } catch (error) {
+    const allowQuotaFallback = process.env.RAG_ALLOW_KEYWORD_ONLY_ON_EMBEDDING_QUOTA === "true";
+    if (!allowQuotaFallback || error?.status !== 402) {
+      throw error;
+    }
 
-  await createOpenAIEmbeddingsForRows(rows, providerConfig.model, providerConfig.apiKey);
-  return { provider: "openai", model: providerConfig.model };
+    // A failed batch can follow one or more successful batches. Clear every vector
+    // before uploading so the refreshed index has one consistent retrieval mode.
+    for (const row of rows) {
+      row.embedding = null;
+    }
+    console.warn(
+      "[embed] Gemini returned HTTP 402; continuing with a keyword-only index. Restore Gemini quota to re-enable vector retrieval.",
+    );
+    return { provider: "keyword-only", model: null };
+  }
 }
 
 async function deleteDocumentChunks(supabaseUrl, serviceRoleKey, documentKey) {
@@ -932,6 +885,7 @@ async function main() {
         ...row,
         embedding: row.embedding ? "[vector omitted]" : null,
       })),
+      ...(args.includeRows ? { rows: rows.map((row) => ({ ...row, embedding: null })) } : {}),
     };
 
     const outFilePath = path.resolve(args.outFile);

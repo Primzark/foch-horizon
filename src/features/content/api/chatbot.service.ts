@@ -323,7 +323,7 @@ export interface ChatbotReply {
   conversationStatePatch?: Partial<ChatbotConversationState>;
   toolTrace?: ChatbotToolTrace[];
   ragUsed?: boolean;
-  edgeProvider?: "gemini" | "openai" | "fallback";
+  edgeProvider?: "gemini" | "fallback";
   retrievalMode?: "none" | "vector" | "keyword" | "hybrid";
   routeDecision?: string;
   routeCategory?: "deterministic_local" | "edge_rag" | "edge_general" | "edge_tools" | "fallback";
@@ -350,7 +350,8 @@ export interface ChatbotReply {
     estimatedClass?: "low" | "medium" | "high";
   };
   webSearchUsed?: boolean;
-  webSearchProvider?: "gemini_google_search";
+  webSearchStatus?: "used" | "no_usable_sources" | "unavailable";
+  webSearchProvider?: "tavily_search" | "official_dvf_dataset";
   webSearchQueries?: string[];
   streamSupported?: boolean;
   source: "local" | "edge";
@@ -966,7 +967,16 @@ function detectTransactionPreference(text: string): "vente" | null {
 }
 
 function isRentalQuestion(text: string): boolean {
-  return /\b(louer|location|locatif|locative|loyer|bailleur|locataire)\b/.test(normalizeKeyword(text));
+  return /\b(louer|loue|louent|locations?|locatifs?|locatives?|loyers?|bailleurs?|locataires?|rent|rental|renting|tenants?|leases?)\b/.test(normalizeKeyword(text));
+}
+
+function isRentalStatisticsQuestion(text: string): boolean {
+  const normalized = normalizeKeyword(text);
+  const hasRentalTopic = /\b(loyers?|locations?|locatifs?|locatives?|rent|rental|renting)\b/.test(normalized);
+  const asksForMarketData =
+    /\b(moyen|moyenne|median|prix|combien|quel|quelle|quels|quelles|cout|statistique|taux|rendement|estimation|marche|average|typical|median|price|cost|statistics|rate|yield|market|how much|what)\b/.test(normalized) ||
+    /\b(?:m2|sqm)\b/.test(normalized);
+  return hasRentalTopic && asksForMarketData;
 }
 
 function buildRentalUnavailableAnswer(context?: ConversationContext, language: "fr" | "en" = "fr"): ChatbotReply {
@@ -1883,6 +1893,10 @@ export function decideChatbotRoute(
     return { target: "local", category: "fallback", reason: "edge_disabled", intent: context.inferredIntent };
   }
 
+  if (isRentalStatisticsQuestion(context.normalizedQuestion)) {
+    return { target: "edge", category: "edge_general", reason: "rental_statistics_research", intent: "unknown" };
+  }
+
   const needsEdgeRag =
     context.inferredIntent === "navigation" ||
     context.inferredIntent === "fees" ||
@@ -1936,7 +1950,7 @@ function isEdgeReplyUsable(payload: unknown): payload is ChatbotReply {
 function getLegacyEdgeProvider(payload: unknown): ChatbotReply["edgeProvider"] {
   if (!payload || typeof payload !== "object") return undefined;
   const source = (payload as Record<string, unknown>).source;
-  return source === "gemini" || source === "openai" || source === "fallback" ? source : undefined;
+  return source === "gemini" || source === "fallback" ? source : undefined;
 }
 
 function sanitizeToolSearchParams(raw: unknown): ToolSearchParams | undefined {
@@ -2788,7 +2802,7 @@ function normalizeReplyOutput(reply: ChatbotReply): ChatbotReply {
   const prompts = normalizePromptList(reply.suggestedPrompts ?? []);
   const citations = sanitizeCitations(reply.citations);
   const edgeProvider =
-    reply.edgeProvider === "gemini" || reply.edgeProvider === "openai" || reply.edgeProvider === "fallback"
+    reply.edgeProvider === "gemini" || reply.edgeProvider === "fallback"
       ? reply.edgeProvider
       : undefined;
   const retrievalMode =
@@ -2821,7 +2835,15 @@ function normalizeReplyOutput(reply: ChatbotReply): ChatbotReply {
   const pageContextMode = reply.pageContextMode === "http" || reply.pageContextMode === "headless" ? reply.pageContextMode : undefined;
   const pageContextCacheHit = typeof reply.pageContextCacheHit === "boolean" ? reply.pageContextCacheHit : undefined;
   const webSearchUsed = typeof reply.webSearchUsed === "boolean" ? reply.webSearchUsed : undefined;
-  const webSearchProvider = reply.webSearchProvider === "gemini_google_search" ? reply.webSearchProvider : undefined;
+  const webSearchStatus = reply.webSearchStatus === "used" ||
+      reply.webSearchStatus === "no_usable_sources" ||
+      reply.webSearchStatus === "unavailable"
+    ? reply.webSearchStatus
+    : undefined;
+  const webSearchProvider = reply.webSearchProvider === "tavily_search" ||
+      reply.webSearchProvider === "official_dvf_dataset"
+    ? reply.webSearchProvider
+    : undefined;
   const webSearchQueries = Array.isArray(reply.webSearchQueries)
     ? reply.webSearchQueries
         .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
@@ -2851,6 +2873,7 @@ function normalizeReplyOutput(reply: ChatbotReply): ChatbotReply {
     pageContextCacheHit,
     costHints,
     webSearchUsed,
+    webSearchStatus,
     webSearchProvider,
     webSearchQueries,
     streamSupported,
@@ -2874,7 +2897,7 @@ export const chatbotServiceTestInternals = {
 
 export async function askAgencyChatbot(request: ChatbotRequest): Promise<ChatbotReply> {
   const context = buildConversationContext(request.question, request.chatHistory);
-  if (isRentalQuestion(request.question)) {
+  if (isRentalQuestion(request.question) && !isRentalStatisticsQuestion(request.question)) {
     return normalizeReplyOutput(buildRentalUnavailableAnswer(context, request.language));
   }
 
@@ -3079,7 +3102,7 @@ export async function askAgencyChatbotStream(
   handlers?: ChatbotStreamHandlers,
 ): Promise<ChatbotReply> {
   const context = buildConversationContext(request.question, request.chatHistory);
-  if (isRentalQuestion(request.question)) {
+  if (isRentalQuestion(request.question) && !isRentalStatisticsQuestion(request.question)) {
     return normalizeReplyOutput(buildRentalUnavailableAnswer(context, request.language));
   }
 
@@ -3114,16 +3137,15 @@ export async function askAgencyChatbotStream(
   }
 
   const { signal, ...requestPayload } = request;
-  const response = await edgeApiFetch(streamEndpointPath(), {
-    method: "POST",
-    signal,
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(requestPayload),
-  });
-
   try {
+    const response = await edgeApiFetch(streamEndpointPath(), {
+      method: "POST",
+      signal,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestPayload),
+    });
     const streamedReply = await parseSseResponseStream(response, handlers);
     return normalizeReplyOutput(applyRouteMetadata(streamedReply, routeDecision));
   } catch {
