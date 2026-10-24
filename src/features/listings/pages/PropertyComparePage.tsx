@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueries } from "@tanstack/react-query";
-import { ArrowLeft, ArrowLeftRight, Building2, Check, X } from "lucide-react";
+import { ArrowLeft, Building2, Check, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -199,8 +199,8 @@ export default function PropertyComparePage() {
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">Les informations manquantes sont indiquées comme non renseignées.</p>
         </div>
         {properties.length >= 2 && (
-          <label htmlFor="show-only-differences" className="inline-flex min-h-10 cursor-pointer items-center gap-3 self-start rounded-full border border-border bg-card px-3.5 text-sm sm:self-auto">
-            <span>Afficher uniquement les différences</span>
+          <label htmlFor="show-only-differences" className="inline-flex min-h-10 w-full max-w-full cursor-pointer items-center justify-between gap-3 self-start rounded-full border border-border bg-card px-3.5 py-2 text-sm sm:w-auto sm:self-auto">
+            <span className="min-w-0 leading-5">Afficher uniquement les différences</span>
             <Switch
               id="show-only-differences"
               checked={showOnlyDifferences}
@@ -259,10 +259,75 @@ export default function PropertyComparePage() {
         </div>
       ) : (
         <div className="mt-6">
-          <p className="mb-2 inline-flex items-center gap-1.5 text-xs text-muted-foreground sm:hidden">
-            <ArrowLeftRight className="h-3.5 w-3.5" aria-hidden="true" /> Faites glisser le tableau pour voir les autres biens.
-          </p>
-          <div className="overflow-x-auto rounded-2xl border border-border bg-card shadow-sm" role="region" aria-label="Tableau de comparaison des biens" tabIndex={0}>
+          <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm lg:hidden" role="table" aria-label="Comparaison des biens">
+            <div role="row" className="grid divide-x divide-border" style={{ gridTemplateColumns: `repeat(${properties.length}, minmax(0, 1fr))` }}>
+              {properties.map((property, index) => {
+                const cityName = cityById.get(property.cityId)?.name;
+                return (
+                  <article key={property.id} role="columnheader" className="min-w-0 p-2 sm:p-3">
+                    <p className="mb-2 text-[9px] font-semibold uppercase tracking-[0.14em] text-brand-strong sm:text-[10px]">Bien {index + 1}</p>
+                    <div className="relative">
+                      <ComparisonPhoto property={property} />
+                      <Button type="button" variant="secondary" size="icon" className="absolute right-1.5 top-1.5 h-7 w-7 rounded-full shadow-sm sm:right-2 sm:top-2 sm:h-8 sm:w-8" aria-label={`Retirer ${property.title} de la comparaison`} onClick={() => handleRemove(property.id, "comparison_table")}>
+                        <X className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      </Button>
+                    </div>
+                    <p className="mt-2 break-words text-[10px] font-medium uppercase leading-4 tracking-[0.08em] text-muted-foreground sm:tracking-[0.12em]">Réf. {property.id} · {cityName ?? property.postalCode}</p>
+                    <Link
+                      to={toCanonicalPropertyPath(property)}
+                      state={{ comparisonOrigin: true }}
+                      onClick={() => trackEvent("comparison_listing_click", { property_id: property.id, placement: "comparison_title" })}
+                      className="mt-1 line-clamp-2 block break-words font-display text-xs leading-snug text-foreground transition-colors hover:text-brand-strong sm:text-sm"
+                    >
+                      {property.title}
+                    </Link>
+                    <p className="mt-1 break-words text-xs font-semibold leading-4 text-brand-strong sm:text-sm">{formatPrice(property.priceAmount, property.transactionType)}</p>
+                    <Link
+                      to={toCanonicalPropertyPath(property)}
+                      state={{ comparisonOrigin: true }}
+                      onClick={() => trackEvent("comparison_listing_click", { property_id: property.id, placement: "comparison_link" })}
+                      aria-label={`Voir l’annonce ${property.title}`}
+                      className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-foreground underline decoration-brand/40 underline-offset-4 hover:text-brand-strong sm:text-xs"
+                    >
+                      Voir <span aria-hidden="true">→</span>
+                    </Link>
+                  </article>
+                );
+              })}
+            </div>
+            <div role="rowgroup" className="border-t border-border">
+              {visibleRows.map((row) => {
+                const known = row.values.filter((value): value is string => value != null);
+                const hasDifference = new Set(known).size > 1;
+                const frequencies = new Map<string, number>();
+                known.forEach((value) => frequencies.set(value, (frequencies.get(value) ?? 0) + 1));
+                const mostCommonCount = Math.max(0, ...frequencies.values());
+                return (
+                  <section key={row.label} role="row" className="border-b border-border py-1 last:border-0">
+                    <p role="rowheader" className="flex items-center gap-1.5 px-3 pb-1 pt-2.5 text-xs font-medium text-muted-foreground">
+                      {row.label}
+                      {hasDifference && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand" aria-label="Différence" />}
+                    </p>
+                    <div role="presentation" className="grid divide-x divide-border" style={{ gridTemplateColumns: `repeat(${properties.length}, minmax(0, 1fr))` }}>
+                      {row.values.map((value, index) => (
+                        <div
+                          key={`${row.label}-${properties[index]?.id ?? index}`}
+                          role="cell"
+                          className={`min-w-0 break-words px-2 py-2 text-xs leading-5 sm:px-3 sm:text-sm ${value != null && hasDifference && (mostCommonCount === 1 || frequencies.get(value) !== mostCommonCount) ? "bg-brand-soft/45 font-medium text-brand-strong" : "text-foreground"}`}
+                        >
+                          {value ?? <span className="text-muted-foreground">Non renseigné</span>}
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                );
+              })}
+              {showOnlyDifferences && visibleRows.length === 0 && (
+                <p role="row" className="px-4 py-8 text-center text-sm text-muted-foreground"><span role="cell">Aucune différence renseignée entre ces annonces.</span></p>
+              )}
+            </div>
+          </div>
+          <div className="hidden overflow-x-auto rounded-2xl border border-border bg-card shadow-sm lg:block" role="region" aria-label="Tableau de comparaison des biens" tabIndex={0}>
             <table className="w-full min-w-[680px] border-collapse text-left sm:min-w-[760px]">
               <thead>
                 <tr className="border-b border-border">

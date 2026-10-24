@@ -959,7 +959,7 @@ function readStoredMessages(): ChatMessage[] {
   }
 }
 
-export function SiteChatbot({ initiallyOpen = false }: { initiallyOpen?: boolean } = {}) {
+export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { initiallyOpen?: boolean; showLauncher?: boolean } = {}) {
   const { language } = useSiteLanguage();
   const location = useLocation();
   const routeIdentity = `${location.pathname}${location.search}`;
@@ -2919,7 +2919,7 @@ export function SiteChatbot({ initiallyOpen = false }: { initiallyOpen?: boolean
         />
       )}
 
-      {!searchDrawerOpen && (
+      {!searchDrawerOpen && (showLauncher || open) && (
       <div className={assistantContainerClassName}>
       {open && (
         <motion.section
