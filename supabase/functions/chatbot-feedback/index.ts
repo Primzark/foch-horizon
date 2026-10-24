@@ -35,6 +35,7 @@ const eventTypeSchema = z.enum([
 ]);
 
 const eventSchema = z.object({
+  eventId: z.string().min(1).max(120).optional(),
   eventType: eventTypeSchema,
   sessionId: z.string().min(1).max(120),
   conversationId: z.string().min(1).max(120),
@@ -42,7 +43,10 @@ const eventSchema = z.object({
   requestId: z.string().min(1).max(120).optional(),
   pagePath: z.string().min(1).max(500).optional(),
   source: z.enum(["local", "edge", "fallback"]).optional(),
-  edgeProvider: z.enum(["gemini", "openai", "fallback"]).optional(),
+  edgeProvider: z.preprocess(
+    (value) => value === "gemini" || value === "fallback" ? value : undefined,
+    z.enum(["gemini", "fallback"]).optional(),
+  ),
   routeDecision: z.string().min(1).max(120).optional(),
   routeCategory: z.enum(["deterministic_local", "edge_rag", "edge_general", "edge_tools", "fallback"]).optional(),
   intent: z.string().min(1).max(80).optional(),

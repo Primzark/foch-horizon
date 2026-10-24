@@ -301,6 +301,7 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
                       key={suggestion.id}
                       idPrefix="main-search-suggestion"
                       property={suggestion}
+                      revealIndex={index}
                       isActive={activeSuggestionIndex === index}
                       reducedMotion={reducedMotion}
                       variant="main"

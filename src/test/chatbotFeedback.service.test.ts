@@ -59,11 +59,26 @@ describe("chatbotFeedback.service", () => {
   });
 
   it("does not throw when network requests fail", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => undefined);
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network down")));
     const service = await loadService();
 
     service.queueChatbotTelemetryEvent(makeEvent());
     await expect(service.flushChatbotTelemetryQueue()).resolves.toBeUndefined();
+  });
+
+  it("detects unsuccessful HTTP responses", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("{}", { status: 400 })));
+    const service = await loadService();
+
+    service.queueChatbotTelemetryEvent(makeEvent());
+    await service.flushChatbotTelemetryQueue();
+
+    expect(warn).toHaveBeenCalledWith(
+      "Chatbot telemetry could not be saved.",
+      expect.objectContaining({ message: "Chatbot telemetry request failed with HTTP 400." }),
+    );
   });
 
   it("uses sendBeacon on visibility hidden when available", async () => {

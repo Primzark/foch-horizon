@@ -40,6 +40,13 @@ const legalContent: Record<LegalPageKey, { title: string; description: string; s
         body: ["Réponse aux demandes de contact, estimation ou visite.", "Suivi opérationnel des leads par l'agence."],
       },
       {
+        heading: "Assistant conversationnel et recherche web",
+        body: [
+          <>Les messages adressés à l’assistant sont transmis à Google Gemini pour préparer les réponses. Lorsqu’une recherche web est déclenchée, la question de recherche est également transmise à Tavily afin de trouver des sources récentes. Consultez les <a className="underline underline-offset-4" href="https://ai.google.dev/gemini-api/terms" target="_blank" rel="noreferrer">conditions de l’API Gemini</a> et la <a className="underline underline-offset-4" href="https://www.tavily.com/privacy" target="_blank" rel="noreferrer">politique de confidentialité de Tavily</a>.</>,
+          "L’historique de conversation et les préférences de l’assistant sont enregistrés dans le stockage local de votre navigateur pour maintenir la conversation entre vos visites. Des événements techniques liés à l’usage du chatbot peuvent être enregistrés pour son suivi opérationnel.",
+        ],
+      },
+      {
         heading: "Durée de conservation",
         body: ["Les données sont conservées selon les obligations légales et la relation commerciale."],
       },

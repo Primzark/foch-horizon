@@ -234,4 +234,25 @@ describe("SiteChatbot feedback and telemetry hooks", () => {
       expect(payload).not.toHaveProperty("content");
     }
   });
+
+  it("shows when a live search found no reliable sources", async () => {
+    askAgencyChatbotMock.mockResolvedValueOnce({
+      source: "edge",
+      edgeProvider: "fallback",
+      answer: "Je n’ai pas trouvé de source officielle vérifiable.",
+      webSearchUsed: false,
+      webSearchStatus: "no_usable_sources",
+      suggestedPrompts: [],
+    });
+    const view = await renderChatbot();
+    const ui = within(view.container);
+
+    fireEvent.click(ui.getByRole("button", { name: /assistant/i }));
+    const input = ui.getByPlaceholderText(/posez une question/i);
+    fireEvent.change(input, { target: { value: "Quel est le loyer moyen au Havre ?" } });
+    fireEvent.submit(input.closest("form")!);
+
+    expect(await screen.findByText(/Recherche web en direct · aucune source fiable trouvée/i)).toBeInTheDocument();
+    expect(screen.getByText("Je n’ai pas trouvé de source officielle vérifiable.")).toBeInTheDocument();
+  });
 });

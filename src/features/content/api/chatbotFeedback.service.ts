@@ -40,7 +40,7 @@ export interface ChatbotTelemetryEvent {
   requestId?: string;
   pagePath?: string;
   source?: "local" | "edge" | "fallback";
-  edgeProvider?: "gemini" | "openai" | "fallback";
+  edgeProvider?: "gemini" | "fallback";
   routeDecision?: string;
   routeCategory?: "deterministic_local" | "edge_rag" | "edge_general" | "edge_tools" | "fallback";
   intent?: string;
@@ -142,12 +142,15 @@ function clearScheduledFlush(): void {
 
 async function postBatch(payload: ChatbotTelemetryBatchRequest): Promise<void> {
   if (payload.events.length === 0) return;
-  await fetch(endpointUrl(), {
+  const response = await fetch(endpointUrl(), {
     method: "POST",
     headers: buildEdgeApiHeaders(undefined, { json: true }),
     body: JSON.stringify(payload),
     keepalive: true,
   });
+  if (!response.ok) {
+    throw new Error(`Chatbot telemetry request failed with HTTP ${response.status}.`);
+  }
 }
 
 function trySendBeacon(events: ChatbotTelemetryEvent[]): boolean {
@@ -215,8 +218,8 @@ export async function flushChatbotTelemetryQueue(): Promise<void> {
   const batch = queue.splice(0, Math.min(queue.length, MAX_BATCH_SIZE));
   try {
     await postBatch({ events: batch });
-  } catch {
-    // Drop failures silently to avoid affecting chat UX.
+  } catch (error) {
+    console.warn("Chatbot telemetry could not be saved.", error);
   } finally {
     inFlight = false;
     if (queue.length > 0) {

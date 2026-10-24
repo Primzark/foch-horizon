@@ -31,7 +31,7 @@ This folder contains Phase 1 backend scaffolding:
 - Bind each function to your hosting routing layer (for example Vercel rewrites) or call Supabase Edge Functions directly.
 - Configure secrets: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
 - For admin counter updates, also set `MARKET_COUNTERS_ADMIN_EMAILS` (comma-separated Supabase Auth emails allowed to write).
-- Chatbot RAG edge function expects either `GEMINI_API_KEY` or `OPENAI_API_KEY` (Gemini is now the preferred provider).
+- Chatbot RAG uses Gemini for answer generation and embeddings, with Tavily as the sole live web-search provider. Configure `GEMINI_API_KEY` and `TAVILY_API_KEY` as Supabase Edge Function secrets.
 - Chatbot telemetry ingest (`chatbot-feedback`) requires `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`.
 
 ## Chatbot RAG indexing (website content)
@@ -52,7 +52,6 @@ cd /Applications/MAMP/htdocs/Foch-1/foch-horizon
 SUPABASE_URL=https://<project-ref>.supabase.co \
 SUPABASE_SERVICE_ROLE_KEY=<service-role-key> \
 GEMINI_API_KEY=<server-gemini-key> \
-RAG_EMBEDDING_PROVIDER=gemini \
 npm run chatbot:index:site
 ```
 
@@ -63,9 +62,7 @@ npm run chatbot:index:site
 - `RAG_INDEX_PATH_PREFIX` to index only one site section
 - `RAG_INDEX_RENDER_MODE` (`http` or `headless`) for SPA pages (`headless` requires Playwright)
 - `RAG_INDEX_RENDER_WAIT_MS` extra wait after navigation in headless mode
-- `RAG_EMBEDDING_PROVIDER` (`gemini` or `openai`) for embeddings
 - `GEMINI_EMBEDDING_MODEL` (default `gemini-embedding-001`)
-- `OPENAI_EMBEDDING_MODEL` (default `text-embedding-3-small`)
 
 ### Chatbot RAG runtime tuning (edge function)
 
@@ -79,17 +76,24 @@ npm run chatbot:index:site
 - `CHATBOT_RAG_MATCH_THRESHOLD=0.70`
 - `CHATBOT_RAG_MAX_CONTEXT_CHARS=5200`
 
-### Gemini web search grounding (edge fallback / RAG assist)
+### Live web search (Tavily / Gemini answer generation)
 
-- `CHATBOT_WEB_SEARCH_ENABLED=false` (default off; Gemini-only Google Search grounding for external/current questions in non-tool edge flows)
-- `CHATBOT_WEB_SEARCH_MAX_CITATIONS=4` (max grounded web citations extracted from Gemini metadata)
-- `CHATBOT_WEB_SEARCH_MIN_QUESTION_CHARS=8` (skip grounding for very short prompts)
+- `CHATBOT_WEB_SEARCH_ENABLED=false` (default off for new environments; production enabled for external/current questions in non-tool edge flows)
+- `TAVILY_API_KEY` (required Supabase Edge Function secret; never expose it to browser code)
+- `CHATBOT_WEB_SEARCH_MAX_RESULTS=5` (Tavily results requested per search)
+- `CHATBOT_WEB_SEARCH_MAX_CITATIONS=4` (maximum Tavily sources returned to the chatbot)
+- `CHATBOT_WEB_SEARCH_MIN_QUESTION_CHARS=8` (skip search for very short prompts)
+- `CHATBOT_WEB_SEARCH_TIMEOUT_MS=8000` (Tavily request timeout, clamped by the edge function)
+- `CHATBOT_GENERATION_TIMEOUT_MS=15000` (Gemini generation timeout)
+- `CHATBOT_STREAM_PROXY_TIMEOUT_MS=45000` (allows the stream proxy to wait for Gemini generation)
 
 Notes:
 
-- This is Gemini-only (`tools: [{ google_search: {} }]`) and is ignored when OpenAI is the active generation provider.
-- It is only used on the non-tool fallback/RAG generation path (not planner tool execution).
-- Keep disabled first in production, enable in staging, then monitor latency/cost before rollout.
+- Tavily searches eligible external/current questions on the non-tool fallback/RAG path; property-tool turns continue to use the site’s property database.
+- Tavily provides source excerpts and citations; Gemini remains responsible for composing the answer from those sources and site RAG context.
+- The edge function only marks search as used when Tavily returns usable sources. If Tavily is unavailable, it returns a clear search fallback instead of presenting an ungrounded answer as live research.
+- If Tavily succeeds but Gemini generation is unavailable, the response tells the user that sources were found and returns the source links without claiming a generated answer.
+- Tavily usage is billed by search depth/credits under the connected Tavily account; this implementation uses the fast depth for routine searches.
 
 ### Frontend chatbot routing flags
 
@@ -210,7 +214,7 @@ GitHub repository secrets required:
 
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
-- `GEMINI_API_KEY` (preferred) or `OPENAI_API_KEY`
+- `GEMINI_API_KEY`
 - `RAG_INDEX_BASE_URL` (optional but recommended, e.g. your production site URL)
 
 ## Provider Sync Worker (inventory feed)

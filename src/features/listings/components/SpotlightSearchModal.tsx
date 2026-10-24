@@ -341,6 +341,7 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
                   key={suggestion.id}
                   property={suggestion}
                   idPrefix="spotlight-search-suggestion"
+                  revealIndex={index}
                   isActive={activeIndex === index}
                   reducedMotion={reducedMotion}
                   variant="spotlight"

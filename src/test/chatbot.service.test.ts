@@ -239,6 +239,18 @@ describe("chatbot service", () => {
     expect(route.category).toBe("edge_general");
   });
 
+  it("routes rent-statistics questions to live search while rental listings stay local", () => {
+    const route = decideChatbotRoute(buildConversationContext("Quel est le loyer moyen au Havre ?", []), {
+      edgeApiEnabled: true,
+      edgeRagForWebsiteQuestionsEnabled: true,
+      routerV2Enabled: true,
+    });
+
+    expect(route.target).toBe("edge");
+    expect(route.category).toBe("edge_general");
+    expect(route.reason).toBe("rental_statistics_research");
+  });
+
   it("falls back to local when edge api is disabled", () => {
     const context = buildConversationContext("Ou trouver les honoraires ?", []);
     const route = decideChatbotRoute(context, {

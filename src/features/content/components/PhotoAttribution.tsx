@@ -17,14 +17,14 @@ export function PhotoAttribution({ credit }: PhotoAttributionProps) {
       <summary className="inline-flex min-h-6 cursor-pointer list-none items-center px-1 py-1 text-[9px] font-normal leading-none underline decoration-white/35 underline-offset-2 [text-shadow:0_1px_2px_rgba(0,0,0,0.9)] transition-colors hover:text-white/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/70 [&::-webkit-details-marker]:hidden">
         Crédits photo
       </summary>
-      <div className="absolute bottom-full right-0 mb-1 w-72 max-w-[calc(100vw_-_1rem)] text-left text-[9px] leading-[1.15] text-white/75 [text-shadow:0_1px_2px_rgba(0,0,0,0.95)] sm:w-64 sm:text-[10px] sm:leading-snug">
+      <div className="absolute bottom-full right-0 mb-1 w-72 max-w-[calc(100vw_-_1rem)] text-left text-[9px] leading-[1.05] text-white/75 [text-shadow:0_1px_2px_rgba(0,0,0,0.95)] lg:w-64 lg:text-[10px] lg:leading-snug">
         <p className="font-medium text-white/85">{credit.title}</p>
-        <p className="mt-0.5 sm:mt-1">Photographie : {credit.creator}</p>
-        <p className="mt-0.5 flex flex-wrap gap-x-2 sm:mt-1">
+        <p className="mt-px lg:mt-1">Photographie : {credit.creator}</p>
+        <p className="mt-px flex flex-wrap gap-x-2 lg:mt-1">
           <a href={credit.sourceUrl} target="_blank" rel="noopener noreferrer" className="underline decoration-white/50 underline-offset-2 hover:text-white">Source originale</a>
           {credit.licenseUrl && <a href={credit.licenseUrl} target="_blank" rel="noopener noreferrer" className="underline decoration-white/50 underline-offset-2 hover:text-white">{credit.license}</a>}
         </p>
-        <p className="mt-0.5 text-white/65 sm:mt-1">{credit.modification}</p>
+        <p className="mt-px text-white/65 lg:mt-1">{credit.modification}</p>
       </div>
     </details>
   );

@@ -20,9 +20,9 @@ import { ListingBadges } from "@/features/listings/components/ListingBadges";
 import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
 
 const galleryImageVariants = {
-  enter: { opacity: 0, scale: 1.025 },
+  enter: { opacity: 1, scale: 1.025 },
   center: { opacity: 1, scale: 1 },
-  exit: { opacity: 0, scale: 0.99 },
+  exit: { opacity: 1, scale: 0.99 },
 };
 // 900px covers standard-density screens and matches the image requests warmed
 // by the property-page gallery; retain the 1200px candidate on high-DPI desktop.
@@ -51,7 +51,7 @@ export function ListingGallery({
   const [galleryImageIndex, setGalleryImageIndex] = useState(0);
   const [mobileThumbnailLoadLimit, setMobileThumbnailLoadLimit] = useState(4);
   const [visibleGalleryImageId, setVisibleGalleryImageId] = useState<string | null>(() => images[0]?.id ?? null);
-  const [fullResolutionGalleryImageId, setFullResolutionGalleryImageId] = useState<string | null>(() => images[0]?.id ?? null);
+  const [fullResolutionGalleryImageId, setFullResolutionGalleryImageId] = useState<string | null>(null);
   const [imageFallbackKeys, setImageFallbackKeys] = useState<Set<string>>(() => new Set());
   const [isDesktopGallery, setIsDesktopGallery] = useState(() =>
     typeof window !== "undefined" && window.matchMedia?.("(min-width: 768px)").matches === true,
@@ -60,7 +60,7 @@ export function ListingGallery({
   const swipeStartRef = useRef<{ x: number; y: number } | null>(null);
   const gallerySwipeStartRef = useRef<{ x: number; y: number } | null>(null);
   const galleryNavigationDirectionRef = useRef<-1 | 1>(1);
-  const fullResolutionGalleryImageIdRef = useRef<string | null>(images[0]?.id ?? null);
+  const fullResolutionGalleryImageIdRef = useRef<string | null>(null);
   const selectedViewerImageRef = useRef<HTMLImageElement | null>(null);
   const swipeHandledRef = useRef(false);
   const { reducedMotion } = useMotionPreference();
@@ -231,14 +231,32 @@ export function ListingGallery({
   }, [activeImageIndex, getWarmedGalleryImage, images, viewerImageWidths]);
 
   useEffect(() => {
-    if (!galleryOpen || images.length < 2) return;
+    if (images.length < 2) return;
 
-    images.forEach((image, index) => {
-      if (index !== safeGalleryImageIndex && image.sourceUrl) {
-        getWarmedGalleryImage(image, 400, "low", false, galleryPreviewImageWidths);
-      }
+    images.forEach((image) => {
+      if (!image.sourceUrl) return;
+
+      // Warm both the quick preview and the viewer-size candidate before a
+      // visitor starts switching photos. The requests stay low priority.
+      const previewImage = getWarmedGalleryImage(
+        image,
+        400,
+        "low",
+        false,
+        galleryPreviewImageWidths,
+      );
+      void previewImage.decode().catch(() => undefined);
+
+      const viewerImage = getWarmedGalleryImage(
+        image,
+        1200,
+        "low",
+        false,
+        viewerImageWidths,
+      );
+      void viewerImage.decode().catch(() => undefined);
     });
-  }, [galleryOpen, getWarmedGalleryImage, images, safeGalleryImageIndex]);
+  }, [getWarmedGalleryImage, images, viewerImageWidths]);
 
   useEffect(() => {
     if (!galleryOpen || images.length < 2) return;
@@ -410,7 +428,7 @@ export function ListingGallery({
                     initial={reducedMotion ? false : "enter"}
                     animate={reducedMotion ? { opacity: 1, scale: 1 } : "center"}
                     exit={reducedMotion ? { opacity: 0 } : "exit"}
-                    transition={{ duration: reducedMotion ? 0 : 0.52, ease: [0.22, 1, 0.36, 1] }}
+                    transition={{ duration: reducedMotion ? 0 : 0.28, ease: [0.22, 1, 0.36, 1] }}
                     {...galleryImageProps(activeImage, 400, `hero:${activeImage.id}`)}
                     sizes={variant === "modal" ? "(max-width: 767px) 100vw, 88vw" : "(max-width: 1023px) calc(100vw - 2rem), 66vw"}
                     alt={activeImage.altText}

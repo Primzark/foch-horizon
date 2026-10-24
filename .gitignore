@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 .vercel/
+tools/property-feed-uploader-vb/bin/
+tools/property-feed-uploader-vb/obj/
+tools/property-feed-uploader-vb/publish/
 
 # Editor directories and files
 .vscode/*

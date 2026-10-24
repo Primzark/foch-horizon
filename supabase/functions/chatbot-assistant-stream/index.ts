@@ -63,7 +63,8 @@ Deno.serve(async (request) => {
     return secureJsonResponse(request, { ok: false, error: "Method not allowed" }, 405);
   }
 
-  if (!isAllowedSiteOrigin(request.headers.get("origin"))) {
+  const siteOrigin = request.headers.get("origin");
+  if (!isAllowedSiteOrigin(siteOrigin)) {
     return secureJsonResponse(request, { ok: false, error: "Request unavailable." }, 403);
   }
 
@@ -109,7 +110,7 @@ Deno.serve(async (request) => {
 
   const supabaseUrl = (Deno.env.get("SUPABASE_URL") ?? "").trim();
   const serviceRoleKey = (Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "").trim();
-  const proxyTimeoutMs = Number.parseInt(Deno.env.get("CHATBOT_STREAM_PROXY_TIMEOUT_MS") ?? "20000", 10);
+  const proxyTimeoutMs = Number.parseInt(Deno.env.get("CHATBOT_STREAM_PROXY_TIMEOUT_MS") ?? "45000", 10);
   const streamEnabled = (Deno.env.get("CHATBOT_STREAM_ENABLED") ?? "").trim().toLowerCase();
   const streamFlag = ["1", "true", "yes", "on"].includes(streamEnabled);
   const requestId = `stream-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
@@ -132,7 +133,8 @@ Deno.serve(async (request) => {
         const proxyApiKey = serviceRoleKey;
         const proxyAuth = `Bearer ${serviceRoleKey}`;
         const proxyController = new AbortController();
-        const proxyTimeoutId = setTimeout(() => proxyController.abort(), Number.isFinite(proxyTimeoutMs) ? proxyTimeoutMs : 20000);
+        const effectiveProxyTimeoutMs = Number.isFinite(proxyTimeoutMs) ? proxyTimeoutMs : 45000;
+        const proxyTimeoutId = setTimeout(() => proxyController.abort(), effectiveProxyTimeoutMs);
         send("status", { phase: "searching" });
 
         let response: Response;
@@ -141,6 +143,7 @@ Deno.serve(async (request) => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            ...(siteOrigin ? { Origin: siteOrigin } : {}),
             ...(proxyApiKey ? { apikey: proxyApiKey } : {}),
             ...(proxyAuth ? { Authorization: proxyAuth } : {}),
           },
@@ -158,7 +161,7 @@ Deno.serve(async (request) => {
           if (error instanceof DOMException && error.name === "AbortError") {
             send("error", {
               code: "stream_proxy_timeout",
-              message: `Proxy call to chatbot-assistant timed out after ${proxyTimeoutMs}ms.`,
+              message: `Proxy call to chatbot-assistant timed out after ${effectiveProxyTimeoutMs}ms.`,
             });
             send("done", { ok: false });
             controller.close();
