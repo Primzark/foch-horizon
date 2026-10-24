@@ -158,20 +158,30 @@ export function RecentSales({ compact = false }: { compact?: boolean }) {
             <div className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               {sales.map((sale) => (
                 <article key={sale.id}>
-                  <div className="relative overflow-hidden rounded-xl bg-muted">
-                    <img
-                      src={getPropertyImageUrl(sale.coverImageUrl, 400)}
-                      srcSet={getPropertyImageSrcSet(sale.coverImageUrl)}
-                      sizes="(max-width: 767px) 100vw, (max-width: 1279px) 50vw, 33vw"
-                      alt={sale.title}
-                      className="aspect-[4/3] w-full object-cover"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                    <ListingBadges labels={getPropertyCardLabels(sale)} className="absolute left-3 top-3 z-[2]" />
-                  </div>
-                  <p className="mt-4 text-xs uppercase tracking-wider text-muted-foreground">{sale.city.name} · {sale.surfaceM2} m²</p>
-                  <h3 className="mt-1 font-display text-2xl">{sale.title}</h3>
+                  <PropertyPreviewLink
+                    item={sale}
+                    browseItems={sales}
+                    aria-label={`Voir le bien vendu : ${sale.title}`}
+                    className="group block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4"
+                  >
+                    <div className="relative overflow-hidden rounded-xl bg-muted">
+                      <img
+                        src={getPropertyImageUrl(sale.coverImageUrl, 400)}
+                        srcSet={getPropertyImageSrcSet(sale.coverImageUrl)}
+                        sizes="(max-width: 767px) 100vw, (max-width: 1279px) 50vw, 33vw"
+                        alt={sale.title}
+                        className="aspect-[4/3] w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                      <ListingBadges labels={getPropertyCardLabels(sale)} className="absolute left-3 top-3 z-[2]" />
+                    </div>
+                    <p className="mt-4 text-xs uppercase tracking-wider text-muted-foreground">{sale.city.name} · {sale.surfaceM2} m²</p>
+                    <div className="mt-1 flex items-start justify-between gap-3">
+                      <h3 className="font-display text-2xl transition-colors group-hover:text-brand-strong">{sale.title}</h3>
+                      <ArrowRight aria-hidden="true" className="mt-2 h-4 w-4 shrink-0 text-brand-strong transition-transform group-hover:translate-x-1" />
+                    </div>
+                  </PropertyPreviewLink>
                 </article>
               ))}
             </div>
@@ -212,7 +222,7 @@ function PropertyCarouselCard({ property, browseItems, isSold }: { property: Pro
       </div>
       <div className="p-4 sm:p-5">
         <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">{formatPropertyTypeLabel(property.type)}</p>
-        <h3 className={`mt-2 line-clamp-2 min-h-[3.5rem] font-display text-xl leading-snug ${isSold ? "" : "group-hover:text-brand-strong"}`}>{property.title}</h3>
+        <h3 className="mt-2 line-clamp-2 min-h-[3.5rem] font-display text-xl leading-snug transition-colors group-hover:text-brand-strong">{property.title}</h3>
         <div className="mt-4 flex items-center gap-4 text-sm text-muted-foreground">
           <span className="inline-flex items-center gap-1.5"><Maximize aria-hidden="true" className="h-4 w-4" /> {property.surfaceM2} m²</span>
           {property.bedrooms != null && <span className="inline-flex items-center gap-1.5"><BedDouble aria-hidden="true" className="h-4 w-4" /> {property.bedrooms}</span>}
@@ -220,11 +230,9 @@ function PropertyCarouselCard({ property, browseItems, isSold }: { property: Pro
         </div>
         <div className="mt-5 flex items-center justify-between border-t border-border pt-4">
           <span className="font-display text-2xl">{isSold ? "Vendu par l’agence" : formatPrice(property.priceAmount, property.transaction)}</span>
-          {!isSold && (
-            <span className="inline-flex items-center gap-2 text-sm font-semibold text-brand-strong">
-              Voir le bien <ArrowRight aria-hidden="true" className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </span>
-          )}
+          <span className="inline-flex items-center gap-2 text-sm font-semibold text-brand-strong">
+            Voir le bien <ArrowRight aria-hidden="true" className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </span>
         </div>
       </div>
     </>
@@ -232,18 +240,14 @@ function PropertyCarouselCard({ property, browseItems, isSold }: { property: Pro
 
   return (
     <article className="h-full">
-      {isSold ? (
-        <div className="h-full overflow-hidden rounded-2xl border border-border bg-card">{content}</div>
-      ) : (
-        <PropertyPreviewLink
-          item={property}
-          browseItems={browseItems}
-          aria-label={`Voir le bien : ${property.title}`}
-          className="group block h-full overflow-hidden rounded-2xl border border-border bg-card transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-1 hover:border-brand-border hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-        >
-          {content}
-        </PropertyPreviewLink>
-      )}
+      <PropertyPreviewLink
+        item={property}
+        browseItems={browseItems}
+        aria-label={`Voir le bien${isSold ? " vendu" : ""} : ${property.title}`}
+        className="group block h-full overflow-hidden rounded-2xl border border-border bg-card transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-1 hover:border-brand-border hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      >
+        {content}
+      </PropertyPreviewLink>
     </article>
   );
 }
@@ -264,16 +268,16 @@ function PropertyListRow({ property, browseItems, isSold }: { property: Property
         <p className="truncate text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
           {property.city.name} · {formatPropertyTypeLabel(property.type)}
         </p>
-        <h3 className={`mt-1 line-clamp-2 font-display text-lg leading-snug ${isSold ? "" : "group-hover:text-brand-strong"}`}>{property.title}</h3>
+        <h3 className="mt-1 line-clamp-2 font-display text-lg leading-snug transition-colors group-hover:text-brand-strong">{property.title}</h3>
         <div className="mt-1.5 flex items-center gap-3 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1"><Maximize aria-hidden="true" className="h-3.5 w-3.5" /> {property.surfaceM2} m²</span>
           {property.bedrooms != null && <span className="inline-flex items-center gap-1"><BedDouble aria-hidden="true" className="h-3.5 w-3.5" /> {property.bedrooms}</span>}
         </div>
         <div className="mt-2 flex items-center justify-between gap-2">
-          <span className={`truncate text-sm font-semibold ${isSold ? "" : "group-hover:text-brand-strong"}`}>
+          <span className="truncate text-sm font-semibold transition-colors group-hover:text-brand-strong">
             {isSold ? "Vendu par l’agence" : formatPrice(property.priceAmount, property.transaction)}
           </span>
-          {!isSold && <ArrowRight aria-hidden="true" className="h-4 w-4 shrink-0 text-brand-strong transition-transform group-hover:translate-x-1" />}
+          <ArrowRight aria-hidden="true" className="h-4 w-4 shrink-0 text-brand-strong transition-transform group-hover:translate-x-1" />
         </div>
       </div>
     </>
@@ -281,18 +285,14 @@ function PropertyListRow({ property, browseItems, isSold }: { property: Property
 
   return (
     <article>
-      {isSold ? (
-        <div className="grid grid-cols-[5.5rem_minmax(0,1fr)] items-center gap-3 py-4">{content}</div>
-      ) : (
-        <PropertyPreviewLink
-          item={property}
-          browseItems={browseItems}
-          aria-label={`Voir le bien : ${property.title}`}
-          className="group grid grid-cols-[5.5rem_minmax(0,1fr)] items-center gap-3 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-        >
-          {content}
-        </PropertyPreviewLink>
-      )}
+      <PropertyPreviewLink
+        item={property}
+        browseItems={browseItems}
+        aria-label={`Voir le bien${isSold ? " vendu" : ""} : ${property.title}`}
+        className="group grid grid-cols-[5.5rem_minmax(0,1fr)] items-center gap-3 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      >
+        {content}
+      </PropertyPreviewLink>
     </article>
   );
 }

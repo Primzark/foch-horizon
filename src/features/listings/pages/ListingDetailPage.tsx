@@ -71,8 +71,7 @@ function getNavigationPreview(state: unknown, propertyId: number | null): Proper
     (item.transaction !== "vente" && item.transaction !== "location") ||
     (item.type !== "appartement" && item.type !== "maison_villa" && item.type !== "autre") ||
     !item.status ||
-    item.status === "sold" ||
-    (item.status !== "active" && item.status !== "under_offer" && item.status !== "reserved" && item.status !== "rented" && item.status !== "off_market") ||
+    (item.status !== "active" && item.status !== "under_offer" && item.status !== "reserved" && item.status !== "sold" && item.status !== "rented" && item.status !== "off_market") ||
     typeof item.priceAmount !== "number" ||
     item.currency !== "EUR" ||
     typeof item.surfaceM2 !== "number" ||
@@ -242,6 +241,7 @@ export default function ListingDetailPage({
   );
 
   const property = propertyQuery.data;
+  const isSold = property?.status === "sold";
   const announcementItems = routeState?.announcementItems;
   const announcementIndex = announcementItems?.findIndex((item) => item.id === propertyId) ?? -1;
   const hasAnnouncementPosition = Boolean(announcementItems && announcementIndex >= 0);
@@ -471,10 +471,12 @@ export default function ListingDetailPage({
       return;
     }
 
+    setPreviewContactFormVisible(false);
+    if (property?.status === "sold") return;
+
     const contact = contactRef.current;
     if (!contact) return;
 
-    setPreviewContactFormVisible(false);
     if (typeof IntersectionObserver === "undefined") return;
 
     const observer = new IntersectionObserver(
@@ -484,10 +486,10 @@ export default function ListingDetailPage({
 
     observer.observe(contact);
     return () => observer.disconnect();
-  }, [previewLayout, property?.id, scrollContainerRef]);
+  }, [previewLayout, property?.id, property?.status, scrollContainerRef]);
 
   const canonicalPath = property ? toCanonicalPropertyPath({ id: property.id, slug: property.slug }) : null;
-  const showStickySummary = Boolean(property && !summaryVisible && !contactVisible);
+  const showStickySummary = Boolean(property && !isSold && !summaryVisible && !contactVisible);
   const contactPhone = agentById.get(property?.agentId ?? "")?.phone ?? "02 35 42 51 76";
 
   const discoveryCardContent = nextPropertyToDiscover ? (
@@ -548,7 +550,7 @@ export default function ListingDetailPage({
     </div>
   ) : null;
 
-  const previewContactBar = property && previewContactBarVisible && previewLayout ? (
+  const previewContactBar = property && !isSold && previewContactBarVisible && previewLayout ? (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
@@ -966,17 +968,19 @@ export default function ListingDetailPage({
             )}
           </section>
 
-          <div ref={contactRef} id="property-contact-form" className={previewLayout ? "scroll-mt-16" : "scroll-mt-28"}>
-            <LeadForm
-              source="property_page"
-              propertyId={property.id}
-              cityId={property.cityId}
-              title="Demander une visite"
-              description="Indiquez vos disponibilités, nous revenons vers vous rapidement."
-              ctaLabel="Envoyer ma demande"
-              showAppointmentFields
-            />
-          </div>
+          {!isSold && (
+            <div ref={contactRef} id="property-contact-form" className={previewLayout ? "scroll-mt-16" : "scroll-mt-28"}>
+              <LeadForm
+                source="property_page"
+                propertyId={property.id}
+                cityId={property.cityId}
+                title="Demander une visite"
+                description="Indiquez vos disponibilités, nous revenons vers vous rapidement."
+                ctaLabel="Envoyer ma demande"
+                showAppointmentFields
+              />
+            </div>
+          )}
         </aside>
       </div>
       </div>

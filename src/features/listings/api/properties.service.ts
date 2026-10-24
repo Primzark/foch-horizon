@@ -374,7 +374,7 @@ export async function getPropertyById(id: number): Promise<Property | null> {
     try {
       const payload = await apiJson<EdgePropertyDetailRow>(`/api/properties/${id}`);
       const property = mapEdgePropertyDetailToDomain(payload);
-      return property.transactionType === "vente" && property.status !== "sold" ? property : null;
+      return property.transactionType === "vente" ? property : null;
     } catch {
       return null;
     }
@@ -382,7 +382,7 @@ export async function getPropertyById(id: number): Promise<Property | null> {
 
   await apiDelay();
   const property = propertyById.get(id);
-  return property?.transactionType === "vente" && property.status !== "sold" ? property : null;
+  return property?.transactionType === "vente" ? property : null;
 }
 
 export async function getPropertyBySlug(slug: string): Promise<Property | null> {
