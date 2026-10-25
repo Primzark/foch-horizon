@@ -276,7 +276,6 @@ export default function ListingsIndexPage() {
             <Phone aria-hidden="true" className="h-5 w-5" />
           </span>
           <p className="max-w-3xl text-sm leading-relaxed text-foreground sm:text-base">
-            <span className="font-semibold">Notre sélection en ligne ne présente pas tous les biens disponibles.</span>{" "}
             Contactez l’agence pour découvrir l’ensemble de notre portefeuille immobilier.
           </p>
         </div>

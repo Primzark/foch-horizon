@@ -14,11 +14,13 @@ let properties;
 let cities;
 let toCanonicalPropertyPath;
 let sanitizePropertySlug;
+let correctFrenchCommuneMentions;
 try {
   ({ geographyGuides: guides } = await loader.ssrLoadModule('/src/features/content/data/geographyGuides.ts'));
   ({ properties } = await loader.ssrLoadModule('/src/features/listings/data/properties.ts'));
   ({ cities } = await loader.ssrLoadModule('/src/features/cities/data/cities.ts'));
   ({ toCanonicalPropertyPath, sanitizePropertySlug } = await loader.ssrLoadModule('/src/features/listings/utils/formatting.ts'));
+  ({ correctFrenchCommuneMentions } = await loader.ssrLoadModule('/src/lib/utils/frenchCommuneNames.ts'));
 } finally {
   await loader.close();
 }
@@ -235,7 +237,7 @@ try {
         document.querySelector('main h1')?.textContent?.includes(title) &&
         document.querySelector('link[rel="canonical"]')?.getAttribute('href')?.endsWith(canonicalPath) &&
         [...document.querySelectorAll('script[data-foch-jsonld]')].some(node => node.textContent?.includes('RealEstateListing')),
-      { title: routeProperty.title, canonicalPath: route }, { timeout: 30000 });
+      { title: correctFrenchCommuneMentions(routeProperty.title), canonicalPath: route }, { timeout: 30000 });
     } else if (route === '/biens' || route === '/nos-dernieres-ventes') {
       await page.waitForFunction(() => document.querySelector('main a[href^="/biens/"]') !== null, undefined, { timeout: 10000 }).catch(async () => {
         const state = await page.evaluate(() => ({

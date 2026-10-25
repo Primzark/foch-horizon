@@ -1,4 +1,5 @@
 import { cityById } from "@/features/cities/data/cities";
+import { correctFrenchCommuneMentions, formatFrenchCommuneName } from "@/lib/utils/frenchCommuneNames";
 import type { PropertySearchItem } from "@/types/api";
 import type { Property } from "@/types/domain";
 
@@ -11,7 +12,7 @@ export function toSearchItem(property: Property): PropertySearchItem {
 
   return {
     id: property.id,
-    title: property.title,
+    title: correctFrenchCommuneMentions(property.title),
     slug: property.slug,
     transaction: property.transactionType,
     type: property.propertyType,
@@ -24,7 +25,7 @@ export function toSearchItem(property: Property): PropertySearchItem {
     parking: property.parkingCount,
     garage: property.garageCount,
     city: {
-      name: city?.name ?? "",
+      name: formatFrenchCommuneName(city?.name ?? "", city?.slug),
       slug: city?.slug ?? "",
       postalCode: property.postalCode,
     },

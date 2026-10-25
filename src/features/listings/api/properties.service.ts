@@ -3,6 +3,7 @@ import { agents } from "@/features/listings/data/agents";
 import { properties, propertyById, propertyBySlug } from "@/features/listings/data/properties";
 import { isAvailablePropertyStatus, normalizeKeyword } from "@/features/listings/utils/formatting";
 import { apiJson, isEdgeApiEnabled } from "@/lib/api/client";
+import { correctFrenchCommuneMentions, formatFrenchCommuneName } from "@/lib/utils/frenchCommuneNames";
 import type { PropertySearchItem, PropertySearchParams, PropertySearchResponse } from "@/types/api";
 import type { Property } from "@/types/domain";
 
@@ -325,7 +326,21 @@ export async function searchProperties(
     if (params.sort) query.set("sort", params.sort);
     if (options.includeDescription) query.set("includeDescription", "true");
 
-    return apiJson<PropertySearchResponse>(`/api/properties?${query.toString()}`);
+    const response = await apiJson<PropertySearchResponse>(`/api/properties?${query.toString()}`);
+    return {
+      ...response,
+      items: response.items.map((item) => ({
+        ...item,
+        title: correctFrenchCommuneMentions(item.title),
+        city: {
+          ...item.city,
+          name: formatFrenchCommuneName(item.city.name, item.city.slug),
+        },
+        ...(item.description !== undefined
+          ? { description: correctFrenchCommuneMentions(item.description) }
+          : {}),
+      })),
+    };
   }
 
   await apiDelay();
@@ -348,7 +363,7 @@ export async function searchProperties(
         .filter(Boolean);
       return {
         id: property.id,
-        title: property.title,
+        title: correctFrenchCommuneMentions(property.title),
         slug: property.slug,
         transaction: property.transactionType,
         type: property.propertyType,
@@ -360,13 +375,13 @@ export async function searchProperties(
         parking: property.parkingCount,
         garage: property.garageCount,
         city: {
-          name: city?.name ?? "",
+          name: formatFrenchCommuneName(city?.name ?? "", city?.slug),
           slug: city?.slug ?? "",
           postalCode: property.postalCode,
         },
         coverImageUrl: imageUrls[0] ?? "",
         imageUrls,
-        ...(options.includeDescription ? { description: property.description } : {}),
+        ...(options.includeDescription ? { description: correctFrenchCommuneMentions(property.description) } : {}),
         dpeLabel: property.dpeLabel,
         status: property.status,
         adminStatusOverride: property.adminStatusOverride ?? null,

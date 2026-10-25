@@ -63,7 +63,7 @@ export function PropertyAlertsDialog({ filters }: PropertyAlertsDialogProps) {
       <DialogTrigger asChild>
         <Button variant="outline" className="min-h-11 shrink-0 gap-2">
           <BellRing aria-hidden="true" className="h-4 w-4" />
-          Recevoir les nouveautés
+          Crée une alerte
         </Button>
       </DialogTrigger>
       <DialogContent>

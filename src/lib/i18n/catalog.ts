@@ -1,3 +1,5 @@
+import { correctFrenchCommuneMentions } from "@/lib/utils/frenchCommuneNames";
+
 export type SiteLanguage = "fr" | "en";
 
 /**
@@ -29,8 +31,7 @@ export const englishCopy: Record<string, string> = {
   "109 Av. Foch, 76600 Le Havre": "109 Avenue Foch, 76600 Le Havre, France",
   "Immobilier résidentiel haut de gamme, achat et vente au Havre et sur le littoral.": "High-end residential property sales in Le Havre and along the coast.",
   "Depuis 1972": "Since 1972",
-  "Havre": "Le Havre",
-  "HAVRE": "LE HAVRE",
+  "Crée une alerte": "Create an alert",
   "Navigation": "Navigation",
   "Coordonnées": "Contact details",
   "Informations légales": "Legal information",
@@ -723,10 +724,10 @@ export const englishCopy: Record<string, string> = {
   "MONTMORENCY": "Montmorency",
   "TRIPLE EXPOSITION VUE MER": "Three-aspect sea view",
   "JOFFRE/ PARC HAUSER": "Joffre / Parc Hauser",
-  "SAINT MICHEL , CENTRE-VILLE": "Saint-Michel, city centre",
+  "Saint-Michel, CENTRE-VILLE": "Saint-Michel, city centre",
   "Sanvic Mairie": "Sanvic Town Hall",
   "Nouveauté A deux pas de Saint Vincent": "New listing · Steps from Saint-Vincent",
-  "EXCLUSIVITE SAINT MICHEL": "Exclusive · Saint-Michel",
+  "EXCLUSIVITE Saint-Michel": "Exclusive · Saint-Michel",
   "EXCLUSIVITE PLACE SAINTE CECILE": "Exclusive · Place Sainte-Cécile",
   "NOUVEAUTE EXCLUSIVITE": "New listing · Exclusive",
   "Place de l'Hôtel de Ville, Vue Ouest": "Place de l’Hôtel de Ville, west-facing",
@@ -743,15 +744,15 @@ export const englishCopy: Record<string, string> = {
   "Proche forêt de Montgeon": "Near Montgeon Forest",
   "Rouelles": "Rouelles",
   "NOUVEAUTE Place de l'hôtel de ville": "New listing · Place de l’Hôtel de Ville",
-  "CENTRE DE SAINT ROMAIN DE COLBOSC": "Saint-Romain-de-Colbosc town centre",
+  "CENTRE DE Saint-Romain-de-Colbosc": "Saint-Romain-de-Colbosc town centre",
   "SANVIC EGLISE": "Sanvic Church",
-  "SAINTE ADRESSE": "Sainte-Adresse",
+  "Sainte-Adresse": "Sainte-Adresse",
   "SAINT VINCENT": "Saint-Vincent",
   "EXCLUSIVITE SANVIC": "Exclusive · Sanvic",
   "Saint Vincent": "Saint-Vincent",
   "PROXIMITE DU CENTRE COTY": "Near the Coty centre",
   "Nouveauté": "New listing",
-  "Proche du phare de Sainte Adresse": "Near the Sainte-Adresse lighthouse",
+  "Proche du phare de Sainte-Adresse": "Near the Sainte-Adresse lighthouse",
   "À deux pas de Saint Vincent": "Steps from Saint-Vincent",
   "GAINNEVILLE": "Gainneville",
   "Belle PROPRIETE": "Beautiful property",
@@ -1032,7 +1033,7 @@ function translateDynamicFrench(source: string): string | undefined {
 }
 
 export function canonicalFrenchText(value: string): string {
-  return reverseEnglishCopy.get(normalize(value)) ?? value;
+  return correctFrenchCommuneMentions(reverseEnglishCopy.get(normalize(value)) ?? value);
 }
 
 export function translateText(value: string, language: SiteLanguage): string {
