@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowUpRight, LocateFixed, MapPin, Move, X } from "lucide-react";
+import { ArrowUpRight, LocateFixed, MapPin, Move, ZoomIn, ZoomOut, X } from "lucide-react";
 import * as L from "leaflet";
 import type { PropertySearchItem } from "@/types/api";
 import { PropertyPreviewLink } from "@/features/listings/components/PropertyPreviewLink";
@@ -21,6 +21,8 @@ interface PropertyMapSplitViewProps {
 
 const DEFAULT_CENTER: L.LatLngTuple = [49.4943, 0.1078];
 const SELECTED_PROPERTY_ZOOM = 15;
+const MIN_MAP_ZOOM = 8;
+const MAX_MAP_ZOOM = 19;
 const MAP_FLY_DURATION_SECONDS = 0.5;
 const TILE_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 
@@ -59,6 +61,7 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [usesCooperativeMapGestures, setUsesCooperativeMapGestures] = useState(false);
   const [singleFingerPanEnabled, setSingleFingerPanEnabled] = useState(false);
+  const [mapZoom, setMapZoom] = useState(11);
 
   const positions = useMemo(
     () => items.map((item) => ({ item, ...resolveApproximatePropertyMapLocation(item) })),
@@ -87,13 +90,18 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
     const map = L.map(mapElementRef.current, {
       center: DEFAULT_CENTER,
       zoom: 11,
-      zoomControl: true,
+      minZoom: MIN_MAP_ZOOM,
+      maxZoom: MAX_MAP_ZOOM,
+      zoomControl: false,
       scrollWheelZoom: false,
       touchZoom: true,
       dragging: !cooperativeViewport.matches,
     });
+    const syncMapZoom = () => setMapZoom(map.getZoom());
+    map.on("zoomend", syncMapZoom);
+    syncMapZoom();
     L.tileLayer(TILE_URL, {
-      maxZoom: 19,
+      maxZoom: MAX_MAP_ZOOM,
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">Contributeurs OpenStreetMap</a>',
     }).addTo(map);
     const markerLayer = L.layerGroup().addTo(map);
@@ -116,6 +124,7 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
 
     return () => {
       cooperativeViewport.removeEventListener("change", syncMapGestureMode);
+      map.off("zoomend", syncMapZoom);
       markerLayer.clearLayers();
       map.remove();
       mapRef.current = null;
@@ -204,6 +213,13 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
     } else {
       map.setView(DEFAULT_CENTER, 11);
     }
+  };
+
+  const zoomMap = (direction: "in" | "out") => {
+    const map = mapRef.current;
+    if (!map) return;
+    if (direction === "in") map.zoomIn();
+    else map.zoomOut();
   };
 
   const toggleSingleFingerPan = () => {
@@ -320,15 +336,41 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
           </>
         )}
 
-        <button
-          type="button"
-          onClick={recenterMap}
-          className="absolute right-3 top-3 z-[1000] inline-flex items-center gap-2 rounded-full border border-border/80 bg-background/95 px-3 py-2 text-xs font-semibold text-foreground shadow-sm backdrop-blur transition hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          aria-label="Recentrer la carte sur les biens"
-        >
-          <LocateFixed aria-hidden="true" className="h-4 w-4 text-brand-strong" />
-          Recentrer
-        </button>
+        <div className="absolute right-3 top-3 z-[1000] flex flex-col items-end gap-2">
+          <button
+            type="button"
+            onClick={recenterMap}
+            className="inline-flex items-center gap-2 rounded-full border border-border/80 bg-background/95 px-3 py-2 text-xs font-semibold text-foreground shadow-sm backdrop-blur transition hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label="Recentrer la carte sur les biens"
+          >
+            <LocateFixed aria-hidden="true" className="h-4 w-4 text-brand-strong" />
+            Recentrer
+          </button>
+
+          <div role="group" aria-label="Réglage du zoom de la carte" className="overflow-hidden rounded-xl border border-border/80 bg-background/95 shadow-sm backdrop-blur">
+            <button
+              type="button"
+              onClick={() => zoomMap("in")}
+              disabled={mapZoom >= MAX_MAP_ZOOM}
+              title="Zoom avant"
+              aria-label="Zoom avant"
+              className="inline-flex h-10 w-10 items-center justify-center text-foreground transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+            >
+              <ZoomIn aria-hidden="true" className="h-4 w-4" />
+            </button>
+            <div aria-hidden="true" className="h-px bg-border/80" />
+            <button
+              type="button"
+              onClick={() => zoomMap("out")}
+              disabled={mapZoom <= MIN_MAP_ZOOM}
+              title="Zoom arrière"
+              aria-label="Zoom arrière"
+              className="inline-flex h-10 w-10 items-center justify-center text-foreground transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+            >
+              <ZoomOut aria-hidden="true" className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
 
         {selectedItem && (
           <div className="absolute left-3 top-3 z-[1000] flex w-[min(19rem,calc(100%-5.5rem))] gap-3 rounded-2xl border border-border/70 bg-background/95 p-2.5 shadow-lg backdrop-blur">
