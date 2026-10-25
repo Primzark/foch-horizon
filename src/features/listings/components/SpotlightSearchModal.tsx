@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { formatPropertyTypeLabel, normalizeKeyword, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
 import { buildSearchParams, parseSearchParams } from "@/features/listings/utils/query";
 import { searchProperties } from "@/features/listings/api/properties.service";
@@ -416,18 +417,21 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
               {advancedOpen ? "Masquer les critères" : "Plus de critères"}
             </button>
             {advancedOpen ? (
-              <button
+              <Button
                 type="submit"
+                variant="outline"
                 form="spotlight-search-criteria-form"
                 aria-label={resultCountAccessibleLabel}
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-brand-strong px-4 py-2 font-semibold text-background transition-colors hover:bg-brand-strong/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-strong focus-visible:ring-offset-2"
+                className="gap-0"
               >
-                <span className="whitespace-nowrap">{resultCountPrefix}</span>
-                <SearchCountBadge aria-live="polite">
-                  {resultCountNumber}
-                </SearchCountBadge>
-                <span className="whitespace-nowrap">{resultCountSuffix}</span>
-              </button>
+                <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                  <span>{resultCountPrefix}</span>
+                  <SearchCountBadge aria-live="polite">
+                    {resultCountNumber}
+                  </SearchCountBadge>
+                  <span>{resultCountSuffix}</span>
+                </span>
+              </Button>
             ) : (
               <button type="button" onClick={() => navigateToSearch({}, true)} className="shrink-0 rounded-full px-3 py-2 font-medium text-foreground transition-colors hover:bg-muted hover:text-brand-strong">
                 Tous les biens

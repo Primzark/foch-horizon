@@ -389,6 +389,7 @@ export function SearchDrawer() {
         <div className="mt-6 flex flex-wrap justify-end gap-2 border-t border-border pt-4">
           {isMobile && (
             <Button
+              variant="outline"
               aria-label={resultCountAccessibleLabel}
               onClick={() => {
                 pushFilters(draft);
