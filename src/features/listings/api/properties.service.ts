@@ -88,8 +88,8 @@ function mapEdgePropertyDetailToDomain(row: EdgePropertyDetailRow): Property {
 
   const localAgentId =
     localAgentIdByName.get(normalizeAgentLookupKey(row.agent?.full_name)) ??
-    (row.agent_id ?? undefined) ??
-    "agent-jeanne-morel";
+    row.agent_id ??
+    "";
 
   const images = (row.images ?? [])
     .filter((image) => typeof image?.source_url === "string" && image.source_url.trim().length > 0)
