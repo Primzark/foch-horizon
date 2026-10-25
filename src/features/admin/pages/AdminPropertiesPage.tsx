@@ -1229,13 +1229,13 @@ export default function AdminPropertiesPage() {
                         <thead>
                           <tr className="border-b border-border/70 bg-secondary/35 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                             <th scope="col" className="px-5 py-3.5">Bien immobilier</th>
+                            <th scope="col" className="w-[180px] px-3 py-3.5">Statut</th>
                             <th scope="col" className="px-4 py-3.5">Type</th>
                             <th scope="col" className="px-4 py-3.5 text-right">Prix</th>
                             <th scope="col" className="px-3 py-3.5 text-center">Favorite</th>
                             <th scope="col" className="px-3 py-3.5 text-center">En ligne</th>
                             <th scope="col" className="px-4 py-3.5">Négociateur</th>
                             <th scope="col" className="px-4 py-3.5">Mis à jour</th>
-                            <th scope="col" className="px-5 py-3.5 text-right">Statut</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -1251,6 +1251,14 @@ export default function AdminPropertiesPage() {
                               >
                                 <td className="px-5 py-3.5">
                                   <PropertyIdentity property={property} />
+                                </td>
+                                <td className="px-3 py-3.5">
+                                  <StatusControl
+                                    property={property}
+                                    value={property.status}
+                                    saving={savingIds.has(property.id)}
+                                    onChange={(propertyId, status) => void changeProperty({ id: propertyId, status })}
+                                  />
                                 </td>
                                 <td className="px-4 py-3.5">
                                   <p className="text-xs font-medium">{formatPropertyType(property.property_type)}</p>
@@ -1284,16 +1292,6 @@ export default function AdminPropertiesPage() {
                                   />
                                 </td>
                                 <td className="px-4 py-3.5 text-xs text-muted-foreground">{formatDate(property.updated_at)}</td>
-                                <td className="px-5 py-3.5">
-                                  <div className="flex justify-end">
-                                    <StatusControl
-                                      property={property}
-                                      value={property.status}
-                                      saving={savingIds.has(property.id)}
-                                      onChange={(propertyId, status) => void changeProperty({ id: propertyId, status })}
-                                    />
-                                  </div>
-                                </td>
                               </motion.tr>
                             ))}
                           </AnimatePresence>
