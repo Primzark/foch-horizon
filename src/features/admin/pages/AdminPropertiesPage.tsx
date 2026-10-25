@@ -11,7 +11,6 @@ import {
   CircleAlert,
   Eye,
   EyeOff,
-  GripVertical,
   Heart,
   KeyRound,
   LogOut,
@@ -69,28 +68,6 @@ import {
 
 type StatusFilter = "all" | AdminManagedPropertyStatus;
 type AdminLoginErrors = Partial<Record<"email" | "password", string>>;
-
-const ADMIN_SIDEBAR_STORAGE_KEY = "foch-admin-sidebar-width";
-const ADMIN_SIDEBAR_MIN_WIDTH = 72;
-const ADMIN_SIDEBAR_MAX_WIDTH = 480;
-const ADMIN_SIDEBAR_DEFAULT_WIDTH = 240;
-
-function clampAdminSidebarWidth(width: number): number {
-  return Math.round(Math.min(ADMIN_SIDEBAR_MAX_WIDTH, Math.max(ADMIN_SIDEBAR_MIN_WIDTH, width)));
-}
-
-function getSavedAdminSidebarWidth(): number {
-  if (typeof window === "undefined") return ADMIN_SIDEBAR_DEFAULT_WIDTH;
-
-  try {
-    const savedWidth = window.localStorage.getItem(ADMIN_SIDEBAR_STORAGE_KEY);
-    if (savedWidth === null) return ADMIN_SIDEBAR_DEFAULT_WIDTH;
-    const parsedWidth = Number(savedWidth);
-    return Number.isFinite(parsedWidth) ? clampAdminSidebarWidth(parsedWidth) : ADMIN_SIDEBAR_DEFAULT_WIDTH;
-  } catch {
-    return ADMIN_SIDEBAR_DEFAULT_WIDTH;
-  }
-}
 
 const adminLoginEmailSchema = z.string().trim().email().max(254);
 
@@ -283,7 +260,7 @@ function PropertyFlagControl({
   saving: boolean;
   onChange: (checked: boolean) => void;
 }) {
-  const label = kind === "favorite" ? "Favorite" : "En ligne";
+  const label = kind === "favorite" ? "Favoris" : "En ligne";
 
   return (
     <Checkbox
@@ -627,9 +604,6 @@ export default function AdminPropertiesPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [savingIds, setSavingIds] = useState<Set<number>>(() => new Set());
-  const [sidebarWidth, setSidebarWidth] = useState(getSavedAdminSidebarWidth);
-  const [sidebarResizing, setSidebarResizing] = useState(false);
-  const sidebarLayoutRef = useRef<HTMLDivElement>(null);
 
   useSeo({
     title: "Gestion des annonces | Foch Immobilier",
@@ -637,32 +611,6 @@ export default function AdminPropertiesPage() {
     canonicalPath: "/admin",
     noIndex: true,
   });
-
-  useEffect(() => {
-    const timeout = window.setTimeout(() => {
-      try {
-        window.localStorage.setItem(ADMIN_SIDEBAR_STORAGE_KEY, String(sidebarWidth));
-      } catch {
-        // Keep resizing usable when browser storage is unavailable.
-      }
-    }, 150);
-
-    return () => window.clearTimeout(timeout);
-  }, [sidebarWidth]);
-
-  useEffect(() => {
-    if (!sidebarResizing) return;
-
-    const previousCursor = document.body.style.cursor;
-    const previousUserSelect = document.body.style.userSelect;
-    document.body.style.cursor = "col-resize";
-    document.body.style.userSelect = "none";
-
-    return () => {
-      document.body.style.cursor = previousCursor;
-      document.body.style.userSelect = previousUserSelect;
-    };
-  }, [sidebarResizing]);
 
   useEffect(() => {
     if (!supabaseClient) {
@@ -908,8 +856,6 @@ export default function AdminPropertiesPage() {
   const likeHistory = propertyLikeHistoryQuery.data ?? [];
   const userEmail = session.user.email ?? "Administrateur";
   const adminAgents = agentsQuery.data ?? [];
-  const sidebarCompact = sidebarWidth < 208;
-
   return (
     <motion.main
       initial={{ opacity: 0, y: 6 }}
@@ -917,154 +863,52 @@ export default function AdminPropertiesPage() {
       transition={{ duration: 0.24, ease: "easeOut" }}
       className="min-h-dvh bg-[hsl(var(--background))] text-foreground"
     >
-      <div
-        ref={sidebarLayoutRef}
-        className="mx-auto min-h-dvh max-w-[1680px] lg:grid"
-        style={{ gridTemplateColumns: `${sidebarWidth}px minmax(0, 1fr)` }}
-      >
-        <aside className={["relative hidden border-r border-border/70 bg-card/70 py-7 lg:flex lg:flex-col", sidebarCompact ? "px-3" : "px-5"].join(" ")}>
-          <div className={sidebarCompact ? "flex flex-col items-center gap-4" : "flex items-start justify-between gap-2"}>
-            {sidebarCompact ? (
-              <Link to="/" aria-label="Foch Immobilier, accueil" title="Foch Immobilier" className="grid h-9 w-9 place-items-center rounded-lg bg-brand-soft font-display text-lg font-semibold text-brand-strong">F</Link>
-            ) : (
-              <Link to="/" className="flex min-w-0 flex-col items-start gap-2" aria-label="Foch Immobilier, accueil">
-                <img
-                  src="/images/foch-immobilier-logo-transparent.png"
-                  alt="Foch Immobilier"
-                  width={772}
-                  height={150}
-                  className="h-auto w-full max-w-[185px] object-contain"
-                  decoding="async"
-                />
-                <span className="text-[9px] font-semibold uppercase tracking-[0.19em] text-muted-foreground">Administration</span>
-              </Link>
-            )}
+      <div className="mx-auto min-h-dvh w-full max-w-[1680px]">
+        <header className="flex min-h-[68px] items-center justify-between gap-3 border-b border-border/70 bg-card/75 px-4 sm:px-7 lg:px-10">
+          <Link to="/" className="shrink-0" aria-label="Foch Immobilier, accueil">
+            <img
+              src="/images/foch-immobilier-logo-transparent.png"
+              alt="Foch Immobilier"
+              width={772}
+              height={150}
+              className="h-auto w-[110px] max-w-full object-contain sm:w-[150px]"
+              decoding="async"
+            />
+          </Link>
+          <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+            <a href="/biens" target="_blank" rel="noreferrer" aria-label="Voir le site" className="inline-flex h-9 items-center gap-2 rounded-lg px-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground sm:px-3">
+              <span className="hidden sm:inline">Voir le site</span><ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
+            </a>
+            <LogoutConfirmationButton variant="outline" size="sm" onConfirm={logout} className="gap-2 px-2 sm:px-3">
+              <LogOut className="h-4 w-4" aria-hidden="true" />
+              <span className="sm:hidden">Quitter</span>
+              <span className="hidden sm:inline">Se déconnecter</span>
+            </LogoutConfirmationButton>
           </div>
+        </header>
 
-          {!sidebarCompact && <p className="mb-3 mt-12 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Espace de travail</p>}
-          <nav aria-label="Administration" className="space-y-1">
-            <Link
-              to="/admin"
-              aria-label="Annonces"
-              title="Annonces"
-              className={[
-                "flex items-center rounded-xl py-3 text-sm font-medium transition-colors",
-                sidebarCompact ? "justify-center px-3" : "gap-3 px-3",
-                !likesSection ? "bg-brand-soft text-brand-strong" : "text-muted-foreground hover:bg-secondary hover:text-foreground",
-              ].join(" ")}
-            >
-              <Building2 className="h-4 w-4" aria-hidden="true" />
-              <span className={sidebarCompact ? "sr-only" : "flex-1"}>Annonces</span>
-              {!sidebarCompact && <span className="text-xs tabular-nums opacity-70">{allProperties.length}</span>}
-            </Link>
-            <Link
-              to="/admin?section=likes"
-              aria-label="Historique des likes"
-              title="Historique des likes"
-              className={[
-                "flex items-center rounded-xl py-3 text-sm font-medium transition-colors",
-                sidebarCompact ? "justify-center px-3" : "gap-3 px-3",
-                likesSection ? "bg-brand-soft text-brand-strong" : "text-muted-foreground hover:bg-secondary hover:text-foreground",
-              ].join(" ")}
-            >
-              <Heart className="h-4 w-4" aria-hidden="true" />
-              <span className={sidebarCompact ? "sr-only" : "flex-1"}>Historique des likes</span>
-              {!sidebarCompact && <span className="text-xs tabular-nums opacity-70">{propertyLikes.length}</span>}
-            </Link>
-          </nav>
-
-          <div className={["mt-auto border-t border-border/70 pt-5", sidebarCompact ? "text-center" : ""].join(" ")}>
-            {sidebarCompact ? (
-              <span title={userEmail} aria-label={userEmail} className="mx-auto grid h-8 w-8 place-items-center rounded-full bg-secondary text-xs font-medium">{userEmail.slice(0, 1).toUpperCase()}</span>
-            ) : (
-              <>
-                <p className="truncate text-xs font-medium" title={userEmail}>{userEmail}</p>
-                <p className="mt-1 text-[11px] text-muted-foreground">Compte autorisé</p>
-              </>
-            )}
-          </div>
-          <div
-            role="separator"
-            aria-label="Redimensionner la barre latérale"
-            aria-orientation="vertical"
-            aria-valuemin={ADMIN_SIDEBAR_MIN_WIDTH}
-            aria-valuemax={ADMIN_SIDEBAR_MAX_WIDTH}
-            aria-valuenow={sidebarWidth}
-            aria-valuetext={`${sidebarWidth} pixels`}
-            tabIndex={0}
-            onPointerDown={(event) => {
-              if (event.button !== 0) return;
-              event.preventDefault();
-              event.currentTarget.setPointerCapture(event.pointerId);
-              setSidebarResizing(true);
-            }}
-            onPointerMove={(event) => {
-              if (!sidebarResizing) return;
-              const layoutLeft = sidebarLayoutRef.current?.getBoundingClientRect().left ?? 0;
-              setSidebarWidth(clampAdminSidebarWidth(event.clientX - layoutLeft));
-            }}
-            onPointerUp={() => setSidebarResizing(false)}
-            onPointerCancel={() => setSidebarResizing(false)}
-            onLostPointerCapture={() => setSidebarResizing(false)}
-            onKeyDown={(event) => {
-              if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
-                event.preventDefault();
-                setSidebarWidth((width) => clampAdminSidebarWidth(width + (event.key === "ArrowRight" ? 16 : -16)));
-              } else if (event.key === "Home") {
-                event.preventDefault();
-                setSidebarWidth(ADMIN_SIDEBAR_MIN_WIDTH);
-              } else if (event.key === "End") {
-                event.preventDefault();
-                setSidebarWidth(ADMIN_SIDEBAR_MAX_WIDTH);
-              }
-            }}
-            className={["group/sidebar-resizer absolute inset-y-0 -right-2 z-30 flex w-4 touch-none cursor-col-resize items-start justify-center outline-none focus-visible:bg-primary/10", sidebarResizing ? "bg-primary/10" : "hover:bg-primary/10"].join(" ")}
+        <nav aria-label="Administration" className="flex flex-wrap items-center gap-2 border-b border-border/70 bg-card/40 px-4 py-2.5 sm:px-7 lg:px-10">
+          <Link
+            to="/admin"
+            aria-current={!likesSection ? "page" : undefined}
+            className={`inline-flex min-h-10 items-center gap-2 rounded-xl px-3 text-sm font-medium transition-colors ${!likesSection ? "bg-brand-soft text-brand-strong" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}
           >
-            <GripVertical className={["sticky top-[calc(50vh-0.625rem)] h-5 w-5 shrink-0 transition-colors", sidebarResizing ? "text-primary" : "text-muted-foreground group-hover/sidebar-resizer:text-primary group-focus-visible/sidebar-resizer:text-primary"].join(" ")} aria-hidden="true" />
-          </div>
-        </aside>
+            <Building2 className="h-4 w-4" aria-hidden="true" />
+            <span>Annonces</span>
+            <span className="text-xs tabular-nums opacity-70">{allProperties.length}</span>
+          </Link>
+          <Link
+            to="/admin?section=likes"
+            aria-current={likesSection ? "page" : undefined}
+            className={`inline-flex min-h-10 items-center gap-2 rounded-xl px-3 text-sm font-medium transition-colors ${likesSection ? "bg-brand-soft text-brand-strong" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}
+          >
+            <Heart className="h-4 w-4" aria-hidden="true" />
+            <span>Historique des likes</span>
+            <span className="text-xs tabular-nums opacity-70">{propertyLikes.length}</span>
+          </Link>
+        </nav>
 
-        <div className="min-w-0">
-          <header className="flex min-h-[68px] items-center justify-between border-b border-border/70 bg-card/75 px-5 sm:px-7 lg:px-9">
-            <div className="flex items-center lg:hidden">
-              <img
-                src="/images/foch-immobilier-logo-transparent.png"
-                alt="Foch Immobilier"
-                width={772}
-                height={150}
-                className="h-auto w-[120px] max-w-full object-contain max-[359px]:w-[102px] sm:w-[150px]"
-                decoding="async"
-              />
-            </div>
-            <div className="hidden text-xs text-muted-foreground lg:block">Espace sécurisé · Gestion des biens</div>
-            <div className="ml-auto flex items-center gap-2">
-              <a href="/biens" target="_blank" rel="noreferrer" className="inline-flex h-9 items-center gap-2 rounded-lg px-3 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
-                Voir le site <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
-              </a>
-              <LogoutConfirmationButton variant="outline" size="sm" onConfirm={logout} className="gap-2">
-                <LogOut className="h-4 w-4" aria-hidden="true" />
-                <span className="lg:hidden">Quitter</span>
-                <span className="hidden lg:inline">Se déconnecter</span>
-              </LogoutConfirmationButton>
-            </div>
-          </header>
-
-          <nav aria-label="Administration" className="flex gap-2 border-b border-border/70 bg-card/40 px-5 py-2 lg:hidden">
-            <Link
-              to="/admin"
-              className={`rounded-lg px-3 py-2 text-xs font-medium ${!likesSection ? "bg-brand-soft text-brand-strong" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}
-            >
-              Annonces
-            </Link>
-            <Link
-              to="/admin?section=likes"
-              className={`rounded-lg px-3 py-2 text-xs font-medium ${likesSection ? "bg-brand-soft text-brand-strong" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}
-            >
-              Historique des likes
-            </Link>
-          </nav>
-
-          <div className="mx-auto w-full max-w-none px-5 py-7 sm:px-7 sm:py-9 lg:px-10 lg:py-10">
+          <div className="mx-auto w-full max-w-none px-4 py-7 sm:px-7 sm:py-9 lg:px-10 lg:py-10">
             {likesSection ? (
               <section aria-labelledby="admin-likes-title">
                 <div className="flex flex-wrap items-end justify-between gap-4">
@@ -1242,7 +1086,7 @@ export default function AdminPropertiesPage() {
 
             <section aria-label="Synthèse des annonces" className="mt-8 grid grid-cols-2 gap-y-5 border-y border-border/70 py-5 sm:grid-cols-3 lg:grid-cols-6">
               <SummaryItem label="Toutes" value={allProperties.length} />
-              <SummaryItem label="Favorites" value={allProperties.filter((property) => property.is_featured).length} />
+              <SummaryItem label="Favoris" value={allProperties.filter((property) => property.is_featured).length} />
               <SummaryItem label="En ligne" value={allProperties.filter((property) => property.is_online).length} />
               <SummaryItem label="Sous offre" value={counts.under_offer} />
               <SummaryItem label="Sous compromis" value={counts.under_contract} />
@@ -1310,7 +1154,7 @@ export default function AdminPropertiesPage() {
                             <th scope="col" className="w-[180px] px-3 py-3.5">Statut</th>
                             <th scope="col" className="px-4 py-3.5">Type</th>
                             <th scope="col" className="px-4 py-3.5 text-right">Prix</th>
-                            <th scope="col" className="px-3 py-3.5 text-center">Favorite</th>
+                            <th scope="col" className="px-3 py-3.5 text-center">Favoris</th>
                             <th scope="col" className="px-3 py-3.5 text-center">En ligne</th>
                             <th scope="col" className="px-4 py-3.5">Négociateur</th>
                             <th scope="col" className="px-4 py-3.5">Mis à jour</th>
@@ -1400,7 +1244,7 @@ export default function AdminPropertiesPage() {
                         </div>
                         <div className="mt-3 grid grid-cols-2 gap-3">
                           <div className="flex items-center justify-between rounded-lg bg-secondary/40 px-3 py-2">
-                            <span className="text-xs">Favorite</span>
+                            <span className="text-xs">Favoris</span>
                             <PropertyFlagControl
                               property={property}
                               kind="favorite"
@@ -1443,7 +1287,6 @@ export default function AdminPropertiesPage() {
               </>
             )}
           </div>
-        </div>
       </div>
     </motion.main>
   );

@@ -511,7 +511,7 @@ export default function ListingDetailPage({
       <div className="relative z-10 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/75">{getRecommendationLocation(nextPropertyToDiscover)} · {nextPropertyToDiscover.surfaceM2} m²</p>
-          <h3 className="mt-2 max-w-2xl font-display text-3xl leading-tight sm:text-4xl">{nextPropertyToDiscover.title}</h3>
+          <h3 className="mt-2 max-w-2xl break-words font-display text-3xl leading-tight sm:text-4xl">{nextPropertyToDiscover.title}</h3>
           <p className="mt-2 text-lg font-medium text-white/90">{formatPrice(nextPropertyToDiscover.priceAmount, nextPropertyToDiscover.transaction)}</p>
         </div>
         <span className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 self-start rounded-full bg-background px-5 text-sm font-semibold text-foreground transition-colors duration-300 group-hover:bg-brand-soft group-focus-visible:bg-brand-soft sm:self-auto">
@@ -786,7 +786,7 @@ export default function ListingDetailPage({
         </div>
       )}
 
-      <div ref={contentRef} className="min-w-0">
+      <div ref={contentRef} className="min-w-0 max-w-full overflow-x-clip">
         {previewLayout && (
           <ListingGallery
             key={property.id}
@@ -814,7 +814,7 @@ export default function ListingDetailPage({
           <div id="property-overview" ref={summaryRef} className={`scroll-mt-16 grid grid-cols-1 items-start gap-x-6 gap-y-4 desktop:grid-cols-[minmax(0,1fr)_auto] ${previewLayout ? "mb-6" : "mt-5"}`}>
             <div className="min-w-0">
               {!previewLayout && <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Réf du bien {property.id}</p>}
-              <h1 className={`leading-[1.08] ${previewLayout ? "font-body text-xl font-bold sm:text-4xl" : "mt-1 font-display text-4xl"}`}>{property.title}</h1>
+              <h1 className={`break-words leading-[1.08] ${previewLayout ? "font-body text-xl font-bold sm:text-4xl" : "mt-1 font-display text-4xl"}`}>{property.title}</h1>
               <p className={`mt-2 ${previewLayout ? "text-sm font-semibold text-foreground" : "text-sm font-medium text-muted-foreground"}`}>{previewLayout ? `${propertyTypeLabel} ${statusLabel.toLowerCase()}` : <>{propertyTypeLabel} <span aria-hidden="true">·</span> {statusLabel}</>}</p>
               {!previewLayout && <p className="mt-2 inline-flex items-center gap-1 text-sm text-muted-foreground">
                 <MapPin className="h-4 w-4" />
@@ -909,14 +909,14 @@ export default function ListingDetailPage({
 
           <article id="property-description" className={previewLayout ? "scroll-mt-16 border-b border-border/80 py-7" : "mt-9 rounded-2xl border border-border bg-card p-6"}>
             <h2 className="font-display text-2xl">Description</h2>
-            <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">{normalizePropertyDescription(property.description)}</p>
+            <p className="mt-3 whitespace-pre-line break-words text-sm leading-relaxed text-muted-foreground">{normalizePropertyDescription(property.description)}</p>
           </article>
 
           <article id="property-features" className={previewLayout ? "scroll-mt-16 border-b border-border/80 py-7" : "mt-6 rounded-2xl border border-border bg-card p-6"}>
             <h2 className="font-display text-2xl">Caractéristiques</h2>
             <ul className="mt-3 flex flex-wrap gap-2">
               {property.features.map((feature) => (
-                <li key={feature.featureKey} className="rounded-full border border-border px-3 py-1 text-xs">
+                <li key={feature.featureKey} className="break-words rounded-full border border-border px-3 py-1 text-xs">
                   {feature.labelFr}
                 </li>
               ))}
@@ -965,7 +965,7 @@ export default function ListingDetailPage({
                 className="mt-2 block text-sm text-muted-foreground hover:underline"
                 onClick={() => trackComparisonContactClick("email")}
               >
-                {agent.email}
+                <span className="break-words">{agent.email}</span>
               </a>
             )}
           </section>
@@ -988,7 +988,7 @@ export default function ListingDetailPage({
       </div>
 
       {nextPropertyToDiscover && (
-        <section className={`mt-16 ${previewLayout ? "mx-auto w-full max-w-7xl px-5 sm:px-8 desktop:px-6" : ""}`}>
+        <section className={`mt-16 min-w-0 max-w-full overflow-x-clip ${previewLayout ? "mx-auto w-full max-w-7xl px-5 sm:px-8 desktop:px-6" : ""}`}>
           <h2 className="font-display text-3xl">Prochain bien à découvrir</h2>
           <Link
             to={toCanonicalPropertyPath(nextPropertyToDiscover)}
@@ -1002,7 +1002,7 @@ export default function ListingDetailPage({
         </section>
       )}
       {secondarySimilarItems.length > 0 && (
-        <section className={`mt-14 ${previewLayout ? "mx-auto w-full max-w-7xl px-5 sm:px-8 desktop:px-6" : ""}`} aria-labelledby="similar-properties-heading">
+        <section className={`mt-14 min-w-0 max-w-full overflow-x-clip ${previewLayout ? "mx-auto w-full max-w-7xl px-5 sm:px-8 desktop:px-6" : ""}`} aria-labelledby="similar-properties-heading">
           <h2 id="similar-properties-heading" className="font-display text-2xl sm:text-3xl">Biens similaires</h2>
           <div className="mt-4 grid grid-flow-col auto-cols-[84%] snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain pb-2 pr-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:auto-cols-[46%] desktop:auto-cols-[32%] desktop:justify-center desktop:overflow-visible desktop:pb-0 desktop:pr-0">
             {secondarySimilarItems.map((item) => {
