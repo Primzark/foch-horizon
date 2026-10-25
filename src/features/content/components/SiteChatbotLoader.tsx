@@ -18,6 +18,8 @@ export function SiteChatbotLoader() {
   const loadRequest = useRef<Promise<void> | null>(null);
   const isHomePage = location.pathname === "/";
   const isComparisonPage = location.pathname === "/biens/comparer";
+  const isPropertyDetailPage = location.pathname.startsWith("/biens/") && !isComparisonPage;
+  const shouldShowLauncher = !isComparisonPage && location.pathname !== "/contact" && !isPropertyDetailPage;
 
   const openAssistant = useCallback(() => {
     if (Chatbot) {
@@ -63,8 +65,8 @@ export function SiteChatbotLoader() {
     void preloadSiteChatbot().catch(() => undefined);
   };
 
-  if (Chatbot) return <Chatbot initiallyOpen={pendingOpen} showLauncher={!isComparisonPage} />;
-  if (searchDrawerOpen || (isComparisonPage && !pendingOpen)) return null;
+  if (Chatbot) return <Chatbot initiallyOpen={pendingOpen} showLauncher={shouldShowLauncher} />;
+  if (searchDrawerOpen || (!shouldShowLauncher && !pendingOpen)) return null;
 
   return (
     <div
