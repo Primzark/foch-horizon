@@ -13,6 +13,7 @@ import { properties } from "@/features/listings/data/properties";
 import { toSearchItem } from "@/features/listings/utils/mappers";
 import { cities } from "@/features/cities/data/cities";
 import { useSeo } from "@/lib/seo/useSeo";
+import { isEdgeApiEnabled } from "@/lib/api/client";
 import { getAgencyReviews } from "@/features/content/api/googleReviews.service";
 import { inferPlaceImageMood } from "@/lib/visuals/placeImageMotion";
 import { ScrollReveal } from "@/components/visuals/ScrollReveal";
@@ -52,12 +53,9 @@ export default function HomePage() {
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
   });
-  const featuredItems = useMemo(
-    () => (featuredQuery.data ?? []).slice(0, 6).map(toSearchItem),
-    [featuredQuery.data],
-  );
+  const featuredItems = useMemo(() => (featuredQuery.data ?? []).slice(0, 6), [featuredQuery.data]);
   const instantSearchItems = useMemo(
-    () => properties.filter((property) => property.status !== "off_market" && property.status !== "sold").map((property) => ({
+    () => (isEdgeApiEnabled() ? [] : properties.filter((property) => property.isOnline !== false && property.status !== "off_market" && property.status !== "sold")).map((property) => ({
       ...toSearchItem(property),
       description: property.description,
     })),
@@ -147,6 +145,11 @@ export default function HomePage() {
               className="paper-grain [--paper-grain-opacity:0.032] [--paper-grain-mobile-reduction:0.018]"
             />
           ))}
+          {featuredQuery.isSuccess && featuredItems.length === 0 && (
+            <p className="col-span-full rounded-xl border border-dashed border-border px-5 py-8 text-center text-sm text-muted-foreground">
+              Aucun bien n’est sélectionné pour l’accueil pour le moment.
+            </p>
+          )}
         </div>
 
         <div className="mt-6 flex flex-col gap-4 rounded-2xl border border-brand-border bg-brand-soft/50 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">

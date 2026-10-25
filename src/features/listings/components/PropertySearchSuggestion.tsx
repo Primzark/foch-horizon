@@ -68,10 +68,7 @@ export function PropertySearchSuggestion({
               srcSet={getPropertyImageSrcSet(property.coverImageUrl, [200, 400])}
               sizes={imageSizes}
               alt=""
-              className={`h-full w-full object-cover ${
-                reducedMotion ? "" : "transition-transform group-hover:scale-[1.06] group-focus-visible:scale-[1.06]"
-              }`}
-              style={{ transitionDuration: reducedMotion ? "0ms" : "350ms" }}
+              className="h-full w-full object-cover"
               loading="lazy"
             />
           ) : (

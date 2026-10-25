@@ -33,7 +33,7 @@ const PropertyCard = ({ property, variant = "grid" }: PropertyCardProps) => {
           <img
             src={property.images[0]?.url}
             alt={property.images[0]?.alt || property.title}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className="h-full w-full object-cover"
             loading="lazy"
           />
           <ListingBadges labels={labels} className="absolute left-3 right-3 top-3 z-[2]" />
@@ -76,7 +76,7 @@ const PropertyCard = ({ property, variant = "grid" }: PropertyCardProps) => {
           <img
             src={property.images[0]?.url}
             alt={property.images[0]?.alt || property.title}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className="h-full w-full object-cover"
             loading="lazy"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-foreground/40 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />

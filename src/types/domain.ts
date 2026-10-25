@@ -2,7 +2,17 @@ export type TransactionType = "vente" | "location";
 
 export type PropertyType = "appartement" | "maison_villa" | "autre";
 
-export type PropertyStatus = "active" | "under_offer" | "reserved" | "sold" | "rented" | "off_market";
+export type PropertyStatus =
+  | "active"
+  | "new"
+  | "exclusive"
+  | "price_reduced"
+  | "under_offer"
+  | "under_contract"
+  | "reserved"
+  | "sold"
+  | "rented"
+  | "off_market";
 
 export type EnergyLabel = "A" | "B" | "C" | "D" | "E" | "F" | "G";
 
@@ -75,6 +85,8 @@ export interface Property {
   publishedAt: string;
   updatedAt: string;
   isFeatured: boolean;
+  /** Admin publication flag; omitted from the bundled feed and treated as online. */
+  isOnline?: boolean;
   images: PropertyImage[];
   features: PropertyFeature[];
 }

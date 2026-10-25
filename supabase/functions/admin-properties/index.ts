@@ -1,6 +1,17 @@
 import { createClient } from "npm:@supabase/supabase-js@2.97.0";
 
-const ADMIN_STATUSES = new Set(["active", "under_offer", "reserved", "sold", "rented", "off_market"]);
+const ADMIN_STATUSES = new Set([
+  "new",
+  "exclusive",
+  "price_reduced",
+  "under_offer",
+  "under_contract",
+  "sold",
+  "active",
+  "reserved",
+  "rented",
+  "off_market",
+]);
 const PAGE_SIZE = 500;
 const functionHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -70,7 +81,7 @@ async function listProperties(supabase: ReturnType<typeof createServiceClient>) 
     const { data, error } = await supabase
       .from("properties")
       .select(
-        "id,title,slug,transaction_type,property_type,status,admin_status_override,price_amount,price_currency,surface_m2,bedrooms,postal_code,updated_at,city:cities(name,slug),images:property_images(source_url,sort_order)",
+        "id,title,slug,transaction_type,property_type,status,admin_status_override,is_featured,is_online,agent_id,price_amount,price_currency,surface_m2,bedrooms,postal_code,updated_at,city:cities(name,slug),images:property_images(source_url,sort_order)",
       )
       .order("updated_at", { ascending: false })
       .order("id", { ascending: true })
@@ -116,7 +127,17 @@ async function listPropertyLikeHistory(
   return events;
 }
 
-async function updatePropertyStatus(
+async function listAgents(supabase: ReturnType<typeof createServiceClient>) {
+  const { data, error } = await supabase
+    .from("agents")
+    .select("id,full_name,role")
+    .eq("is_active", true)
+    .order("full_name", { ascending: true });
+  if (error) throw error;
+  return data ?? [];
+}
+
+async function updateProperty(
   request: Request,
   supabase: ReturnType<typeof createServiceClient>,
 ) {
@@ -133,19 +154,38 @@ async function updatePropertyStatus(
 
   const body = payload as Record<string, unknown>;
   const id = typeof body.id === "number" ? body.id : Number(body.id);
-  const status = typeof body.status === "string" ? body.status : "";
   if (!Number.isSafeInteger(id) || id <= 0) throw new HttpError(400, "Invalid property reference.");
-  if (!ADMIN_STATUSES.has(status)) throw new HttpError(400, "Choose a valid property status.");
+  const allowedKeys = new Set(["id", "status", "isFeatured", "isOnline", "agentId"]);
+  if (Object.keys(body).some((key) => !allowedKeys.has(key))) throw new HttpError(400, "Unsupported property update.");
+
+  const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if ("status" in body) {
+    const status = typeof body.status === "string" ? body.status : "";
+    if (!ADMIN_STATUSES.has(status)) throw new HttpError(400, "Choose a valid property status.");
+    updates.status = status;
+    updates.admin_status_override = status;
+  }
+  if ("isFeatured" in body) {
+    if (typeof body.isFeatured !== "boolean") throw new HttpError(400, "Favorite must be true or false.");
+    updates.is_featured = body.isFeatured;
+  }
+  if ("isOnline" in body) {
+    if (typeof body.isOnline !== "boolean") throw new HttpError(400, "Online visibility must be true or false.");
+    updates.is_online = body.isOnline;
+  }
+  if ("agentId" in body) {
+    if (body.agentId !== null && (typeof body.agentId !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(body.agentId))) {
+      throw new HttpError(400, "Choose a valid negotiator.");
+    }
+    updates.agent_id = body.agentId;
+  }
+  if (Object.keys(updates).length === 1) throw new HttpError(400, "Choose a property field to update.");
 
   const { data, error } = await supabase
     .from("properties")
-    .update({
-      status,
-      admin_status_override: status,
-      updated_at: new Date().toISOString(),
-    })
+    .update(updates)
     .eq("id", id)
-    .select("id,status,admin_status_override,updated_at")
+    .select("id,status,admin_status_override,is_featured,is_online,agent_id,updated_at")
     .maybeSingle();
 
   if (error) throw error;
@@ -179,6 +219,11 @@ Deno.serve(async (request) => {
         return jsonResponse({ likes });
       }
 
+      if (query.get("view") === "agents") {
+        const agents = await listAgents(supabase);
+        return jsonResponse({ agents });
+      }
+
       if (query.get("view") === "likes-history") {
         const propertyId = Number(query.get("propertyId"));
         if (!Number.isSafeInteger(propertyId) || propertyId <= 0) {
@@ -192,7 +237,7 @@ Deno.serve(async (request) => {
       return jsonResponse({ properties });
     }
 
-    const property = await updatePropertyStatus(request, supabase);
+    const property = await updateProperty(request, supabase);
     return jsonResponse({ property });
   } catch (error) {
     if (error instanceof HttpError) return jsonResponse({ error: error.message }, error.status);

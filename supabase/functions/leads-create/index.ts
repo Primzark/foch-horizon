@@ -242,7 +242,16 @@ Deno.serve(async (request) => {
     let assignedAgentId: string | null = null;
 
     if (payload.propertyId) {
-      const { data: propertyData } = await supabase.from("properties").select("agent_id").eq("id", payload.propertyId).maybeSingle();
+      const { data: propertyData, error: propertyError } = await supabase
+        .from("properties")
+        .select("agent_id")
+        .eq("id", payload.propertyId)
+        .eq("is_online", true)
+        .maybeSingle();
+      if (propertyError) throw propertyError;
+      if (!propertyData) {
+        return secureJsonResponse(request, { ok: false, error: "This property is no longer available online." }, 400);
+      }
       assignedAgentId = propertyData?.agent_id ?? null;
     }
 

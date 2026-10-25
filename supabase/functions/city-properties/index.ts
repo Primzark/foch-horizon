@@ -31,6 +31,7 @@ Deno.serve(async (request) => {
       )
       .eq("city_id", city.id)
       .eq("transaction_type", "vente")
+      .eq("is_online", true)
       .neq("status", "off_market")
       .neq("status", "sold")
       .order("published_at", { ascending: false });

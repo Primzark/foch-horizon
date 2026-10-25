@@ -489,7 +489,7 @@ export default function ReviewsPage() {
                           <div className={cn("relative overflow-hidden", visual.accentHeightClass)}>
                             <div
                               className={cn(
-                                "absolute inset-0 bg-cover bg-no-repeat transition-transform duration-500 group-hover:scale-[1.04]",
+                                "absolute inset-0 bg-cover bg-no-repeat",
                                 visual.accentPositionClass,
                               )}
                               style={{ backgroundImage: `url(${visual.accentImageUrl})` }}

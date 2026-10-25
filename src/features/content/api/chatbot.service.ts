@@ -2,7 +2,7 @@ import { cities, cityById } from "@/features/cities/data/cities";
 import { leHavreDistrictHistory, leHavreFaq } from "@/features/content/data/leHavreHistoryContent";
 import { agencyReviewsFallbackSnapshot, getAgencyReviews } from "@/features/content/api/googleReviews.service";
 import { properties } from "@/features/listings/data/properties";
-import { formatPrice, normalizeKeyword, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
+import { formatPrice, isAvailablePropertyStatus, normalizeKeyword, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
 import { apiJson, edgeApiFetch, isEdgeApiEnabled } from "@/lib/api/client";
 
 export interface ChatbotPropertySuggestion {
@@ -1157,7 +1157,7 @@ function buildPropertySuggestions(question: string, context: ConversationContext
     Number(Boolean(wantsSale));
 
   return properties
-    .filter((property) => property.status === "active" && property.transactionType === "vente")
+    .filter((property) => isAvailablePropertyStatus(property.status) && property.transactionType === "vente" && property.isOnline !== false)
     .filter((property) => {
       if (wantsSale && property.transactionType !== "vente") return false;
       if (bedroomsMin != null && (property.bedrooms ?? 0) < bedroomsMin) return false;

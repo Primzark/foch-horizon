@@ -5,7 +5,6 @@ import { getSiteUrl, useSeo } from "@/lib/seo/useSeo";
 import { cn } from "@/lib/utils";
 import { getPlaceImageMotionPreset, inferPlaceImageMood } from "@/lib/visuals/placeImageMotion";
 import { PlaceAtmosphereLayer } from "@/components/visuals/PlaceAtmosphereLayer";
-import { ContextAwareParallax } from "@/components/visuals/ContextAwareParallax";
 import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
 import { getMotionDirectorProfile } from "@/lib/visuals/motionDirector";
 import {
@@ -200,15 +199,11 @@ export default function LeHavreHistoryPage() {
                 {districtPhotos.map((photo, photoIndex) => (
                   <figure key={`${district.id}-${photo?.id}`} className="group overflow-hidden rounded-xl border border-border">
                     <div className="relative overflow-hidden">
-                      <ContextAwareParallax mood={districtMood} reducedMotion={reducedMotion} intensity="subtle">
-                        <motion.img
+                      <motion.img
                           src={photo?.src}
                           alt={photo?.alt}
                           loading="lazy"
-                          className={cn(
-                            "aspect-[4/3] w-full object-cover transition-transform",
-                            districtMotionPreset.hoverClassName,
-                          )}
+                          className="aspect-[4/3] w-full object-cover"
                           itemProp="image"
                           initial={
                             reducedMotion
@@ -222,8 +217,7 @@ export default function LeHavreHistoryPage() {
                             delay: Math.min(photoIndex * motionDirector.revealStagger, 0.2),
                             ease: [0.22, 1, 0.36, 1],
                           }}
-                        />
-                      </ContextAwareParallax>
+                      />
                       <PlaceAtmosphereLayer
                         mood={districtMood}
                         animated={!reducedMotion && photoIndex === 0}

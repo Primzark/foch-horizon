@@ -41,7 +41,7 @@ function extractErrorCode(error: unknown): string | null {
 }
 
 async function countByStatuses(supabase: SupabaseServiceClient, statuses: string[]): Promise<number> {
-  let query = supabase.from("properties").select("id", { count: "exact", head: true }).eq("transaction_type", "vente");
+  let query = supabase.from("properties").select("id", { count: "exact", head: true }).eq("transaction_type", "vente").eq("is_online", true);
 
   if (statuses.length === 1) {
     query = query.eq("status", statuses[0]);

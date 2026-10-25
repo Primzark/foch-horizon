@@ -14,7 +14,6 @@ import type { PropertyImage } from "@/types/domain";
 import { trackEvent } from "@/lib/analytics/events";
 import { inferPlaceImageMood } from "@/lib/visuals/placeImageMotion";
 import { PlaceAtmosphereLayer } from "@/components/visuals/PlaceAtmosphereLayer";
-import { ContextAwareParallax } from "@/components/visuals/ContextAwareParallax";
 import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
 import { ListingBadges } from "@/features/listings/components/ListingBadges";
 import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
@@ -419,7 +418,7 @@ export function ListingGallery({
               trackEvent("gallery_opened", { property_id: propertyId });
             }}
           >
-            <ContextAwareParallax mood={imageMood} reducedMotion={reducedMotion} intensity="immersive" scrollReactive className="z-[0]">
+            <div className="z-[0]">
               <div className={`relative w-full overflow-hidden ${variant === "modal" ? "aspect-[4/3] max-h-[min(32rem,44dvh)] min-h-[16rem] sm:aspect-[16/7]" : "aspect-[16/9]"}`}>
                 <AnimatePresence initial={!reducedMotion} mode="sync">
                   <motion.img
@@ -432,14 +431,14 @@ export function ListingGallery({
                     {...galleryImageProps(activeImage, 400, `hero:${activeImage.id}`)}
                     sizes={variant === "modal" ? "(max-width: 767px) 100vw, 88vw" : "(max-width: 1023px) calc(100vw - 2rem), 66vw"}
                     alt={activeImage.altText}
-                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.015] motion-reduce:transition-none"
+                    className="absolute inset-0 h-full w-full object-cover"
                     loading="eager"
                     fetchPriority="high"
                     decoding="async"
                   />
                 </AnimatePresence>
               </div>
-            </ContextAwareParallax>
+            </div>
             <PlaceAtmosphereLayer mood={imageMood} animated={false} variant="gallery" className="z-[1]" />
             <div className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-t from-black/50 via-transparent to-black/5" />
             {badgeLabels.length > 0 && (
@@ -554,7 +553,7 @@ export function ListingGallery({
                     {...galleryImageProps(image, 200, `desktop-thumbnail:${image.id}`, thumbnailImageWidths)}
                     sizes="96px"
                     alt={image.altText}
-                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03] motion-reduce:transition-none"
+                    className="absolute inset-0 h-full w-full object-cover"
                     loading={isDesktopGallery && Math.abs(index - safeGalleryImageIndex) <= 1 ? "eager" : "lazy"}
                     fetchPriority="low"
                     decoding="async"

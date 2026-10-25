@@ -14,6 +14,8 @@ import {
   Heart,
   KeyRound,
   LogOut,
+  PanelLeftClose,
+  PanelLeftOpen,
   Search,
   ShieldCheck,
   SlidersHorizontal,
@@ -34,6 +36,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -49,6 +52,7 @@ import { formatPrice, toCanonicalPropertyPath } from "@/features/listings/utils/
 import type { PropertyStatus } from "@/types/domain";
 import {
   ADMIN_PROPERTIES_QUERY_KEY,
+  ADMIN_AGENTS_QUERY_KEY,
   ADMIN_PROPERTY_LIKES_QUERY_KEY,
   ADMIN_PROPERTY_LIKE_HISTORY_QUERY_KEY,
   ADMIN_PROPERTY_STATUS_OPTIONS,
@@ -56,7 +60,10 @@ import {
   getAdminPropertyLikeHistory,
   getAdminPropertyLikeSummary,
   getAdminProperties,
-  updateAdminPropertyStatus,
+  getAdminAgents,
+  updateAdminProperty,
+  type AdminAgent,
+  type AdminPropertyUpdateInput,
   type AdminProperty,
   type AdminPropertyLikeSummary,
 } from "@/features/admin/api/adminProperties.service";
@@ -89,10 +96,30 @@ const statusDetails: Record<PropertyStatus, { label: string; trigger: string; do
     trigger: "border-emerald-200 bg-emerald-50 text-emerald-900 hover:bg-emerald-100 dark:border-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-200",
     dot: "bg-emerald-600",
   },
+  new: {
+    label: "Nouveauté",
+    trigger: "border-emerald-200 bg-emerald-50 text-emerald-900 hover:bg-emerald-100 dark:border-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-200",
+    dot: "bg-emerald-600",
+  },
+  exclusive: {
+    label: "Exclusivité",
+    trigger: "border-fuchsia-200 bg-fuchsia-50 text-fuchsia-900 hover:bg-fuchsia-100 dark:border-fuchsia-900 dark:bg-fuchsia-950/50 dark:text-fuchsia-200",
+    dot: "bg-fuchsia-600",
+  },
+  price_reduced: {
+    label: "Prix réduit",
+    trigger: "border-orange-200 bg-orange-50 text-orange-900 hover:bg-orange-100 dark:border-orange-900 dark:bg-orange-950/50 dark:text-orange-200",
+    dot: "bg-orange-600",
+  },
   under_offer: {
     label: "Sous offre",
     trigger: "border-amber-200 bg-amber-50 text-amber-900 hover:bg-amber-100 dark:border-amber-900 dark:bg-amber-950/50 dark:text-amber-200",
     dot: "bg-amber-500",
+  },
+  under_contract: {
+    label: "Sous compromis",
+    trigger: "border-violet-200 bg-violet-50 text-violet-900 hover:bg-violet-100 dark:border-violet-900 dark:bg-violet-950/50 dark:text-violet-200",
+    dot: "bg-violet-500",
   },
   reserved: {
     label: "Réservé",
@@ -211,12 +238,79 @@ function PropertyIdentity({ property }: { property: AdminProperty }) {
   );
 }
 
-function PropertyPrice({ property }: { property: AdminProperty }) {
+function PropertyPrice({ property, align = "start" }: { property: AdminProperty; align?: "start" | "end" }) {
+  const formattedPrice = new Intl.NumberFormat("fr-FR").format(property.price_amount);
+
   return (
     <div className="min-w-0">
-      <p className="font-medium tabular-nums">{formatPrice(property.price_amount, property.transaction_type)}</p>
+      <p className={["inline-grid grid-cols-[auto_1.25rem] items-center gap-1 font-medium tabular-nums", align === "end" && "w-full justify-end"].filter(Boolean).join(" ")}>
+        <span className={align === "end" ? "text-right" : "text-left"}>{formattedPrice}</span>
+        <span className="text-center leading-none" aria-hidden="true">€</span>
+      </p>
       <p className="mt-1 text-xs text-muted-foreground">{formatArea(property.surface_m2)}</p>
     </div>
+  );
+}
+
+const UNASSIGNED_AGENT = "__unassigned__";
+
+function PropertyFlagControl({
+  property,
+  kind,
+  checked,
+  saving,
+  onChange,
+}: {
+  property: AdminProperty;
+  kind: "favorite" | "online";
+  checked: boolean;
+  saving: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  const label = kind === "favorite" ? "Favorite" : "En ligne";
+
+  return (
+    <Checkbox
+      checked={checked}
+      disabled={saving}
+      onCheckedChange={(value) => onChange(value === true)}
+      aria-label={label + " : " + property.title}
+      className="mx-auto"
+    />
+  );
+}
+
+function PropertyAgentControl({
+  property,
+  agents,
+  saving,
+  onChange,
+}: {
+  property: AdminProperty;
+  agents: AdminAgent[];
+  saving: boolean;
+  onChange: (agentId: string | null) => void;
+}) {
+  const value = property.agent_id ?? UNASSIGNED_AGENT;
+  const assignedAgent = agents.find((agent) => agent.id === property.agent_id);
+
+  return (
+    <Select
+      value={value}
+      onValueChange={(agentId) => onChange(agentId === UNASSIGNED_AGENT ? null : agentId)}
+      disabled={saving || agents.length === 0}
+    >
+      <SelectTrigger aria-label={"Négociateur de " + property.title} className="h-9 min-w-[190px] bg-background text-xs">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent align="end">
+        <SelectItem value={UNASSIGNED_AGENT}>Non assigné</SelectItem>
+        {property.agent_id && !assignedAgent && <SelectItem value={property.agent_id}>Négociateur archivé</SelectItem>}
+        {agents.map((agent) => (
+          <SelectItem key={agent.id} value={agent.id}>{agent.full_name}</SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }
 
@@ -517,7 +611,7 @@ export default function AdminPropertiesPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [savingIds, setSavingIds] = useState<Set<number>>(() => new Set());
-  const [optimisticStatuses, setOptimisticStatuses] = useState<Record<number, PropertyStatus>>({});
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useSeo({
     title: "Gestion des annonces | Foch Immobilier",
@@ -561,6 +655,14 @@ export default function AdminPropertiesPage() {
     staleTime: 0,
   });
 
+  const agentsQuery = useQuery({
+    queryKey: ADMIN_AGENTS_QUERY_KEY,
+    queryFn: () => getAdminAgents(supabaseClient!),
+    enabled: Boolean(session?.access_token),
+    retry: false,
+    staleTime: 5 * 60_000,
+  });
+
   const propertyLikesQuery = useQuery({
     queryKey: ADMIN_PROPERTY_LIKES_QUERY_KEY,
     queryFn: () => getAdminPropertyLikeSummary(supabaseClient!),
@@ -597,9 +699,9 @@ export default function AdminPropertiesPage() {
       return;
     }
     queryClient.removeQueries({ queryKey: ADMIN_PROPERTIES_QUERY_KEY });
+    queryClient.removeQueries({ queryKey: ADMIN_AGENTS_QUERY_KEY });
     queryClient.removeQueries({ queryKey: ADMIN_PROPERTY_LIKES_QUERY_KEY });
     queryClient.removeQueries({ queryKey: ADMIN_PROPERTY_LIKE_HISTORY_QUERY_KEY });
-    setOptimisticStatuses({});
     setLoginError(null);
   };
 
@@ -614,34 +716,58 @@ export default function AdminPropertiesPage() {
     loginMutation.mutate({ email, password });
   };
 
-  const changeStatus = async (propertyId: number, status: PropertyStatus) => {
-    const current = propertiesQuery.data?.find((property) => property.id === propertyId);
-    if (!current || current.status === status || savingIds.has(propertyId) || !supabaseClient) return;
+  const changeProperty = async (input: AdminPropertyUpdateInput) => {
+    const current = propertiesQuery.data?.find((property) => property.id === input.id);
+    if (!current || savingIds.has(input.id) || !supabaseClient) return;
+    if (input.status === current.status) return;
+    if (input.isFeatured === current.is_featured) return;
+    if (input.isOnline === current.is_online) return;
+    if ("agentId" in input && input.agentId === current.agent_id) return;
 
-    setOptimisticStatuses((existing) => ({ ...existing, [propertyId]: status }));
-    setSavingIds((existing) => new Set(existing).add(propertyId));
+    const optimisticUpdate: Partial<AdminProperty> = {};
+    if (input.status) {
+      optimisticUpdate.status = input.status;
+      optimisticUpdate.admin_status_override = input.status;
+    }
+    if (input.isFeatured !== undefined) optimisticUpdate.is_featured = input.isFeatured;
+    if (input.isOnline !== undefined) optimisticUpdate.is_online = input.isOnline;
+    if ("agentId" in input) optimisticUpdate.agent_id = input.agentId ?? null;
+
+    setSavingIds((existing) => new Set(existing).add(input.id));
+    queryClient.setQueryData<AdminProperty[]>(ADMIN_PROPERTIES_QUERY_KEY, (properties) =>
+      properties?.map((property) => (property.id === input.id ? { ...property, ...optimisticUpdate } : property)),
+    );
 
     try {
-      const updated = await updateAdminPropertyStatus(supabaseClient, { id: propertyId, status });
+      const updated = await updateAdminProperty(supabaseClient, input);
       queryClient.setQueryData<AdminProperty[]>(ADMIN_PROPERTIES_QUERY_KEY, (properties) =>
-        properties?.map((property) => (property.id === propertyId ? { ...property, ...updated } : property)),
+        properties?.map((property) => (property.id === input.id ? { ...property, ...updated } : property)),
       );
-      toast({
-        title: "Statut mis à jour",
-        description: "Le nouveau statut est enregistré et publié sur le site.",
-      });
+      const title = input.status
+        ? "Statut mis à jour"
+        : input.isFeatured !== undefined
+          ? "Favori mis à jour"
+          : input.isOnline !== undefined
+            ? "Visibilité mise à jour"
+            : "Négociateur mis à jour";
+      const description = input.status
+        ? "Le nouveau statut est enregistré."
+        : input.isFeatured !== undefined
+          ? "La sélection de l’accueil est enregistrée."
+          : input.isOnline !== undefined
+            ? "La visibilité du bien est enregistrée."
+            : "Le négociateur est enregistré.";
+      toast({ title, description });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Impossible d’enregistrer ce statut.";
+      queryClient.setQueryData<AdminProperty[]>(ADMIN_PROPERTIES_QUERY_KEY, (properties) =>
+        properties?.map((property) => (property.id === input.id ? { ...property, ...current } : property)),
+      );
+      const message = error instanceof Error ? error.message : "Impossible d’enregistrer cette modification.";
       toast({ title: "Enregistrement impossible", description: message, variant: "destructive" });
     } finally {
-      setOptimisticStatuses((existing) => {
-        const next = { ...existing };
-        delete next[propertyId];
-        return next;
-      });
       setSavingIds((existing) => {
         const next = new Set(existing);
-        next.delete(propertyId);
+        next.delete(input.id);
         return next;
       });
     }
@@ -724,7 +850,7 @@ export default function AdminPropertiesPage() {
   const counts = allProperties.reduce<Record<PropertyStatus, number>>((acc, property) => {
     acc[property.status] += 1;
     return acc;
-  }, { active: 0, under_offer: 0, reserved: 0, sold: 0, rented: 0, off_market: 0 });
+  }, Object.fromEntries(ADMIN_PROPERTY_STATUS_OPTIONS.map(({ value }) => [value, 0])) as Record<PropertyStatus, number>);
   const propertyById = new Map(allProperties.map((property) => [property.id, property]));
   const propertyLikes = propertyLikesQuery.data ?? [];
   const totalActiveLikes = propertyLikes.reduce((sum, item) => sum + item.like_count, 0);
@@ -737,6 +863,7 @@ export default function AdminPropertiesPage() {
     : undefined;
   const likeHistory = propertyLikeHistoryQuery.data ?? [];
   const userEmail = session.user.email ?? "Administrateur";
+  const adminAgents = agentsQuery.data ?? [];
 
   return (
     <motion.main
@@ -745,43 +872,82 @@ export default function AdminPropertiesPage() {
       transition={{ duration: 0.24, ease: "easeOut" }}
       className="min-h-dvh bg-[hsl(var(--background))] text-foreground"
     >
-      <div className="mx-auto min-h-dvh max-w-[1680px] lg:grid lg:grid-cols-[240px_minmax(0,1fr)]">
-        <aside className="hidden border-r border-border/70 bg-card/70 px-5 py-7 lg:flex lg:flex-col">
-          <Link to="/" className="flex flex-col items-start gap-2" aria-label="Foch Immobilier, accueil">
-            <img
-              src="/images/foch-immobilier-logo-transparent.png"
-              alt="Foch Immobilier"
-              width={772}
-              height={150}
-              className="h-auto w-full max-w-[185px] object-contain"
-              decoding="async"
-            />
-            <span className="text-[9px] font-semibold uppercase tracking-[0.19em] text-muted-foreground">Administration</span>
-          </Link>
+      <div
+        className={sidebarCollapsed
+          ? "mx-auto min-h-dvh max-w-[1680px] lg:grid lg:grid-cols-[76px_minmax(0,1fr)]"
+          : "mx-auto min-h-dvh max-w-[1680px] lg:grid lg:grid-cols-[240px_minmax(0,1fr)]"}
+      >
+        <aside className={["hidden border-r border-border/70 bg-card/70 py-7 transition-[padding] duration-200 lg:flex lg:flex-col", sidebarCollapsed ? "px-3" : "px-5"].join(" ")}>
+          <div className={sidebarCollapsed ? "flex flex-col items-center gap-4" : "flex items-start justify-between gap-2"}>
+            {sidebarCollapsed ? (
+              <Link to="/" aria-label="Foch Immobilier, accueil" title="Foch Immobilier" className="grid h-9 w-9 place-items-center rounded-lg bg-brand-soft font-display text-lg font-semibold text-brand-strong">F</Link>
+            ) : (
+              <Link to="/" className="flex min-w-0 flex-col items-start gap-2" aria-label="Foch Immobilier, accueil">
+                <img
+                  src="/images/foch-immobilier-logo-transparent.png"
+                  alt="Foch Immobilier"
+                  width={772}
+                  height={150}
+                  className="h-auto w-full max-w-[185px] object-contain"
+                  decoding="async"
+                />
+                <span className="text-[9px] font-semibold uppercase tracking-[0.19em] text-muted-foreground">Administration</span>
+              </Link>
+            )}
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label={sidebarCollapsed ? "Développer la navigation" : "Réduire la navigation"}
+              title={sidebarCollapsed ? "Développer la navigation" : "Réduire la navigation"}
+              onClick={() => setSidebarCollapsed((collapsed) => !collapsed)}
+              className="h-9 w-9 shrink-0 text-muted-foreground"
+            >
+              {sidebarCollapsed ? <PanelLeftOpen className="h-4 w-4" aria-hidden="true" /> : <PanelLeftClose className="h-4 w-4" aria-hidden="true" />}
+            </Button>
+          </div>
 
-          <p className="mb-3 mt-12 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Espace de travail</p>
+          {!sidebarCollapsed && <p className="mb-3 mt-12 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Espace de travail</p>}
           <nav aria-label="Administration" className="space-y-1">
             <Link
               to="/admin"
-              className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-colors ${!likesSection ? "bg-brand-soft text-brand-strong" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}
+              aria-label="Annonces"
+              title="Annonces"
+              className={[
+                "flex items-center rounded-xl py-3 text-sm font-medium transition-colors",
+                sidebarCollapsed ? "justify-center px-3" : "gap-3 px-3",
+                !likesSection ? "bg-brand-soft text-brand-strong" : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+              ].join(" ")}
             >
               <Building2 className="h-4 w-4" aria-hidden="true" />
-              <span className="flex-1">Annonces</span>
-              <span className="text-xs tabular-nums opacity-70">{allProperties.length}</span>
+              <span className={sidebarCollapsed ? "sr-only" : "flex-1"}>Annonces</span>
+              {!sidebarCollapsed && <span className="text-xs tabular-nums opacity-70">{allProperties.length}</span>}
             </Link>
             <Link
               to="/admin?section=likes"
-              className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-colors ${likesSection ? "bg-brand-soft text-brand-strong" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}
+              aria-label="Historique des likes"
+              title="Historique des likes"
+              className={[
+                "flex items-center rounded-xl py-3 text-sm font-medium transition-colors",
+                sidebarCollapsed ? "justify-center px-3" : "gap-3 px-3",
+                likesSection ? "bg-brand-soft text-brand-strong" : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+              ].join(" ")}
             >
               <Heart className="h-4 w-4" aria-hidden="true" />
-              <span className="flex-1">Historique des likes</span>
-              <span className="text-xs tabular-nums opacity-70">{propertyLikes.length}</span>
+              <span className={sidebarCollapsed ? "sr-only" : "flex-1"}>Historique des likes</span>
+              {!sidebarCollapsed && <span className="text-xs tabular-nums opacity-70">{propertyLikes.length}</span>}
             </Link>
           </nav>
 
-          <div className="mt-auto border-t border-border/70 pt-5">
-            <p className="truncate text-xs font-medium" title={userEmail}>{userEmail}</p>
-            <p className="mt-1 text-[11px] text-muted-foreground">Compte autorisé</p>
+          <div className={["mt-auto border-t border-border/70 pt-5", sidebarCollapsed ? "text-center" : ""].join(" ")}>
+            {sidebarCollapsed ? (
+              <span title={userEmail} aria-label={userEmail} className="mx-auto grid h-8 w-8 place-items-center rounded-full bg-secondary text-xs font-medium">{userEmail.slice(0, 1).toUpperCase()}</span>
+            ) : (
+              <>
+                <p className="truncate text-xs font-medium" title={userEmail}>{userEmail}</p>
+                <p className="mt-1 text-[11px] text-muted-foreground">Compte autorisé</p>
+              </>
+            )}
           </div>
         </aside>
 
@@ -992,7 +1158,7 @@ export default function AdminPropertiesPage() {
                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-brand">Inventaire immobilier</p>
                 <h1 className="mt-2 font-display text-4xl leading-none tracking-tight sm:text-[2.75rem]">Annonces</h1>
                 <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
-                  Gérez la visibilité et le statut de chaque bien. Les changements sont enregistrés automatiquement.
+                  Gérez les favoris, la visibilité, le négociateur et le statut de chaque bien.
                 </p>
               </div>
               <p className="mb-1 text-xs text-muted-foreground">
@@ -1003,11 +1169,11 @@ export default function AdminPropertiesPage() {
 
             <section aria-label="Synthèse des annonces" className="mt-8 grid grid-cols-2 gap-y-5 border-y border-border/70 py-5 sm:grid-cols-3 lg:grid-cols-6">
               <SummaryItem label="Toutes" value={allProperties.length} />
-              <SummaryItem label="Disponibles" value={counts.active} />
+              <SummaryItem label="Favorites" value={allProperties.filter((property) => property.is_featured).length} />
+              <SummaryItem label="En ligne" value={allProperties.filter((property) => property.is_online).length} />
               <SummaryItem label="Sous offre" value={counts.under_offer} />
-              <SummaryItem label="Réservés" value={counts.reserved} />
+              <SummaryItem label="Sous compromis" value={counts.under_contract} />
               <SummaryItem label="Vendus" value={counts.sold} />
-              <SummaryItem label="Retirés" value={counts.off_market} />
             </section>
 
             <section aria-label="Liste des annonces" className="mt-7">
@@ -1064,12 +1230,15 @@ export default function AdminPropertiesPage() {
                 <>
                   <div className="hidden overflow-hidden rounded-2xl border border-border/70 bg-card md:block">
                     <div className="overflow-x-auto">
-                      <table className="w-full min-w-[940px] border-collapse text-left">
+                      <table className="w-full min-w-[1480px] border-collapse text-left">
                         <thead>
                           <tr className="border-b border-border/70 bg-secondary/35 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                             <th scope="col" className="px-5 py-3.5">Bien immobilier</th>
                             <th scope="col" className="px-4 py-3.5">Type</th>
-                            <th scope="col" className="px-4 py-3.5">Prix</th>
+                            <th scope="col" className="px-4 py-3.5 text-right">Prix</th>
+                            <th scope="col" className="px-3 py-3.5 text-center">Favorite</th>
+                            <th scope="col" className="px-3 py-3.5 text-center">En ligne</th>
+                            <th scope="col" className="px-4 py-3.5">Négociateur</th>
                             <th scope="col" className="px-4 py-3.5">Mis à jour</th>
                             <th scope="col" className="px-5 py-3.5 text-right">Statut</th>
                           </tr>
@@ -1092,15 +1261,41 @@ export default function AdminPropertiesPage() {
                                   <p className="text-xs font-medium">{formatPropertyType(property.property_type)}</p>
                                   <p className="mt-1 text-[11px] text-muted-foreground">{property.transaction_type === "location" ? "Location" : "Vente"}</p>
                                 </td>
-                                <td className="px-4 py-3.5"><PropertyPrice property={property} /></td>
+                                <td className="px-4 py-3.5 text-right"><PropertyPrice property={property} align="end" /></td>
+                                <td className="px-3 py-3.5 text-center">
+                                  <PropertyFlagControl
+                                    property={property}
+                                    kind="favorite"
+                                    checked={property.is_featured}
+                                    saving={savingIds.has(property.id)}
+                                    onChange={(isFeatured) => void changeProperty({ id: property.id, isFeatured })}
+                                  />
+                                </td>
+                                <td className="px-3 py-3.5 text-center">
+                                  <PropertyFlagControl
+                                    property={property}
+                                    kind="online"
+                                    checked={property.is_online}
+                                    saving={savingIds.has(property.id)}
+                                    onChange={(isOnline) => void changeProperty({ id: property.id, isOnline })}
+                                  />
+                                </td>
+                                <td className="px-4 py-3.5">
+                                  <PropertyAgentControl
+                                    property={property}
+                                    agents={adminAgents}
+                                    saving={savingIds.has(property.id)}
+                                    onChange={(agentId) => void changeProperty({ id: property.id, agentId })}
+                                  />
+                                </td>
                                 <td className="px-4 py-3.5 text-xs text-muted-foreground">{formatDate(property.updated_at)}</td>
                                 <td className="px-5 py-3.5">
                                   <div className="flex justify-end">
                                     <StatusControl
                                       property={property}
-                                      value={optimisticStatuses[property.id] ?? property.status}
+                                      value={property.status}
                                       saving={savingIds.has(property.id)}
-                                      onChange={changeStatus}
+                                      onChange={(propertyId, status) => void changeProperty({ id: propertyId, status })}
                                     />
                                   </div>
                                 </td>
@@ -1127,9 +1322,40 @@ export default function AdminPropertiesPage() {
                           <span className="text-[11px] text-muted-foreground">Statut</span>
                           <StatusControl
                             property={property}
-                            value={optimisticStatuses[property.id] ?? property.status}
+                            value={property.status}
                             saving={savingIds.has(property.id)}
-                            onChange={changeStatus}
+                            onChange={(propertyId, status) => void changeProperty({ id: propertyId, status })}
+                          />
+                        </div>
+                        <div className="mt-3 grid grid-cols-2 gap-3">
+                          <div className="flex items-center justify-between rounded-lg bg-secondary/40 px-3 py-2">
+                            <span className="text-xs">Favorite</span>
+                            <PropertyFlagControl
+                              property={property}
+                              kind="favorite"
+                              checked={property.is_featured}
+                              saving={savingIds.has(property.id)}
+                              onChange={(isFeatured) => void changeProperty({ id: property.id, isFeatured })}
+                            />
+                          </div>
+                          <div className="flex items-center justify-between rounded-lg bg-secondary/40 px-3 py-2">
+                            <span className="text-xs">En ligne</span>
+                            <PropertyFlagControl
+                              property={property}
+                              kind="online"
+                              checked={property.is_online}
+                              saving={savingIds.has(property.id)}
+                              onChange={(isOnline) => void changeProperty({ id: property.id, isOnline })}
+                            />
+                          </div>
+                        </div>
+                        <div className="mt-3 flex items-center justify-between gap-3">
+                          <span className="text-[11px] text-muted-foreground">Négociateur</span>
+                          <PropertyAgentControl
+                            property={property}
+                            agents={adminAgents}
+                            saving={savingIds.has(property.id)}
+                            onChange={(agentId) => void changeProperty({ id: property.id, agentId })}
                           />
                         </div>
                       </motion.article>
@@ -1140,7 +1366,7 @@ export default function AdminPropertiesPage() {
 
               <p className="mt-4 flex items-center gap-2 text-[11px] leading-5 text-muted-foreground">
                 <Check className="h-3.5 w-3.5 shrink-0 text-brand" aria-hidden="true" />
-                Chaque changement de statut est enregistré dans la base et pris en compte par le site public.
+                Les modifications sont enregistrées automatiquement et appliquées aux pages publiques.
               </p>
             </section>
               </>

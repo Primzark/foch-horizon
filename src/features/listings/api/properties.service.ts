@@ -1,9 +1,9 @@
 import { cityById, cityBySlug } from "@/features/cities/data/cities";
 import { agents } from "@/features/listings/data/agents";
 import { properties, propertyById, propertyBySlug } from "@/features/listings/data/properties";
-import { normalizeKeyword } from "@/features/listings/utils/formatting";
+import { isAvailablePropertyStatus, normalizeKeyword } from "@/features/listings/utils/formatting";
 import { apiJson, isEdgeApiEnabled } from "@/lib/api/client";
-import type { PropertySearchParams, PropertySearchResponse } from "@/types/api";
+import type { PropertySearchItem, PropertySearchParams, PropertySearchResponse } from "@/types/api";
 import type { Property } from "@/types/domain";
 
 const DEFAULT_PAGE = 1;
@@ -40,6 +40,8 @@ type EdgePropertyDetailRow = {
   agent_id: string | null;
   published_at: string | null;
   updated_at: string;
+  is_featured?: boolean;
+  is_online?: boolean;
   city?: {
     id?: string | null;
     name?: string | null;
@@ -136,7 +138,8 @@ function mapEdgePropertyDetailToDomain(row: EdgePropertyDetailRow): Property {
     agentId: localAgentId,
     publishedAt: row.published_at ?? row.updated_at,
     updatedAt: row.updated_at,
-    isFeatured: false,
+    isFeatured: row.is_featured ?? false,
+    isOnline: row.is_online ?? true,
     images,
     features,
   };
@@ -173,6 +176,7 @@ function readCounterEnv(name: string): number | null {
 function applyFilters(items: Property[], params: PropertySearchParams): Property[] {
   let result = items.filter(
     (property) =>
+      property.isOnline !== false &&
       property.transactionType === "vente" &&
       (params.status === "sold"
         ? property.status === "sold"
@@ -180,6 +184,8 @@ function applyFilters(items: Property[], params: PropertySearchParams): Property
   );
 
   if (params.transaction && params.transaction !== "vente") return [];
+
+  if (params.featuredOnly) result = result.filter((property) => property.isFeatured && isAvailablePropertyStatus(property.status));
 
   if (params.type) {
     result = result.filter((property) => property.propertyType === params.type);
@@ -300,6 +306,7 @@ export async function searchProperties(
     const query = new URLSearchParams();
     query.set("transaction", "vente");
     if (params.status) query.set("status", params.status);
+    if (params.featuredOnly) query.set("featuredOnly", "true");
     if (params.type) query.set("type", params.type);
     if (params.city) query.set("city", params.city);
     if (params.q) query.set("q", params.q);
@@ -382,7 +389,7 @@ export async function getPropertyById(id: number): Promise<Property | null> {
 
   await apiDelay();
   const property = propertyById.get(id);
-  return property?.transactionType === "vente" ? property : null;
+  return property?.transactionType === "vente" && property.isOnline !== false ? property : null;
 }
 
 export async function getPropertyBySlug(slug: string): Promise<Property | null> {
@@ -392,7 +399,7 @@ export async function getPropertyBySlug(slug: string): Promise<Property | null> 
 
   await apiDelay();
   const property = propertyBySlug.get(slug);
-  return property?.transactionType === "vente" && property.status !== "sold" ? property : null;
+  return property?.transactionType === "vente" && property.status !== "sold" && property.isOnline !== false ? property : null;
 }
 
 export async function getPropertyByCanonicalPathId(idParam: string): Promise<Property | null> {
@@ -403,7 +410,7 @@ export async function getPropertyByCanonicalPathId(idParam: string): Promise<Pro
   }
 
   const property = propertyById.get(id);
-  return property?.transactionType === "vente" && property.status !== "sold" ? property : null;
+  return property?.transactionType === "vente" && property.status !== "sold" && property.isOnline !== false ? property : null;
 }
 
 export interface SimilarPropertyRecommendation {
@@ -422,7 +429,8 @@ export async function getSimilarProperties(property: Property, limit = 3): Promi
       (candidate) =>
         candidate.id !== property.id &&
         candidate.transactionType === "vente" &&
-        candidate.status === "active" &&
+        candidate.isOnline !== false &&
+        isAvailablePropertyStatus(candidate.status) &&
         candidate.cityId === property.cityId &&
         candidate.propertyType === property.propertyType &&
         candidate.surfaceM2 > 0 &&
@@ -485,21 +493,15 @@ export async function getSimilarProperties(property: Property, limit = 3): Promi
   }));
 }
 
-export async function getFeaturedProperties(limit = 8): Promise<Property[]> {
-  await apiDelay();
-  const activeProperties = properties.filter((property) => property.status === "active" && property.transactionType === "vente");
-  const featured = activeProperties.filter((property) => property.isFeatured);
-
-  if (featured.length >= limit) {
-    return featured.slice(0, limit);
-  }
-
-  const featuredIds = new Set(featured.map((property) => property.id));
-  const newestRemaining = [...activeProperties]
-    .filter((property) => !featuredIds.has(property.id))
-    .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
-
-  return [...featured, ...newestRemaining].slice(0, limit);
+export async function getFeaturedProperties(limit = 8): Promise<PropertySearchItem[]> {
+  const result = await searchProperties({
+    transaction: "vente",
+    featuredOnly: true,
+    page: 1,
+    pageSize: limit,
+    sort: "newest",
+  });
+  return result.items;
 }
 
 export async function getPropertiesByCitySlug(citySlug: string): Promise<Property[]> {
@@ -567,7 +569,7 @@ export async function getPropertiesByCitySlug(citySlug: string): Promise<Propert
   }
 
   return properties.filter(
-    (property) => property.cityId === city.id && property.transactionType === "vente" && property.status !== "off_market" && property.status !== "sold",
+    (property) => property.cityId === city.id && property.transactionType === "vente" && property.isOnline !== false && property.status !== "off_market" && property.status !== "sold",
   );
 }
 
@@ -608,9 +610,9 @@ export async function getMarketCountersSnapshot(): Promise<MarketCountersSnapsho
 
   await apiDelay();
 
-  const soldInData = properties.filter((property) => property.status === "sold" && property.transactionType === "vente").length;
+  const soldInData = properties.filter((property) => property.status === "sold" && property.transactionType === "vente" && property.isOnline !== false).length;
   const underOfferInData = properties.filter((property) => property.status === "under_offer").length;
-  const activeCount = properties.filter((property) => property.status === "active").length;
+  const activeCount = properties.filter((property) => isAvailablePropertyStatus(property.status) && property.isOnline !== false).length;
 
   const soldCount = readCounterEnv("VITE_MARKET_SOLD_COUNT") ?? Math.max(soldInData, activeCount * 6);
   const underOfferCount =

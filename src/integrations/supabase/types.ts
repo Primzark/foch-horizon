@@ -620,6 +620,8 @@ export type Database = {
           ges_label: string | null
           ges_value: number | null
           id: number
+          is_featured: boolean
+          is_online: boolean
           lat: number | null
           lng: number | null
           parking_count: number | null
@@ -654,6 +656,8 @@ export type Database = {
           ges_label?: string | null
           ges_value?: number | null
           id: number
+          is_featured?: boolean
+          is_online?: boolean
           lat?: number | null
           lng?: number | null
           parking_count?: number | null
@@ -688,6 +692,8 @@ export type Database = {
           ges_label?: string | null
           ges_value?: number | null
           id?: number
+          is_featured?: boolean
+          is_online?: boolean
           lat?: number | null
           lng?: number | null
           parking_count?: number | null
@@ -1159,6 +1165,10 @@ export type Database = {
         | "rented"
         | "off_market"
         | "reserved"
+        | "new"
+        | "exclusive"
+        | "price_reduced"
+        | "under_contract"
       property_type: "appartement" | "maison_villa" | "autre"
       transaction_type: "vente" | "location"
     }
@@ -1302,6 +1312,10 @@ export const Constants = {
         "rented",
         "off_market",
         "reserved",
+        "new",
+        "exclusive",
+        "price_reduced",
+        "under_contract",
       ],
       property_type: ["appartement", "maison_villa", "autre"],
       transaction_type: ["vente", "location"],

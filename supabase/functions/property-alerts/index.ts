@@ -263,6 +263,7 @@ async function loadProperty(supabase: ReturnType<typeof createServiceClient>, pr
     .from("properties")
     .select("id,title,slug,transaction_type,property_type,status,price_amount,surface_m2,bedrooms,city:cities(name),images:property_images(source_url,sort_order)")
     .eq("id", propertyId)
+    .eq("is_online", true)
     .maybeSingle();
   if (error) throw error;
   return data as PropertyRecord | null;
@@ -281,7 +282,7 @@ async function sendPropertyAlert(
   if (!subscription || !subscription.confirmed_at || subscription.unsubscribed_at) return "cancelled";
 
   const property = await loadProperty(supabase, delivery.property_id);
-  if (!property || property.status !== "active") return "cancelled";
+  if (!property || !["active", "new", "exclusive", "price_reduced"].includes(property.status)) return "cancelled";
 
   const propertyUrl = absoluteSiteUrl(propertyPath(property));
   const unsubscribeToken = await createUnsubscribeToken(delivery.subscription_id);

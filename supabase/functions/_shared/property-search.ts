@@ -4,6 +4,7 @@ export interface SharedPropertySearchQueryParams {
   slug?: string;
   transaction?: string;
   status?: "sold";
+  featuredOnly?: boolean;
   type?: string;
   city?: string;
   q?: string;
@@ -36,6 +37,7 @@ export interface SharedPropertySearchRow {
   status: string;
   description?: string | null;
   admin_status_override?: string | null;
+  is_featured?: boolean;
   source_status?: string | null;
   price_amount: number;
   price_currency: string;
@@ -319,10 +321,17 @@ export async function runSharedPropertySearchQuery(
     .from("properties")
     .select(selectFields, { count: "exact" })
     .eq("transaction_type", "vente")
+    .eq("is_online", true)
     .range(from, to);
   query = input.status === "sold"
     ? query.eq("status", "sold")
     : query.neq("status", "off_market").neq("status", "sold");
+
+  if (input.featuredOnly) {
+    query = query
+      .eq("is_featured", true)
+      .in("status", ["active", "new", "exclusive", "price_reduced"]);
+  }
 
   if (exactSlug) {
     query = query.eq("slug", exactSlug);
@@ -508,6 +517,7 @@ export async function fetchAggregateRowsForSearchFilters(
   let query = supabase
     .from("properties")
     .select("id,transaction_type,property_type,price_amount,surface_m2,city:cities(name,slug)")
+    .eq("is_online", true)
     .neq("status", "off_market")
     .neq("status", "sold");
 
@@ -558,6 +568,7 @@ export async function fetchAggregateRowsByIds(
     .from("properties")
     .select("id,transaction_type,property_type,price_amount,surface_m2,city:cities(name,slug)")
     .in("id", ids)
+    .eq("is_online", true)
     .neq("status", "off_market")
     .neq("status", "sold");
   if (error) throw error;

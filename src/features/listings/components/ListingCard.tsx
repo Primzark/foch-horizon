@@ -8,7 +8,9 @@ import { ListingBadges } from "@/features/listings/components/ListingBadges";
 import {
   formatPrice,
   formatPropertyTypeLabel,
+  getPropertySchemaAvailability,
   getPropertyCardLabels,
+  isAvailablePropertyStatus,
   normalizePropertyDescription,
 } from "@/features/listings/utils/formatting";
 import { useFavoritesStore } from "@/features/favorites/useFavoritesStore";
@@ -48,13 +50,11 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, eagerIma
         viewport: { once: true, amount: 0.05 },
         transition: { duration: motionDirector.revealDuration * 0.65, delay: revealDelay, ease: [0.22, 1, 0.36, 1] as const },
       };
-  const cardHoverMotion = reducedMotion ? undefined : { y: motionDirector.cardHoverLift, scale: motionDirector.cardHoverScale };
 
   if (viewMode === "list") {
     return (
       <motion.article
         {...revealProps}
-        whileHover={cardHoverMotion}
         className={cn("overflow-hidden rounded-2xl border border-border bg-card", className)}
         itemScope
         itemType="https://schema.org/RealEstateListing"
@@ -68,7 +68,7 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, eagerIma
             containerClassName="rounded-xl"
             sizes="(max-width: 767px) 100vw, 280px"
             imageClassName="aspect-[4/3] h-full"
-            imageMotionClassName={cn("transition-transform", imageMotionPreset.hoverClassName)}
+            imageMotionClassName=""
             overlayClassName={cn("bg-gradient-to-tr opacity-0 transition-opacity duration-500 group-hover:opacity-100", imageMotionPreset.overlayClassName)}
             animateAtmosphere={enableAmbientAnimation}
           >
@@ -117,7 +117,7 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, eagerIma
             <div className="mt-4 flex items-center justify-between">
               <p className="font-display text-3xl font-semibold tracking-tight text-brand-strong">{formatPrice(item.priceAmount, item.transaction)}</p>
               <div className="flex shrink-0 items-center gap-1.5">
-                {item.status === "active" && item.transaction === "vente" && <PropertyCompareToggle propertyId={item.id} className="px-2.5" />}
+                {isAvailablePropertyStatus(item.status) && item.transaction === "vente" && <PropertyCompareToggle propertyId={item.id} className="px-2.5" />}
                 <button
                   type="button"
                   className={cn(
@@ -146,7 +146,7 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, eagerIma
         <div itemProp="offers" itemScope itemType="https://schema.org/Offer">
           <meta itemProp="priceCurrency" content={item.currency} />
           <meta itemProp="price" content={String(item.priceAmount)} />
-          <meta itemProp="availability" content={item.status === "active" ? "https://schema.org/InStock" : item.status === "under_offer" || item.status === "reserved" ? "https://schema.org/LimitedAvailability" : item.status === "off_market" ? "https://schema.org/Discontinued" : "https://schema.org/SoldOut"} />
+          <meta itemProp="availability" content={getPropertySchemaAvailability(item.status)} />
         </div>
       </motion.article>
     );
@@ -155,7 +155,6 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, eagerIma
   return (
     <motion.article
       {...revealProps}
-      whileHover={cardHoverMotion}
       className={cn("group overflow-hidden rounded-2xl border border-border bg-card transition-all duration-200", className)}
       itemScope
       itemType="https://schema.org/RealEstateListing"
@@ -168,7 +167,7 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, eagerIma
           eagerImage={eagerImage}
           sizes="(max-width: 767px) 92vw, (max-width: 1023px) 48vw, 33vw"
           imageClassName="aspect-[3/2]"
-          imageMotionClassName={imageMotionPreset.hoverClassName}
+          imageMotionClassName=""
           overlayClassName={cn("bg-gradient-to-t opacity-80 transition-opacity duration-500 group-hover:opacity-95", imageMotionPreset.overlayClassName)}
           animateAtmosphere={enableAmbientAnimation}
         >
@@ -226,14 +225,14 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, eagerIma
         </div>
         <div className="flex items-center justify-between gap-2">
           <p className="font-display text-2xl font-semibold tracking-tight text-brand-strong sm:text-3xl">{formatPrice(item.priceAmount, item.transaction)}</p>
-          {item.status === "active" && item.transaction === "vente" && <PropertyCompareToggle propertyId={item.id} />}
+          {isAvailablePropertyStatus(item.status) && item.transaction === "vente" && <PropertyCompareToggle propertyId={item.id} />}
         </div>
         <meta itemProp="identifier" content={String(item.id)} />
         <meta itemProp="floorSize" content={String(item.surfaceM2)} />
         <div itemProp="offers" itemScope itemType="https://schema.org/Offer">
           <meta itemProp="priceCurrency" content={item.currency} />
           <meta itemProp="price" content={String(item.priceAmount)} />
-          <meta itemProp="availability" content={item.status === "active" ? "https://schema.org/InStock" : item.status === "under_offer" || item.status === "reserved" ? "https://schema.org/LimitedAvailability" : item.status === "off_market" ? "https://schema.org/Discontinued" : "https://schema.org/SoldOut"} />
+          <meta itemProp="availability" content={getPropertySchemaAvailability(item.status)} />
         </div>
       </div>
     </motion.article>

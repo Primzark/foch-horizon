@@ -268,7 +268,7 @@ export default function GeographyPage() {
           {havrePhotos.map((photo) => (
             <figure key={photo.src} className="group overflow-hidden rounded-xl border border-border bg-card">
               <div className="relative">
-                <img src={photo.src} alt={photo.alt} width={photo.width} height={photo.height} loading="lazy" decoding="async" className="aspect-[4/3] w-full object-cover transition-transform duration-500 group-hover:scale-[1.025]" />
+                <img src={photo.src} alt={photo.alt} width={photo.width} height={photo.height} loading="lazy" decoding="async" className="aspect-[4/3] w-full object-cover" />
                 <PhotoAttribution credit={photo.credit} />
               </div>
               <figcaption className="flex items-start justify-between gap-3 p-4">

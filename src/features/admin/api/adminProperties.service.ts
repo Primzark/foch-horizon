@@ -4,11 +4,19 @@ import type { PropertyStatus, PropertyType } from "@/types/domain";
 export const ADMIN_PROPERTIES_QUERY_KEY = ["admin-properties"] as const;
 
 export const ADMIN_PROPERTY_STATUS_OPTIONS: Array<{ value: PropertyStatus; label: string }> = [
-  { value: "active", label: "Disponibles" },
+  { value: "new", label: "Nouveauté" },
+  { value: "exclusive", label: "Exclusivité" },
+  { value: "price_reduced", label: "Prix réduit" },
   { value: "under_offer", label: "Sous offre" },
+  { value: "under_contract", label: "Sous compromis" },
   { value: "sold", label: "Vendu" },
+  { value: "active", label: "Disponible" },
+  { value: "reserved", label: "Réservé" },
+  { value: "rented", label: "Loué" },
   { value: "off_market", label: "Retiré" },
 ];
+
+export const ADMIN_AGENTS_QUERY_KEY = ["admin-agents"] as const;
 
 export interface AdminProperty {
   id: number;
@@ -18,6 +26,9 @@ export interface AdminProperty {
   property_type: "appartement" | "maison_villa" | "autre";
   status: PropertyStatus;
   admin_status_override: PropertyStatus | null;
+  is_featured: boolean;
+  is_online: boolean;
+  agent_id: string | null;
   price_amount: number;
   price_currency: string;
   surface_m2: number | null;
@@ -28,11 +39,28 @@ export interface AdminProperty {
   images: Array<{ source_url: string; sort_order: number }> | null;
 }
 
-export interface UpdatedAdminPropertyStatus {
+export interface AdminAgent {
+  id: string;
+  full_name: string;
+  role: string;
+}
+
+export interface UpdatedAdminProperty {
   id: number;
   status: PropertyStatus;
-  admin_status_override: PropertyStatus;
+  admin_status_override: PropertyStatus | null;
+  is_featured: boolean;
+  is_online: boolean;
+  agent_id: string | null;
   updated_at: string;
+}
+
+export interface AdminPropertyUpdateInput {
+  id: number;
+  status?: PropertyStatus;
+  isFeatured?: boolean;
+  isOnline?: boolean;
+  agentId?: string | null;
 }
 
 export interface AdminPropertyLikeSummary {
@@ -93,6 +121,14 @@ export async function getAdminProperties(client: SupabaseClient): Promise<AdminP
   return response.properties;
 }
 
+export async function getAdminAgents(client: SupabaseClient): Promise<AdminAgent[]> {
+  const response = await invokeAdminProperties<{ agents: AdminAgent[] }>(client, {
+    method: "GET",
+    query: { view: "agents" },
+  });
+  return response.agents;
+}
+
 export async function getAdminPropertyLikeSummary(client: SupabaseClient): Promise<AdminPropertyLikeSummary[]> {
   const response = await invokeAdminProperties<{ likes: AdminPropertyLikeSummary[] }>(client, {
     method: "GET",
@@ -112,13 +148,13 @@ export async function getAdminPropertyLikeHistory(
   return response.events;
 }
 
-export async function updateAdminPropertyStatus(
+export async function updateAdminProperty(
   client: SupabaseClient,
-  input: { id: number; status: PropertyStatus },
-): Promise<UpdatedAdminPropertyStatus> {
-  const response = await invokeAdminProperties<{ property: UpdatedAdminPropertyStatus }>(client, {
+  input: AdminPropertyUpdateInput,
+): Promise<UpdatedAdminProperty> {
+  const response = await invokeAdminProperties<{ property: UpdatedAdminProperty }>(client, {
     method: "PATCH",
-    body: input,
+    body: { ...input },
   });
   return response.property;
 }

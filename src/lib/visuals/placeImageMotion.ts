@@ -6,7 +6,6 @@ export interface PlaceImageMotionPreset {
   hoverScale: number;
   hoverY: number;
   overlayClassName: string;
-  hoverClassName: string;
   floatDuration: number;
 }
 
@@ -28,7 +27,6 @@ const placeImageMotionPresets: Record<PlaceImageMood, PlaceImageMotionPreset> = 
     hoverScale: 1.075,
     hoverY: -4,
     overlayClassName: "from-black/56 via-black/18 to-transparent",
-    hoverClassName: "duration-500 group-hover:scale-[1.07] group-hover:-translate-y-1",
     floatDuration: 16,
   },
   heritage: {
@@ -37,7 +35,6 @@ const placeImageMotionPresets: Record<PlaceImageMood, PlaceImageMotionPreset> = 
     hoverScale: 1.055,
     hoverY: -2,
     overlayClassName: "from-amber-900/40 via-orange-700/14 to-transparent",
-    hoverClassName: "duration-500 group-hover:scale-[1.05] group-hover:rotate-[0.25deg]",
     floatDuration: 18,
   },
   urban: {
@@ -46,7 +43,6 @@ const placeImageMotionPresets: Record<PlaceImageMood, PlaceImageMotionPreset> = 
     hoverScale: 1.05,
     hoverY: -2,
     overlayClassName: "from-zinc-900/44 via-black/14 to-transparent",
-    hoverClassName: "duration-450 group-hover:scale-[1.05] group-hover:-translate-y-0.5",
     floatDuration: 15,
   },
   residential: {
@@ -55,7 +51,6 @@ const placeImageMotionPresets: Record<PlaceImageMood, PlaceImageMotionPreset> = 
     hoverScale: 1.045,
     hoverY: -2,
     overlayClassName: "from-emerald-900/35 via-emerald-700/12 to-transparent",
-    hoverClassName: "duration-450 group-hover:scale-[1.045] group-hover:-translate-y-0.5",
     floatDuration: 14,
   },
 };

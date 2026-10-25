@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { getPropertyById } from "@/features/listings/api/properties.service";
 import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
-import { formatPrice, formatPropertyTypeLabel, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
+import { formatPrice, formatPropertyTypeLabel, isAvailablePropertyStatus, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
 import { cityById } from "@/features/cities/data/cities";
 import { PROPERTY_COMPARE_LIMIT, usePropertyCompareStore } from "@/features/listings/state/usePropertyCompareStore";
 import { useSeo } from "@/lib/seo/useSeo";
@@ -140,9 +140,9 @@ export default function PropertyComparePage() {
 
   const isLoading = propertyQueries.some((query) => query.isPending);
   const resolved = ids.map((id, index) => ({ id, property: propertyQueries[index]?.data ?? null }));
-  const unavailable = resolved.filter(({ property }) => !property || property.status !== "active" || property.transactionType !== "vente");
+  const unavailable = resolved.filter(({ property }) => !property || !isAvailablePropertyStatus(property.status) || property.transactionType !== "vente");
   const properties = resolved.flatMap(({ property }) =>
-    property?.status === "active" && property.transactionType === "vente" ? [property] : [],
+    property && isAvailablePropertyStatus(property.status) && property.transactionType === "vente" ? [property] : [],
   );
   const rows = useMemo(() => getCompareRows(properties), [properties]);
   const visibleRows = showOnlyDifferences

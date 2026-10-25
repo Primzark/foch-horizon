@@ -14,7 +14,6 @@ import { getSiteUrl, useSeo } from "@/lib/seo/useSeo";
 import { cn } from "@/lib/utils";
 import { getPlaceImageMotionPreset, inferPlaceImageMood } from "@/lib/visuals/placeImageMotion";
 import { PlaceAtmosphereLayer } from "@/components/visuals/PlaceAtmosphereLayer";
-import { ContextAwareParallax } from "@/components/visuals/ContextAwareParallax";
 import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
 import { getMotionDirectorProfile } from "@/lib/visuals/motionDirector";
 import { geographyGuides, type GeographyPhotoCredit } from "@/features/content/data/geographyGuides";
@@ -77,8 +76,7 @@ function LocationHero({ pageTitle, description, locationName, locationSlug, loca
 
   return (
     <header className="page-banner relative overflow-hidden rounded-2xl border border-border">
-      <ContextAwareParallax mood={heroMood} reducedMotion={reducedMotion} intensity="immersive" scrollReactive className="z-[0]">
-        <motion.img
+      <motion.img
           src={imageUrl}
           alt={imageAlt}
           className="h-full w-full object-cover"
@@ -98,8 +96,7 @@ function LocationHero({ pageTitle, description, locationName, locationSlug, loca
                   y: { duration: heroMotionPreset.floatDuration, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" },
                 }
           }
-        />
-      </ContextAwareParallax>
+      />
       <PlaceAtmosphereLayer mood={heroMood} animated={!reducedMotion} className="z-[1]" />
       <motion.div
         className={cn("absolute inset-0 z-[2] bg-gradient-to-br", heroMotionPreset.overlayClassName)}

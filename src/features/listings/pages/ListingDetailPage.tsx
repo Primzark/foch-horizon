@@ -22,7 +22,9 @@ import {
   formatPropertyTypeLabel,
   getCanonicalPropertySlug,
   getPropertyCardLabels,
+  getPropertySchemaAvailability,
   getPropertyStatusLabel,
+  isAvailablePropertyStatus,
   normalizePropertyDescription,
   normalizeKeyword,
   sanitizePropertySlug,
@@ -71,7 +73,7 @@ function getNavigationPreview(state: unknown, propertyId: number | null): Proper
     (item.transaction !== "vente" && item.transaction !== "location") ||
     (item.type !== "appartement" && item.type !== "maison_villa" && item.type !== "autre") ||
     !item.status ||
-    (item.status !== "active" && item.status !== "under_offer" && item.status !== "reserved" && item.status !== "sold" && item.status !== "rented" && item.status !== "off_market") ||
+    !["active", "new", "exclusive", "price_reduced", "under_offer", "under_contract", "reserved", "sold", "rented", "off_market"].includes(item.status) ||
     typeof item.priceAmount !== "number" ||
     item.currency !== "EUR" ||
     typeof item.surfaceM2 !== "number" ||
@@ -402,7 +404,7 @@ export default function ListingDetailPage({
     </section>
   ) : null;
   useEffect(() => {
-    if (cookieConsent !== "accepted" || !property || property.status !== "active" || propertyQuery.isPlaceholderData) return;
+    if (cookieConsent !== "accepted" || !property || !isAvailablePropertyStatus(property.status) || propertyQuery.isPlaceholderData) return;
     if (trackedPropertyViewId.current === property.id) return;
 
     trackedPropertyViewId.current = property.id;
@@ -500,7 +502,7 @@ export default function ListingDetailPage({
           srcSet={getPropertyImageSrcSet(nextPropertyToDiscover.coverImageUrl)}
           sizes="(max-width: 767px) calc(100vw - 2rem), 1000px"
           alt=""
-          className="absolute inset-0 h-full w-full scale-[1.015] object-cover opacity-45 saturate-[0.82] transition-[opacity,transform,filter] duration-1000 ease-out group-hover:scale-100 group-hover:opacity-80 group-hover:saturate-100 motion-reduce:transition-none"
+          className="absolute inset-0 h-full w-full object-cover opacity-45 saturate-[0.82] transition-[opacity,filter] duration-1000 ease-out group-hover:opacity-80 group-hover:saturate-100 motion-reduce:transition-none"
           loading="lazy"
           decoding="async"
         />
@@ -633,7 +635,7 @@ export default function ListingDetailPage({
               seller: { "@id": `${siteUrl}/#agency` },
               businessFunction: "http://purl.org/goodrelations/v1#Sell",
               itemOffered: { "@id": `${siteUrl}${canonicalPath}#property` },
-              availability: property.status === "active" ? "https://schema.org/InStock" : property.status === "under_offer" || property.status === "reserved" ? "https://schema.org/LimitedAvailability" : property.status === "off_market" ? "https://schema.org/Discontinued" : "https://schema.org/SoldOut",
+              availability: getPropertySchemaAvailability(property.status),
             },
           },
         }
@@ -835,7 +837,7 @@ export default function ListingDetailPage({
               </div>
               {!previewLayout && (
                 <div className="mt-4 flex flex-wrap items-center gap-2 sm:mt-3 sm:justify-end">
-                  {property.status === "active" && property.transactionType === "vente" && (
+                  {isAvailablePropertyStatus(property.status) && property.transactionType === "vente" && (
                     <PropertyCompareToggle propertyId={property.id} />
                   )}
                   <Button
@@ -1023,7 +1025,7 @@ export default function ListingDetailPage({
                         srcSet={getPropertyImageSrcSet(item.coverImageUrl)}
                         sizes="(max-width: 639px) 84vw, (max-width: 1023px) 46vw, 30vw"
                         alt=""
-                        className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.035] motion-reduce:transition-none"
+                        className="h-full w-full object-cover"
                         loading="lazy"
                         decoding="async"
                       />

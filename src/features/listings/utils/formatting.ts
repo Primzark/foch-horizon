@@ -67,6 +67,14 @@ export function getPropertyStatusLabel(
         getExplicitStatusLabel(title ?? "") === "Sous compromis";
       return isUnderContract ? "Sous compromis" : "Sous offre";
     }
+    case "new":
+      return "Nouveauté";
+    case "exclusive":
+      return "Exclusivité";
+    case "price_reduced":
+      return "Prix en baisse";
+    case "under_contract":
+      return "Sous compromis";
     case "reserved":
       return "Réservé";
     case "sold":
@@ -82,6 +90,19 @@ export function getPropertyStatusLabel(
   }
 }
 
+export function isAvailablePropertyStatus(status: PropertyStatus): boolean {
+  return status === "active" || status === "new" || status === "exclusive" || status === "price_reduced";
+}
+
+export function getPropertySchemaAvailability(status: PropertyStatus): string {
+  if (isAvailablePropertyStatus(status)) return "https://schema.org/InStock";
+  if (status === "under_offer" || status === "under_contract" || status === "reserved") {
+    return "https://schema.org/LimitedAvailability";
+  }
+  if (status === "off_market") return "https://schema.org/Discontinued";
+  return "https://schema.org/SoldOut";
+}
+
 export function getPropertyCardLabels(property: PropertyBadgeSource): string[] {
   const hasAdminOverride = property.adminStatusOverride === property.status;
   const statusLabel = getPropertyStatusLabel(
@@ -89,7 +110,17 @@ export function getPropertyCardLabels(property: PropertyBadgeSource): string[] {
     hasAdminOverride ? null : property.sourceStatus,
     hasAdminOverride ? undefined : property.title,
   );
-  if (property.status === "reserved" || property.status === "sold" || property.status === "off_market" || property.status === "rented") {
+  if (
+    property.status === "new" ||
+    property.status === "exclusive" ||
+    property.status === "price_reduced" ||
+    property.status === "under_offer" ||
+    property.status === "under_contract" ||
+    property.status === "reserved" ||
+    property.status === "sold" ||
+    property.status === "off_market" ||
+    property.status === "rented"
+  ) {
     return statusLabel ? [statusLabel] : [];
   }
 

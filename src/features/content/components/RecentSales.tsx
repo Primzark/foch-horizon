@@ -8,7 +8,7 @@ import { PhotoAttribution } from "@/features/content/components/PhotoAttribution
 import { getRecentSales } from "@/features/content/api/recentSales.service";
 import { SearchThinkingState } from "@/features/content/components/SearchThinkingState";
 import { searchProperties } from "@/features/listings/api/properties.service";
-import { formatPrice, formatPropertyTypeLabel, getPropertyCardLabels } from "@/features/listings/utils/formatting";
+import { formatPrice, formatPropertyTypeLabel, getPropertyCardLabels, isAvailablePropertyStatus } from "@/features/listings/utils/formatting";
 import { PropertyPreviewLink } from "@/features/listings/components/PropertyPreviewLink";
 import { ListingBadges } from "@/features/listings/components/ListingBadges";
 import type { PropertySearchItem } from "@/types/api";
@@ -21,7 +21,7 @@ export function RecentSales({ compact = false }: { compact?: boolean }) {
     queryKey: ["recent-sales", "available-properties"],
     queryFn: async () => {
       const result = await searchProperties({ transaction: "vente", sort: "newest", page: 1, pageSize: 100 });
-      return result.items.filter((item) => item.status === "active" && item.coverImageUrl).slice(0, 8);
+      return result.items.filter((item) => isAvailablePropertyStatus(item.status) && item.coverImageUrl).slice(0, 8);
     },
     enabled: !compact && query.isSuccess && (query.data?.length ?? 0) === 0,
     staleTime: 300_000,
@@ -146,7 +146,7 @@ export function RecentSales({ compact = false }: { compact?: boolean }) {
                         srcSet={getPropertyImageSrcSet(sale.coverImageUrl)}
                         sizes="(max-width: 767px) 100vw, (max-width: 1279px) 50vw, 33vw"
                         alt={sale.title}
-                        className="aspect-[4/3] w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+                        className="aspect-[4/3] w-full object-cover"
                         loading="lazy"
                         decoding="async"
                       />
@@ -178,7 +178,7 @@ function PropertySaleCard({ property, browseItems, isSold }: { property: Propert
           srcSet={getPropertyImageSrcSet(property.coverImageUrl)}
           sizes="(max-width: 767px) 100vw, (max-width: 1279px) 50vw, 33vw"
           alt={property.title}
-          className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+          className="h-full w-full object-cover"
           loading="lazy"
         />
         <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-slate-950/35 via-transparent to-transparent opacity-80" />

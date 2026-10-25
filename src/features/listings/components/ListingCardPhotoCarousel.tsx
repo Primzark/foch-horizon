@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import type { PropertySearchItem } from "@/types/api";
 import { cn } from "@/lib/utils";
 import { PlaceAtmosphereLayer } from "@/components/visuals/PlaceAtmosphereLayer";
-import { ContextAwareParallax } from "@/components/visuals/ContextAwareParallax";
 import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
 import type { inferPlaceImageMood } from "@/lib/visuals/placeImageMotion";
 
@@ -90,23 +89,21 @@ export function ListingCardPhotoCarousel({
         lastSwipeAtRef.current = null;
       }}
     >
-      <ContextAwareParallax mood={mood} reducedMotion={reducedMotion} intensity="subtle">
-        <motion.img
-          key={activeImageUrl}
-          src={getPropertyImageUrl(activeImageUrl, 400)}
-          srcSet={getPropertyImageSrcSet(activeImageUrl)}
-          sizes={sizes}
-          alt={item.title}
-          itemProp="image"
-          className={cn("block w-full object-cover", imageClassName, imageMotionClassName)}
-          loading={eagerImage ? "eager" : "lazy"}
-          fetchPriority="low"
-          decoding="async"
-          initial={reducedMotion ? false : { opacity: 0.84 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: reducedMotion ? 0 : 0.22, ease: "easeOut" }}
-        />
-      </ContextAwareParallax>
+      <motion.img
+        key={activeImageUrl}
+        src={getPropertyImageUrl(activeImageUrl, 400)}
+        srcSet={getPropertyImageSrcSet(activeImageUrl)}
+        sizes={sizes}
+        alt={item.title}
+        itemProp="image"
+        className={cn("block w-full object-cover", imageClassName, imageMotionClassName)}
+        loading={eagerImage ? "eager" : "lazy"}
+        fetchPriority="low"
+        decoding="async"
+        initial={reducedMotion ? false : { opacity: 0.84 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: reducedMotion ? 0 : 0.22, ease: "easeOut" }}
+      />
       <PlaceAtmosphereLayer mood={mood} animated={animateAtmosphere} className="z-[1]" />
       <div
         className={cn(

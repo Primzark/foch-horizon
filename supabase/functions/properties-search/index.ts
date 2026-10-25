@@ -15,6 +15,7 @@ interface PropertyRow {
   property_type: string;
   status: string;
   admin_status_override: string | null;
+  is_featured?: boolean;
   source_status: string | null;
   description?: string | null;
   price_amount: number;
@@ -67,6 +68,7 @@ Deno.serve(async (request) => {
         slug: params.get("slug") ?? undefined,
         transaction: params.get("transaction") ?? undefined,
         status: params.get("status") === "sold" ? "sold" : undefined,
+        featuredOnly: params.get("featuredOnly") === "true",
         type: params.get("type") ?? undefined,
         city: params.get("city") ?? undefined,
         q: params.get("q") ?? undefined,
