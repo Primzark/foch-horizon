@@ -139,10 +139,10 @@ export function SearchDrawer() {
     : `${resultCountPrefix} ${resultCountLabel} ${resultCountSuffix}`;
 
   const renderAreaOption = (name: string, count: number | undefined) => (
-    <span className="flex w-full min-w-0 items-center justify-between gap-4">
-      <span className="truncate">{name}</span>
+    <span className="flex w-full min-w-0 items-center gap-2">
+      <span className="min-w-0 truncate">{name}</span>
       <span
-        className="ml-auto inline-flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground group-data-[highlighted]:text-accent-foreground"
+        className="inline-flex shrink-0 items-center gap-2 text-xs text-muted-foreground group-data-[highlighted]:text-accent-foreground"
         aria-label={count == null ? (areaCounts.isLoading ? "Calcul des disponibilités" : "Disponibilités indisponibles") : formatAreaAvailability(count)}
       >
         {count == null
