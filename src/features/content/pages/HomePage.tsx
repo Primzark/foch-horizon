@@ -113,7 +113,7 @@ export default function HomePage() {
         <ScrollReveal mood={heroMood}>
           <div className="mb-6 flex flex-col items-start gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h2 className="font-display text-3xl">Nos biens favoris</h2>
+              <h2 className="font-display text-3xl">Nos biens</h2>
             </div>
             <Link to="/biens" className="inline-flex items-center gap-1 text-sm hover:underline">
               Découvrir tous les biens

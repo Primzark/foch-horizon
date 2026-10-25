@@ -68,6 +68,7 @@ import {
   getAdminAgents,
   updateAdminProperty,
   type AdminManagedPropertyStatus,
+  type AdminPropertyStatus,
   type AdminAgent,
   type AdminPropertyUpdateInput,
   type AdminProperty,
@@ -189,6 +190,20 @@ function formatPropertyType(value: AdminProperty["property_type"]): string {
 function getStatusOptionLabel(status: AdminManagedPropertyStatus, _transactionType: AdminProperty["transaction_type"]): string {
   if (status === "active") return "À vendre";
   return statusDetails[status].label;
+}
+
+const unknownStatusDetails = {
+  label: "À vérifier",
+  trigger: "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200",
+  icon: CircleAlert,
+};
+
+function getStatusDetails(status: AdminPropertyStatus) {
+  return status === "unknown" ? unknownStatusDetails : statusDetails[status];
+}
+
+function getAdminStatusOptionLabel(status: AdminPropertyStatus, transactionType: AdminProperty["transaction_type"]): string {
+  return status === "unknown" ? unknownStatusDetails.label : getStatusOptionLabel(status, transactionType);
 }
 
 function PropertyThumbnail({ property }: { property: AdminProperty }) {
@@ -353,16 +368,16 @@ function StatusControl({
   onChange,
 }: {
   property: AdminProperty;
-  value: AdminManagedPropertyStatus;
+  value: AdminPropertyStatus;
   saving: boolean;
   onChange: (propertyId: number, status: AdminManagedPropertyStatus) => void;
 }) {
-  const detail = statusDetails[value];
+  const detail = getStatusDetails(value);
   const StatusIcon = detail.icon;
 
   return (
     <Select
-      value={value}
+      value={value === "unknown" ? "" : value}
       onValueChange={(status) => onChange(property.id, status as AdminManagedPropertyStatus)}
       disabled={saving}
     >
@@ -376,7 +391,7 @@ function StatusControl({
         ) : (
           <StatusIcon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
         )}
-        <SelectValue>{getStatusOptionLabel(value, property.transaction_type)}</SelectValue>
+        <SelectValue>{getAdminStatusOptionLabel(value, property.transaction_type)}</SelectValue>
       </SelectTrigger>
       <SelectContent align="end" className="min-w-[170px]">
         {ADMIN_PROPERTY_STATUS_OPTIONS.map((option) => {
@@ -852,7 +867,7 @@ export default function AdminPropertiesPage() {
   }
 
   const counts = allProperties.reduce<Record<AdminManagedPropertyStatus, number>>((acc, property) => {
-    acc[property.status] += 1;
+    if (property.status !== "unknown") acc[property.status] += 1;
     return acc;
   }, Object.fromEntries(ADMIN_PROPERTY_STATUS_OPTIONS.map(({ value }) => [value, 0])) as Record<AdminManagedPropertyStatus, number>);
   const propertyById = new Map(allProperties.map((property) => [property.id, property]));

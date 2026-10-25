@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { PropertyStatus, PropertyType } from "@/types/domain";
 
 export type AdminManagedPropertyStatus = Exclude<PropertyStatus, "rented" | "reserved" | "off_market">;
+export type AdminPropertyStatus = AdminManagedPropertyStatus | "unknown";
 
 export const ADMIN_PROPERTIES_QUERY_KEY = ["admin-properties"] as const;
 
@@ -15,6 +16,17 @@ export const ADMIN_PROPERTY_STATUS_OPTIONS: Array<{ value: AdminManagedPropertyS
   { value: "active", label: "Disponible" },
 ];
 
+const ADMIN_MANAGED_STATUSES = new Set<string>(ADMIN_PROPERTY_STATUS_OPTIONS.map(({ value }) => value));
+
+function normalizeAdminPropertyStatus(status: string | null): AdminPropertyStatus {
+  // Older versions of the admin API can still return this enum value. The
+  // current inventory treats reservations as properties under contract.
+  if (status === "reserved") return "under_contract";
+  return status && ADMIN_MANAGED_STATUSES.has(status)
+    ? status as AdminManagedPropertyStatus
+    : "unknown";
+}
+
 export const ADMIN_AGENTS_QUERY_KEY = ["admin-agents"] as const;
 
 export interface AdminProperty {
@@ -23,7 +35,7 @@ export interface AdminProperty {
   slug: string;
   transaction_type: "vente";
   property_type: "appartement" | "maison_villa" | "autre";
-  status: AdminManagedPropertyStatus;
+  status: AdminPropertyStatus;
   admin_status_override: AdminManagedPropertyStatus | null;
   is_featured: boolean;
   is_online: boolean;
@@ -117,8 +129,13 @@ async function invokeAdminProperties<T>(
 }
 
 export async function getAdminProperties(client: SupabaseClient): Promise<AdminProperty[]> {
-  const response = await invokeAdminProperties<{ properties: AdminProperty[] }>(client, { method: "GET" });
-  return response.properties;
+  const response = await invokeAdminProperties<{
+    properties: Array<Omit<AdminProperty, "status"> & { status: string | null }>;
+  }>(client, { method: "GET" });
+
+  return response.properties
+    .filter((property) => property.transaction_type === "vente" && property.status !== "rented" && property.status !== "off_market")
+    .map((property) => ({ ...property, status: normalizeAdminPropertyStatus(property.status) }));
 }
 
 export async function getAdminAgents(client: SupabaseClient): Promise<AdminAgent[]> {
