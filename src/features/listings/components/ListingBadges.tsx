@@ -1,4 +1,4 @@
-import { BadgeCheck, CircleOff, Handshake, Sparkles, Star } from "lucide-react";
+import { ArrowDownRight, BadgeCheck, FileCheck2, Handshake, Sparkles, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ListingBadgesProps {
@@ -11,12 +11,20 @@ const badgeStyles: Record<string, { icon: typeof Star; className: string }> = {
     icon: Star,
     className: "bg-amber-100 text-amber-950",
   },
+  "Nouveauté": {
+    icon: Sparkles,
+    className: "bg-emerald-100 text-emerald-950",
+  },
   "Nouveautés": {
     icon: Sparkles,
     className: "bg-emerald-100 text-emerald-950",
   },
+  "Baisse de prix": {
+    icon: ArrowDownRight,
+    className: "bg-orange-100 text-orange-950",
+  },
   "Sous compromis": {
-    icon: Handshake,
+    icon: FileCheck2,
     className: "bg-sky-100 text-sky-950",
   },
   "Sous offre": {
@@ -26,10 +34,6 @@ const badgeStyles: Record<string, { icon: typeof Star; className: string }> = {
   "Vendu par l’agence": {
     icon: BadgeCheck,
     className: "bg-slate-100 text-slate-900",
-  },
-  "Retiré": {
-    icon: CircleOff,
-    className: "bg-rose-100 text-rose-950",
   },
 };
 

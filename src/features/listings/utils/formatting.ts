@@ -72,15 +72,15 @@ export function getPropertyStatusLabel(
     case "exclusive":
       return "Exclusivité";
     case "price_reduced":
-      return "Prix en baisse";
+      return "Baisse de prix";
     case "under_contract":
       return "Sous compromis";
     case "reserved":
-      return "Réservé";
+      return null;
     case "sold":
       return "Vendu par l’agence";
     case "off_market":
-      return "Retiré";
+      return null;
     case "active":
       return getExplicitStatusLabel(sourceStatus ?? "") ?? getExplicitStatusLabel(title ?? "");
     default:

@@ -8,8 +8,6 @@ const ADMIN_STATUSES = new Set([
   "under_contract",
   "sold",
   "active",
-  "reserved",
-  "off_market",
 ]);
 const PAGE_SIZE = 500;
 const functionHeaders = {
@@ -80,12 +78,13 @@ async function listProperties(supabase: ReturnType<typeof createServiceClient>) 
     const { data, error } = await supabase
       .from("properties")
       .select(
-        "id,title,slug,transaction_type,property_type,status,admin_status_override,is_featured,is_online,agent_id,price_amount,price_currency,surface_m2,bedrooms,postal_code,updated_at,city:cities(name,slug),images:property_images(source_url,sort_order)",
+        "id,title,slug,transaction_type,property_type,status,admin_status_override,is_featured,is_online,agent_id,price_amount,price_currency,surface_m2,bedrooms,postal_code,published_at,updated_at,city:cities(name,slug),images:property_images(source_url,sort_order)",
       )
       .eq("transaction_type", "vente")
       .neq("status", "rented")
-      .order("updated_at", { ascending: false })
-      .order("id", { ascending: true })
+      .not("status", "in", "(reserved,off_market)")
+      .order("published_at", { ascending: false, nullsFirst: false })
+      .order("id", { ascending: false })
       .range(offset, offset + PAGE_SIZE - 1);
 
     if (error) throw error;

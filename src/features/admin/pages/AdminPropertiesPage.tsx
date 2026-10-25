@@ -14,10 +14,18 @@ import {
   Heart,
   KeyRound,
   LogOut,
+  BadgeCheck,
+  FileCheck2,
+  Handshake,
+  House,
   Search,
   ShieldCheck,
   SlidersHorizontal,
+  Sparkles,
+  Star,
+  TrendingDown,
   X,
+  type LucideIcon,
 } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Button, type ButtonProps } from "@/components/ui/button";
@@ -88,51 +96,41 @@ function validateAdminLogin(emailValue: string, password: string): AdminLoginErr
   return errors;
 }
 
-const statusDetails: Record<AdminManagedPropertyStatus, { label: string; trigger: string; dot: string }> = {
+const statusDetails: Record<AdminManagedPropertyStatus, { label: string; trigger: string; icon: LucideIcon }> = {
   active: {
     label: "Disponible",
     trigger: "border-emerald-200 bg-emerald-50 text-emerald-900 hover:bg-emerald-100 dark:border-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-200",
-    dot: "bg-emerald-600",
+    icon: House,
   },
   new: {
     label: "Nouveauté",
     trigger: "border-emerald-200 bg-emerald-50 text-emerald-900 hover:bg-emerald-100 dark:border-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-200",
-    dot: "bg-emerald-600",
+    icon: Sparkles,
   },
   exclusive: {
     label: "Exclusivité",
     trigger: "border-fuchsia-200 bg-fuchsia-50 text-fuchsia-900 hover:bg-fuchsia-100 dark:border-fuchsia-900 dark:bg-fuchsia-950/50 dark:text-fuchsia-200",
-    dot: "bg-fuchsia-600",
+    icon: Star,
   },
   price_reduced: {
-    label: "Prix réduit",
+    label: "Baisse de prix",
     trigger: "border-orange-200 bg-orange-50 text-orange-900 hover:bg-orange-100 dark:border-orange-900 dark:bg-orange-950/50 dark:text-orange-200",
-    dot: "bg-orange-600",
+    icon: TrendingDown,
   },
   under_offer: {
     label: "Sous offre",
     trigger: "border-amber-200 bg-amber-50 text-amber-900 hover:bg-amber-100 dark:border-amber-900 dark:bg-amber-950/50 dark:text-amber-200",
-    dot: "bg-amber-500",
+    icon: Handshake,
   },
   under_contract: {
     label: "Sous compromis",
     trigger: "border-violet-200 bg-violet-50 text-violet-900 hover:bg-violet-100 dark:border-violet-900 dark:bg-violet-950/50 dark:text-violet-200",
-    dot: "bg-violet-500",
-  },
-  reserved: {
-    label: "Réservé",
-    trigger: "border-violet-200 bg-violet-50 text-violet-900 hover:bg-violet-100 dark:border-violet-900 dark:bg-violet-950/50 dark:text-violet-200",
-    dot: "bg-violet-500",
+    icon: FileCheck2,
   },
   sold: {
     label: "Vendu",
     trigger: "border-sky-200 bg-sky-50 text-sky-900 hover:bg-sky-100 dark:border-sky-900 dark:bg-sky-950/50 dark:text-sky-200",
-    dot: "bg-sky-600",
-  },
-  off_market: {
-    label: "Retiré",
-    trigger: "border-slate-200 bg-slate-100 text-slate-700 hover:bg-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200",
-    dot: "bg-slate-500",
+    icon: BadgeCheck,
   },
 };
 
@@ -147,6 +145,11 @@ function normalizeSearch(value: string): string {
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLocaleLowerCase("fr-FR");
+}
+
+function propertyPublicationTimestamp(property: AdminProperty): number {
+  const timestamp = Date.parse(property.published_at ?? property.updated_at);
+  return Number.isNaN(timestamp) ? 0 : timestamp;
 }
 
 function formatArea(value: number | null): string {
@@ -355,6 +358,7 @@ function StatusControl({
   onChange: (propertyId: number, status: AdminManagedPropertyStatus) => void;
 }) {
   const detail = statusDetails[value];
+  const StatusIcon = detail.icon;
 
   return (
     <Select
@@ -370,16 +374,22 @@ function StatusControl({
         {saving ? (
           <span className="h-2.5 w-2.5 animate-spin rounded-full border-2 border-current border-r-transparent" aria-hidden="true" />
         ) : (
-          <span className={`h-2 w-2 shrink-0 rounded-full ${detail.dot}`} aria-hidden="true" />
+          <StatusIcon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
         )}
         <SelectValue>{getStatusOptionLabel(value, property.transaction_type)}</SelectValue>
       </SelectTrigger>
       <SelectContent align="end" className="min-w-[170px]">
-        {ADMIN_PROPERTY_STATUS_OPTIONS.map((option) => (
-          <SelectItem key={option.value} value={option.value}>
-            {getStatusOptionLabel(option.value, property.transaction_type)}
-          </SelectItem>
-        ))}
+        {ADMIN_PROPERTY_STATUS_OPTIONS.map((option) => {
+          const OptionIcon = statusDetails[option.value].icon;
+          return (
+            <SelectItem key={option.value} value={option.value}>
+              <span className="flex items-center gap-2">
+                <OptionIcon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                <span>{getStatusOptionLabel(option.value, property.transaction_type)}</span>
+              </span>
+            </SelectItem>
+          );
+        })}
       </SelectContent>
     </Select>
   );
@@ -779,7 +789,9 @@ export default function AdminPropertiesPage() {
         String(property.id),
       ].join(" "));
       return haystack.includes(needle);
-    });
+    }).sort((left, right) =>
+      propertyPublicationTimestamp(right) - propertyPublicationTimestamp(left) || right.id - left.id,
+    );
   }, [allProperties, search, statusFilter]);
 
   if (!supabaseClient) {
@@ -1122,9 +1134,17 @@ export default function AdminPropertiesPage() {
                     </SelectTrigger>
                     <SelectContent align="end">
                       <SelectItem value="all">Tous les statuts</SelectItem>
-                      {ADMIN_PROPERTY_STATUS_OPTIONS.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-                      ))}
+                      {ADMIN_PROPERTY_STATUS_OPTIONS.map((option) => {
+                        const OptionIcon = statusDetails[option.value].icon;
+                        return (
+                          <SelectItem key={option.value} value={option.value}>
+                            <span className="flex items-center gap-2">
+                              <OptionIcon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                              <span>{option.label}</span>
+                            </span>
+                          </SelectItem>
+                        );
+                      })}
                     </SelectContent>
                   </Select>
                 </div>
@@ -1157,7 +1177,7 @@ export default function AdminPropertiesPage() {
                             <th scope="col" className="px-3 py-3.5 text-center">Favoris</th>
                             <th scope="col" className="px-3 py-3.5 text-center">En ligne</th>
                             <th scope="col" className="px-4 py-3.5">Négociateur</th>
-                            <th scope="col" className="px-4 py-3.5">Mis à jour</th>
+                            <th scope="col" className="px-4 py-3.5">Ajouté le</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -1213,7 +1233,7 @@ export default function AdminPropertiesPage() {
                                     onChange={(agentId) => void changeProperty({ id: property.id, agentId })}
                                   />
                                 </td>
-                                <td className="px-4 py-3.5 text-xs text-muted-foreground">{formatDate(property.updated_at)}</td>
+                                <td className="px-4 py-3.5 text-xs text-muted-foreground">{formatDate(property.published_at ?? property.updated_at)}</td>
                               </motion.tr>
                             ))}
                           </AnimatePresence>
@@ -1231,7 +1251,7 @@ export default function AdminPropertiesPage() {
                             <PropertyPrice property={property} />
                             <p className="mt-1 text-xs text-muted-foreground">{formatPropertyType(property.property_type)} · Vente</p>
                           </div>
-                          <p className="text-[10px] text-muted-foreground">{formatDate(property.updated_at)}</p>
+                          <p className="text-[10px] text-muted-foreground">{formatDate(property.published_at ?? property.updated_at)}</p>
                         </div>
                         <div className="mt-3 flex items-center justify-between gap-3">
                           <span className="text-[11px] text-muted-foreground">Statut</span>

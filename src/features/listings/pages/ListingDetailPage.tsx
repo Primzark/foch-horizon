@@ -73,7 +73,7 @@ function getNavigationPreview(state: unknown, propertyId: number | null): Proper
     item.transaction !== "vente" ||
     (item.type !== "appartement" && item.type !== "maison_villa" && item.type !== "autre") ||
     !item.status ||
-    !["active", "new", "exclusive", "price_reduced", "under_offer", "under_contract", "reserved", "sold", "off_market"].includes(item.status) ||
+    !["active", "new", "exclusive", "price_reduced", "under_offer", "under_contract", "sold"].includes(item.status) ||
     typeof item.priceAmount !== "number" ||
     item.currency !== "EUR" ||
     typeof item.surfaceM2 !== "number" ||

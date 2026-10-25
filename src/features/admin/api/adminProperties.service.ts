@@ -1,20 +1,18 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { PropertyStatus, PropertyType } from "@/types/domain";
 
-export type AdminManagedPropertyStatus = Exclude<PropertyStatus, "rented">;
+export type AdminManagedPropertyStatus = Exclude<PropertyStatus, "rented" | "reserved" | "off_market">;
 
 export const ADMIN_PROPERTIES_QUERY_KEY = ["admin-properties"] as const;
 
 export const ADMIN_PROPERTY_STATUS_OPTIONS: Array<{ value: AdminManagedPropertyStatus; label: string }> = [
   { value: "new", label: "Nouveauté" },
   { value: "exclusive", label: "Exclusivité" },
-  { value: "price_reduced", label: "Prix réduit" },
+  { value: "price_reduced", label: "Baisse de prix" },
   { value: "under_offer", label: "Sous offre" },
   { value: "under_contract", label: "Sous compromis" },
   { value: "sold", label: "Vendu" },
   { value: "active", label: "Disponible" },
-  { value: "reserved", label: "Réservé" },
-  { value: "off_market", label: "Retiré" },
 ];
 
 export const ADMIN_AGENTS_QUERY_KEY = ["admin-agents"] as const;
@@ -35,6 +33,7 @@ export interface AdminProperty {
   surface_m2: number | null;
   bedrooms: number | null;
   postal_code: string | null;
+  published_at: string | null;
   updated_at: string;
   city: { name: string; slug: string } | null;
   images: Array<{ source_url: string; sort_order: number }> | null;

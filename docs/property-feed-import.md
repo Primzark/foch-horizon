@@ -8,9 +8,11 @@ Create a shareable feed from the current normalized inventory:
 npm run export:property-feed
 ```
 
-This writes `supabase/fixtures/property-feed.json` with properties, cities, agents, property references, and status counts. The current normalized inventory has 48 properties and all 48 are marked `active`; it does not currently provide evidence of sold or under-offer properties. The provider scraper maps known labels to `active`, `under_offer`, `sold`, `rented`, and `off_market`, while preserving the original provider label in `sourceStatus` / `source_status` for review when the software uses a new label.
+This writes `supabase/fixtures/property-feed.json` with properties, cities, agents, property references, and status counts. The current normalized inventory has 48 properties and all 48 are marked `active`; it does not currently provide evidence of sold or under-offer properties. The provider scraper maps known labels to `active`, `under_offer`, `sold`, `rented`, and `off_market`, while preserving the original provider label in `sourceStatus` / `source_status` for review when the software uses a new label. Withdrawn (`off_market`) rows are removed during import.
 
 ## POST path
+
+The feed is a complete snapshot of the provider's current inventory. An import upserts listed properties and removes rows that are missing from the snapshot or marked withdrawn. Legacy `reserved` values are normalized to `under_contract`. Leads linked to a removed property are retained with their property reference cleared; property-specific media and likes follow their existing foreign-key delete behavior.
 
 The intended path is:
 
