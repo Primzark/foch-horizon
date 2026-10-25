@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { PointerEvent, ReactNode } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   Dialog,
   DialogContent,
@@ -13,9 +14,15 @@ import type { PropertyImage } from "@/types/domain";
 import { trackEvent } from "@/lib/analytics/events";
 import { inferPlaceImageMood } from "@/lib/visuals/placeImageMotion";
 import { PlaceAtmosphereLayer } from "@/components/visuals/PlaceAtmosphereLayer";
+import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
 import { ListingBadges } from "@/features/listings/components/ListingBadges";
 import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
 
+const galleryImageVariants = {
+  enter: { opacity: 1, scale: 1.025 },
+  center: { opacity: 1, scale: 1 },
+  exit: { opacity: 1, scale: 0.99 },
+};
 // 900px covers standard-density screens and matches the image requests warmed
 // by the property-page gallery; retain the 1200px candidate on high-DPI desktop.
 const standardDensityViewerImageWidths = [400, 700, 900] as const;
@@ -55,6 +62,8 @@ export function ListingGallery({
   const fullResolutionGalleryImageIdRef = useRef<string | null>(null);
   const selectedViewerImageRef = useRef<HTMLImageElement | null>(null);
   const swipeHandledRef = useRef(false);
+  const { reducedMotion } = useMotionPreference();
+
   useEffect(() => {
     if (typeof window === "undefined" || !window.matchMedia) return;
     const mediaQuery = window.matchMedia("(min-width: 768px)");
@@ -411,15 +420,23 @@ export function ListingGallery({
           >
             <div className="z-[0]">
               <div className={`relative w-full overflow-hidden ${variant === "modal" ? "aspect-[4/3] max-h-[min(32rem,44dvh)] min-h-[16rem] sm:aspect-[16/7]" : "aspect-[16/9]"}`}>
-                <img
-                  {...galleryImageProps(activeImage, 400, `hero:${activeImage.id}`)}
-                  sizes={variant === "modal" ? "(max-width: 767px) 100vw, 88vw" : "(max-width: 1023px) calc(100vw - 2rem), 66vw"}
-                  alt={activeImage.altText}
-                  className="absolute inset-0 h-full w-full object-cover"
-                  loading="eager"
-                  fetchPriority="high"
-                  decoding="async"
-                />
+                <AnimatePresence initial={!reducedMotion} mode="sync">
+                  <motion.img
+                    key={activeImage.id}
+                    variants={galleryImageVariants}
+                    initial={reducedMotion ? false : "enter"}
+                    animate={reducedMotion ? { opacity: 1, scale: 1 } : "center"}
+                    exit={reducedMotion ? { opacity: 0 } : "exit"}
+                    transition={{ duration: reducedMotion ? 0 : 0.28, ease: [0.22, 1, 0.36, 1] }}
+                    {...galleryImageProps(activeImage, 400, `hero:${activeImage.id}`)}
+                    sizes={variant === "modal" ? "(max-width: 767px) 100vw, 88vw" : "(max-width: 1023px) calc(100vw - 2rem), 66vw"}
+                    alt={activeImage.altText}
+                    className="absolute inset-0 h-full w-full object-cover"
+                    loading="eager"
+                    fetchPriority="high"
+                    decoding="async"
+                  />
+                </AnimatePresence>
               </div>
             </div>
             <PlaceAtmosphereLayer mood={imageMood} animated={false} variant="gallery" className="z-[1]" />
