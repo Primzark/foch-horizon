@@ -70,7 +70,7 @@ export function PropertyAlertsDialog({ filters }: PropertyAlertsDialogProps) {
         <DialogHeader>
           <DialogTitle>Créer une alerte e-mail</DialogTitle>
           <DialogDescription>
-            Nous vous écrirons lorsqu’un nouveau bien correspondra à votre recherche. Les annonces déjà en ligne ne seront pas envoyées.
+            Nous vous écrirons lorsqu’un nouveau bien correspondra à votre recherche.
           </DialogDescription>
         </DialogHeader>
 
