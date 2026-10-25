@@ -147,9 +147,9 @@ export function SpotlightSearchCriteria({ filters, onChange, onQueryChange }: Sp
                 aria-labelledby="spotlight-search-area-label"
                 className="[&>span]:line-clamp-none [&>span]:flex-1 [&>span]:min-w-0"
               >
-                <SelectValue placeholder="Tous">
+                <SelectValue placeholder="Tous les">
                   <SearchAreaValue
-                    name={selectedArea?.name ?? "Tous"}
+                    name={selectedArea?.name ?? "Tous les"}
                     count={selectedAreaCount}
                     isLoading={areaCounts.isLoading}
                   />
@@ -157,7 +157,7 @@ export function SpotlightSearchCriteria({ filters, onChange, onQueryChange }: Sp
               </SelectTrigger>
               <SelectContent className="z-[210]">
                 <SelectItem value="all" className="group">
-                  {renderAreaOption("Tous", areaCounts.data?.all)}
+                  {renderAreaOption("Tous les", areaCounts.data?.all)}
                 </SelectItem>
                 <SelectGroup>
                   <SelectLabel>Le Havre et ses quartiers</SelectLabel>

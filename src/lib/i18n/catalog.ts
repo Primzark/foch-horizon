@@ -339,6 +339,9 @@ export const englishCopy: Record<string, string> = {
   "Tous types": "All property types",
   "Ville ou secteur": "Town or area",
   "Tous": "All",
+  "Tous les": "All",
+  "bien": "property",
+  "biens": "properties",
   "Toutes les villes et tous les secteurs": "All towns and areas",
   "Le Havre et ses quartiers": "Le Havre and its neighbourhoods",
   "Autres communes et secteurs": "Other towns and areas",
@@ -797,6 +800,12 @@ function translateDelimitedPhrase(source: string): string {
 }
 
 function translateDynamicFrench(source: string): string | undefined {
+  const propertyCount = source.match(/^([\d\s\u202f,.]+)\s+biens?$/i);
+  if (propertyCount) {
+    const count = propertyCount[1].trim();
+    return `${count} ${Number(count.replace(/[\s\u202f,.]/g, "")) === 1 ? "property" : "properties"}`;
+  }
+
   const propertyCountInBudget = source.match(/^(\d[\d\s,.]*)\s+biens? dans votre budget$/i);
   if (propertyCountInBudget) {
     const count = propertyCountInBudget[1].trim();
