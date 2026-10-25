@@ -51,6 +51,7 @@ type EdgePropertyDetailRow = {
   agent?: {
     id?: string | null;
     full_name?: string | null;
+    role?: string | null;
     email?: string | null;
     phone?: string | null;
   } | null;
@@ -137,6 +138,14 @@ function mapEdgePropertyDetailToDomain(row: EdgePropertyDetailRow): Property {
     lat: row.lat ?? null,
     lng: row.lng ?? null,
     agentId: localAgentId,
+    assignedAgent: row.agent?.full_name?.trim()
+      ? {
+          fullName: row.agent.full_name.trim(),
+          role: row.agent.role?.trim() || null,
+          phone: row.agent.phone?.trim() || null,
+          email: row.agent.email?.trim() || null,
+        }
+      : null,
     publishedAt: row.published_at ?? row.updated_at,
     updatedAt: row.updated_at,
     isFeatured: row.is_featured ?? false,

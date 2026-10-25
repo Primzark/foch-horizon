@@ -70,8 +70,12 @@
       "destination": "/nos-dernieres-ventes/index.html"
     },
     {
-      "source": "/biens/:idSlug([0-9]+-[a-z0-9-]+)",
+      "source": "/biens/:idSlug(4990-propriete-de-caractere|5061-appartement-de-standing-vue-ville-et-mer|5062-felix-faure|5063-entre-le-square-saint-roch-et-la-plage|5065-magnifique-vue-sur-honfleur|5079-nouveaute-quartier-danton|5086-belle-propriete|5107-gainneville|5112-a-deux-pas-de-saint-vincent|5115-proche-du-phare-de-sainte-adresse|5119-nouveaute|5122-proximite-du-centre-coty|5124-nouveaute|5136-saint-vincent|5148-exclusivite-sanvic|5149-saint-vincent|5150-sainte-adresse|5151-nouveaute-quartier-sainte-anne|5152-sanvic-eglise|5154-centre-de-saint-romain-de-colbosc|5159-nouveaute-place-de-l-hotel-de-ville|5162-proche-foret-de-montgeon|5163-nouveaute-prox-universite|5165-exclusivite-sainte-cecile|5168-exclusivite-harfleur-centre|5170-exclusivite-avenue-rene-coty|5173-fontaine-la-mallet|5174-exclusivite-felix-faure-parc-d-or-proximite-des-lycees|5176-nouveaute-exclusivite|5177-debut-graville-rue-j-mazarin|5179-face-casino|5182-exclusivite-les-ormeaux|5184-place-de-l-hotel-de-ville-vue-ouest|5186-nouveaute-exclusivite|5189-exclusivite-place-sainte-cecile|5191-exclusivite-saint-michel|5196-nouveaute-a-deux-pas-de-saint-vincent|5198-saint-michel-centre-ville|5199-joffre-parc-hauser|5200-triple-exposition-vue-mer|5202-montmorency|5203-entre-palais-de-justice-et-bassin-du-commerce|5205-les-docks-dernier-etage|5206-entre-coty-et-danton|5207-exclusivite-centre-d-harfleur|5208-nouveaute-place-de-bleville|5209-exclusivite-saint-vincent|5211-golf-d-octeville-sur-mer-exclusivite|5212-sainte-adresse|5213-nouveaute-dollemard-limite-sainte-adresse|6667-nouveaute-harfleur|814-nouveaute-gainneville-centre)",
       "destination": "/biens/:idSlug/index.html"
+    },
+    {
+      "source": "/biens/:idSlug([0-9]+-[a-z0-9-]+)",
+      "destination": "/spa.html"
     },
     {
       "source": "/immobilier/:ville(le-havre|sainte-adresse|la-plage|gobelins|saint-michel|octeville-sur-mer|montivilliers|maneglise|gainneville|saint-romain|etretat|deauville|trouville|halles-centrales|hotel-de-ville|notre-dame|saint-francois|perrey|danton|bleville|centre-ville|harfleur|gonfreville-l-orcher|rogerville|saint-laurent-de-brevedent|etainhus|epretot|saint-aubin-routot|la-remuee|gommerville|la-cerlangue|les-trois-pierres)",

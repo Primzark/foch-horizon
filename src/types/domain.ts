@@ -52,6 +52,13 @@ export interface PropertyFeature {
   labelFr: string;
 }
 
+export interface AssignedPropertyAgent {
+  fullName: string;
+  role: string | null;
+  phone: string | null;
+  email: string | null;
+}
+
 export interface Property {
   id: number;
   title: string;
@@ -82,6 +89,8 @@ export interface Property {
   lat: number | null;
   lng: number | null;
   agentId: string;
+  /** Live contact details joined from the assigned agent record, when available. */
+  assignedAgent?: AssignedPropertyAgent | null;
   publishedAt: string;
   updatedAt: string;
   isFeatured: boolean;

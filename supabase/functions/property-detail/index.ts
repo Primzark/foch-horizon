@@ -18,7 +18,7 @@ Deno.serve(async (request) => {
     const { data, error } = await supabase
       .from("properties")
       .select(
-        "*, city:cities(*), agent:agents(*), images:property_images(*), features:property_features(*)",
+        "*, city:cities(*), agent:agents(id,full_name,role,email,phone), images:property_images(*), features:property_features(*)",
       )
       .eq("id", id)
       .eq("transaction_type", "vente")
