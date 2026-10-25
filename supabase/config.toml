@@ -22,3 +22,8 @@ entrypoint = "./functions/property-likes/index.ts"
 enabled = true
 verify_jwt = false
 entrypoint = "./functions/property-alerts/index.ts"
+
+[functions.search-popularity]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/search-popularity/index.ts"

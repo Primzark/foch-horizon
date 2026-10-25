@@ -15,23 +15,25 @@ import { Button } from "@/components/ui/button";
 import { formatPropertyTypeLabel, normalizeKeyword, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
 import { buildSearchParams, parseSearchParams } from "@/features/listings/utils/query";
 import { searchProperties } from "@/features/listings/api/properties.service";
+import { fetchPopularSearchSuggestions } from "@/features/listings/api/searchPopularity.service";
 import { properties } from "@/features/listings/data/properties";
 import { toSearchItem } from "@/features/listings/utils/mappers";
 import { createPropertyModalRouteState } from "@/features/listings/navigation/propertyModalNavigation";
 import { persistAppliedPropertySearchFilters, resolvePropertySearchFilters } from "@/features/listings/utils/searchFilterPersistence";
 import { SpotlightSearchCriteria } from "@/features/listings/components/SpotlightSearchCriteria";
 import { SearchCountBadge } from "@/features/listings/components/SearchCountBadge";
+import {
+  fallbackSearchKeys,
+  getSearchPopularityCandidate,
+} from "@/features/listings/utils/searchPopularity";
 import type { PropertySearchItem, PropertySearchParams, PropertySearchResponse } from "@/types/api";
 import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
 
 type SearchableProperty = PropertySearchItem & { description?: string };
 
-const popularSearches: Array<{ label: string; filters: Partial<PropertySearchParams> }> = [
-  { label: "Le Havre", filters: { q: "Le Havre" } },
-  { label: "Sainte-Adresse", filters: { q: "Sainte-Adresse" } },
-  { label: "Vue mer", filters: { q: "vue mer" } },
-  { label: "Maison", filters: { type: "maison_villa" } },
-];
+const fallbackSearches = fallbackSearchKeys
+  .map((key) => getSearchPopularityCandidate(key))
+  .filter((candidate): candidate is NonNullable<typeof candidate> => Boolean(candidate));
 
 const defaultSearchFilters: PropertySearchParams = {
   transaction: "vente",
@@ -71,6 +73,23 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
     staleTime: 60_000,
     refetchOnWindowFocus: false,
   });
+
+  const popularSearchQuery = useQuery({
+    queryKey: ["popular-search-suggestions"],
+    queryFn: fetchPopularSearchSuggestions,
+    enabled: open,
+    staleTime: 5 * 60_000,
+    retry: 1,
+  });
+
+  const rankedPopularSearches = useMemo(
+    () => (popularSearchQuery.data ?? [])
+      .map(({ key }) => getSearchPopularityCandidate(key))
+      .filter((candidate): candidate is NonNullable<typeof candidate> => Boolean(candidate)),
+    [popularSearchQuery.data],
+  );
+  const hasPopularSearchData = rankedPopularSearches.length >= 2;
+  const displayedSearches = hasPopularSearchData ? rankedPopularSearches : fallbackSearches;
 
   const queryText = query.trim();
   const searchableInventory = useMemo(() => {
@@ -296,7 +315,13 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
 
         <div className="flex items-center justify-between gap-4 px-5 pb-2 pt-4">
           <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-            {advancedOpen ? "Affiner votre recherche" : showSuggestions ? "Biens correspondants" : "Recherches populaires"}
+            {advancedOpen
+              ? "Affiner votre recherche"
+              : showSuggestions
+                ? "Biens correspondants"
+                : hasPopularSearchData
+                  ? "Recherches populaires · 30 derniers jours"
+                  : "Suggestions de recherche"}
           </p>
           {!advancedOpen && showSuggestions && (
             <p className="text-xs text-muted-foreground" aria-live="polite">
@@ -382,7 +407,7 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
             </p>
           ) : (
             <div className="flex flex-wrap gap-2 px-2 pb-2">
-              {popularSearches.map((search) => (
+              {displayedSearches.map((search) => (
                 <button
                   key={search.label}
                   type="button"

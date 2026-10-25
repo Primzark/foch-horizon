@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getPropertyById, searchProperties } from "@/features/listings/api/properties.service";
+import { recordSearchPopularity } from "@/features/listings/api/searchPopularity.service";
 import { ActiveFiltersChips } from "@/features/listings/components/ActiveFiltersChips";
 import { FiltersBar } from "@/features/listings/components/FiltersBar";
 import { ListingCard } from "@/features/listings/components/ListingCard";
@@ -79,6 +80,10 @@ export default function ListingsIndexPage() {
       setSearchParams(restored, { replace: true });
     }
   }, [searchParams, setSearchParams]);
+
+  useEffect(() => {
+    recordSearchPopularity(parseSearchParams(searchParams));
+  }, [searchParams]);
 
   const query = useQuery({
     queryKey: ["properties", filters, viewMode === "list" ? "list" : viewMode === "map" ? "map" : "default"],
