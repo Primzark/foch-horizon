@@ -19,6 +19,7 @@ import type { PropertySearchParams } from "@/types/api";
 import { useUiStore } from "@/lib/state/useUiStore";
 import { trackEvent } from "@/lib/analytics/events";
 import { createPropertyModalRouteState } from "@/features/listings/navigation/propertyModalNavigation";
+import { SearchAreaValue } from "@/features/listings/components/SearchAreaValue";
 import { SearchCountBadge } from "@/features/listings/components/SearchCountBadge";
 
 const defaultFilters: PropertySearchParams = {
@@ -117,6 +118,9 @@ export function SearchDrawer() {
     enabled: searchDrawerOpen,
     staleTime: 60_000,
   });
+  const selectedAreaCount = selectedArea
+    ? areaCounts.data?.byArea[selectedArea.id]
+    : areaCounts.data?.all;
   const resultCountFilters = useMemo(() => ({ ...normalizeFilters(draft), page: 1, pageSize: 1 }), [draft]);
   const resultCount = useQuery({
     queryKey: ["property-search-result-count", resultCountFilters],
@@ -218,8 +222,17 @@ export function SearchDrawer() {
                 });
               }}
             >
-              <SelectTrigger aria-labelledby="listing-search-city-label">
-                <SelectValue placeholder="Tous" />
+              <SelectTrigger
+                aria-labelledby="listing-search-city-label"
+                className="[&>span]:line-clamp-none [&>span]:flex-1 [&>span]:min-w-0"
+              >
+                <SelectValue placeholder="Tous">
+                  <SearchAreaValue
+                    name={selectedArea?.name ?? "Tous"}
+                    count={selectedAreaCount}
+                    isLoading={areaCounts.isLoading}
+                  />
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all" className="group">

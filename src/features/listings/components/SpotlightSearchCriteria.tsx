@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { listingLocationOptions } from "@/features/listings/data/listingLocationOptions";
 import { featureOptions, propertyTypeOptions } from "@/features/listings/data/options";
+import { SearchAreaValue } from "@/features/listings/components/SearchAreaValue";
 import { SearchCountBadge } from "@/features/listings/components/SearchCountBadge";
 import type { PropertySearchParams } from "@/types/api";
 
@@ -73,6 +74,9 @@ export function SpotlightSearchCriteria({ filters, onChange, onQueryChange }: Sp
     },
     staleTime: 60_000,
   });
+  const selectedAreaCount = selectedArea
+    ? areaCounts.data?.byArea[selectedArea.id]
+    : areaCounts.data?.all;
 
   const renderAreaOption = (name: string, count: number | undefined) => (
     <span className="flex w-full min-w-0 items-center justify-between gap-4">
@@ -139,8 +143,17 @@ export function SpotlightSearchCriteria({ filters, onChange, onQueryChange }: Sp
           <div className="space-y-1.5">
             <Label id="spotlight-search-area-label">Ville ou secteur</Label>
             <Select value={selectedArea?.id ?? "all"} onValueChange={updateArea}>
-              <SelectTrigger aria-labelledby="spotlight-search-area-label">
-                <SelectValue placeholder="Tous" />
+              <SelectTrigger
+                aria-labelledby="spotlight-search-area-label"
+                className="[&>span]:line-clamp-none [&>span]:flex-1 [&>span]:min-w-0"
+              >
+                <SelectValue placeholder="Tous">
+                  <SearchAreaValue
+                    name={selectedArea?.name ?? "Tous"}
+                    count={selectedAreaCount}
+                    isLoading={areaCounts.isLoading}
+                  />
+                </SelectValue>
               </SelectTrigger>
               <SelectContent className="z-[210]">
                 <SelectItem value="all" className="group">
