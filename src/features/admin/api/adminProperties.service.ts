@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { PropertyStatus, PropertyType } from "@/types/domain";
+import { correctFrenchCommuneMentions, formatFrenchCommuneName } from "@/lib/utils/frenchCommuneNames";
 
 export type AdminManagedPropertyStatus = Exclude<PropertyStatus, "rented" | "reserved" | "off_market">;
 export type AdminPropertyStatus = AdminManagedPropertyStatus | "unknown";
@@ -135,7 +136,14 @@ export async function getAdminProperties(client: SupabaseClient): Promise<AdminP
 
   return response.properties
     .filter((property) => property.transaction_type === "vente" && property.status !== "rented" && property.status !== "off_market")
-    .map((property) => ({ ...property, status: normalizeAdminPropertyStatus(property.status) }));
+    .map((property) => ({
+      ...property,
+      title: correctFrenchCommuneMentions(property.title),
+      city: property.city
+        ? { ...property.city, name: formatFrenchCommuneName(property.city.name, property.city.slug) }
+        : null,
+      status: normalizeAdminPropertyStatus(property.status),
+    }));
 }
 
 export async function getAdminAgents(client: SupabaseClient): Promise<AdminAgent[]> {
