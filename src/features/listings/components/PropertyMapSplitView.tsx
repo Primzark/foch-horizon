@@ -3,6 +3,7 @@ import { ArrowUpRight, LocateFixed, MapPin, Move, X } from "lucide-react";
 import * as L from "leaflet";
 import type { PropertySearchItem } from "@/types/api";
 import { PropertyPreviewLink } from "@/features/listings/components/PropertyPreviewLink";
+import { SearchCountBadge } from "@/features/listings/components/SearchCountBadge";
 import { formatPrice, formatPropertyTypeLabel } from "@/features/listings/utils/formatting";
 import { resolveApproximatePropertyMapLocation } from "@/features/listings/utils/propertyMapLocations";
 import { PaginationBar } from "@/features/listings/components/PaginationBar";
@@ -227,7 +228,10 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
             <h2 className="font-display text-xl">Les biens</h2>
             <p className="mt-0.5 text-xs text-muted-foreground">Repères approximatifs basés sur la ville, le code postal et le secteur de l’annonce.</p>
           </div>
-          <span className="shrink-0 text-xs text-muted-foreground">{items.length} sur cette page</span>
+          <span className="inline-flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
+            <SearchCountBadge size="compact">{items.length.toLocaleString("fr-FR")}</SearchCountBadge>
+            <span>sur cette page</span>
+          </span>
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">

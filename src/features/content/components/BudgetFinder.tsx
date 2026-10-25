@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { SearchThinkingState } from "@/features/content/components/SearchThinkingState";
 import { geographyGuideOptions } from "@/features/content/data/geographyGuideOptions";
 import { searchProperties } from "@/features/listings/api/properties.service";
+import { SearchCountBadge } from "@/features/listings/components/SearchCountBadge";
 import { propertyTypeOptions } from "@/features/listings/data/options";
 import { buildSearchParams } from "@/features/listings/utils/query";
 import { formatPrice, formatPropertyTypeLabel, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
@@ -182,7 +183,16 @@ export function BudgetFinder() {
                     ? "Recherche des annonces…"
                     : listingsQuery.isError
                       ? "Annonces momentanément indisponibles"
-                      : `${listingsQuery.data?.total ?? 0} bien${listingsQuery.data?.total === 1 ? "" : "s"} ${selectedArea || propertyType ? "correspondant à vos critères" : "dans votre budget"}`}
+                      : (
+                          <span className="inline-flex flex-wrap items-center gap-2">
+                            <SearchCountBadge size="large">
+                              {(listingsQuery.data?.total ?? 0).toLocaleString("fr-FR")}
+                            </SearchCountBadge>
+                            <span>
+                              bien{listingsQuery.data?.total === 1 ? "" : "s"} {selectedArea || propertyType ? "correspondant à vos critères" : "dans votre budget"}
+                            </span>
+                          </span>
+                        )}
               </h3>
               <div aria-label="Critères de recherche" className="mt-2 flex flex-wrap gap-1.5 text-[11px] text-muted-foreground">
                 <span className="rounded-full border border-border bg-background px-2 py-1">{selectedTypeLabel ?? "Tous les types"}</span>
@@ -204,7 +214,12 @@ export function BudgetFinder() {
                     <DialogHeader className="shrink-0 border-b border-border px-5 py-5 pr-14 text-left">
                       <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Votre sélection</p>
                       <DialogTitle className="font-display text-2xl font-normal leading-tight">
-                        {listingsQuery.data.total} bien{listingsQuery.data.total === 1 ? "" : "s"} correspondant à vos critères
+                        <span className="inline-flex flex-wrap items-center gap-2">
+                          <SearchCountBadge size="large">
+                            {listingsQuery.data.total.toLocaleString("fr-FR")}
+                          </SearchCountBadge>
+                          <span>bien{listingsQuery.data.total === 1 ? "" : "s"} correspondant à vos critères</span>
+                        </span>
                       </DialogTitle>
                       <DialogDescription>
                         {selectedTypeLabel ?? "Tous les types"} · {selectedArea?.name ?? "Tous les secteurs"}

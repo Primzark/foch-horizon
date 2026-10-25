@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { listingLocationOptions } from "@/features/listings/data/listingLocationOptions";
 import { featureOptions, propertyTypeOptions } from "@/features/listings/data/options";
+import { SearchCountBadge } from "@/features/listings/components/SearchCountBadge";
 import type { PropertySearchParams } from "@/types/api";
 
 interface SpotlightSearchCriteriaProps {
@@ -77,10 +78,19 @@ export function SpotlightSearchCriteria({ filters, onChange, onQueryChange }: Sp
     <span className="flex w-full min-w-0 items-center justify-between gap-4">
       <span className="truncate">{name}</span>
       <span
-        className="ml-auto shrink-0 text-xs tabular-nums text-muted-foreground group-data-[highlighted]:text-accent-foreground"
+        className="ml-auto inline-flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground group-data-[highlighted]:text-accent-foreground"
         aria-label={count == null ? (areaCounts.isLoading ? "Calcul des disponibilités" : "Disponibilités indisponibles") : formatAreaAvailability(count)}
       >
-        {count == null ? (areaCounts.isLoading ? "…" : areaCounts.isError ? "—" : "") : formatAreaAvailability(count)}
+        {count == null
+          ? areaCounts.isLoading
+            ? <SearchCountBadge size="compact" aria-hidden="true">…</SearchCountBadge>
+            : areaCounts.isError
+              ? <SearchCountBadge size="compact" aria-hidden="true">—</SearchCountBadge>
+              : null
+          : <>
+              <SearchCountBadge size="compact" aria-hidden="true">{count.toLocaleString("fr-FR")}</SearchCountBadge>
+              <span aria-hidden="true">bien{count > 1 ? "s" : ""}</span>
+            </>}
       </span>
     </span>
   );

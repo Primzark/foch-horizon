@@ -19,6 +19,7 @@ import type { PropertySearchParams } from "@/types/api";
 import { useUiStore } from "@/lib/state/useUiStore";
 import { trackEvent } from "@/lib/analytics/events";
 import { createPropertyModalRouteState } from "@/features/listings/navigation/propertyModalNavigation";
+import { SearchCountBadge } from "@/features/listings/components/SearchCountBadge";
 
 const defaultFilters: PropertySearchParams = {
   transaction: "vente",
@@ -137,10 +138,19 @@ export function SearchDrawer() {
     <span className="flex w-full min-w-0 items-center justify-between gap-4">
       <span className="truncate">{name}</span>
       <span
-        className="ml-auto shrink-0 text-xs tabular-nums text-muted-foreground group-data-[highlighted]:text-accent-foreground"
+        className="ml-auto inline-flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground group-data-[highlighted]:text-accent-foreground"
         aria-label={count == null ? (areaCounts.isLoading ? "Calcul des disponibilités" : "Disponibilités indisponibles") : formatAreaAvailability(count)}
       >
-        {count == null ? (areaCounts.isLoading ? "…" : areaCounts.isError ? "—" : "") : formatAreaAvailability(count)}
+        {count == null
+          ? areaCounts.isLoading
+            ? <SearchCountBadge size="compact" aria-hidden="true">…</SearchCountBadge>
+            : areaCounts.isError
+              ? <SearchCountBadge size="compact" aria-hidden="true">—</SearchCountBadge>
+              : null
+          : <>
+              <SearchCountBadge size="compact" aria-hidden="true">{count.toLocaleString("fr-FR")}</SearchCountBadge>
+              <span aria-hidden="true">bien{count > 1 ? "s" : ""}</span>
+            </>}
       </span>
     </span>
   );
@@ -373,8 +383,10 @@ export function SearchDrawer() {
               }}
               className="gap-0"
             >
-              <span className="whitespace-nowrap">
-                {resultCountPrefix} <span aria-live="polite" className="font-semibold tabular-nums">{resultCountLabel}</span> {resultCountSuffix}
+              <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                <span>{resultCountPrefix}</span>
+                <SearchCountBadge aria-live="polite">{resultCountLabel}</SearchCountBadge>
+                <span>{resultCountSuffix}</span>
               </span>
             </Button>
           )}
@@ -388,8 +400,10 @@ export function SearchDrawer() {
               }}
               className="gap-0"
             >
-              <span className="whitespace-nowrap">
-                {resultCountPrefix} <span aria-live="polite" className="font-semibold tabular-nums">{resultCountLabel}</span> {resultCountSuffix}
+              <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                <span>{resultCountPrefix}</span>
+                <SearchCountBadge aria-live="polite">{resultCountLabel}</SearchCountBadge>
+                <span>{resultCountSuffix}</span>
               </span>
             </Button>
           )}

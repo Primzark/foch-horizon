@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { sortOptions } from "@/features/listings/data/options";
 import { SearchThinkingIndicator } from "@/features/content/components/SearchThinkingState";
+import { SearchCountBadge } from "@/features/listings/components/SearchCountBadge";
 import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
 
 interface FiltersBarProps {
@@ -31,7 +32,7 @@ export function FiltersBar({
     <div className="sticky top-[calc(93px+env(safe-area-inset-top))] lg:top-[calc(145px+env(safe-area-inset-top))] z-30 rounded-2xl border border-border bg-background/85 p-3 backdrop-blur supports-[backdrop-filter]:bg-background/70">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-sm text-muted-foreground" role="status" aria-live="polite" aria-busy={isLoading}>
+          <p className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground" role="status" aria-live="polite" aria-busy={isLoading}>
             <motion.span
               key={isLoading ? "loading" : total ?? "unavailable"}
               initial={isLoading ? false : reducedMotion ? { opacity: 0 } : { opacity: 0, y: 6 }}
@@ -39,13 +40,15 @@ export function FiltersBar({
               transition={{ duration: 0.18, ease: "easeOut" }}
               className="inline-flex min-w-[1ch] items-center justify-center align-middle"
             >
-              {isLoading ? <SearchThinkingIndicator compact /> : total ?? "—"}
+              {isLoading ? <SearchThinkingIndicator compact /> : <SearchCountBadge size="compact">{total?.toLocaleString("fr-FR") ?? "—"}</SearchCountBadge>}
             </motion.span>{" "}
-            {isLoading
-              ? "biens en cours de recherche"
-              : total == null
-                ? "résultats indisponibles"
-                : `bien${total > 1 ? "s" : ""} trouvé${total > 1 ? "s" : ""}`}
+            <span>
+              {isLoading
+                ? "biens en cours de recherche"
+                : total == null
+                  ? "résultats indisponibles"
+                  : `bien${total > 1 ? "s" : ""} trouvé${total > 1 ? "s" : ""}`}
+            </span>
           </p>
         </div>
 

@@ -19,6 +19,7 @@ import { toSearchItem } from "@/features/listings/utils/mappers";
 import { createPropertyModalRouteState } from "@/features/listings/navigation/propertyModalNavigation";
 import { persistAppliedPropertySearchFilters, resolvePropertySearchFilters } from "@/features/listings/utils/searchFilterPersistence";
 import { SpotlightSearchCriteria } from "@/features/listings/components/SpotlightSearchCriteria";
+import { SearchCountBadge } from "@/features/listings/components/SearchCountBadge";
 import type { PropertySearchItem, PropertySearchParams, PropertySearchResponse } from "@/types/api";
 import { useMotionPreference } from "@/lib/visuals/useMotionPreference";
 
@@ -422,9 +423,9 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
                 className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-brand-strong px-4 py-2 font-semibold text-background transition-colors hover:bg-brand-strong/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-strong focus-visible:ring-offset-2"
               >
                 <span className="whitespace-nowrap">{resultCountPrefix}</span>
-                <span aria-live="polite" className="inline-flex min-w-8 justify-center rounded-full bg-background/15 px-2 py-1 text-sm font-bold leading-none tabular-nums">
+                <SearchCountBadge aria-live="polite">
                   {resultCountNumber}
-                </span>
+                </SearchCountBadge>
                 <span className="whitespace-nowrap">{resultCountSuffix}</span>
               </button>
             ) : (
