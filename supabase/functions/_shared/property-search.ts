@@ -60,7 +60,7 @@ type SortValue = "newest" | "price_asc" | "price_desc" | "surface_desc";
 
 type ServiceClient = ReturnType<typeof createServiceClient>;
 type SortablePropertyQuery<TQuery> = {
-  order(column: "price_amount" | "published_at" | "surface_m2", options: { ascending: boolean }): TQuery;
+  order(column: "id" | "price_amount" | "published_at" | "surface_m2", options: { ascending: boolean }): TQuery;
 };
 
 function normalizeTerm(value: string): string {
@@ -265,14 +265,23 @@ function applySort<TQuery extends SortablePropertyQuery<TQuery>>(
 ): TQuery {
   switch (sort) {
     case "price_asc":
-      return query.order("price_amount", { ascending: true }).order("published_at", { ascending: false });
+      return query
+        .order("price_amount", { ascending: true })
+        .order("published_at", { ascending: false })
+        .order("id", { ascending: false });
     case "price_desc":
-      return query.order("price_amount", { ascending: false }).order("published_at", { ascending: false });
+      return query
+        .order("price_amount", { ascending: false })
+        .order("published_at", { ascending: false })
+        .order("id", { ascending: false });
     case "surface_desc":
-      return query.order("surface_m2", { ascending: false }).order("published_at", { ascending: false });
+      return query
+        .order("surface_m2", { ascending: false })
+        .order("published_at", { ascending: false })
+        .order("id", { ascending: false });
     case "newest":
     default:
-      return query.order("published_at", { ascending: false });
+      return query.order("published_at", { ascending: false }).order("id", { ascending: false });
   }
 }
 
