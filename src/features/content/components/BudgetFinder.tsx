@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, MapPin } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -12,10 +13,12 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SearchThinkingState } from "@/features/content/components/SearchThinkingState";
-import { geographyGuideOptions } from "@/features/content/data/geographyGuideOptions";
 import { searchProperties } from "@/features/listings/api/properties.service";
+import { listingLocationOptions } from "@/features/listings/data/listingLocationOptions";
 import { SearchCountBadge } from "@/features/listings/components/SearchCountBadge";
+import { SearchAreaValue } from "@/features/listings/components/SearchAreaValue";
 import { propertyTypeOptions } from "@/features/listings/data/options";
 import { buildSearchParams } from "@/features/listings/utils/query";
 import { formatPrice, formatPropertyTypeLabel, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
@@ -35,10 +38,10 @@ export function BudgetFinder() {
   const parsedBudget = budgetText.trim() ? Number(budgetText) : Number.NaN;
   const hasValidBudget = Number.isFinite(parsedBudget) && parsedBudget > 0;
   const isBudgetSettled = hasValidBudget && parsedBudget === settledBudget;
-  const selectedArea = geographyGuideOptions.find((area) => area.id === areaId);
+  const selectedArea = listingLocationOptions.find((area) => area.id === areaId);
   const selectedTypeLabel = propertyTypeOptions.find((option) => option.value === propertyType)?.label;
-  const havreAreas = geographyGuideOptions.filter((area) => area.city === "le-havre");
-  const otherAreas = geographyGuideOptions.filter((area) => area.city !== "le-havre");
+  const havreAreas = listingLocationOptions.filter((area) => area.city === "le-havre");
+  const otherAreas = listingLocationOptions.filter((area) => area.city !== "le-havre");
   const formattedBudget = hasValidBudget
     ? new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(parsedBudget)
     : null;
@@ -47,6 +50,74 @@ export function BudgetFinder() {
     `Secteur : ${selectedArea?.name ?? "Tous les secteurs"}`,
     formattedBudget ? `Budget max. : ${formattedBudget} €` : null,
   ].filter(Boolean).join(" · ");
+
+  const areaCounts = useQuery({
+    queryKey: ["budget-finder-area-counts", { type: propertyType || undefined, priceMax: settledBudget }],
+    queryFn: async () => {
+      const { getGeographyAreaPropertyCounts } = await import("@/features/listings/api/geographyAreaCounts.service");
+      return getGeographyAreaPropertyCounts({
+        transaction,
+        type: propertyType || undefined,
+        priceMax: settledBudget ?? 0,
+      });
+    },
+    enabled: isBudgetSettled,
+    staleTime: 60_000,
+  });
+  const typeCounts = useQuery({
+    queryKey: ["budget-finder-type-counts", { areaId, priceMax: settledBudget }],
+    queryFn: async () => {
+      const countFilters: PropertySearchParams = {
+        transaction,
+        priceMax: settledBudget ?? 0,
+        city: selectedArea?.city,
+        q: selectedArea?.query,
+        page: 1,
+        pageSize: 1,
+      };
+      const [allResults, ...typeResults] = await Promise.all([
+        searchProperties(countFilters),
+        ...propertyTypeOptions.map((option) => searchProperties({ ...countFilters, type: option.value })),
+      ]);
+
+      return {
+        all: allResults.total,
+        byType: Object.fromEntries(propertyTypeOptions.map((option, index) => [option.value, typeResults[index].total])),
+      };
+    },
+    enabled: isBudgetSettled,
+    staleTime: 60_000,
+  });
+  const displayedAreaCounts = isBudgetSettled ? areaCounts.data : undefined;
+  const displayedTypeCounts = isBudgetSettled ? typeCounts.data : undefined;
+  const isAreaCountLoading = hasValidBudget && (!isBudgetSettled || areaCounts.isLoading);
+  const isTypeCountLoading = hasValidBudget && (!isBudgetSettled || typeCounts.isLoading);
+
+  const renderAvailabilityOption = (
+    name: string,
+    count: number | undefined,
+    isLoading: boolean,
+    isError: boolean,
+  ) => (
+    <span className="flex w-full min-w-0 items-center gap-2">
+      <span className="min-w-0 flex-1 truncate">{name}</span>
+      <span
+        className="inline-flex shrink-0 items-center gap-2 text-xs text-muted-foreground group-data-[highlighted]:text-accent-foreground"
+        aria-label={count == null ? (isLoading ? "Calcul des disponibilités" : "Disponibilités indisponibles") : `${count.toLocaleString("fr-FR")} bien${count > 1 ? "s" : ""}`}
+      >
+        {count == null
+          ? isLoading
+            ? <SearchCountBadge size="compact" aria-hidden="true">…</SearchCountBadge>
+            : isError
+              ? <SearchCountBadge size="compact" aria-hidden="true">—</SearchCountBadge>
+              : null
+          : <>
+              <SearchCountBadge size="compact" aria-hidden="true">{count.toLocaleString("fr-FR")}</SearchCountBadge>
+              <span aria-hidden="true">bien{count > 1 ? "s" : ""}</span>
+            </>}
+      </span>
+    </span>
+  );
 
   useEffect(() => {
     const nextBudget = hasValidBudget ? parsedBudget : null;
@@ -111,7 +182,7 @@ export function BudgetFinder() {
 
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5 sm:col-span-2">
-              <label htmlFor="budget-finder-amount" className="text-sm font-medium">Budget maximal</label>
+              <Label htmlFor="budget-finder-amount">Budget maximal</Label>
               <div className="relative">
                 <Input
                   id="budget-finder-amount"
@@ -121,53 +192,74 @@ export function BudgetFinder() {
                   step={5000}
                   value={budgetText}
                   onChange={(event) => setBudgetText(event.target.value)}
-                  aria-describedby="budget-finder-hint"
                   className="pr-28 text-base tabular-nums"
                 />
                 <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground">
                   €
                 </span>
               </div>
-              <p id="budget-finder-hint" className="text-xs text-muted-foreground">
-                Budget maximal
-              </p>
             </div>
 
             <div className="space-y-1.5">
-              <label htmlFor="budget-finder-type" className="text-sm font-medium">Type de bien</label>
-              <select
-                id="budget-finder-type"
-                value={propertyType}
-                onChange={(event) => setPropertyType(event.target.value as PropertyType | "")}
-                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              <Label id="budget-finder-type-label">Type de bien</Label>
+              <Select
+                value={propertyType || "all"}
+                onValueChange={(value) => setPropertyType(value === "all" ? "" : value as PropertyType)}
               >
-                <option value="">Tous</option>
-                {propertyTypeOptions.map((option) => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
-                ))}
-              </select>
+                <SelectTrigger id="budget-finder-type" aria-labelledby="budget-finder-type-label">
+                  <SelectValue placeholder="Tous" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all" className="group">
+                    {renderAvailabilityOption("Tous", displayedTypeCounts?.all, isTypeCountLoading, isBudgetSettled && typeCounts.isError)}
+                  </SelectItem>
+                  {propertyTypeOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value} className="group">
+                      {renderAvailabilityOption(option.label, displayedTypeCounts?.byType[option.value], isTypeCountLoading, isBudgetSettled && typeCounts.isError)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-1.5">
-              <label htmlFor="budget-finder-city" className="text-sm font-medium">Secteur</label>
-              <select
-                id="budget-finder-city"
-                value={areaId}
-                onChange={(event) => setAreaId(event.target.value)}
-                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <option value="">Tous</option>
-                <optgroup label="Le Havre et ses quartiers">
-                  {havreAreas.map((guide) => (
-                    <option key={guide.id} value={guide.id}>{guide.name}</option>
-                  ))}
-                </optgroup>
-                <optgroup label="Autres communes et secteurs">
-                  {otherAreas.map((guide) => (
-                    <option key={guide.id} value={guide.id}>{guide.name}</option>
-                  ))}
-                </optgroup>
-              </select>
+              <Label id="budget-finder-area-label">Secteur</Label>
+              <Select value={areaId || "all"} onValueChange={(value) => setAreaId(value === "all" ? "" : value)}>
+                <SelectTrigger
+                  id="budget-finder-city"
+                  aria-labelledby="budget-finder-area-label"
+                  className="[&>span]:line-clamp-none [&>span]:flex-1 [&>span]:min-w-0"
+                >
+                  <SelectValue placeholder="Tous les">
+                    <SearchAreaValue
+                      name={selectedArea?.name ?? "Tous les"}
+                      count={selectedArea ? displayedAreaCounts?.byArea[selectedArea.id] : displayedAreaCounts?.all}
+                      isLoading={isAreaCountLoading}
+                    />
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all" className="group">
+                    {renderAvailabilityOption("Tous les", displayedAreaCounts?.all, isAreaCountLoading, isBudgetSettled && areaCounts.isError)}
+                  </SelectItem>
+                  <SelectGroup>
+                    <SelectLabel>Le Havre et ses quartiers</SelectLabel>
+                    {havreAreas.map((area) => (
+                      <SelectItem key={area.id} value={area.id} className="group">
+                        {renderAvailabilityOption(area.name, displayedAreaCounts?.byArea[area.id], isAreaCountLoading, isBudgetSettled && areaCounts.isError)}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                  <SelectGroup>
+                    <SelectLabel>Autres communes et secteurs</SelectLabel>
+                    {otherAreas.map((area) => (
+                      <SelectItem key={area.id} value={area.id} className="group">
+                        {renderAvailabilityOption(area.name, displayedAreaCounts?.byArea[area.id], isAreaCountLoading, isBudgetSettled && areaCounts.isError)}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </div>

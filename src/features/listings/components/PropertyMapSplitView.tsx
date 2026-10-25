@@ -23,8 +23,35 @@ const DEFAULT_CENTER: L.LatLngTuple = [49.4943, 0.1078];
 const SELECTED_PROPERTY_ZOOM = 15;
 const MIN_MAP_ZOOM = 8;
 const MAX_MAP_ZOOM = 19;
+const MAP_ZOOM_STEP = 0.01;
 const MAP_FLY_DURATION_SECONDS = 0.5;
 const TILE_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
+
+interface ContinuousZoomMap extends L.Map {
+  _animatingZoom?: boolean;
+  _zoomAnimated?: boolean;
+  _moveStart: (zoomChanged: boolean, noMoveStart?: boolean) => L.Map;
+  _move: (
+    center: L.LatLng,
+    zoom: number,
+    data?: { pinch?: boolean; round?: boolean },
+    suppressEvent?: boolean,
+  ) => L.Map;
+  _animateZoom: (center: L.LatLng, zoom: number, startAnim?: boolean, noUpdate?: boolean | number) => void;
+  _limitZoom: (zoom: number) => number;
+  _resetView: (center: L.LatLng, zoom: number) => void;
+  _onZoomTransitionEnd?: () => void;
+}
+
+interface ZoomSliderInteraction {
+  center: L.LatLng;
+  zoom: number;
+  appliedZoom: number;
+  frameId: number | null;
+  finishTimer: number | null;
+  pointerActive: boolean;
+  started: boolean;
+}
 
 function makePriceIcon(item: PropertySearchItem, selected: boolean): L.DivIcon {
   const compactPrice = new Intl.NumberFormat("fr-FR", {
@@ -48,6 +75,10 @@ function setMarkerSelected(marker: L.Marker, selected: boolean) {
   marker.setZIndexOffset(selected ? 1000 : 0);
 }
 
+function formatMapZoom(zoom: number) {
+  return Number(zoom.toFixed(2)).toString();
+}
+
 export function PropertyMapSplitView({ items, page, pageSize, total, onPageChange }: PropertyMapSplitViewProps) {
   const mapElementRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -62,6 +93,9 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
   const [usesCooperativeMapGestures, setUsesCooperativeMapGestures] = useState(false);
   const [singleFingerPanEnabled, setSingleFingerPanEnabled] = useState(false);
   const [mapZoom, setMapZoom] = useState(11);
+  const zoomSliderInteractionRef = useRef<ZoomSliderInteraction | null>(null);
+  const finishZoomSliderInteractionRef = useRef<() => void>(() => undefined);
+  const settleMapZoomAnimationRef = useRef<() => void>(() => undefined);
 
   const positions = useMemo(
     () => items.map((item) => ({ item, ...resolveApproximatePropertyMapLocation(item) })),
@@ -81,6 +115,97 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
 
   onSelectRef.current = (id) => selectProperty(id);
 
+  const applyZoomSliderValue = (interaction: ZoomSliderInteraction) => {
+    const map = mapRef.current as ContinuousZoomMap | null;
+    if (!map || Math.abs(interaction.zoom - interaction.appliedZoom) < 0.0001) return;
+
+    if (!interaction.started) {
+      map._moveStart(true, false);
+      interaction.started = true;
+    }
+
+    // Follow Leaflet's native pinch-zoom path so tiles and markers scale together
+    // continuously instead of restarting an animation for every slider step.
+    map._move(interaction.center, interaction.zoom, { pinch: true, round: false }, true);
+    interaction.appliedZoom = interaction.zoom;
+  };
+
+  const beginZoomSliderInteraction = (pointerActive = false) => {
+    const map = mapRef.current as ContinuousZoomMap | null;
+    if (!map) return;
+
+    const activeInteraction = zoomSliderInteractionRef.current;
+    if (activeInteraction) {
+      if (pointerActive) activeInteraction.pointerActive = true;
+      return;
+    }
+
+    if (map._animatingZoom) map._onZoomTransitionEnd?.();
+    map.stop();
+
+    const currentZoom = map.getZoom();
+    zoomSliderInteractionRef.current = {
+      center: map.getCenter(),
+      zoom: currentZoom,
+      appliedZoom: currentZoom,
+      frameId: null,
+      finishTimer: null,
+      pointerActive,
+      started: false,
+    };
+  };
+
+  const finishZoomSliderInteraction = () => {
+    const map = mapRef.current as ContinuousZoomMap | null;
+    const interaction = zoomSliderInteractionRef.current;
+    if (!interaction) return;
+
+    if (interaction.finishTimer != null) window.clearTimeout(interaction.finishTimer);
+    if (interaction.frameId != null) window.cancelAnimationFrame(interaction.frameId);
+    applyZoomSliderValue(interaction);
+    zoomSliderInteractionRef.current = null;
+
+    if (!map || !interaction.started) return;
+
+    const finalZoom = map._limitZoom(interaction.zoom);
+    if (map._zoomAnimated) {
+      map._animateZoom(interaction.center, finalZoom, true, map.options.zoomSnap ?? 0);
+    } else {
+      map._resetView(interaction.center, finalZoom);
+    }
+  };
+
+  const settleMapZoomAnimation = () => {
+    const map = mapRef.current as ContinuousZoomMap | null;
+    if (map?._animatingZoom) map._onZoomTransitionEnd?.();
+  };
+
+  finishZoomSliderInteractionRef.current = finishZoomSliderInteraction;
+  settleMapZoomAnimationRef.current = settleMapZoomAnimation;
+
+  const updateZoomSlider = (requestedZoom: number) => {
+    const targetZoom = Math.min(MAX_MAP_ZOOM, Math.max(MIN_MAP_ZOOM, requestedZoom));
+    let interaction = zoomSliderInteractionRef.current;
+    if (!interaction) {
+      beginZoomSliderInteraction();
+      interaction = zoomSliderInteractionRef.current;
+    }
+    if (!interaction) return;
+
+    interaction.zoom = targetZoom;
+    setMapZoom(targetZoom);
+    if (interaction.frameId != null) window.cancelAnimationFrame(interaction.frameId);
+    interaction.frameId = window.requestAnimationFrame(() => {
+      interaction.frameId = null;
+      applyZoomSliderValue(interaction);
+    });
+
+    if (!interaction.pointerActive) {
+      if (interaction.finishTimer != null) window.clearTimeout(interaction.finishTimer);
+      interaction.finishTimer = window.setTimeout(finishZoomSliderInteraction, 160);
+    }
+  };
+
   useEffect(() => {
     if (!mapElementRef.current) return;
 
@@ -92,6 +217,7 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
       zoom: 11,
       minZoom: MIN_MAP_ZOOM,
       maxZoom: MAX_MAP_ZOOM,
+      zoomSnap: 0,
       zoomControl: false,
       scrollWheelZoom: false,
       touchZoom: true,
@@ -125,6 +251,10 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
     return () => {
       cooperativeViewport.removeEventListener("change", syncMapGestureMode);
       map.off("zoomend", syncMapZoom);
+      const zoomInteraction = zoomSliderInteractionRef.current;
+      if (zoomInteraction?.finishTimer != null) window.clearTimeout(zoomInteraction.finishTimer);
+      if (zoomInteraction?.frameId != null) window.cancelAnimationFrame(zoomInteraction.frameId);
+      zoomSliderInteractionRef.current = null;
       markerLayer.clearLayers();
       map.remove();
       mapRef.current = null;
@@ -138,6 +268,8 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
     const markerLayer = markerLayerRef.current;
     if (!map || !markerLayer) return;
 
+    finishZoomSliderInteractionRef.current();
+    settleMapZoomAnimationRef.current();
     markerLayer.clearLayers();
     markerRefs.current.clear();
 
@@ -192,6 +324,8 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
 
     // A new click takes over from the current flight, so rapid selections always
     // animate toward the latest property instead of finishing an old flight.
+    finishZoomSliderInteractionRef.current();
+    settleMapZoomAnimationRef.current();
     map.stop();
     map.flyTo(marker.getLatLng(), SELECTED_PROPERTY_ZOOM, {
       duration: MAP_FLY_DURATION_SECONDS,
@@ -200,6 +334,8 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
   }, [items, selectedId]);
 
   const recenterMap = () => {
+    finishZoomSliderInteraction();
+    settleMapZoomAnimation();
     const map = mapRef.current;
     if (!map) return;
 
@@ -216,10 +352,12 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
   };
 
   const zoomMap = (direction: "in" | "out") => {
-    const map = mapRef.current;
+    finishZoomSliderInteraction();
+    settleMapZoomAnimation();
+    const map = mapRef.current as ContinuousZoomMap | null;
     if (!map) return;
-    if (direction === "in") map.zoomIn();
-    else map.zoomOut();
+    const nextZoom = map.getZoom() + (direction === "in" ? 1 : -1);
+    map.setZoom(Math.min(MAX_MAP_ZOOM, Math.max(MIN_MAP_ZOOM, nextZoom)), { animate: true });
   };
 
   const toggleSingleFingerPan = () => {
@@ -347,28 +485,51 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
             Recentrer
           </button>
 
-          <div role="group" aria-label="Réglage du zoom de la carte" className="overflow-hidden rounded-xl border border-border/80 bg-background/95 shadow-sm backdrop-blur">
-            <button
-              type="button"
-              onClick={() => zoomMap("in")}
-              disabled={mapZoom >= MAX_MAP_ZOOM}
-              title="Zoom avant"
-              aria-label="Zoom avant"
-              className="inline-flex h-10 w-10 items-center justify-center text-foreground transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
-            >
-              <ZoomIn aria-hidden="true" className="h-4 w-4" />
-            </button>
-            <div aria-hidden="true" className="h-px bg-border/80" />
-            <button
-              type="button"
-              onClick={() => zoomMap("out")}
-              disabled={mapZoom <= MIN_MAP_ZOOM}
-              title="Zoom arrière"
-              aria-label="Zoom arrière"
-              className="inline-flex h-10 w-10 items-center justify-center text-foreground transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
-            >
-              <ZoomOut aria-hidden="true" className="h-4 w-4" />
-            </button>
+          <div role="group" aria-label="Réglage du zoom de la carte" className="flex items-center gap-1.5">
+            <div className="flex h-[5.5rem] w-9 items-center justify-center rounded-xl border border-border/80 bg-background/95 shadow-sm backdrop-blur">
+              <input
+                type="range"
+                min={MIN_MAP_ZOOM}
+                max={MAX_MAP_ZOOM}
+                step={MAP_ZOOM_STEP}
+                value={mapZoom}
+                onPointerDown={() => beginZoomSliderInteraction(true)}
+                onPointerUp={finishZoomSliderInteraction}
+                onPointerCancel={finishZoomSliderInteraction}
+                onKeyDown={() => beginZoomSliderInteraction()}
+                onKeyUp={finishZoomSliderInteraction}
+                onBlur={finishZoomSliderInteraction}
+                onChange={(event) => updateZoomSlider(Number(event.currentTarget.value))}
+                title={`Niveau de zoom : ${formatMapZoom(mapZoom)}`}
+                aria-label="Niveau de zoom de la carte"
+                aria-valuetext={`Zoom ${formatMapZoom(mapZoom)}`}
+                className="h-[4.5rem] w-5 cursor-ns-resize accent-brand-strong [direction:rtl] [writing-mode:vertical-lr] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              />
+            </div>
+
+            <div className="overflow-hidden rounded-xl border border-border/80 bg-background/95 shadow-sm backdrop-blur">
+              <button
+                type="button"
+                onClick={() => zoomMap("in")}
+                disabled={mapZoom >= MAX_MAP_ZOOM}
+                title="Zoom avant"
+                aria-label="Zoom avant"
+                className="inline-flex h-10 w-10 items-center justify-center text-foreground transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+              >
+                <ZoomIn aria-hidden="true" className="h-4 w-4" />
+              </button>
+              <div aria-hidden="true" className="h-px bg-border/80" />
+              <button
+                type="button"
+                onClick={() => zoomMap("out")}
+                disabled={mapZoom <= MIN_MAP_ZOOM}
+                title="Zoom arrière"
+                aria-label="Zoom arrière"
+                className="inline-flex h-10 w-10 items-center justify-center text-foreground transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+              >
+                <ZoomOut aria-hidden="true" className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         </div>
 
