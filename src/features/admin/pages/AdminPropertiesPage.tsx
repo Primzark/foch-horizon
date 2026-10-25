@@ -285,7 +285,7 @@ function StatusControl({
         ) : (
           <span className={`h-2 w-2 shrink-0 rounded-full ${detail.dot}`} aria-hidden="true" />
         )}
-        <SelectValue />
+        <SelectValue>{getStatusOptionLabel(value, property.transaction_type)}</SelectValue>
       </SelectTrigger>
       <SelectContent align="end" className="min-w-[170px]">
         {ADMIN_PROPERTY_STATUS_OPTIONS.map((option) => (

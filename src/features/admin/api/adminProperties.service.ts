@@ -6,7 +6,6 @@ export const ADMIN_PROPERTIES_QUERY_KEY = ["admin-properties"] as const;
 export const ADMIN_PROPERTY_STATUS_OPTIONS: Array<{ value: PropertyStatus; label: string }> = [
   { value: "active", label: "Disponibles" },
   { value: "under_offer", label: "Sous offre" },
-  { value: "reserved", label: "Réservé" },
   { value: "sold", label: "Vendu" },
   { value: "off_market", label: "Retiré" },
 ];
