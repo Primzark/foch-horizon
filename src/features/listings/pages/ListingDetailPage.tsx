@@ -752,7 +752,7 @@ export default function ListingDetailPage({
     </>
   );
   return (
-    <section className={previewLayout ? "listing-preview-modal w-full bg-background pb-32 text-foreground" : "container mx-auto px-4 pt-8 pb-28 desktop:pb-8"}>
+    <section className={previewLayout ? "listing-preview-modal w-full bg-background pb-32 text-foreground" : "container mx-auto px-4 pt-4 pb-28 sm:pt-5 desktop:pb-8"}>
       {!previewLayout && <div className="pointer-events-none fixed right-5 top-1/2 z-20 hidden h-36 -translate-y-1/2 desktop:block">
         <div className="h-full w-1 rounded-full bg-border/70">
           <motion.span
