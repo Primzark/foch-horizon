@@ -2,7 +2,6 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, BedDouble, MapPin, Maximize } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { ScrollReveal } from "@/components/visuals/ScrollReveal";
 import { geographyPhotoCredits } from "@/features/content/data/geographyGuides";
 import { PhotoAttribution } from "@/features/content/components/PhotoAttribution";
@@ -29,14 +28,14 @@ export function RecentSales({ compact = false }: { compact?: boolean }) {
   });
 
   const featuredProperties = availablePropertiesQuery.data ?? [];
-  const carouselProperties = !compact && (sales?.length ?? 0) === 0 ? featuredProperties : sales ?? [];
-  const carouselShowsSales = (sales?.length ?? 0) > 0;
+  const displayedProperties = !compact && (sales?.length ?? 0) === 0 ? featuredProperties : sales ?? [];
+  const showsSales = (sales?.length ?? 0) > 0;
 
   return (
     <section className={compact ? "border-b border-border bg-card" : ""}>
       <div className={compact ? "container mx-auto px-4 py-10 md:py-12" : "pt-4 pb-10"}>
         <ScrollReveal>
-          {(compact || (query.isSuccess && !carouselShowsSales)) && (
+          {(compact || (query.isSuccess && !showsSales)) && (
             <div className={compact ? "grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(16rem,0.72fr)] sm:items-end" : undefined}>
               <div>
                 <p className="text-xs uppercase tracking-[0.2em] text-brand-strong">
@@ -45,7 +44,7 @@ export function RecentSales({ compact = false }: { compact?: boolean }) {
                     : "Des projets accompagnés"}
                 </p>
                 <h2 className="mt-2 max-w-3xl font-display text-3xl leading-tight sm:text-4xl md:text-5xl">
-                  {carouselShowsSales ? "Nos dernières ventes" : "Biens actuellement à vendre"}
+                  {showsSales ? "Nos dernières ventes" : "Biens actuellement à vendre"}
                 </h2>
               </div>
               {compact && (
@@ -73,42 +72,19 @@ export function RecentSales({ compact = false }: { compact?: boolean }) {
               className="mt-6 w-fit max-w-full"
             />
           )}
-          {!compact && !query.isLoading && !query.isError && carouselProperties.length > 0 && (
+          {!compact && !query.isLoading && !query.isError && displayedProperties.length > 0 && (
             <ul
-              className="mt-5 divide-y divide-border border-y border-border sm:hidden"
-              aria-label={carouselShowsSales ? "Nos dernières ventes" : "Biens à la vente au Havre et alentours"}
+              className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3"
+              aria-label={showsSales ? "Nos dernières ventes" : "Biens à la vente au Havre et alentours"}
             >
-              {carouselProperties.map((property) => (
+              {displayedProperties.map((property) => (
                 <li key={property.id}>
-                  <PropertyListRow property={property} browseItems={carouselProperties} isSold={carouselShowsSales} />
+                  <PropertySaleCard property={property} browseItems={displayedProperties} isSold={showsSales} />
                 </li>
               ))}
             </ul>
           )}
-          {!compact && !query.isLoading && !query.isError && carouselProperties.length > 0 && (
-            <Carousel
-              opts={{ align: "start", loop: carouselProperties.length > 1 }}
-              aria-label={carouselShowsSales ? "Nos dernières ventes" : "Biens à la vente au Havre et alentours"}
-              className="mt-5 hidden sm:block"
-            >
-              <div className="mb-3 flex justify-end">
-                {carouselProperties.length > 1 && (
-                  <div className="flex items-center gap-2">
-                    <CarouselPrevious aria-label="Bien précédent" className="static h-10 w-10 translate-y-0" />
-                    <CarouselNext aria-label="Bien suivant" className="static h-10 w-10 translate-y-0" />
-                  </div>
-                )}
-              </div>
-              <CarouselContent className="-ml-4 pb-3">
-                {carouselProperties.map((property) => (
-                  <CarouselItem key={property.id} className="basis-[88%] pl-4 sm:basis-[62%] lg:basis-[46%] xl:basis-[38%]">
-                    <PropertyCarouselCard property={property} browseItems={carouselProperties} isSold={carouselShowsSales} />
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-            </Carousel>
-          )}
-          {!query.isLoading && !query.isError && !compact && query.data?.length === 0 && !availablePropertiesQuery.isLoading && carouselProperties.length === 0 && (
+          {!query.isLoading && !query.isError && !compact && query.data?.length === 0 && !availablePropertiesQuery.isLoading && displayedProperties.length === 0 && (
             <div className="mt-6 rounded-2xl border border-border bg-card p-6 md:p-8">
               <h3 className="font-display text-2xl">Une recherche en tête ?</h3>
               <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
@@ -192,7 +168,7 @@ export function RecentSales({ compact = false }: { compact?: boolean }) {
   );
 }
 
-function PropertyCarouselCard({ property, browseItems, isSold }: { property: PropertySearchItem; browseItems: PropertySearchItem[]; isSold: boolean }) {
+function PropertySaleCard({ property, browseItems, isSold }: { property: PropertySearchItem; browseItems: PropertySearchItem[]; isSold: boolean }) {
   const labels = getPropertyCardLabels(property);
   const content = (
     <>
@@ -200,7 +176,7 @@ function PropertyCarouselCard({ property, browseItems, isSold }: { property: Pro
         <img
           src={getPropertyImageUrl(property.coverImageUrl, 400)}
           srcSet={getPropertyImageSrcSet(property.coverImageUrl)}
-          sizes="(max-width: 767px) 86vw, (max-width: 1279px) 45vw, 33vw"
+          sizes="(max-width: 767px) 100vw, (max-width: 1279px) 50vw, 33vw"
           alt={property.title}
           className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
           loading="lazy"
@@ -245,51 +221,6 @@ function PropertyCarouselCard({ property, browseItems, isSold }: { property: Pro
         browseItems={browseItems}
         aria-label={`Voir le bien${isSold ? " vendu" : ""} : ${property.title}`}
         className="group block h-full overflow-hidden rounded-2xl border border-border bg-card transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-1 hover:border-brand-border hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-      >
-        {content}
-      </PropertyPreviewLink>
-    </article>
-  );
-}
-
-function PropertyListRow({ property, browseItems, isSold }: { property: PropertySearchItem; browseItems: PropertySearchItem[]; isSold: boolean }) {
-  const content = (
-    <>
-      <img
-        src={getPropertyImageUrl(property.coverImageUrl, 200)}
-        srcSet={getPropertyImageSrcSet(property.coverImageUrl)}
-        sizes="88px"
-        alt={property.title}
-        className="aspect-[4/3] w-full rounded-lg bg-muted object-cover"
-        loading="lazy"
-        decoding="async"
-      />
-      <div className="min-w-0">
-        <p className="truncate text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-          {property.city.name} · {formatPropertyTypeLabel(property.type)}
-        </p>
-        <h3 className="mt-1 line-clamp-2 font-display text-lg leading-snug transition-colors group-hover:text-brand-strong">{property.title}</h3>
-        <div className="mt-1.5 flex items-center gap-3 text-xs text-muted-foreground">
-          <span className="inline-flex items-center gap-1"><Maximize aria-hidden="true" className="h-3.5 w-3.5" /> {property.surfaceM2} m²</span>
-          {property.bedrooms != null && <span className="inline-flex items-center gap-1"><BedDouble aria-hidden="true" className="h-3.5 w-3.5" /> {property.bedrooms}</span>}
-        </div>
-        <div className="mt-2 flex items-center justify-between gap-2">
-          <span className="truncate text-sm font-semibold transition-colors group-hover:text-brand-strong">
-            {isSold ? "Vendu par l’agence" : formatPrice(property.priceAmount, property.transaction)}
-          </span>
-          <ArrowRight aria-hidden="true" className="h-4 w-4 shrink-0 text-brand-strong transition-transform group-hover:translate-x-1" />
-        </div>
-      </div>
-    </>
-  );
-
-  return (
-    <article>
-      <PropertyPreviewLink
-        item={property}
-        browseItems={browseItems}
-        aria-label={`Voir le bien${isSold ? " vendu" : ""} : ${property.title}`}
-        className="group grid grid-cols-[5.5rem_minmax(0,1fr)] items-center gap-3 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       >
         {content}
       </PropertyPreviewLink>
