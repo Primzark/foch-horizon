@@ -1,9 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { PropertyStatus, PropertyType } from "@/types/domain";
 
+export type AdminManagedPropertyStatus = Exclude<PropertyStatus, "rented">;
+
 export const ADMIN_PROPERTIES_QUERY_KEY = ["admin-properties"] as const;
 
-export const ADMIN_PROPERTY_STATUS_OPTIONS: Array<{ value: PropertyStatus; label: string }> = [
+export const ADMIN_PROPERTY_STATUS_OPTIONS: Array<{ value: AdminManagedPropertyStatus; label: string }> = [
   { value: "new", label: "Nouveauté" },
   { value: "exclusive", label: "Exclusivité" },
   { value: "price_reduced", label: "Prix réduit" },
@@ -12,7 +14,6 @@ export const ADMIN_PROPERTY_STATUS_OPTIONS: Array<{ value: PropertyStatus; label
   { value: "sold", label: "Vendu" },
   { value: "active", label: "Disponible" },
   { value: "reserved", label: "Réservé" },
-  { value: "rented", label: "Loué" },
   { value: "off_market", label: "Retiré" },
 ];
 
@@ -22,10 +23,10 @@ export interface AdminProperty {
   id: number;
   title: string;
   slug: string;
-  transaction_type: "vente" | "location";
+  transaction_type: "vente";
   property_type: "appartement" | "maison_villa" | "autre";
-  status: PropertyStatus;
-  admin_status_override: PropertyStatus | null;
+  status: AdminManagedPropertyStatus;
+  admin_status_override: AdminManagedPropertyStatus | null;
   is_featured: boolean;
   is_online: boolean;
   agent_id: string | null;
@@ -47,8 +48,8 @@ export interface AdminAgent {
 
 export interface UpdatedAdminProperty {
   id: number;
-  status: PropertyStatus;
-  admin_status_override: PropertyStatus | null;
+  status: AdminManagedPropertyStatus;
+  admin_status_override: AdminManagedPropertyStatus | null;
   is_featured: boolean;
   is_online: boolean;
   agent_id: string | null;
@@ -57,7 +58,7 @@ export interface UpdatedAdminProperty {
 
 export interface AdminPropertyUpdateInput {
   id: number;
-  status?: PropertyStatus;
+  status?: AdminManagedPropertyStatus;
   isFeatured?: boolean;
   isOnline?: boolean;
   agentId?: string | null;

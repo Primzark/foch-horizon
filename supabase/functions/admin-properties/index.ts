@@ -9,7 +9,6 @@ const ADMIN_STATUSES = new Set([
   "sold",
   "active",
   "reserved",
-  "rented",
   "off_market",
 ]);
 const PAGE_SIZE = 500;
@@ -83,6 +82,8 @@ async function listProperties(supabase: ReturnType<typeof createServiceClient>) 
       .select(
         "id,title,slug,transaction_type,property_type,status,admin_status_override,is_featured,is_online,agent_id,price_amount,price_currency,surface_m2,bedrooms,postal_code,updated_at,city:cities(name,slug),images:property_images(source_url,sort_order)",
       )
+      .eq("transaction_type", "vente")
+      .neq("status", "rented")
       .order("updated_at", { ascending: false })
       .order("id", { ascending: true })
       .range(offset, offset + PAGE_SIZE - 1);

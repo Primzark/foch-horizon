@@ -323,14 +323,12 @@ export async function runSharedPropertySearchQuery(
     .eq("transaction_type", "vente")
     .eq("is_online", true)
     .range(from, to);
-  query = input.status === "sold"
-    ? query.eq("status", "sold")
-    : query.neq("status", "off_market").neq("status", "sold");
-
   if (input.featuredOnly) {
-    query = query
-      .eq("is_featured", true)
-      .in("status", ["active", "new", "exclusive", "price_reduced"]);
+    query = query.eq("is_featured", true);
+  } else {
+    query = input.status === "sold"
+      ? query.eq("status", "sold")
+      : query.neq("status", "off_market").neq("status", "sold");
   }
 
   if (exactSlug) {

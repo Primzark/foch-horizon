@@ -79,8 +79,6 @@ export function getPropertyStatusLabel(
       return "Réservé";
     case "sold":
       return "Vendu par l’agence";
-    case "rented":
-      return "Loué";
     case "off_market":
       return "Retiré";
     case "active":
@@ -118,8 +116,7 @@ export function getPropertyCardLabels(property: PropertyBadgeSource): string[] {
     property.status === "under_contract" ||
     property.status === "reserved" ||
     property.status === "sold" ||
-    property.status === "off_market" ||
-    property.status === "rented"
+    property.status === "off_market"
   ) {
     return statusLabel ? [statusLabel] : [];
   }

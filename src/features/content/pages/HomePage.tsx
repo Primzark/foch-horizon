@@ -48,14 +48,14 @@ const HERO_IMAGE_CREDIT: PhotoAttributionCredit = {
 export default function HomePage() {
   const featuredQuery = useQuery({
     queryKey: ["featured-properties"],
-    queryFn: () => getFeaturedProperties(24),
+    queryFn: getFeaturedProperties,
     staleTime: 1000 * 60 * 20,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
   });
-  const featuredItems = useMemo(() => (featuredQuery.data ?? []).slice(0, 6), [featuredQuery.data]);
+  const featuredItems = featuredQuery.data ?? [];
   const instantSearchItems = useMemo(
-    () => (isEdgeApiEnabled() ? [] : properties.filter((property) => property.isOnline !== false && property.status !== "off_market" && property.status !== "sold")).map((property) => ({
+    () => (isEdgeApiEnabled() ? [] : properties.filter((property) => property.isOnline !== false && property.isFeatured)).map((property) => ({
       ...toSearchItem(property),
       description: property.description,
     })),
@@ -113,7 +113,7 @@ export default function HomePage() {
         <ScrollReveal mood={heroMood}>
           <div className="mb-6 flex flex-col items-start gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h2 className="font-display text-3xl">Biens actuellement à vendre</h2>
+              <h2 className="font-display text-3xl">Nos biens favoris</h2>
             </div>
             <Link to="/biens" className="inline-flex items-center gap-1 text-sm hover:underline">
               Découvrir tous les biens

@@ -70,10 +70,10 @@ function getNavigationPreview(state: unknown, propertyId: number | null): Proper
     item.id !== propertyId ||
     typeof item.title !== "string" ||
     typeof item.slug !== "string" ||
-    (item.transaction !== "vente" && item.transaction !== "location") ||
+    item.transaction !== "vente" ||
     (item.type !== "appartement" && item.type !== "maison_villa" && item.type !== "autre") ||
     !item.status ||
-    !["active", "new", "exclusive", "price_reduced", "under_offer", "under_contract", "reserved", "sold", "rented", "off_market"].includes(item.status) ||
+    !["active", "new", "exclusive", "price_reduced", "under_offer", "under_contract", "reserved", "sold", "off_market"].includes(item.status) ||
     typeof item.priceAmount !== "number" ||
     item.currency !== "EUR" ||
     typeof item.surfaceM2 !== "number" ||
@@ -711,7 +711,7 @@ export default function ListingDetailPage({
     property.status,
     hasAdminStatusOverride ? null : property.sourceStatus,
     hasAdminStatusOverride ? undefined : property.title,
-  ) ?? (property.transactionType === "location" ? "À louer" : "À vendre");
+  ) ?? "À vendre";
   const listingBadges = getPropertyCardLabels(property);
   const quickFacts = [
     { icon: Maximize, label: "Surface", value: `${property.surfaceM2} m²` },

@@ -178,14 +178,14 @@ function applyFilters(items: Property[], params: PropertySearchParams): Property
     (property) =>
       property.isOnline !== false &&
       property.transactionType === "vente" &&
-      (params.status === "sold"
-        ? property.status === "sold"
-        : property.status !== "off_market" && property.status !== "sold"),
+      (params.featuredOnly
+        ? property.isFeatured
+        : params.status === "sold"
+          ? property.status === "sold"
+          : property.status !== "off_market" && property.status !== "sold"),
   );
 
   if (params.transaction && params.transaction !== "vente") return [];
-
-  if (params.featuredOnly) result = result.filter((property) => property.isFeatured && isAvailablePropertyStatus(property.status));
 
   if (params.type) {
     result = result.filter((property) => property.propertyType === params.type);
@@ -493,15 +493,31 @@ export async function getSimilarProperties(property: Property, limit = 3): Promi
   }));
 }
 
-export async function getFeaturedProperties(limit = 8): Promise<PropertySearchItem[]> {
-  const result = await searchProperties({
+export async function getFeaturedProperties(): Promise<PropertySearchItem[]> {
+  const pageSize = 100;
+  const firstPage = await searchProperties({
     transaction: "vente",
     featuredOnly: true,
     page: 1,
-    pageSize: limit,
+    pageSize,
     sort: "newest",
   });
-  return result.items;
+
+  if (firstPage.items.length >= firstPage.total) return firstPage.items;
+
+  const remainingPages = await Promise.all(
+    Array.from({ length: Math.ceil(firstPage.total / pageSize) - 1 }, (_, index) =>
+      searchProperties({
+        transaction: "vente",
+        featuredOnly: true,
+        page: index + 2,
+        pageSize,
+        sort: "newest",
+      }),
+    ),
+  );
+
+  return [firstPage, ...remainingPages].flatMap((page) => page.items);
 }
 
 export async function getPropertiesByCitySlug(citySlug: string): Promise<Property[]> {

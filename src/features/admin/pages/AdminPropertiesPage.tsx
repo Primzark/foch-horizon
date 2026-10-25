@@ -49,7 +49,6 @@ import { useToast } from "@/hooks/use-toast";
 import { getBrowserSupabaseClient } from "@/lib/supabase/browserClient";
 import { useSeo } from "@/lib/seo/useSeo";
 import { formatPrice, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
-import type { PropertyStatus } from "@/types/domain";
 import {
   ADMIN_PROPERTIES_QUERY_KEY,
   ADMIN_AGENTS_QUERY_KEY,
@@ -62,13 +61,14 @@ import {
   getAdminProperties,
   getAdminAgents,
   updateAdminProperty,
+  type AdminManagedPropertyStatus,
   type AdminAgent,
   type AdminPropertyUpdateInput,
   type AdminProperty,
   type AdminPropertyLikeSummary,
 } from "@/features/admin/api/adminProperties.service";
 
-type StatusFilter = "all" | PropertyStatus;
+type StatusFilter = "all" | AdminManagedPropertyStatus;
 type AdminLoginErrors = Partial<Record<"email" | "password", string>>;
 
 const adminLoginEmailSchema = z.string().trim().email().max(254);
@@ -90,7 +90,7 @@ function validateAdminLogin(emailValue: string, password: string): AdminLoginErr
   return errors;
 }
 
-const statusDetails: Record<PropertyStatus, { label: string; trigger: string; dot: string }> = {
+const statusDetails: Record<AdminManagedPropertyStatus, { label: string; trigger: string; dot: string }> = {
   active: {
     label: "Disponible",
     trigger: "border-emerald-200 bg-emerald-50 text-emerald-900 hover:bg-emerald-100 dark:border-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-200",
@@ -130,11 +130,6 @@ const statusDetails: Record<PropertyStatus, { label: string; trigger: string; do
     label: "Vendu",
     trigger: "border-sky-200 bg-sky-50 text-sky-900 hover:bg-sky-100 dark:border-sky-900 dark:bg-sky-950/50 dark:text-sky-200",
     dot: "bg-sky-600",
-  },
-  rented: {
-    label: "Loué",
-    trigger: "border-cyan-200 bg-cyan-50 text-cyan-900 hover:bg-cyan-100 dark:border-cyan-900 dark:bg-cyan-950/50 dark:text-cyan-200",
-    dot: "bg-cyan-600",
   },
   off_market: {
     label: "Retiré",
@@ -190,8 +185,8 @@ function formatPropertyType(value: AdminProperty["property_type"]): string {
   return typeLabels[value] ?? "Autre bien";
 }
 
-function getStatusOptionLabel(status: PropertyStatus, transactionType: AdminProperty["transaction_type"]): string {
-  if (status === "active") return transactionType === "location" ? "À louer" : "À vendre";
+function getStatusOptionLabel(status: AdminManagedPropertyStatus, _transactionType: AdminProperty["transaction_type"]): string {
+  if (status === "active") return "À vendre";
   return statusDetails[status].label;
 }
 
@@ -357,16 +352,16 @@ function StatusControl({
   onChange,
 }: {
   property: AdminProperty;
-  value: PropertyStatus;
+  value: AdminManagedPropertyStatus;
   saving: boolean;
-  onChange: (propertyId: number, status: PropertyStatus) => void;
+  onChange: (propertyId: number, status: AdminManagedPropertyStatus) => void;
 }) {
   const detail = statusDetails[value];
 
   return (
     <Select
       value={value}
-      onValueChange={(status) => onChange(property.id, status as PropertyStatus)}
+      onValueChange={(status) => onChange(property.id, status as AdminManagedPropertyStatus)}
       disabled={saving}
     >
       <SelectTrigger
@@ -847,10 +842,10 @@ export default function AdminPropertiesPage() {
     );
   }
 
-  const counts = allProperties.reduce<Record<PropertyStatus, number>>((acc, property) => {
+  const counts = allProperties.reduce<Record<AdminManagedPropertyStatus, number>>((acc, property) => {
     acc[property.status] += 1;
     return acc;
-  }, Object.fromEntries(ADMIN_PROPERTY_STATUS_OPTIONS.map(({ value }) => [value, 0])) as Record<PropertyStatus, number>);
+  }, Object.fromEntries(ADMIN_PROPERTY_STATUS_OPTIONS.map(({ value }) => [value, 0])) as Record<AdminManagedPropertyStatus, number>);
   const propertyById = new Map(allProperties.map((property) => [property.id, property]));
   const propertyLikes = propertyLikesQuery.data ?? [];
   const totalActiveLikes = propertyLikes.reduce((sum, item) => sum + item.like_count, 0);
@@ -1035,7 +1030,7 @@ export default function AdminPropertiesPage() {
                         <div className="min-w-0 flex-1">
                           <PropertyIdentity property={selectedLikeProperty} />
                           <p className="mt-3 text-xs text-muted-foreground">
-                            {formatPropertyType(selectedLikeProperty.property_type)} · {selectedLikeProperty.transaction_type === "location" ? "Location" : "Vente"} · {formatPrice(selectedLikeProperty.price_amount, selectedLikeProperty.transaction_type)}
+                            {formatPropertyType(selectedLikeProperty.property_type)} · Vente · {formatPrice(selectedLikeProperty.price_amount, selectedLikeProperty.transaction_type)}
                           </p>
                         </div>
                         <div className="shrink-0 sm:text-right">
@@ -1132,7 +1127,7 @@ export default function AdminPropertiesPage() {
                             <div className="min-w-0 flex-1">
                               <PropertyIdentity property={property} />
                               <p className="mt-3 text-xs text-muted-foreground">
-                                {formatPropertyType(property.property_type)} · {property.transaction_type === "location" ? "Location" : "Vente"} · {formatPrice(property.price_amount, property.transaction_type)}
+                                {formatPropertyType(property.property_type)} · Vente · {formatPrice(property.price_amount, property.transaction_type)}
                               </p>
                             </div>
                             <div className="flex items-center justify-between gap-5 sm:justify-end">
@@ -1259,7 +1254,7 @@ export default function AdminPropertiesPage() {
                                 </td>
                                 <td className="px-4 py-3.5">
                                   <p className="text-xs font-medium">{formatPropertyType(property.property_type)}</p>
-                                  <p className="mt-1 text-[11px] text-muted-foreground">{property.transaction_type === "location" ? "Location" : "Vente"}</p>
+                                  <p className="mt-1 text-[11px] text-muted-foreground">Vente</p>
                                 </td>
                                 <td className="px-4 py-3.5 text-right"><PropertyPrice property={property} align="end" /></td>
                                 <td className="px-3 py-3.5 text-center">
@@ -1314,7 +1309,7 @@ export default function AdminPropertiesPage() {
                         <div className="mt-3 flex items-center justify-between gap-3">
                           <div>
                             <PropertyPrice property={property} />
-                            <p className="mt-1 text-xs text-muted-foreground">{formatPropertyType(property.property_type)} · {property.transaction_type === "location" ? "Location" : "Vente"}</p>
+                            <p className="mt-1 text-xs text-muted-foreground">{formatPropertyType(property.property_type)} · Vente</p>
                           </div>
                           <p className="text-[10px] text-muted-foreground">{formatDate(property.updated_at)}</p>
                         </div>
