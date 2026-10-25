@@ -419,13 +419,13 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
                 type="submit"
                 form="spotlight-search-criteria-form"
                 aria-label={resultCountAccessibleLabel}
-                className="inline-flex shrink-0 items-center gap-0 rounded-full bg-brand-strong px-4 py-2 font-semibold text-white transition-colors hover:bg-brand-strong/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-strong focus-visible:ring-offset-2"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-brand-strong px-4 py-2 font-semibold text-background transition-colors hover:bg-brand-strong/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-strong focus-visible:ring-offset-2"
               >
-                {resultCountPrefix}{" "}
-                <span aria-live="polite" className="text-xs font-normal tabular-nums opacity-85">
+                <span className="whitespace-nowrap">{resultCountPrefix}</span>
+                <span aria-live="polite" className="inline-flex min-w-8 justify-center rounded-full bg-background/15 px-2 py-1 text-sm font-bold leading-none tabular-nums">
                   {resultCountNumber}
-                </span>{" "}
-                {resultCountSuffix}
+                </span>
+                <span className="whitespace-nowrap">{resultCountSuffix}</span>
               </button>
             ) : (
               <button type="button" onClick={() => navigateToSearch({}, true)} className="shrink-0 rounded-full px-3 py-2 font-medium text-foreground transition-colors hover:bg-muted hover:text-brand-strong">
