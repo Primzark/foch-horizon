@@ -11,11 +11,10 @@ import {
   CircleAlert,
   Eye,
   EyeOff,
+  GripVertical,
   Heart,
   KeyRound,
   LogOut,
-  PanelLeftClose,
-  PanelLeftOpen,
   Search,
   ShieldCheck,
   SlidersHorizontal,
@@ -70,6 +69,28 @@ import {
 
 type StatusFilter = "all" | AdminManagedPropertyStatus;
 type AdminLoginErrors = Partial<Record<"email" | "password", string>>;
+
+const ADMIN_SIDEBAR_STORAGE_KEY = "foch-admin-sidebar-width";
+const ADMIN_SIDEBAR_MIN_WIDTH = 72;
+const ADMIN_SIDEBAR_MAX_WIDTH = 480;
+const ADMIN_SIDEBAR_DEFAULT_WIDTH = 240;
+
+function clampAdminSidebarWidth(width: number): number {
+  return Math.round(Math.min(ADMIN_SIDEBAR_MAX_WIDTH, Math.max(ADMIN_SIDEBAR_MIN_WIDTH, width)));
+}
+
+function getSavedAdminSidebarWidth(): number {
+  if (typeof window === "undefined") return ADMIN_SIDEBAR_DEFAULT_WIDTH;
+
+  try {
+    const savedWidth = window.localStorage.getItem(ADMIN_SIDEBAR_STORAGE_KEY);
+    if (savedWidth === null) return ADMIN_SIDEBAR_DEFAULT_WIDTH;
+    const parsedWidth = Number(savedWidth);
+    return Number.isFinite(parsedWidth) ? clampAdminSidebarWidth(parsedWidth) : ADMIN_SIDEBAR_DEFAULT_WIDTH;
+  } catch {
+    return ADMIN_SIDEBAR_DEFAULT_WIDTH;
+  }
+}
 
 const adminLoginEmailSchema = z.string().trim().email().max(254);
 
@@ -606,7 +627,9 @@ export default function AdminPropertiesPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [savingIds, setSavingIds] = useState<Set<number>>(() => new Set());
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarWidth, setSidebarWidth] = useState(getSavedAdminSidebarWidth);
+  const [sidebarResizing, setSidebarResizing] = useState(false);
+  const sidebarLayoutRef = useRef<HTMLDivElement>(null);
 
   useSeo({
     title: "Gestion des annonces | Foch Immobilier",
@@ -614,6 +637,32 @@ export default function AdminPropertiesPage() {
     canonicalPath: "/admin",
     noIndex: true,
   });
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      try {
+        window.localStorage.setItem(ADMIN_SIDEBAR_STORAGE_KEY, String(sidebarWidth));
+      } catch {
+        // Keep resizing usable when browser storage is unavailable.
+      }
+    }, 150);
+
+    return () => window.clearTimeout(timeout);
+  }, [sidebarWidth]);
+
+  useEffect(() => {
+    if (!sidebarResizing) return;
+
+    const previousCursor = document.body.style.cursor;
+    const previousUserSelect = document.body.style.userSelect;
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+
+    return () => {
+      document.body.style.cursor = previousCursor;
+      document.body.style.userSelect = previousUserSelect;
+    };
+  }, [sidebarResizing]);
 
   useEffect(() => {
     if (!supabaseClient) {
@@ -859,6 +908,7 @@ export default function AdminPropertiesPage() {
   const likeHistory = propertyLikeHistoryQuery.data ?? [];
   const userEmail = session.user.email ?? "Administrateur";
   const adminAgents = agentsQuery.data ?? [];
+  const sidebarCompact = sidebarWidth < 208;
 
   return (
     <motion.main
@@ -868,13 +918,13 @@ export default function AdminPropertiesPage() {
       className="min-h-dvh bg-[hsl(var(--background))] text-foreground"
     >
       <div
-        className={sidebarCollapsed
-          ? "mx-auto min-h-dvh max-w-[1680px] lg:grid lg:grid-cols-[76px_minmax(0,1fr)]"
-          : "mx-auto min-h-dvh max-w-[1680px] lg:grid lg:grid-cols-[240px_minmax(0,1fr)]"}
+        ref={sidebarLayoutRef}
+        className="mx-auto min-h-dvh max-w-[1680px] lg:grid"
+        style={{ gridTemplateColumns: `${sidebarWidth}px minmax(0, 1fr)` }}
       >
-        <aside className={["hidden border-r border-border/70 bg-card/70 py-7 transition-[padding] duration-200 lg:flex lg:flex-col", sidebarCollapsed ? "px-3" : "px-5"].join(" ")}>
-          <div className={sidebarCollapsed ? "flex flex-col items-center gap-4" : "flex items-start justify-between gap-2"}>
-            {sidebarCollapsed ? (
+        <aside className={["relative hidden border-r border-border/70 bg-card/70 py-7 lg:flex lg:flex-col", sidebarCompact ? "px-3" : "px-5"].join(" ")}>
+          <div className={sidebarCompact ? "flex flex-col items-center gap-4" : "flex items-start justify-between gap-2"}>
+            {sidebarCompact ? (
               <Link to="/" aria-label="Foch Immobilier, accueil" title="Foch Immobilier" className="grid h-9 w-9 place-items-center rounded-lg bg-brand-soft font-display text-lg font-semibold text-brand-strong">F</Link>
             ) : (
               <Link to="/" className="flex min-w-0 flex-col items-start gap-2" aria-label="Foch Immobilier, accueil">
@@ -889,20 +939,9 @@ export default function AdminPropertiesPage() {
                 <span className="text-[9px] font-semibold uppercase tracking-[0.19em] text-muted-foreground">Administration</span>
               </Link>
             )}
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              aria-label={sidebarCollapsed ? "Développer la navigation" : "Réduire la navigation"}
-              title={sidebarCollapsed ? "Développer la navigation" : "Réduire la navigation"}
-              onClick={() => setSidebarCollapsed((collapsed) => !collapsed)}
-              className="h-9 w-9 shrink-0 text-muted-foreground"
-            >
-              {sidebarCollapsed ? <PanelLeftOpen className="h-4 w-4" aria-hidden="true" /> : <PanelLeftClose className="h-4 w-4" aria-hidden="true" />}
-            </Button>
           </div>
 
-          {!sidebarCollapsed && <p className="mb-3 mt-12 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Espace de travail</p>}
+          {!sidebarCompact && <p className="mb-3 mt-12 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Espace de travail</p>}
           <nav aria-label="Administration" className="space-y-1">
             <Link
               to="/admin"
@@ -910,13 +949,13 @@ export default function AdminPropertiesPage() {
               title="Annonces"
               className={[
                 "flex items-center rounded-xl py-3 text-sm font-medium transition-colors",
-                sidebarCollapsed ? "justify-center px-3" : "gap-3 px-3",
+                sidebarCompact ? "justify-center px-3" : "gap-3 px-3",
                 !likesSection ? "bg-brand-soft text-brand-strong" : "text-muted-foreground hover:bg-secondary hover:text-foreground",
               ].join(" ")}
             >
               <Building2 className="h-4 w-4" aria-hidden="true" />
-              <span className={sidebarCollapsed ? "sr-only" : "flex-1"}>Annonces</span>
-              {!sidebarCollapsed && <span className="text-xs tabular-nums opacity-70">{allProperties.length}</span>}
+              <span className={sidebarCompact ? "sr-only" : "flex-1"}>Annonces</span>
+              {!sidebarCompact && <span className="text-xs tabular-nums opacity-70">{allProperties.length}</span>}
             </Link>
             <Link
               to="/admin?section=likes"
@@ -924,18 +963,18 @@ export default function AdminPropertiesPage() {
               title="Historique des likes"
               className={[
                 "flex items-center rounded-xl py-3 text-sm font-medium transition-colors",
-                sidebarCollapsed ? "justify-center px-3" : "gap-3 px-3",
+                sidebarCompact ? "justify-center px-3" : "gap-3 px-3",
                 likesSection ? "bg-brand-soft text-brand-strong" : "text-muted-foreground hover:bg-secondary hover:text-foreground",
               ].join(" ")}
             >
               <Heart className="h-4 w-4" aria-hidden="true" />
-              <span className={sidebarCollapsed ? "sr-only" : "flex-1"}>Historique des likes</span>
-              {!sidebarCollapsed && <span className="text-xs tabular-nums opacity-70">{propertyLikes.length}</span>}
+              <span className={sidebarCompact ? "sr-only" : "flex-1"}>Historique des likes</span>
+              {!sidebarCompact && <span className="text-xs tabular-nums opacity-70">{propertyLikes.length}</span>}
             </Link>
           </nav>
 
-          <div className={["mt-auto border-t border-border/70 pt-5", sidebarCollapsed ? "text-center" : ""].join(" ")}>
-            {sidebarCollapsed ? (
+          <div className={["mt-auto border-t border-border/70 pt-5", sidebarCompact ? "text-center" : ""].join(" ")}>
+            {sidebarCompact ? (
               <span title={userEmail} aria-label={userEmail} className="mx-auto grid h-8 w-8 place-items-center rounded-full bg-secondary text-xs font-medium">{userEmail.slice(0, 1).toUpperCase()}</span>
             ) : (
               <>
@@ -943,6 +982,45 @@ export default function AdminPropertiesPage() {
                 <p className="mt-1 text-[11px] text-muted-foreground">Compte autorisé</p>
               </>
             )}
+          </div>
+          <div
+            role="separator"
+            aria-label="Redimensionner la barre latérale"
+            aria-orientation="vertical"
+            aria-valuemin={ADMIN_SIDEBAR_MIN_WIDTH}
+            aria-valuemax={ADMIN_SIDEBAR_MAX_WIDTH}
+            aria-valuenow={sidebarWidth}
+            aria-valuetext={`${sidebarWidth} pixels`}
+            tabIndex={0}
+            onPointerDown={(event) => {
+              if (event.button !== 0) return;
+              event.preventDefault();
+              event.currentTarget.setPointerCapture(event.pointerId);
+              setSidebarResizing(true);
+            }}
+            onPointerMove={(event) => {
+              if (!sidebarResizing) return;
+              const layoutLeft = sidebarLayoutRef.current?.getBoundingClientRect().left ?? 0;
+              setSidebarWidth(clampAdminSidebarWidth(event.clientX - layoutLeft));
+            }}
+            onPointerUp={() => setSidebarResizing(false)}
+            onPointerCancel={() => setSidebarResizing(false)}
+            onLostPointerCapture={() => setSidebarResizing(false)}
+            onKeyDown={(event) => {
+              if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+                event.preventDefault();
+                setSidebarWidth((width) => clampAdminSidebarWidth(width + (event.key === "ArrowRight" ? 16 : -16)));
+              } else if (event.key === "Home") {
+                event.preventDefault();
+                setSidebarWidth(ADMIN_SIDEBAR_MIN_WIDTH);
+              } else if (event.key === "End") {
+                event.preventDefault();
+                setSidebarWidth(ADMIN_SIDEBAR_MAX_WIDTH);
+              }
+            }}
+            className={["group/sidebar-resizer absolute inset-y-0 -right-2 z-30 flex w-4 touch-none cursor-col-resize items-start justify-center outline-none focus-visible:bg-primary/10", sidebarResizing ? "bg-primary/10" : "hover:bg-primary/10"].join(" ")}
+          >
+            <GripVertical className={["sticky top-[calc(50vh-0.625rem)] h-5 w-5 shrink-0 transition-colors", sidebarResizing ? "text-primary" : "text-muted-foreground group-hover/sidebar-resizer:text-primary group-focus-visible/sidebar-resizer:text-primary"].join(" ")} aria-hidden="true" />
           </div>
         </aside>
 
@@ -986,7 +1064,7 @@ export default function AdminPropertiesPage() {
             </Link>
           </nav>
 
-          <div className="mx-auto max-w-[1380px] px-5 py-7 sm:px-7 sm:py-9 lg:px-10 lg:py-10">
+          <div className="mx-auto w-full max-w-none px-5 py-7 sm:px-7 sm:py-9 lg:px-10 lg:py-10">
             {likesSection ? (
               <section aria-labelledby="admin-likes-title">
                 <div className="flex flex-wrap items-end justify-between gap-4">
@@ -1225,7 +1303,7 @@ export default function AdminPropertiesPage() {
                 <>
                   <div className="hidden overflow-hidden rounded-2xl border border-border/70 bg-card md:block">
                     <div className="overflow-x-auto">
-                      <table className="w-full min-w-[1480px] border-collapse text-left">
+                      <table className="w-full min-w-[1320px] border-collapse text-left">
                         <thead>
                           <tr className="border-b border-border/70 bg-secondary/35 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                             <th scope="col" className="px-5 py-3.5">Bien immobilier</th>
