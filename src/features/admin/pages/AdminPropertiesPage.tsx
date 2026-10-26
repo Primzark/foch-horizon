@@ -683,10 +683,10 @@ export default function AdminPropertiesPage() {
   const propertyLikesQuery = useQuery({
     queryKey: ADMIN_PROPERTY_LIKES_QUERY_KEY,
     queryFn: () => getAdminPropertyLikeSummary(supabaseClient!),
-    enabled: Boolean(session?.access_token && likesSection),
+    enabled: Boolean(session?.access_token),
     retry: false,
     staleTime: 0,
-    refetchInterval: likesSection ? 30_000 : false,
+    refetchInterval: 30_000,
   });
 
   const propertyLikeHistoryQuery = useQuery({
@@ -931,7 +931,9 @@ export default function AdminPropertiesPage() {
           >
             <Heart className="h-4 w-4" aria-hidden="true" />
             <span>Historique des likes</span>
-            <span className="text-xs tabular-nums opacity-70">{propertyLikes.length}</span>
+            <span className="text-xs tabular-nums opacity-70">
+              {propertyLikesQuery.isPending ? "…" : propertyLikesQuery.isError ? "—" : propertyLikes.length}
+            </span>
           </Link>
         </nav>
 
@@ -1099,7 +1101,6 @@ export default function AdminPropertiesPage() {
               <>
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-brand">Inventaire immobilier</p>
                 <h1 className="mt-2 font-display text-4xl leading-none tracking-tight sm:text-[2.75rem]">Annonces</h1>
                 <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
                   Gérez les favoris, la visibilité, le négociateur et le statut de chaque bien.

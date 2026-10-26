@@ -44,7 +44,7 @@ export const agents: Agent[] = [
     fullName: "Dries HUBERT",
     role: "Transactions immobilières",
     phone: "02 35 42 51 76",
-    mobile: "",
+    mobile: "06 61 42 68 50",
     email: "contact@fochimmobilier.com",
     facebookUrl: legacyFacebookUrl,
     bio: "Accompagnement dans vos projets d’achat et de vente.",

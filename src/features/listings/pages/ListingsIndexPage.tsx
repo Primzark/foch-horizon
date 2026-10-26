@@ -276,11 +276,11 @@ export default function ListingsIndexPage() {
       </aside>
 
       <aside className="my-5 flex flex-col gap-4 rounded-2xl border border-brand-border bg-brand-soft/50 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
-        <div className="flex items-start gap-3">
-          <span className="mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-background text-brand-strong">
+        <div className="flex items-center gap-3">
+          <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-background text-brand-strong">
             <Phone aria-hidden="true" className="h-5 w-5" />
           </span>
-          <p className="max-w-3xl text-sm leading-relaxed text-foreground sm:text-base">
+          <p className="max-w-3xl text-sm leading-6 text-foreground sm:text-base">
             Contactez l’agence pour découvrir l’ensemble de notre portefeuille immobilier.
           </p>
         </div>

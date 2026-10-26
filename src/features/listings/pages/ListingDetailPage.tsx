@@ -495,7 +495,8 @@ export default function ListingDetailPage({
 
   const canonicalPath = property ? toCanonicalPropertyPath({ id: property.id, slug: property.slug }) : null;
   const showStickySummary = Boolean(property && !isSold && !summaryVisible && !contactVisible);
-  const contactPhone = property?.assignedAgent?.phone || agentById.get(property?.agentId ?? "")?.phone || "02 35 42 51 76";
+  const localAssignedAgent = agentById.get(property?.agentId ?? "");
+  const contactPhone = property?.assignedAgent?.phone || localAssignedAgent?.mobile || localAssignedAgent?.phone || "02 35 42 51 76";
 
   const discoveryCardContent = nextPropertyToDiscover ? (
     <>

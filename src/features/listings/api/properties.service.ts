@@ -1,5 +1,5 @@
 import { cityById, cityBySlug } from "@/features/cities/data/cities";
-import { agents } from "@/features/listings/data/agents";
+import { agents, agentById } from "@/features/listings/data/agents";
 import { properties, propertyById, propertyBySlug } from "@/features/listings/data/properties";
 import { isAvailablePropertyStatus, normalizeKeyword } from "@/features/listings/utils/formatting";
 import { apiJson, isEdgeApiEnabled } from "@/lib/api/client";
@@ -54,6 +54,7 @@ type EdgePropertyDetailRow = {
     role?: string | null;
     email?: string | null;
     phone?: string | null;
+    mobile?: string | null;
   } | null;
   images?: Array<{
     id?: string | null;
@@ -80,6 +81,8 @@ function normalizeAgentLookupKey(value: string | null | undefined): string {
 const localAgentIdByName = new Map(
   agents.map((agent) => [normalizeAgentLookupKey(agent.fullName), agent.id] as const),
 );
+localAgentIdByName.set(normalizeAgentLookupKey("Véronique Fort"), "agent-clara-durand");
+localAgentIdByName.set(normalizeAgentLookupKey("Didier Hubert"), "agent-dries-hubert");
 
 function mapEdgePropertyDetailToDomain(row: EdgePropertyDetailRow): Property {
   const citySlug = row.city?.slug ?? null;
@@ -90,6 +93,7 @@ function mapEdgePropertyDetailToDomain(row: EdgePropertyDetailRow): Property {
     localAgentIdByName.get(normalizeAgentLookupKey(row.agent?.full_name)) ??
     row.agent_id ??
     "";
+  const localAgent = agentById.get(localAgentId);
 
   const images = (row.images ?? [])
     .filter((image) => typeof image?.source_url === "string" && image.source_url.trim().length > 0)
@@ -142,7 +146,7 @@ function mapEdgePropertyDetailToDomain(row: EdgePropertyDetailRow): Property {
       ? {
           fullName: row.agent.full_name.trim(),
           role: row.agent.role?.trim() || null,
-          phone: row.agent.phone?.trim() || null,
+          phone: localAgent?.mobile.trim() || row.agent.mobile?.trim() || row.agent.phone?.trim() || null,
           email: row.agent.email?.trim() || null,
         }
       : null,
