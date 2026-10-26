@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import { ArrowRight, Bath, BedDouble, Car, ChevronLeft, ChevronRight, Copy, Heart, Mail, MapPin, Maximize, Phone, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cityById, cityBySlug } from "@/features/cities/data/cities";
 import { getPropertyById, getSimilarProperties, searchProperties } from "@/features/listings/api/properties.service";
 import { ListingGallery } from "@/features/listings/components/ListingGallery";
@@ -949,8 +950,17 @@ export default function ListingDetailPage({
         <aside className={`min-w-0 space-y-4 ${previewLayout ? "desktop:sticky desktop:top-14 desktop:h-fit" : "desktop:sticky desktop:top-[calc(145px+env(safe-area-inset-top))] desktop:h-fit"}`}>
           <section className={previewLayout ? "border-b border-border/80 pb-5" : "rounded-2xl border border-border bg-card p-5"}>
             <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Votre interlocuteur</p>
-            <p className="mt-2 font-display text-2xl">{agent?.fullName ?? "Foch Immobilier"}</p>
-            <p className="text-sm text-muted-foreground">{agent?.role ?? "Transactions immobilières"}</p>
+            {propertyQuery.isPlaceholderData ? (
+              <div className="mt-2 space-y-2" role="status" aria-label="Chargement de votre interlocuteur">
+                <Skeleton className="h-8 w-3/4 motion-reduce:animate-none" />
+                <Skeleton className="h-5 w-full motion-reduce:animate-none" />
+              </div>
+            ) : (
+              <>
+                <p className="mt-2 font-display text-2xl">{agent?.fullName ?? "Foch Immobilier"}</p>
+                <p className="text-sm text-muted-foreground">{agent?.role ?? "Transactions immobilières"}</p>
+              </>
+            )}
             <a
               href={`tel:${contactPhone.replace(/\s+/g, "")}`}
               className="mt-3 inline-flex items-center gap-2 rounded-full border border-border px-3 py-1 text-sm"

@@ -299,7 +299,7 @@ export function LeadForm({
             </div>
 
             {showAppointmentFields && (
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-3">
                 <div className="space-y-1.5">
                   <Label id="lead-callback-window-label">Créneau de rappel</Label>
                   <Select
