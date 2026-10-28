@@ -1,6 +1,6 @@
 import { atLocation } from "@/lib/utils/frenchLocation";
 import { StorefrontPageHero } from "@/features/content/components/StorefrontPageHero";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
@@ -40,9 +40,10 @@ const defaultParams: PropertySearchParams = {
 
 export default function ListingsIndexPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [viewMode, setViewMode] = useState<"grid" | "list" | "map">("grid");
   const { reducedMotion } = useMotionPreference();
   const setSearchDrawerOpen = useUiStore((state) => state.setSearchDrawerOpen);
+  const viewMode = useUiStore((state) => state.listingsViewMode);
+  const setViewMode = useUiStore((state) => state.setListingsViewMode);
   const favoriteIds = useFavoritesStore((state) => state.ids);
   const siteUrl = getSiteUrl();
 
