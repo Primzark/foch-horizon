@@ -38,7 +38,7 @@ export const englishCopy: Record<string, string> = {
   "Lun-Ven : 09:30-12:00, 14:00-18:30 · Samedi sur rendez-vous": "Mon–Fri: 9:30 am–12 pm, 2–6:30 pm · Saturdays by appointment",
   "Foch Immobilier. Carte professionnelle CPI et mentions contractuelles disponibles dans les mentions légales.": "Foch Immobilier. Professional licence details and contractual information are available in the legal notice.",
   "Notre cabinet accompagne vendeurs et acquéreurs avec une approche sur mesure.": "Since 1972, we have guided sellers and buyers with a tailored approach.",
-    "Découvrir tous les biens": "Explore all properties",
+  "Trouver mon prochain bien": "Find my next property",
   "Chargement de la sélection": "Loading our selection",
   "Nous préparons les biens à découvrir.": "We’re getting properties ready for you to explore.",
   "Explorer par ville": "Explore by town",

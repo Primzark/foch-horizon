@@ -113,10 +113,12 @@ export default function HomePage() {
         <ScrollReveal mood={heroMood}>
           <div className="mb-6 flex flex-col items-start gap-2 sm:flex-row sm:items-end sm:justify-between">
             <h2 className="font-display text-3xl">La sélection du moment</h2>
-            <Link to="/biens" className="inline-flex items-center gap-1 text-sm hover:underline">
-              Découvrir tous les biens
-              <ArrowRight className="h-4 w-4" />
-            </Link>
+            <Button asChild variant="brand" className="group h-11 w-full rounded-full px-5 font-semibold sm:w-auto">
+              <Link to="/biens">
+                Trouver mon prochain bien
+                <ArrowRight aria-hidden="true" className="transition-transform duration-200 group-hover:translate-x-0.5" />
+              </Link>
+            </Button>
           </div>
         </ScrollReveal>
 
