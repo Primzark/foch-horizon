@@ -266,7 +266,7 @@ export function AppHeader() {
               </button>
             </div>
           </div>
-          <nav aria-label="Navigation principale" className="hidden min-h-[60px] items-center justify-center gap-4 border-t border-border/70 font-body desktop:flex desktop:gap-4 xl:gap-7">
+          <nav aria-label="Navigation principale" className="hidden min-h-[60px] items-center justify-center gap-4 border-t border-border/70 font-display desktop:flex desktop:gap-4 xl:gap-7">
             {primaryLinks.map((item) => (
               <NavLink key={item.to} to={item.to} end={item.to === "/"} className={({ isActive }) => cn("whitespace-nowrap px-1 py-3 text-sm font-medium transition-colors hover:text-brand-strong", isActive ? "text-brand-strong underline underline-offset-8" : "text-foreground/80")}>
                 {item.label}
@@ -289,7 +289,7 @@ export function AppHeader() {
             <LanguageSwitcher className="h-[30px] w-[68px]" />
           </div>
         </div>
-        <nav aria-label="Navigation mobile" className="flex flex-1 flex-col gap-0 overflow-y-auto px-4 py-2 font-body">
+        <nav aria-label="Navigation mobile" className="flex flex-1 flex-col gap-0 overflow-y-auto px-4 py-2 font-display">
           {primaryLinks.map((item) => (
             <SheetClose asChild key={item.to}>
               <NavLink to={item.to} end={item.to === "/"} className={({ isActive }) => cn("rounded-lg px-3 py-2.5 font-medium hover:bg-brand-soft", isActive && "bg-brand-soft text-brand-strong")}>{item.label}</NavLink>
