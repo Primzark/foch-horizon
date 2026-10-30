@@ -115,7 +115,7 @@ export default function HomePage() {
             <h2 className="font-display text-3xl">La sélection du moment</h2>
             <Button asChild variant="brand" className="group h-11 w-full rounded-full px-5 font-semibold sm:w-auto">
               <Link to="/biens">
-                Trouver mon prochain bien
+                Découvrir tous les biens
                 <ArrowRight aria-hidden="true" className="transition-transform duration-200 group-hover:translate-x-0.5" />
               </Link>
             </Button>
