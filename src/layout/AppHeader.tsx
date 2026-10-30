@@ -206,7 +206,7 @@ export function AppHeader() {
   const assistantButton = (mobile = false) => (
     <button
       type="button"
-      className={cn("inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border border-brand-border bg-brand-soft px-4 py-2.5 text-sm font-medium text-brand-strong transition-colors hover:bg-brand-soft/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand", mobile && "mt-1 justify-center py-2.5")}
+      className={cn("inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border border-brand-border bg-brand-soft px-4 py-2.5 text-base font-medium text-brand-strong transition-colors hover:bg-brand-soft/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand", mobile && "mt-1 justify-center py-2.5")}
       onClick={() => { setMobileOpen(false); openSiteAssistant(); }}
       onPointerEnter={prewarmAssistant}
       onPointerDown={prewarmAssistant}
@@ -268,7 +268,7 @@ export function AppHeader() {
           </div>
           <nav aria-label="Navigation principale" className="hidden min-h-[60px] items-center justify-center gap-4 border-t border-border/70 font-display desktop:flex desktop:gap-4 xl:gap-7">
             {primaryLinks.map((item) => (
-              <NavLink key={item.to} to={item.to} end={item.to === "/"} className={({ isActive }) => cn("whitespace-nowrap px-1 py-3 text-sm font-medium transition-colors hover:text-brand-strong", isActive ? "text-brand-strong underline underline-offset-8" : "text-foreground/80")}>
+              <NavLink key={item.to} to={item.to} end={item.to === "/"} className={({ isActive }) => cn("whitespace-nowrap px-1 py-3 text-lg font-medium transition-colors hover:text-brand-strong", isActive ? "text-brand-strong underline underline-offset-8" : "text-foreground/80")}>
                 {item.label}
               </NavLink>
             ))}
@@ -292,7 +292,7 @@ export function AppHeader() {
         <nav aria-label="Navigation mobile" className="flex flex-1 flex-col gap-0 overflow-y-auto px-4 py-2 font-display">
           {primaryLinks.map((item) => (
             <SheetClose asChild key={item.to}>
-              <NavLink to={item.to} end={item.to === "/"} className={({ isActive }) => cn("rounded-lg px-3 py-2.5 font-medium hover:bg-brand-soft", isActive && "bg-brand-soft text-brand-strong")}>{item.label}</NavLink>
+              <NavLink to={item.to} end={item.to === "/"} className={({ isActive }) => cn("rounded-lg px-3 py-2.5 text-lg font-medium hover:bg-brand-soft", isActive && "bg-brand-soft text-brand-strong")}>{item.label}</NavLink>
             </SheetClose>
           ))}
           {isAuthorizedAdmin && (
