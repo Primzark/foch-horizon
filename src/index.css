@@ -270,7 +270,7 @@
     border-radius: 9999px;
     background: transparent;
     color: hsl(var(--muted-foreground));
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 550;
     letter-spacing: 0.16em;
     line-height: 1;

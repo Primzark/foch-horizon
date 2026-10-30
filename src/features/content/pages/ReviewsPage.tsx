@@ -288,19 +288,19 @@ export default function ReviewsPage() {
 
                 <div className="mt-6 grid gap-3 sm:grid-cols-3">
                   <div className="rounded-2xl border border-border bg-background/70 p-4">
-                    <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Avis visibles</p>
+                    <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Avis visibles</p>
                     <p className="mt-2 text-2xl font-semibold">{payload.reviews.length}</p>
                     <p className="mt-1 text-xs text-muted-foreground">Extraits affichés sur cette page</p>
                   </div>
 
                   <div className="rounded-2xl border border-border bg-background/70 p-4">
-                    <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Ancrage local</p>
+                    <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Ancrage local</p>
                     <p className="mt-2 text-base font-semibold">Le Havre · Foch</p>
                     <p className="mt-1 text-xs text-muted-foreground">Agence physique vérifiable sur Google Maps</p>
                   </div>
 
                   <div className="rounded-2xl border border-border bg-background/70 p-4">
-                    <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Actualisation</p>
+                    <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Actualisation</p>
                     <p className="mt-2 text-base font-semibold">{formatDate(payload.fetchedAt) ?? "Indisponible"}</p>
                     <p className="mt-1 text-xs text-muted-foreground">Dernière collecte: {formatDateTime(payload.fetchedAt) ?? "N/A"}</p>
                   </div>
@@ -413,19 +413,19 @@ export default function ReviewsPage() {
 
               <div className="mt-4 grid gap-3 sm:grid-cols-3">
                 <div className="rounded-2xl border border-border bg-background/80 p-4">
-                  <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Note moyenne</p>
+                  <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Note moyenne</p>
                   <div className="mt-2 flex items-center gap-2">
                     <p className="text-2xl font-semibold leading-none">{hasRating ? payload.rating.toFixed(1) : "—"}</p>
                     {hasRating && <StarRating rating={payload.rating} />}
                   </div>
                 </div>
                 <div className="rounded-2xl border border-border bg-background/80 p-4">
-                  <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Volume Google</p>
+                  <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Volume Google</p>
                   <p className="mt-2 text-2xl font-semibold leading-none">{payload.userRatingCount > 0 ? payload.userRatingCount : "—"}</p>
                   <p className="mt-1 text-xs text-muted-foreground">Avis totaux sur la fiche agence</p>
                 </div>
                 <div className="rounded-2xl border border-border bg-background/80 p-4">
-                  <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Flux</p>
+                  <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Flux</p>
                   <div className="mt-2 flex flex-wrap items-center gap-2">
                     <ReviewsStatusBadge live={payload.live} />
                     <ReviewsSourceBadge source={payload.source} />
@@ -497,7 +497,7 @@ export default function ReviewsPage() {
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-[hsl(var(--foreground)/0.55)] via-[hsl(var(--foreground)/0.1)] to-transparent" />
                             <div className="absolute inset-0 opacity-50" style={visual.textureStyle} />
-                            <div className="absolute bottom-2 left-2 inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-black/35 px-2.5 py-1 text-[10px] font-medium tracking-[0.12em] text-white backdrop-blur-sm">
+                            <div className="absolute bottom-2 left-2 inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-black/35 px-2.5 py-1 text-xs font-medium tracking-[0.12em] text-white backdrop-blur-sm">
                               <MapPin className="h-3 w-3" />
                               {visual.accentLabel}
                             </div>
@@ -545,7 +545,7 @@ export default function ReviewsPage() {
                         )}
 
                         <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
-                          <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-border bg-brand-soft/70 px-2.5 py-1 text-[11px] font-medium text-brand-strong">
+                          <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-border bg-brand-soft/70 px-2.5 py-1 text-xs font-medium text-brand-strong">
                             <GoogleGIcon size={11} decorative />
                             Google
                           </span>

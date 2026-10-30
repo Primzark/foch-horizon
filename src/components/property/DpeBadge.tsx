@@ -62,7 +62,7 @@ export default function DpeBadge({ label, size = "md", type = "DPE", value }: Dp
           );
         })}
       </svg>
-      <span className="text-[9px] font-semibold leading-none tracking-wide text-foreground">{type} {selectedClass}</span>
+      <span className="text-xs font-semibold leading-none tracking-wide text-foreground">{type} {selectedClass}</span>
     </span>
   );
 }

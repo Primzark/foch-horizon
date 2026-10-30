@@ -286,7 +286,7 @@ export function BudgetFinder() {
                           </span>
                         )}
               </h3>
-              <div aria-label="Critères de recherche" className="mt-2 flex flex-wrap gap-1.5 text-[11px] text-muted-foreground">
+              <div aria-label="Critères de recherche" className="mt-2 flex flex-wrap gap-1.5 text-xs text-muted-foreground">
                 <span className="rounded-full border border-border bg-background px-2 py-1">{selectedTypeLabel ?? "Tous les types"}</span>
                 <span className="rounded-full border border-border bg-background px-2 py-1">{selectedArea?.name ?? "Tous les secteurs"}</span>
                 {formattedBudget && (
@@ -345,7 +345,7 @@ export function BudgetFinder() {
                             )}
                             <span className="min-w-0 flex-1">
                               <span className="block truncate text-sm font-medium group-hover:text-brand-strong">{item.title}</span>
-                              <span className="mt-1 block truncate text-[11px] text-muted-foreground">
+                              <span className="mt-1 block truncate text-xs text-muted-foreground">
                                 {item.city.name} · {formatPropertyTypeLabel(item.type)} · {item.surfaceM2} m²
                               </span>
                             </span>
@@ -442,7 +442,7 @@ export function BudgetFinder() {
                       )}
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-sm font-medium group-hover:text-brand-strong lg:text-base">{item.title}</span>
-                        <span className="mt-1 block truncate text-[11px] text-muted-foreground lg:text-xs">
+                        <span className="mt-1 block truncate text-xs text-muted-foreground">
                           {item.city.name} · {formatPropertyTypeLabel(item.type)} · {item.surfaceM2} m²
                         </span>
                       </span>

@@ -604,7 +604,7 @@ function AdminState({
 function SummaryItem({ label, value }: { label: string; value: number }) {
   return (
     <div className="border-l border-border/70 pl-4 first:border-l-0 first:pl-0 sm:pl-6">
-      <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
+      <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
       <p className="mt-1 text-2xl font-semibold tabular-nums tracking-tight">{value}</p>
     </div>
   );
@@ -1018,7 +1018,7 @@ export default function AdminPropertiesPage() {
                           <div className="overflow-x-auto">
                             <table className="w-full min-w-[620px] border-collapse text-left">
                               <thead>
-                                <tr className="border-b border-border/70 bg-secondary/35 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                                <tr className="border-b border-border/70 bg-secondary/35 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                                   <th scope="col" className="px-5 py-3.5">Action</th>
                                   <th scope="col" className="px-5 py-3.5">Date et heure</th>
                                   <th scope="col" className="px-5 py-3.5">Visiteur</th>
@@ -1185,7 +1185,7 @@ export default function AdminPropertiesPage() {
                     <div className="overflow-x-auto">
                       <table className="w-full min-w-[1320px] border-collapse text-left">
                         <thead>
-                          <tr className="border-b border-border/70 bg-secondary/35 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                          <tr className="border-b border-border/70 bg-secondary/35 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                             <th scope="col" className="px-5 py-3.5">Bien immobilier</th>
                             <th scope="col" className="w-[180px] px-3 py-3.5">Statut</th>
                             <th scope="col" className="px-4 py-3.5">Type</th>
@@ -1220,7 +1220,7 @@ export default function AdminPropertiesPage() {
                                 </td>
                                 <td className="px-4 py-3.5">
                                   <p className="text-xs font-medium">{formatPropertyType(property.property_type)}</p>
-                                  <p className="mt-1 text-[11px] text-muted-foreground">Vente</p>
+                                  <p className="mt-1 text-xs text-muted-foreground">Vente</p>
                                 </td>
                                 <td className="px-4 py-3.5 text-right"><PropertyPrice property={property} align="end" /></td>
                                 <td className="px-3 py-3.5 text-center">
@@ -1270,7 +1270,7 @@ export default function AdminPropertiesPage() {
                           <p className="text-[10px] text-muted-foreground">{formatDate(property.published_at ?? property.updated_at)}</p>
                         </div>
                         <div className="mt-3 flex items-center justify-between gap-3">
-                          <span className="text-[11px] text-muted-foreground">Statut</span>
+                          <span className="text-xs text-muted-foreground">Statut</span>
                           <StatusControl
                             property={property}
                             value={property.status}
@@ -1301,7 +1301,7 @@ export default function AdminPropertiesPage() {
                           </div>
                         </div>
                         <div className="mt-3 flex items-center justify-between gap-3">
-                          <span className="text-[11px] text-muted-foreground">Négociateur</span>
+                          <span className="text-xs text-muted-foreground">Négociateur</span>
                           <PropertyAgentControl
                             property={property}
                             agents={adminAgents}
@@ -1315,7 +1315,7 @@ export default function AdminPropertiesPage() {
                 </>
               )}
 
-              <p className="mt-4 flex items-center gap-2 text-[11px] leading-5 text-muted-foreground">
+              <p className="mt-4 flex items-center gap-2 text-xs leading-5 text-muted-foreground">
                 <Check className="h-3.5 w-3.5 shrink-0 text-brand" aria-hidden="true" />
                 Les modifications sont enregistrées automatiquement et appliquées aux pages publiques.
               </p>

@@ -314,7 +314,7 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
         </div>
 
         <div className="flex items-center justify-between gap-4 px-5 pb-2 pt-4">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
             {advancedOpen
               ? "Affiner votre recherche"
               : showSuggestions
@@ -423,7 +423,7 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
           </div>
         )}
 
-        <div className="flex items-center justify-between gap-3 border-t border-border/80 bg-muted/20 px-4 py-3 text-[11px] text-muted-foreground sm:px-5">
+        <div className="flex items-center justify-between gap-3 border-t border-border/80 bg-muted/20 px-4 py-3 text-xs text-muted-foreground sm:px-5">
           <span className="hidden sm:inline">
             {advancedOpen ? "Choisissez vos critères" : "↑ ↓ naviguer · Entrée ouvrir"}
           </span>

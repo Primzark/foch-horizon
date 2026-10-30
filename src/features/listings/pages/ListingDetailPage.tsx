@@ -533,7 +533,7 @@ export default function ListingDetailPage({
           {formatPrice(property.priceAmount, property.transactionType)}
         </p>
         <span aria-hidden="true" className="h-4 shrink-0 border-l border-border" />
-        <p className="min-w-0 flex-1 truncate text-[11px] text-muted-foreground">
+        <p className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
           {[
             property.rooms != null ? `${property.rooms} pièce${property.rooms > 1 ? "s" : ""}` : null,
             `${property.surfaceM2} m²`,

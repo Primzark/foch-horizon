@@ -417,7 +417,7 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
                     className="h-[82px] w-[92px] rounded-lg object-cover sm:h-[94px] sm:w-[112px]"
                   />
                   <span className="flex min-w-0 flex-col justify-between py-0.5">
-                    <span className="flex items-center gap-1.5 truncate text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+                    <span className="flex items-center gap-1.5 truncate text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">
                       <span>Réf. {item.id}</span>
                       <span aria-hidden="true">·</span>
                       <span className="truncate">{formatPropertyTypeLabel(item.type)}</span>
@@ -458,7 +458,7 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
 
         {usesCooperativeMapGestures && (
           <>
-            <div className="pointer-events-none absolute bottom-14 left-3 z-[500] max-w-[calc(100%-13rem)] rounded-full border border-border/70 bg-background/90 px-3 py-2 text-[11px] font-medium text-foreground shadow-sm backdrop-blur">
+            <div className="pointer-events-none absolute bottom-14 left-3 z-[500] max-w-[calc(100%-13rem)] rounded-full border border-border/70 bg-background/90 px-3 py-2 text-xs font-medium text-foreground shadow-sm backdrop-blur">
               {singleFingerPanEnabled ? "Déplacement à un doigt activé" : "Deux doigts pour déplacer ou zoomer la carte"}
             </div>
             <button
@@ -544,7 +544,7 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
               loading="lazy"
             />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              <p className="truncate text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                 {selectedItem.city.name}
                 {selectedMapLocation && selectedMapLocation.label !== selectedItem.city.name ? ` · ${selectedMapLocation.label}` : ""}
                 {` · Réf. ${selectedItem.id}`}
@@ -576,7 +576,7 @@ export function PropertyMapSplitView({ items, page, pageSize, total, onPageChang
           </div>
         )}
 
-        <div className="pointer-events-none absolute bottom-7 left-3 z-[500] inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-background/90 px-2.5 py-1.5 text-[11px] font-medium text-foreground shadow-sm backdrop-blur">
+        <div className="pointer-events-none absolute bottom-7 left-3 z-[500] inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-background/90 px-2.5 py-1.5 text-xs font-medium text-foreground shadow-sm backdrop-blur">
           <MapPin aria-hidden="true" className="h-3.5 w-3.5 text-brand-strong" />
           Localisation indicative
         </div>

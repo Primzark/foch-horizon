@@ -20,6 +20,8 @@ const config: Config = {
     },
     extend: {
       fontFamily: {
+        sans: ["Sora", "Avenir Next", "sans-serif"],
+        serif: ["Cormorant Garamond", "Georgia", "serif"],
         display: ["Cormorant Garamond", "Georgia", "serif"],
         body: ["Sora", "Avenir Next", "sans-serif"],
       },

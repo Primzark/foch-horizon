@@ -58,7 +58,7 @@ function ComparisonPhoto({ property }: { property: Property }) {
           aria-label={hasError || !sourceUrl ? "Photo non disponible" : "Chargement de la photo"}
         >
           <Building2 className="h-7 w-7" aria-hidden="true" />
-          <span className="text-[10px]">{hasError || !sourceUrl ? "Photo non disponible" : "Chargement de la photo"}</span>
+          <span className="text-xs">{hasError || !sourceUrl ? "Photo non disponible" : "Chargement de la photo"}</span>
         </span>
       )}
     </div>
@@ -265,14 +265,14 @@ export default function PropertyComparePage() {
                 const cityName = cityById.get(property.cityId)?.name;
                 return (
                   <article key={property.id} role="columnheader" className="min-w-0 p-2 sm:p-3">
-                    <p className="mb-2 text-[9px] font-semibold uppercase tracking-[0.14em] text-brand-strong sm:text-[10px]">Bien {index + 1}</p>
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-brand-strong">Bien {index + 1}</p>
                     <div className="relative">
                       <ComparisonPhoto property={property} />
                       <Button type="button" variant="secondary" size="icon" className="absolute right-1.5 top-1.5 h-7 w-7 rounded-full shadow-sm sm:right-2 sm:top-2 sm:h-8 sm:w-8" aria-label={`Retirer ${property.title} de la comparaison`} onClick={() => handleRemove(property.id, "comparison_table")}>
                         <X className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       </Button>
                     </div>
-                    <p className="mt-2 break-words text-[10px] font-medium uppercase leading-4 tracking-[0.08em] text-muted-foreground sm:tracking-[0.12em]">Réf. {property.id} · {cityName ?? property.postalCode}</p>
+                    <p className="mt-2 break-words text-xs font-medium uppercase leading-4 tracking-[0.08em] text-muted-foreground sm:tracking-[0.12em]">Réf. {property.id} · {cityName ?? property.postalCode}</p>
                     <Link
                       to={toCanonicalPropertyPath(property)}
                       state={{ comparisonOrigin: true }}
@@ -287,7 +287,7 @@ export default function PropertyComparePage() {
                       state={{ comparisonOrigin: true }}
                       onClick={() => trackEvent("comparison_listing_click", { property_id: property.id, placement: "comparison_link" })}
                       aria-label={`Voir l’annonce ${property.title}`}
-                      className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-foreground underline decoration-brand/40 underline-offset-4 hover:text-brand-strong sm:text-xs"
+                      className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-foreground underline decoration-brand/40 underline-offset-4 hover:text-brand-strong"
                     >
                       Voir <span aria-hidden="true">→</span>
                     </Link>
@@ -342,7 +342,7 @@ export default function PropertyComparePage() {
                             <X className="h-4 w-4" />
                           </Button>
                         </div>
-                        <p className="mt-3 text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">Réf. {property.id} · {cityName ?? property.postalCode}</p>
+                        <p className="mt-3 text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Réf. {property.id} · {cityName ?? property.postalCode}</p>
                         <Link
                           to={toCanonicalPropertyPath(property)}
                           state={{ comparisonOrigin: true }}

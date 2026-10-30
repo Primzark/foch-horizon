@@ -2346,7 +2346,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
                   edgeProvider: message.edgeProvider,
                   planner: message.planner,
                 })}
-              className="mt-2 rounded-full border border-border bg-background px-2.5 py-1 text-[11px] hover:bg-muted"
+              className="mt-2 rounded-full border border-border bg-background px-2.5 py-1 text-xs hover:bg-muted"
             >
               {action.data.label || "Ouvrir"}
             </button>
@@ -2363,7 +2363,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
             <button
               type="button"
               onClick={() => prefillLeadFormFromCriteria(action.data.prefill.criteria)}
-              className="mt-2 rounded-full border border-border bg-background px-2.5 py-1 text-[11px] hover:bg-muted"
+              className="mt-2 rounded-full border border-border bg-background px-2.5 py-1 text-xs hover:bg-muted"
             >
               Préremplir le formulaire
             </button>
@@ -2385,7 +2385,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
                   action.data.removeKeys,
                   action.data.syntheticPrompt ?? action.data.label,
                 )}
-              className="mt-2 rounded-full border border-border bg-background px-2.5 py-1 text-[11px] hover:bg-muted"
+              className="mt-2 rounded-full border border-border bg-background px-2.5 py-1 text-xs hover:bg-muted"
             >
               {action.data.label}
             </button>
@@ -2410,7 +2410,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
                       suggestion.removeKeys,
                       `Affiner: ${suggestion.label}`,
                     )}
-                  className="rounded-full border border-border bg-background px-2.5 py-1 text-[11px] hover:bg-muted"
+                  className="rounded-full border border-border bg-background px-2.5 py-1 text-xs hover:bg-muted"
                 >
                   {suggestion.label}
                 </button>
@@ -2440,7 +2440,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
                       option.label,
                     )}
                   className={cn(
-                    "w-full rounded-lg border px-2.5 py-2 text-left text-[11px]",
+                    "w-full rounded-lg border px-2.5 py-2 text-left text-xs",
                     option.scope === action.data.defaultScope
                       ? "border-emerald-500/30 bg-emerald-500/5"
                       : "border-border bg-background hover:bg-muted",
@@ -2466,7 +2466,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
           <div className="mt-3 rounded-lg border border-border/70 bg-background/60 px-3 py-2 text-xs">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="font-medium">{action.title}</p>
-              <span className="rounded-full border border-border bg-background px-2 py-0.5 text-[10px]">
+              <span className="rounded-full border border-border bg-background px-2 py-0.5 text-xs">
                 {action.data.scopeLabel}
               </span>
             </div>
@@ -2475,15 +2475,15 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
 
             <div className="mt-2 grid grid-cols-2 gap-2">
               <div className="rounded-md border border-border bg-card/80 px-2 py-1.5">
-                <p className="text-[10px] uppercase tracking-[0.08em] text-muted-foreground">Biens</p>
+                <p className="text-xs uppercase tracking-[0.08em] text-muted-foreground">Biens</p>
                 <p className="text-sm font-medium">{formatNumberValue(action.data.metrics.count)}</p>
               </div>
               <div className="rounded-md border border-border bg-card/80 px-2 py-1.5">
-                <p className="text-[10px] uppercase tracking-[0.08em] text-muted-foreground">Surface moyenne</p>
+                <p className="text-xs uppercase tracking-[0.08em] text-muted-foreground">Surface moyenne</p>
                 <p className="text-sm font-medium">{formatSurface(action.data.metrics.avgSurfaceM2 ?? null)}</p>
               </div>
               <div className="col-span-2 rounded-md border border-border bg-card/80 px-2 py-1.5">
-                <p className="text-[10px] uppercase tracking-[0.08em] text-muted-foreground">Prix moyen</p>
+                <p className="text-xs uppercase tracking-[0.08em] text-muted-foreground">Prix moyen</p>
                 <p className="text-sm font-medium">
                   {typeof action.data.metrics.avgPrice === "number"
                     ? formatCompactPrice(action.data.metrics.avgPrice, "EUR")
@@ -2492,7 +2492,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
               </div>
             </div>
 
-            <div className="mt-2 flex flex-wrap gap-1.5 text-[10px] text-muted-foreground">
+            <div className="mt-2 flex flex-wrap gap-1.5 text-xs text-muted-foreground">
               <span>{action.data.sampleSizeLabel}</span>
               {typeof action.data.metrics.excludedSurfaceCount === "number" && action.data.metrics.excludedSurfaceCount > 0 && (
                 <span>· {action.data.metrics.excludedSurfaceCount} sans surface</span>
@@ -2500,7 +2500,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
             </div>
 
             {action.data.lowSampleWarning && (
-              <p className="mt-2 rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-1.5 text-[11px] text-amber-800">
+              <p className="mt-2 rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-1.5 text-xs text-amber-800">
                 {action.data.lowSampleWarning}
               </p>
             )}
@@ -2509,7 +2509,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
               <div className="mt-2 space-y-2">
                 {byTransaction.length > 0 && (
                   <div>
-                    <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Par transaction</p>
+                    <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Par transaction</p>
                     <div className="mt-1 flex flex-wrap gap-1.5">
                       {byTransaction.map((bucket) => (
                         <span key={`${action.id}-tx-${bucket.key}`} className="rounded-full border border-border bg-background px-2 py-0.5">
@@ -2521,7 +2521,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
                 )}
                 {byType.length > 0 && (
                   <div>
-                    <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Par type</p>
+                    <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Par type</p>
                     <div className="mt-1 flex flex-wrap gap-1.5">
                       {byType.map((bucket) => (
                         <span key={`${action.id}-type-${bucket.key}`} className="rounded-full border border-border bg-background px-2 py-0.5">
@@ -2533,7 +2533,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
                 )}
                 {topCities.length > 0 && (
                   <div>
-                    <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Villes principales</p>
+                    <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Villes principales</p>
                     <div className="mt-1 flex flex-wrap gap-1.5">
                       {topCities.map((bucket) => (
                         <span key={`${action.id}-city-${bucket.key}`} className="rounded-full border border-border bg-background px-2 py-0.5">
@@ -2551,7 +2551,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
                 <button
                   type="button"
                   onClick={() => handleSearchRefineAction({ ...(action.data.searchParams ?? {}), page: 1 }, 1)}
-                  className="rounded-full border border-border bg-background px-2.5 py-1 text-[11px] hover:bg-muted"
+                  className="rounded-full border border-border bg-background px-2.5 py-1 text-xs hover:bg-muted"
                 >
                   Voir les biens correspondants
                 </button>
@@ -2567,7 +2567,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
                       },
                       "Comparer avec tout le stock actif",
                     )}
-                  className="rounded-full border border-border bg-background px-2.5 py-1 text-[11px] hover:bg-muted"
+                  className="rounded-full border border-border bg-background px-2.5 py-1 text-xs hover:bg-muted"
                 >
                   Comparer au stock actif
                 </button>
@@ -2583,7 +2583,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
                       },
                       "Voir les stats des résultats",
                     )}
-                  className="rounded-full border border-border bg-background px-2.5 py-1 text-[11px] hover:bg-muted"
+                  className="rounded-full border border-border bg-background px-2.5 py-1 text-xs hover:bg-muted"
                 >
                   Voir les stats filtrées
                 </button>
@@ -2599,14 +2599,14 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
             <div className="flex items-center justify-between gap-2">
               <p className="font-medium">{action.title}</p>
               {action.data.recommendedPropertyId && (
-                <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] text-emerald-700">
+                <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-xs text-emerald-700">
                   Recommandé
                 </span>
               )}
             </div>
             {action.description && <p className="mt-1 text-muted-foreground">{action.description}</p>}
             <div className="mt-2 overflow-x-auto">
-              <table className="w-full min-w-[280px] text-[11px]">
+              <table className="w-full min-w-[280px] text-xs">
                 <thead>
                   <tr className="text-left text-muted-foreground">
                     <th className="pb-1 pr-2 font-medium">Critère</th>
@@ -2643,7 +2643,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
                       edgeProvider: message.edgeProvider,
                       planner: message.planner,
                     })}
-                  className="rounded-full border border-border bg-background px-2.5 py-1 text-[11px] hover:bg-muted"
+                  className="rounded-full border border-border bg-background px-2.5 py-1 text-xs hover:bg-muted"
                 >
                   Ouvrir {property.id === action.data.recommendedPropertyId ? "le recommandé" : property.title}
                 </button>
@@ -2651,7 +2651,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
               <button
                 type="button"
                 onClick={() => handlePrepareHandoffAction(action.data.propertyIds)}
-                className="rounded-full border border-border bg-background px-2.5 py-1 text-[11px] hover:bg-muted"
+                className="rounded-full border border-border bg-background px-2.5 py-1 text-xs hover:bg-muted"
               >
                 Préremplir le formulaire
               </button>
@@ -2685,7 +2685,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
                         </p>
                       </div>
                       {item.dpeLabel && (
-                        <span className="rounded-full border border-border px-1.5 py-0.5 text-[10px]">
+                        <span className="rounded-full border border-border px-1.5 py-0.5 text-xs">
                           DPE {item.dpeLabel}
                         </span>
                       )}
@@ -2700,7 +2700,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
                             edgeProvider: message.edgeProvider,
                             planner: message.planner,
                           })}
-                        className="rounded-full border border-border bg-background px-2 py-1 text-[11px] hover:bg-muted"
+                        className="rounded-full border border-border bg-background px-2 py-1 text-xs hover:bg-muted"
                       >
                         Ouvrir
                       </button>
@@ -2708,7 +2708,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
                         type="button"
                         onClick={() => toggleSelectedPropertyId(item.id)}
                         className={cn(
-                          "rounded-full border px-2 py-1 text-[11px]",
+                          "rounded-full border px-2 py-1 text-xs",
                           isSelected
                             ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-700"
                             : "border-border bg-background hover:bg-muted",
@@ -2719,7 +2719,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
                       <button
                         type="button"
                         onClick={() => handlePrepareHandoffAction([item.id])}
-                        className="rounded-full border border-border bg-background px-2 py-1 text-[11px] hover:bg-muted"
+                        className="rounded-full border border-border bg-background px-2 py-1 text-xs hover:bg-muted"
                       >
                         Préremplir contact
                       </button>
@@ -2734,7 +2734,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
                 type="button"
                 onClick={() => handleCompareSelectionRequest(message)}
                 disabled={(conversationState.selectedPropertyIds?.length ?? 0) < 2}
-                className="rounded-full border border-border bg-background px-2.5 py-1 text-[11px] hover:bg-muted disabled:opacity-50"
+                className="rounded-full border border-border bg-background px-2.5 py-1 text-xs hover:bg-muted disabled:opacity-50"
               >
                 Comparer la sélection
               </button>
@@ -2748,7 +2748,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
                     },
                     "Voir les stats des résultats",
                   )}
-                className="rounded-full border border-border bg-background px-2.5 py-1 text-[11px] hover:bg-muted"
+                className="rounded-full border border-border bg-background px-2.5 py-1 text-xs hover:bg-muted"
               >
                 Voir les stats
               </button>
@@ -2756,7 +2756,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
                 <button
                   type="button"
                   onClick={() => handleSearchRefineAction(action.data.searchParams, nextPage)}
-                  className="rounded-full border border-border bg-background px-2.5 py-1 text-[11px] hover:bg-muted"
+                  className="rounded-full border border-border bg-background px-2.5 py-1 text-xs hover:bg-muted"
                 >
                   Voir plus de résultats
                 </button>
@@ -2764,7 +2764,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
               <button
                 type="button"
                 onClick={() => handlePrepareHandoffAction()}
-                className="rounded-full border border-border bg-background px-2.5 py-1 text-[11px] hover:bg-muted"
+                className="rounded-full border border-border bg-background px-2.5 py-1 text-xs hover:bg-muted"
               >
                 Préremplir le formulaire
               </button>
@@ -2803,7 +2803,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
       return (
         <div key={`${message.id}-analysis-${card.id}`} className="mt-3 rounded-lg border border-border/70 bg-background/60 px-3 py-2 text-xs">
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="rounded-full border border-border bg-background px-2 py-0.5 text-[10px] font-medium">
+            <span className="rounded-full border border-border bg-background px-2 py-0.5 text-xs font-medium">
               {kindLabel}
             </span>
             <span className="text-[10px] text-muted-foreground">Bien #{card.propertyId}</span>
@@ -2822,7 +2822,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
           <p className="mt-1 whitespace-pre-line text-foreground/90">{card.summary}</p>
           {card.evidence && card.evidence.length > 0 && (
             <div className="mt-2 rounded-md border border-border/60 bg-card/80 px-2 py-2">
-              <p className="mb-1 text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+              <p className="mb-1 text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
                 Éléments de preuve
               </p>
               <div className="space-y-1">
@@ -2833,7 +2833,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
                     (evidence.page ? `Page ${evidence.page}` : href ? `Source ${index + 1}` : `Élément ${index + 1}`);
                   if (!href) {
                     return (
-                      <div key={`${card.id}-evidence-${index}`} className="text-[11px] text-muted-foreground">
+                      <div key={`${card.id}-evidence-${index}`} className="text-xs text-muted-foreground">
                         {label}
                       </div>
                     );
@@ -2845,7 +2845,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
                       target="_blank"
                       rel="noreferrer"
                       onClick={() => handleAnalysisEvidenceClick(message, card, evidence)}
-                      className="block rounded-md px-1.5 py-1 text-[11px] text-foreground hover:bg-muted"
+                      className="block rounded-md px-1.5 py-1 text-xs text-foreground hover:bg-muted"
                     >
                       <span className="font-medium">{label}</span>
                       {evidence.page ? <span className="ml-1 text-muted-foreground">(p.{evidence.page})</span> : null}
@@ -2855,7 +2855,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
               </div>
             </div>
           )}
-          <p className="mt-2 text-[10px] text-muted-foreground">
+          <p className="mt-2 text-xs text-muted-foreground">
             Synthèse IA informative: vérifiez toujours les documents officiels.
           </p>
         </div>
@@ -2968,7 +2968,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
               typeof conversationState.preferences?.priceMax === "number" ||
               (conversationState.preferences?.features?.length ?? 0) > 0) && (
               <div className="border-b border-border/70 px-4 py-2">
-                <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
+                <div className="flex flex-wrap items-center gap-1.5 text-xs">
                   <span className="text-muted-foreground">Contexte mémorisé:</span>
                   {conversationState.preferences?.transaction === "vente" && (
                     <span className="rounded-full border border-border bg-background px-2 py-0.5">
@@ -3052,7 +3052,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
                   <p>{renderMessageContent(message.content)}</p>
 
                   {message.webSearchStatus && message.role === "assistant" && (
-                    <p className="mt-2 text-[10px] font-medium text-muted-foreground">
+                    <p className="mt-2 text-xs font-medium text-muted-foreground">
                       {message.webSearchStatus === "used"
                         ? message.webSearchProvider === "official_dvf_dataset"
                           ? language === "en" ? "Official DVF statistics · data.gouv.fr" : "Statistiques DVF officielles · data.gouv.fr"
@@ -3084,7 +3084,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
 
                   {message.citations && message.citations.length > 0 && message.role === "assistant" && (
                     <div className="mt-3 space-y-1 rounded-lg border border-border/70 bg-background/60 px-2.5 py-2">
-                      <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+                      <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
                         Sources
                       </p>
                       <div className="space-y-1">
@@ -3166,7 +3166,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
                           disabled={Boolean(message.feedback)}
                           onClick={() => handleFeedbackVoteClick(message, 1)}
                           className={cn(
-                            "inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] transition-colors",
+                            "inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs transition-colors",
                             message.feedback?.value === 1
                               ? "border-emerald-500/60 bg-emerald-500/10 text-emerald-700"
                               : "border-border bg-background text-muted-foreground hover:bg-muted disabled:opacity-60",
@@ -3182,7 +3182,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
                           disabled={Boolean(message.feedback)}
                           onClick={() => handleFeedbackVoteClick(message, -1)}
                           className={cn(
-                            "inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] transition-colors",
+                            "inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs transition-colors",
                             message.feedback?.value === -1
                               ? "border-amber-500/60 bg-amber-500/10 text-amber-700"
                               : "border-border bg-background text-muted-foreground hover:bg-muted disabled:opacity-60",
@@ -3192,7 +3192,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
                           Peu utile
                         </button>
                         {message.feedback && (
-                          <span className="text-[10px] text-muted-foreground">
+                          <span className="text-xs text-muted-foreground">
                             Merci pour votre retour.
                           </span>
                         )}
@@ -3205,7 +3205,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
                               key={`${message.id}-feedback-${reason}`}
                               type="button"
                               onClick={() => handleFeedbackReasonSelect(message, reason)}
-                              className="rounded-full border border-border bg-background px-2 py-1 text-[10px] text-foreground/90 hover:bg-muted"
+                              className="rounded-full border border-border bg-background px-2 py-1 text-xs text-foreground/90 hover:bg-muted"
                             >
                               {reason}
                             </button>
@@ -3213,7 +3213,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
                           <button
                             type="button"
                             onClick={() => submitAssistantFeedback(message, -1)}
-                            className="rounded-full border border-dashed border-border bg-background px-2 py-1 text-[10px] text-muted-foreground hover:bg-muted"
+                            className="rounded-full border border-dashed border-border bg-background px-2 py-1 text-xs text-muted-foreground hover:bg-muted"
                           >
                             Sans précision
                           </button>
@@ -3230,7 +3230,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
                           type="button"
                           onClick={() => handlePromptClick(prompt)}
                           disabled={loading}
-                          className="rounded-full border border-border bg-background px-2.5 py-1 text-[11px] text-foreground/90 hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+                          className="rounded-full border border-border bg-background px-2.5 py-1 text-xs text-foreground/90 hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           {prompt}
                         </button>
@@ -3439,7 +3439,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
                 </Button>
               </form>
 
-              <div className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[10px] leading-4 text-muted-foreground">
+              <div className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs leading-4 text-muted-foreground">
                 <span>L’IA peut se tromper. Vérifiez les informations importantes.</span>
                 <a
                   href="https://support.google.com/gemini/answer/13594961?hl=fr"
@@ -3457,7 +3457,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
                   Propulsé par Gemini
                 </span>
               </div>
-              <p className="mt-1 text-[10px] leading-4 text-muted-foreground">
+              <p className="mt-1 text-xs leading-4 text-muted-foreground">
                 Vos messages sont traités par Gemini ; les questions soumises à la recherche web sont transmises à Tavily. L’historique est enregistré dans ce navigateur.{" "}
                 <Link to="/confidentialite" className="underline underline-offset-2 hover:text-foreground">Confidentialité</Link>
               </p>

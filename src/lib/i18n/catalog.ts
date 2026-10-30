@@ -31,7 +31,7 @@ export const englishCopy: Record<string, string> = {
   "109 Av. Foch, 76600 Le Havre": "109 Avenue Foch, 76600 Le Havre, France",
   "Immobilier résidentiel haut de gamme, achat et vente au Havre et sur le littoral.": "High-end residential property sales in Le Havre and along the coast.",
   "Depuis 1972": "Since 1972",
-  "Crée une alerte": "Create an alert",
+  "Créer une alerte": "Create an alert",
   "Navigation": "Navigation",
   "Coordonnées": "Contact details",
   "Informations légales": "Legal information",

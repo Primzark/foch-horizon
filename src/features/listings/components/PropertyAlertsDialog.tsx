@@ -61,9 +61,9 @@ export function PropertyAlertsDialog({ filters }: PropertyAlertsDialogProps) {
   return (
     <Dialog open={open} onOpenChange={resetWhenClosed}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="min-h-11 shrink-0 gap-2">
+        <Button variant="destructive" className="min-h-11 shrink-0 gap-2 rounded-full px-5 shadow-md shadow-destructive/20">
           <BellRing aria-hidden="true" className="h-4 w-4" />
-          Crée une alerte
+          Créer une alerte
         </Button>
       </DialogTrigger>
       <DialogContent>

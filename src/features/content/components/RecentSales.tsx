@@ -119,7 +119,7 @@ export function RecentSales({ compact = false }: { compact?: boolean }) {
                     />
                     <PhotoAttribution credit={geographyPhotoCredits.perret} />
                   </div>
-                  <p className="bg-white px-2 py-1.5 text-[10px] font-medium text-slate-800">Le centre reconstruit</p>
+                  <p className="bg-white px-2 py-1.5 text-xs font-medium text-slate-800">Le centre reconstruit</p>
                 </div>
               </figure>
               <div className="flex flex-col justify-center p-6 md:p-8 lg:p-10">
