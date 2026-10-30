@@ -9,7 +9,6 @@ import { MainSearchBar } from "@/features/content/components/MainSearchBar";
 import { SearchThinkingState } from "@/features/content/components/SearchThinkingState";
 import { getFeaturedProperties } from "@/features/listings/api/properties.service";
 import { ListingCard } from "@/features/listings/components/ListingCard";
-import { PropertyAlertsDialog } from "@/features/listings/components/PropertyAlertsDialog";
 import { properties } from "@/features/listings/data/properties";
 import { toSearchItem } from "@/features/listings/utils/mappers";
 import { cities } from "@/features/cities/data/cities";
@@ -113,10 +112,7 @@ export default function HomePage() {
       <section data-live-content="/biens" className="container mx-auto px-4 pt-5 pb-12 md:pt-8 md:pb-12">
         <ScrollReveal mood={heroMood}>
           <div className="mb-6 flex flex-col items-start gap-2 sm:flex-row sm:items-end sm:justify-between">
-            <div className="flex flex-wrap items-center gap-3">
-              <h2 className="font-display text-3xl">La sélection du moment</h2>
-              <PropertyAlertsDialog filters={{ transaction: "vente" }} />
-            </div>
+            <h2 className="font-display text-3xl">La sélection du moment</h2>
             <Link to="/biens" className="inline-flex items-center gap-1 text-sm hover:underline">
               Découvrir tous les biens
               <ArrowRight className="h-4 w-4" />
