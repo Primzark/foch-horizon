@@ -19,7 +19,7 @@ export const englishCopy: Record<string, string> = {
   "Contact": "Contact",
   "L'agence": "The agency",
   "Transactions immobilières": "Property transactions",
-  "Immobilier au Havre · Depuis 1972": "Property in Le Havre · Since 1972",
+  "L'immobilier au Havre · Depuis 1972": "Property in Le Havre · Since 1972",
   "Mon assistant IA": "AI assistant",
   "Ouvrir le menu": "Open menu",
   "Navigation principale": "Main navigation",

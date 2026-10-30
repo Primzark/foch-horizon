@@ -240,7 +240,7 @@ export function AppHeader() {
                 />
               </picture>
             </Link>
-            <p className="hidden text-xs uppercase tracking-[0.2em] text-muted-foreground desktop:block">Immobilier au Havre · Depuis 1972</p>
+            <p className="hidden text-xs uppercase tracking-[0.2em] text-muted-foreground desktop:block">L'immobilier au Havre · Depuis 1972</p>
             <div className="flex shrink-0 items-center gap-2">
               {isAuthorizedAdmin && (
                 <NavLink
