@@ -252,8 +252,7 @@ try {
       await page.waitForFunction(() => {
         const main = document.querySelector('main');
         const hasSales = main?.querySelector('a[href^="/biens/"]') !== null;
-        const hasEmptyState = main?.textContent?.includes('Aucune vente récente n’est publiée pour le moment.') &&
-          [...(main?.querySelectorAll('a[href="/biens"]') ?? [])].some(link => link.textContent?.includes('Découvrir tous les biens'));
+        const hasEmptyState = main?.textContent?.includes('Aucune vente récente n’est publiée pour le moment.');
         return hasSales || hasEmptyState;
       }, undefined, { timeout: 10000 }).catch(async () => {
         const state = await page.evaluate(() => ({
