@@ -224,7 +224,11 @@ The provider sync worker is designed to ingest a supplier feed into the Supabase
 - upserts `cities`
 - upserts `properties`
 - replaces `property_images` and `property_features` for synced properties
-- marks missing properties as `off_market` on **full** sync only (incremental can opt-in)
+- uses each property's external reference as its unique key
+- retains listings absent from the feed; full and incremental syncs never delete them
+- leaves manual property status and visibility fields unchanged
+
+The `--reconcile-missing` option is no longer supported. Sold status and online visibility are managed manually.
 
 ### Run (dry-run, local JSON file)
 
@@ -254,7 +258,6 @@ deno run -A supabase/workers/provider-sync.ts full
 - `PROVIDER_FEED_BASIC_USER` + `PROVIDER_FEED_BASIC_PASSWORD`
 - `PROVIDER_INCREMENTAL_QUERY_PARAM` (adds an ISO timestamp on incremental syncs)
 - `PROVIDER_INCREMENTAL_LOOKBACK_HOURS` (default `24`)
-- `PROVIDER_RECONCILE_MISSING_ON_INCREMENTAL=true` (usually leave disabled)
 - `PROVIDER_SYNC_DRY_RUN=true`
 
 ### Notes

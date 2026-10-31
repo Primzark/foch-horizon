@@ -1,14 +1,13 @@
-export type ImportedPropertyStatus = "active" | "under_offer" | "sold" | "rented" | "off_market";
-
 export interface ProviderPropertyFeed {
   schemaVersion: 1;
   generatedAt?: string;
-  properties: Array<Record<string, unknown> & { id: number; cityId: string; status: ImportedPropertyStatus }>;
+  // id is the external property reference; feed status fields are accepted as
+  // source metadata but never control database status or visibility.
+  properties: Array<Record<string, unknown> & { id: number; cityId: string }>;
   cities: Array<Record<string, unknown> & { id: string; name: string; slug: string }>;
   agents: Array<Record<string, unknown> & { id: string; fullName: string }>;
 }
 
-const allowedStatuses = new Set<ImportedPropertyStatus>(["active", "under_offer", "sold", "rented", "off_market"]);
 const allowedTransactions = new Set(["vente", "location"]);
 const allowedTypes = new Set(["appartement", "maison_villa", "autre"]);
 
@@ -36,11 +35,11 @@ export function validatePropertyFeed(value: unknown): ProviderPropertyFeed {
     throw new Error("Unsupported property feed format. Expected schemaVersion 1.");
   }
 
-  if (!Array.isArray(value.properties) || value.properties.length === 0 || value.properties.length > 250) {
-    throw new Error("The feed must contain between 1 and 250 properties.");
+  if (!Array.isArray(value.properties) || value.properties.length > 250) {
+    throw new Error("The feed must contain at most 250 properties.");
   }
-  if (!Array.isArray(value.cities) || value.cities.length === 0 || value.cities.length > 100) {
-    throw new Error("The feed must contain between 1 and 100 cities.");
+  if (!Array.isArray(value.cities) || value.cities.length > 100) {
+    throw new Error("The feed must contain at most 100 cities.");
   }
   if (!Array.isArray(value.agents) || value.agents.length > 100) {
     throw new Error("The feed must include an agents array with at most 100 entries.");
@@ -80,14 +79,13 @@ export function validatePropertyFeed(value: unknown): ProviderPropertyFeed {
     requiredText(item.slug, `property ${id} slug`);
     if (!allowedTransactions.has(String(item.transactionType))) throw new Error(`Property ${id} has an unsupported transaction type.`);
     if (!allowedTypes.has(String(item.propertyType))) throw new Error(`Property ${id} has an unsupported property type.`);
-    if (!allowedStatuses.has(String(item.status) as ImportedPropertyStatus)) throw new Error(`Property ${id} has an unsupported status.`);
     if (!Number.isFinite(Number(item.priceAmount)) || Number(item.priceAmount) < 0) throw new Error(`Property ${id} has an invalid price.`);
     if (item.agentId != null && item.agentId !== "" && !agentIds.has(String(item.agentId))) {
       throw new Error(`Property ${id} references an agent missing from the feed.`);
     }
     if (item.images != null && !Array.isArray(item.images)) throw new Error(`Property ${id} images must be an array.`);
     if (item.features != null && !Array.isArray(item.features)) throw new Error(`Property ${id} features must be an array.`);
-    return { ...item, id, cityId, status: item.status as ImportedPropertyStatus };
+    return { ...item, id, cityId };
   });
 
   return {

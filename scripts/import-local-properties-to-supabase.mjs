@@ -212,7 +212,7 @@ async function upsertAgents(rest, localAgents) {
       method: "POST",
       query: { on_conflict: "id" },
       body: batch,
-      prefer: "resolution=merge-duplicates,return=minimal",
+      prefer: "resolution=ignore-duplicates,return=minimal",
     });
   }
 
@@ -225,14 +225,13 @@ function mapPropertyRow(property, cityIdToDbId, agentIdToDbId) {
     throw new Error(`Missing DB city id for local city "${property.cityId}" (property ${property.id})`);
   }
 
+  // Leave status and other administrator controls out of the upsert payload.
   return {
     id: property.id,
     title: property.title,
     slug: property.slug,
     transaction_type: property.transactionType,
     property_type: property.propertyType,
-    status: property.status,
-    source_status: toNullableText(property.sourceStatus),
     price_amount: Number(property.priceAmount ?? 0),
     price_currency: property.priceCurrency ?? "EUR",
     surface_m2: property.surfaceM2,
@@ -340,7 +339,7 @@ async function main() {
   console.log("[import] Upserting cities...");
   const cityIdToDbId = await upsertCities(rest, cities);
 
-  console.log("[import] Upserting agents...");
+  console.log("[import] Adding missing agents while preserving existing records...");
   const agentIdToDbId = await upsertAgents(rest, agents);
 
   console.log("[import] Upserting properties...");

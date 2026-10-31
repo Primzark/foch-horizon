@@ -19,7 +19,6 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.53.0";
 type SyncMode = "incremental" | "full";
 type TransactionType = "vente" | "location";
 type PropertyType = "appartement" | "maison_villa" | "autre";
-type PropertyStatus = "active" | "under_offer" | "sold" | "rented" | "off_market";
 
 interface ProviderFeatureInput {
   featureKey?: string;
@@ -61,7 +60,6 @@ interface ProviderProperty {
   slug: string;
   transactionType: TransactionType;
   propertyType: PropertyType;
-  status: PropertyStatus;
   priceAmount: number;
   surfaceM2: number;
   citySlug: string;
@@ -83,7 +81,6 @@ interface ProviderProperty {
   publishedAt?: string | null;
   updatedAt?: string | null;
   agentId?: string | null;
-  isFeatured?: boolean;
   imageUrls?: string[];
   images?: ProviderImageInput[];
   documents?: ProviderDocumentInput[];
@@ -94,7 +91,6 @@ interface CliOptions {
   mode: SyncMode;
   dryRun: boolean;
   limit?: number;
-  reconcileMissing: boolean;
 }
 
 interface SyncSummary {
@@ -109,7 +105,6 @@ interface SyncSummary {
   documentRows: number;
   featureRows: number;
   mediaAnalysisJobs: number;
-  offMarketReconciled: number;
   startedAt: string;
   finishedAt: string;
   durationMs: number;
@@ -251,6 +246,18 @@ function pickInteger(...values: unknown[]): number | undefined {
   return undefined;
 }
 
+function pickPropertyReference(...values: unknown[]): number | undefined {
+  for (const value of values) {
+    if (typeof value === "number" && Number.isSafeInteger(value) && value > 0) return value;
+    if (typeof value !== "string") continue;
+    const normalized = value.trim();
+    if (!/^\d+$/.test(normalized)) continue;
+    const parsed = Number(normalized);
+    if (Number.isSafeInteger(parsed) && parsed > 0) return parsed;
+  }
+  return undefined;
+}
+
 function readArrayCandidate(value: unknown): unknown[] | undefined {
   return Array.isArray(value) ? value : undefined;
 }
@@ -275,15 +282,6 @@ function coercePropertyType(value: unknown): PropertyType {
   if (normalized.includes("appart")) return "appartement";
   if (normalized.includes("maison") || normalized.includes("villa")) return "maison_villa";
   return "autre";
-}
-
-function coerceStatus(value: unknown): PropertyStatus {
-  const normalized = normalizeKey(typeof value === "string" ? value : "");
-  if (normalized.includes("under_offer") || normalized.includes("sous offre")) return "under_offer";
-  if (normalized.includes("vendu") || normalized === "sold") return "sold";
-  if (normalized.includes("rented") || normalized.includes("loue") || normalized.includes("louee")) return "rented";
-  if (normalized.includes("off_market") || normalized.includes("retire") || normalized.includes("archive")) return "off_market";
-  return "active";
 }
 
 function extractCityInfo(row: JsonObject): { citySlug: string; cityName?: string; postalCode: string } {
@@ -442,7 +440,17 @@ function normalizeDocuments(row: JsonObject): ProviderDocumentInput[] {
 function coerceProviderProperty(raw: unknown): ProviderProperty | null {
   if (!isRecord(raw)) return null;
 
-  const id = pickInteger(raw.id, raw.propertyId, raw.property_id, raw.reference, raw.ref);
+  const id = pickPropertyReference(
+    raw.referenceNumber,
+    raw.reference_number,
+    raw.propertyReference,
+    raw.property_reference,
+    raw.reference,
+    raw.ref,
+    raw.propertyId,
+    raw.property_id,
+    raw.id,
+  );
   if (!id || id <= 0) return null;
 
   const title = pickString(raw.title, raw.name, raw.label) ?? `Annonce ${id}`;
@@ -454,7 +462,6 @@ function coerceProviderProperty(raw: unknown): ProviderProperty | null {
   const propertyType = coercePropertyType(
     pickFirst(raw.propertyType, raw.property_type, raw.type, raw.typeBien, raw.type_bien),
   );
-  const status = coerceStatus(pickFirst(raw.status, raw.state, raw.availability));
 
   const priceAmount = pickNumber(raw.priceAmount, raw.price_amount, raw.price, raw.amount) ?? 0;
   const surfaceM2 = pickNumber(raw.surfaceM2, raw.surface_m2, raw.surface, raw.surfaceHab, raw.surface_hab) ?? 0;
@@ -478,7 +485,6 @@ function coerceProviderProperty(raw: unknown): ProviderProperty | null {
     slug,
     transactionType,
     propertyType,
-    status,
     priceAmount: Math.max(0, Math.round(priceAmount)),
     surfaceM2: Math.max(0, surfaceM2),
     terrainM2: terrainM2 ?? null,
@@ -500,7 +506,6 @@ function coerceProviderProperty(raw: unknown): ProviderProperty | null {
     publishedAt: toIsoString(pickFirst(raw.publishedAt, raw.published_at, raw.createdAt, raw.created_at)),
     updatedAt: toIsoString(pickFirst(raw.updatedAt, raw.updated_at)),
     agentId: pickString(raw.agentId, raw.agent_id) ?? null,
-    isFeatured: Boolean(pickFirst(raw.isFeatured, raw.is_featured) ?? false),
     images,
     imageUrls: images.map((image) => image.sourceUrl ?? "").filter(Boolean),
     documents,
@@ -530,10 +535,6 @@ function parseCliOptions(args: string[]): CliOptions {
   let mode: SyncMode = "incremental";
   let dryRun = parseBoolean(Deno.env.get("PROVIDER_SYNC_DRY_RUN"), false);
   let limit: number | undefined;
-  let reconcileMissing = parseBoolean(
-    Deno.env.get("PROVIDER_RECONCILE_MISSING_ON_INCREMENTAL"),
-    false,
-  );
 
   const remaining = [...args];
   if (remaining[0] === "incremental" || remaining[0] === "full") {
@@ -542,9 +543,9 @@ function parseCliOptions(args: string[]): CliOptions {
 
   for (const arg of remaining) {
     if (arg === "--dry-run") dryRun = true;
-    else if (arg === "--reconcile-missing") reconcileMissing = true;
-    else if (arg === "--no-reconcile-missing") reconcileMissing = false;
-    else if (arg.startsWith("--limit=")) {
+    else if (arg === "--reconcile-missing" || arg === "--no-reconcile-missing") {
+      throw new Error("Reconcile-missing flags are no longer supported; imports retain listings missing from the feed.");
+    } else if (arg.startsWith("--limit=")) {
       const parsed = Number.parseInt(arg.slice("--limit=".length), 10);
       if (Number.isFinite(parsed) && parsed > 0) limit = parsed;
     }
@@ -554,7 +555,6 @@ function parseCliOptions(args: string[]): CliOptions {
     mode,
     dryRun,
     limit,
-    reconcileMissing,
   };
 }
 
@@ -771,7 +771,6 @@ function buildPropertyRows(
       slug: property.slug,
       transaction_type: property.transactionType,
       property_type: property.propertyType,
-      status: property.status,
       price_amount: Math.round(property.priceAmount),
       price_currency: "EUR",
       surface_m2: property.surfaceM2,
@@ -1062,33 +1061,6 @@ async function queueImageAnalysisJobs(
   }
 }
 
-async function reconcileMissingProperties(
-  supabase: ReturnType<typeof createClient>,
-  sourceIds: Set<number>,
-): Promise<number> {
-  const { data, error } = await supabase
-    .from("properties")
-    .select("id,status")
-    .neq("status", "off_market");
-
-  if (error) throw error;
-
-  const toOffMarket = ((data ?? []) as Array<{ id: number; status: string }>)
-    .map((row) => row.id)
-    .filter((id) => !sourceIds.has(id));
-
-  for (const batch of chunk(toOffMarket, 500)) {
-    if (batch.length === 0) continue;
-    const { error: updateError } = await supabase
-      .from("properties")
-      .update({ status: "off_market", updated_at: new Date().toISOString() })
-      .in("id", batch);
-    if (updateError) throw updateError;
-  }
-
-  return toOffMarket.length;
-}
-
 async function runSync(options: CliOptions): Promise<SyncSummary> {
   const startedAtDate = new Date();
   const startedAt = startedAtDate.toISOString();
@@ -1114,7 +1086,6 @@ async function runSync(options: CliOptions): Promise<SyncSummary> {
   const documentRows = buildDocumentRows(properties);
   const sourceIds = new Set(properties.map((property) => property.id));
 
-  let offMarketReconciled = 0;
   let mediaAnalysisJobs = 0;
 
   if (!options.dryRun && properties.length > 0) {
@@ -1126,6 +1097,8 @@ async function runSync(options: CliOptions): Promise<SyncSummary> {
     const publishedAtById = await queryExistingPropertyPublishedAt(supabase, Array.from(sourceIds));
     const propertyRows = buildPropertyRows(properties, cityIdBySlug, publishedAtById);
 
+    // Status, online visibility, and featured state are managed manually.
+    // Omit those columns so existing values remain unchanged and new rows use defaults.
     for (const batch of chunk(propertyRows, 200)) {
       const { error } = await supabase.from("properties").upsert(batch, { onConflict: "id" });
       if (error) throw error;
@@ -1138,11 +1111,6 @@ async function runSync(options: CliOptions): Promise<SyncSummary> {
     const documentsSync = await upsertPropertyDocumentsAndQueueAnalysisJobs(supabase, properties);
     mediaAnalysisJobs += documentsSync.queuedJobs;
 
-    const shouldReconcile =
-      options.mode === "full" || (options.mode === "incremental" && options.reconcileMissing);
-    if (shouldReconcile && sourceIds.size > 0) {
-      offMarketReconciled = await reconcileMissingProperties(supabase, sourceIds);
-    }
   }
 
   const finishedAtDate = new Date();
@@ -1161,7 +1129,6 @@ async function runSync(options: CliOptions): Promise<SyncSummary> {
     documentRows: documentRows.length,
     featureRows: featureRows.length,
     mediaAnalysisJobs,
-    offMarketReconciled,
     startedAt,
     finishedAt,
     durationMs,

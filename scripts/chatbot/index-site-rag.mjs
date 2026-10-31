@@ -218,6 +218,11 @@ function normalizeInternalPath(urlValue) {
   return `${pathname}${url.search}`;
 }
 
+function isPropertyInventoryPath(urlOrPath) {
+  const pathname = new URL(urlOrPath, "https://foch.invalid").pathname.replace(/\/+$/, "") || "/";
+  return pathname === "/biens" || /^\/biens\/\d+(?:-|\/|$)/.test(pathname);
+}
+
 function buildAbsoluteUrlForRoutePath(routePath, baseUrl) {
   return new URL(routePath, baseUrl).toString();
 }
@@ -227,6 +232,7 @@ function buildFallbackRouteUrls(fallbackDocsByPath, baseUrl, pathPrefix = "") {
 
   return Array.from(fallbackDocsByPath.keys())
     .filter((routePath) => !pathPrefix || routePath.startsWith(pathPrefix))
+    .filter((routePath) => !isPropertyInventoryPath(routePath))
     .map((routePath) => buildAbsoluteUrlForRoutePath(routePath, baseUrl));
 }
 
@@ -847,6 +853,9 @@ async function main() {
   const htmlFetcher = await createHtmlFetcher(args);
   const sitemapUrls = extractSitemapUrls(sitemapText)
     .map((url) => applyBaseUrlOverride(url, args.baseUrl))
+    // Property inventory is queried from live listing data; indexing rendered
+    // listing pages here would preserve stale listings outside the properties table.
+    .filter((url) => !isPropertyInventoryPath(url))
     .filter((url) => {
       if (!args.pathPrefix) return true;
       return normalizeInternalPath(url).startsWith(args.pathPrefix);
