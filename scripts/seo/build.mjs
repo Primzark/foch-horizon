@@ -238,7 +238,7 @@ try {
         document.querySelector('link[rel="canonical"]')?.getAttribute('href')?.endsWith(canonicalPath) &&
         [...document.querySelectorAll('script[data-foch-jsonld]')].some(node => node.textContent?.includes('RealEstateListing')),
       { title: correctFrenchCommuneMentions(routeProperty.title), canonicalPath: route }, { timeout: 30000 });
-    } else if (route === '/biens' || route === '/nos-dernieres-ventes') {
+    } else if (route === '/biens') {
       await page.waitForFunction(() => document.querySelector('main a[href^="/biens/"]') !== null, undefined, { timeout: 10000 }).catch(async () => {
         const state = await page.evaluate(() => ({
           path: window.location.pathname,
@@ -247,6 +247,22 @@ try {
           listingLinks: [...document.querySelectorAll('main a[href^="/biens/"]')].length,
         }));
         throw new Error(`No property links were rendered on ${route}: ${JSON.stringify(state)}`);
+      });
+    } else if (route === '/nos-dernieres-ventes') {
+      await page.waitForFunction(() => {
+        const main = document.querySelector('main');
+        const hasSales = main?.querySelector('a[href^="/biens/"]') !== null;
+        const hasEmptyState = main?.textContent?.includes('Aucune vente récente n’est publiée pour le moment.') &&
+          [...(main?.querySelectorAll('a[href="/biens"]') ?? [])].some(link => link.textContent?.includes('Découvrir tous les biens'));
+        return hasSales || hasEmptyState;
+      }, undefined, { timeout: 10000 }).catch(async () => {
+        const state = await page.evaluate(() => ({
+          path: window.location.pathname,
+          title: document.title,
+          mainText: document.querySelector('main')?.textContent?.slice(0, 500) ?? '',
+          listingLinks: [...document.querySelectorAll('main a[href^="/biens/"]')].length,
+        }));
+        throw new Error(`No recent sales or empty state were rendered: ${JSON.stringify(state)}`);
       });
     } else if (route === '/avis') {
       await page.waitForFunction(() => document.body.textContent?.includes('Source de secours'), undefined, { timeout: 30000 });

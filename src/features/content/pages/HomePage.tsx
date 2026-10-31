@@ -9,7 +9,6 @@ import { MainSearchBar } from "@/features/content/components/MainSearchBar";
 import { SearchThinkingState } from "@/features/content/components/SearchThinkingState";
 import { getFeaturedProperties } from "@/features/listings/api/properties.service";
 import { ListingCard } from "@/features/listings/components/ListingCard";
-import { PropertyEmptyState } from "@/features/listings/components/PropertyEmptyState";
 import { properties } from "@/features/listings/data/properties";
 import { toSearchItem } from "@/features/listings/utils/mappers";
 import { cities } from "@/features/cities/data/cities";
@@ -147,9 +146,9 @@ export default function HomePage() {
             />
           ))}
           {featuredQuery.isSuccess && featuredItems.length === 0 && (
-            <PropertyEmptyState className="col-span-full text-center text-sm text-muted-foreground">
+            <p className="col-span-full rounded-xl border border-dashed border-border px-5 py-8 text-center text-sm text-muted-foreground">
               Aucun bien n’est sélectionné pour l’accueil pour le moment.
-            </PropertyEmptyState>
+            </p>
           )}
         </div>
 
