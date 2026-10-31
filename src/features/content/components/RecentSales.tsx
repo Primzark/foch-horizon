@@ -2,7 +2,6 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, BedDouble, MapPin, Maximize } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ScrollReveal } from "@/components/visuals/ScrollReveal";
 import { geographyPhotoCredits } from "@/features/content/data/geographyGuides";
 import { PhotoAttribution } from "@/features/content/components/PhotoAttribution";
 import { getRecentSales } from "@/features/content/api/recentSales.service";
@@ -34,7 +33,7 @@ export function RecentSales({ compact = false }: { compact?: boolean }) {
   return (
     <section className={compact ? "border-b border-border bg-card" : ""}>
       <div className={compact ? "container mx-auto px-4 py-10 md:py-12" : "pt-4 pb-10"}>
-        <ScrollReveal>
+        <div>
           {(compact || (query.isSuccess && !showsSales)) && (
             <div className={compact ? "grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(16rem,0.72fr)] sm:items-end" : undefined}>
               <div>
@@ -162,7 +161,7 @@ export function RecentSales({ compact = false }: { compact?: boolean }) {
               ))}
             </div>
           )}
-        </ScrollReveal>
+        </div>
       </div>
     </section>
   );
