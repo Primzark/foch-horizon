@@ -19,6 +19,7 @@ import { searchProperties } from "@/features/listings/api/properties.service";
 import { listingLocationOptions } from "@/features/listings/data/listingLocationOptions";
 import { SearchCountBadge } from "@/features/listings/components/SearchCountBadge";
 import { SearchAreaValue } from "@/features/listings/components/SearchAreaValue";
+import { PropertyEmptyState } from "@/features/listings/components/PropertyEmptyState";
 import { propertyTypeOptions } from "@/features/listings/data/options";
 import { buildSearchParams } from "@/features/listings/utils/query";
 import { formatPrice, formatPropertyTypeLabel, toCanonicalPropertyPath } from "@/features/listings/utils/formatting";
@@ -389,7 +390,7 @@ export function BudgetFinder() {
                 </Link>
               </div>
             ) : listingsQuery.data?.total === 0 ? (
-              <div className="py-6">
+              <PropertyEmptyState className="my-3 px-5 py-6">
                 <p className="text-sm leading-relaxed text-muted-foreground">
                   {selectedArea || propertyType
                     ? "Aucun bien ne correspond à ces sélections pour le moment. Élargissez le secteur ou le type de bien."
@@ -408,7 +409,7 @@ export function BudgetFinder() {
                   )}
                   {!selectedArea && !propertyType && <span className="text-sm text-muted-foreground">Essayez un autre montant.</span>}
                 </div>
-              </div>
+              </PropertyEmptyState>
             ) : (
               <div
                 role="region"

@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { LayoutGrid, List, SlidersHorizontal } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 import PropertyCard from "@/components/property/PropertyCard";
+import { PropertyEmptyState } from "@/features/listings/components/PropertyEmptyState";
 import SearchBar from "@/components/property/SearchBar";
 import { properties } from "@/data/mock-data";
 import { Button } from "@/components/ui/button";
@@ -88,10 +89,10 @@ const ListingsPage = () => {
 
         {/* Results */}
         {filtered.length === 0 ? (
-          <div className="py-20 text-center">
+          <PropertyEmptyState className="py-20 text-center">
             <p className="text-lg text-muted-foreground">Aucun bien ne correspond à vos critères.</p>
             <p className="mt-2 text-sm text-muted-foreground">Essayez d'élargir votre recherche.</p>
-          </div>
+          </PropertyEmptyState>
         ) : (
           <div className={cn(
             viewMode === "grid"

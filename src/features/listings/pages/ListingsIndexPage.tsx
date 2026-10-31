@@ -13,6 +13,7 @@ import { FiltersBar } from "@/features/listings/components/FiltersBar";
 import { ListingCard } from "@/features/listings/components/ListingCard";
 import { PropertyMapSplitView } from "@/features/listings/components/PropertyMapSplitView";
 import { PaginationBar } from "@/features/listings/components/PaginationBar";
+import { PropertyEmptyState } from "@/features/listings/components/PropertyEmptyState";
 import { PropertyAlertsDialog } from "@/features/listings/components/PropertyAlertsDialog";
 import { buildSearchParams, parseSearchParams } from "@/features/listings/utils/query";
 import type { PropertySearchParams } from "@/types/api";
@@ -337,7 +338,7 @@ export default function ListingsIndexPage() {
           >
             {query.data.items.length === 0 ? (
               <>
-              <section className="mt-8 overflow-hidden rounded-2xl border border-border bg-card" aria-labelledby="no-results-title">
+              <PropertyEmptyState role="region" aria-labelledby="no-results-title" className="mt-8 overflow-hidden p-0">
                 <div className="grid gap-6 p-6 sm:p-8 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,0.8fr)] lg:gap-10">
                   <div>
                     <p className="text-xs font-medium uppercase tracking-[0.18em] text-brand-strong">On élargit la recherche</p>
@@ -385,7 +386,7 @@ export default function ListingsIndexPage() {
                     Explorer les secteurs
                   </Link>
                 </div>
-              </section>
+              </PropertyEmptyState>
               {locationGuide && (
                 <section className="mt-8 rounded-2xl border border-border bg-card p-6 sm:p-8" aria-labelledby="location-guide-title">
                   <header className="mb-6 max-w-3xl">

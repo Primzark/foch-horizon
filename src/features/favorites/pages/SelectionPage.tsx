@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useFavoritesStore } from "@/features/favorites/useFavoritesStore";
 import { ListingCard } from "@/features/listings/components/ListingCard";
+import { PropertyEmptyState } from "@/features/listings/components/PropertyEmptyState";
 import { propertyById } from "@/features/listings/data/properties";
 import { toSearchItem } from "@/features/listings/utils/mappers";
 import { useSeo } from "@/lib/seo/useSeo";
@@ -69,7 +70,7 @@ export default function SelectionPage() {
       <div className="mb-7 h-px w-full accent-divider" />
 
       {savedListings.length === 0 ? (
-        <article className="rounded-2xl border border-border bg-card p-8 text-center">
+        <PropertyEmptyState className="p-8 text-center">
           <Heart className="mx-auto h-12 w-12 text-brand" />
           <h2 className="mt-4 font-display text-3xl">Aucun bien sauvegardé</h2>
           <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">
@@ -78,7 +79,7 @@ export default function SelectionPage() {
           <Button variant="brand" className="mt-6" asChild>
             <Link to="/biens">Explorer les biens</Link>
           </Button>
-        </article>
+        </PropertyEmptyState>
       ) : (
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {savedListings.map((listing, index) => (

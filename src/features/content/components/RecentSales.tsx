@@ -2,14 +2,13 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, BedDouble, MapPin, Maximize } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { geographyPhotoCredits } from "@/features/content/data/geographyGuides";
-import { PhotoAttribution } from "@/features/content/components/PhotoAttribution";
 import { getRecentSales } from "@/features/content/api/recentSales.service";
 import { SearchThinkingState } from "@/features/content/components/SearchThinkingState";
 import { searchProperties } from "@/features/listings/api/properties.service";
 import { formatPrice, formatPropertyTypeLabel, getPropertyCardLabels, isAvailablePropertyStatus } from "@/features/listings/utils/formatting";
 import { PropertyPreviewLink } from "@/features/listings/components/PropertyPreviewLink";
 import { ListingBadges } from "@/features/listings/components/ListingBadges";
+import { PropertyEmptyState } from "@/features/listings/components/PropertyEmptyState";
 import type { PropertySearchItem } from "@/types/api";
 import { getPropertyImageSrcSet, getPropertyImageUrl } from "@/features/listings/utils/propertyImageUrls";
 
@@ -34,24 +33,26 @@ export function RecentSales({ compact = false }: { compact?: boolean }) {
     <section className={compact ? "border-b border-border bg-card" : ""}>
       <div className={compact ? "container mx-auto px-4 py-10 md:py-12" : "pt-4 pb-10"}>
         <div>
-          {(compact || (query.isSuccess && !showsSales)) && (
-            <div className={compact ? "grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(16rem,0.72fr)] sm:items-end" : undefined}>
+          {compact && (
+            <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(16rem,0.72fr)] sm:items-end">
               <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-brand-strong">
-                  {!compact && query.data?.length === 0
-                    ? "Aucune vente enregistrée n’est publiée pour le moment"
-                    : "Des projets accompagnés"}
-                </p>
+                <p className="text-xs uppercase tracking-[0.2em] text-brand-strong">Des projets accompagnés</p>
                 <h2 className="mt-2 max-w-3xl font-display text-3xl leading-tight sm:text-4xl md:text-5xl">
-                  {showsSales ? "Nos dernières ventes" : "Biens actuellement à vendre"}
+                  {showsSales ? "Nos dernières ventes" : "Bien à vendre"}
                 </h2>
               </div>
-              {compact && (
-                <Link to="/nos-dernieres-ventes" className="inline-flex items-center gap-2 text-sm hover:underline sm:justify-self-end">
-                  Nos dernières ventes <ArrowRight className="h-4 w-4" />
-                </Link>
-              )}
+              <Link to="/nos-dernieres-ventes" className="inline-flex items-center gap-2 text-sm hover:underline sm:justify-self-end">
+                Nos dernières ventes <ArrowRight className="h-4 w-4" />
+              </Link>
             </div>
+          )}
+          {!compact && query.isSuccess && !showsSales && (
+            <PropertyEmptyState className="mb-5 text-center">
+              <p className="text-xs uppercase tracking-[0.2em] text-brand-strong">
+                Aucune vente enregistrée n’est publiée pour le moment
+              </p>
+              <h2 className="mt-2 font-display text-3xl leading-tight sm:text-4xl md:text-5xl">Bien à vendre</h2>
+            </PropertyEmptyState>
           )}
           {query.isLoading && (
             <SearchThinkingState
@@ -84,50 +85,27 @@ export function RecentSales({ compact = false }: { compact?: boolean }) {
             </ul>
           )}
           {!query.isLoading && !query.isError && !compact && query.data?.length === 0 && !availablePropertiesQuery.isLoading && displayedProperties.length === 0 && (
-            <div className="mt-6 rounded-2xl border border-border bg-card p-6 md:p-8">
+            <PropertyEmptyState className="mt-6 text-center">
               <h3 className="font-display text-2xl">Une recherche en tête ?</h3>
-              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+              <p className="mx-auto mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
                 Notre sélection évolue régulièrement. Contactez l’équipe Foch Immobilier pour parler des biens à découvrir au Havre et sur le littoral.
               </p>
               <Link to="/contact" className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-brand-strong hover:underline">
                 Échanger avec le cabinet <ArrowRight aria-hidden="true" className="h-4 w-4" />
               </Link>
-            </div>
+            </PropertyEmptyState>
           )}
           {compact && !query.isLoading && !query.isError && sales?.length === 0 && (
-            <div className="mt-6 grid overflow-hidden rounded-2xl border border-border bg-background md:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
-              <figure className="relative isolate min-h-64 overflow-hidden bg-slate-900 md:min-h-72">
-                <img
-                  src="/images/geography/panorama-le-havre.webp"
-                  alt="Panorama du Havre, entre front de mer et quartiers résidentiels"
-                  className="absolute inset-0 -z-10 h-full w-full object-cover object-[52%_48%]"
-                  loading="lazy"
-                />
-                <div aria-hidden="true" className="absolute inset-0 -z-10 bg-gradient-to-t from-slate-950/65 via-slate-950/5 to-transparent" />
-                <div className="absolute left-5 top-5 inline-flex items-center gap-2 rounded-full border border-white/25 bg-slate-950/30 px-3 py-2 text-xs font-medium text-white backdrop-blur-sm">
-                  <MapPin aria-hidden="true" className="h-3.5 w-3.5" /> Le Havre et le littoral
-                </div>
-                <PhotoAttribution credit={geographyPhotoCredits.panorama} />
-                <div className="absolute bottom-5 right-5 hidden w-36 overflow-hidden rounded-xl border-4 border-white shadow-xl sm:block md:w-40">
-                  <div className="relative">
-                    <img
-                      src="/images/geography/architecture-perret.webp"
-                      alt="Architecture Perret au Havre"
-                      className="aspect-[4/3] w-full object-cover"
-                      loading="lazy"
-                    />
-                    <PhotoAttribution credit={geographyPhotoCredits.perret} />
-                  </div>
-                  <p className="bg-white px-2 py-1.5 text-xs font-medium text-slate-800">Le centre reconstruit</p>
-                </div>
-              </figure>
-              <div className="flex flex-col justify-center p-6 md:p-8 lg:p-10">
-                <p className="text-xs uppercase tracking-[0.18em] text-brand-strong">À vos côtés depuis 1972</p>
-                <h3 className="mt-3 font-display text-2xl md:text-3xl">Des ventes à découvrir avec notre équipe</h3>
-                <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">Découvrez nos références de vente auprès de notre équipe et parlons de votre projet.</p>
-                <Link to="/contact" className="mt-6 inline-flex items-center gap-2 self-start text-sm font-medium text-brand-strong hover:underline">Échanger avec le cabinet <ArrowRight className="h-4 w-4" /></Link>
-              </div>
-            </div>
+            <PropertyEmptyState className="mt-6 text-center">
+              <p className="text-xs uppercase tracking-[0.18em] text-brand-strong">À vos côtés depuis 1972</p>
+              <h3 className="mt-2 font-display text-2xl">Des ventes à découvrir avec notre équipe</h3>
+              <p className="mx-auto mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">
+                Découvrez nos références de vente auprès de notre équipe et parlons de votre projet.
+              </p>
+              <Link to="/contact" className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-brand-strong hover:underline">
+                Échanger avec le cabinet <ArrowRight aria-hidden="true" className="h-4 w-4" />
+              </Link>
+            </PropertyEmptyState>
           )}
           {compact && sales && sales.length > 0 && (
             <div className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
