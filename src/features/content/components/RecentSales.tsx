@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, BedDouble, MapPin, Maximize } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,14 +17,8 @@ export function RecentSales({ compact = false }: { compact?: boolean }) {
   return (
     <section className={compact ? "border-b border-border bg-card" : ""}>
       <div className={compact ? "container mx-auto px-4 py-10 md:py-12" : "pt-4 pb-10"}>
-        <div className="mb-6 flex flex-col items-start gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div className="mb-6">
           <h2 className="font-display text-3xl">Nos dernières ventes</h2>
-          <Button asChild variant="brand" className="group h-11 w-full rounded-full px-5 font-semibold sm:w-auto">
-            <Link to="/biens">
-              Découvrir tous les biens
-              <ArrowRight aria-hidden="true" className="transition-transform duration-200 group-hover:translate-x-0.5" />
-            </Link>
-          </Button>
         </div>
 
         {query.isLoading && (
