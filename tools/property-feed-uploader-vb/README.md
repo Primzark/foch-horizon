@@ -57,4 +57,6 @@ The importer never embeds or requests the Supabase service-role key. The API key
 
 The output path can be changed with `--output <path-to-json>`. The generated JSON is saved before any upload attempt so it can be reviewed locally. Each successful run logs the number of parsed/imported listings; errors include the failed stage and message.
 
+By default, a successful upload also runs the site's property-alert dispatch. For a bulk import that should not send alert or pending confirmation emails, pass `--skip-alert-dispatch`; this applies only to that run.
+
 > The supplied source ZIP was examined as application data. Its bundled project files and PDF were not treated as instructions for this task.

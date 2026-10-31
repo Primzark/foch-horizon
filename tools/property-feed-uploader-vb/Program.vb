@@ -118,6 +118,7 @@ Module Program
             Using request As New HttpRequestMessage(HttpMethod.Post, endpoint)
                 request.Headers.Add("apikey", apiKey)
                 request.Headers.Add("x-property-import-token", importToken)
+                If options.SkipAlertDispatch Then request.Headers.Add("x-property-feed-skip-alert-dispatch", "true")
                 request.Content = New StringContent(feedJson, New UTF8Encoding(False), "application/json")
 
                 Console.WriteLine("Sending feed to Supabase...")
@@ -184,6 +185,8 @@ Module Program
                     Throw New ArgumentException("--output must be followed by a JSON file path.")
                 End If
                 options.OutputPath = args(index)
+            ElseIf String.Equals(argument, "--skip-alert-dispatch", StringComparison.OrdinalIgnoreCase) Then
+                options.SkipAlertDispatch = True
             ElseIf String.Equals(argument, "--help", StringComparison.OrdinalIgnoreCase) OrElse String.Equals(argument, "-h", StringComparison.OrdinalIgnoreCase) Then
                 options.ShowHelp = True
             ElseIf argument.StartsWith("--", StringComparison.Ordinal) Then
@@ -282,10 +285,11 @@ Module Program
     End Sub
 
     Private Sub PrintUsage()
-        Console.WriteLine("Usage: Fochimmo [<path-to-zip> | --zip-dir <directory>] [--dry-run] [--output <path-to-json>]")
+        Console.WriteLine("Usage: Fochimmo [<path-to-zip> | --zip-dir <directory>] [--dry-run] [--skip-alert-dispatch] [--output <path-to-json>]")
         Console.WriteLine("If no ZIP path or directory is supplied, Fochimmo uses the only .zip file beside the executable.")
         Console.WriteLine("--zip-dir searches the named directory for exactly one .zip file.")
         Console.WriteLine("The ZIP must contain one Annonces.csv file. Without --dry-run, the feed is upserted through the Foch Supabase import function.")
+        Console.WriteLine("--skip-alert-dispatch suppresses post-import alert and confirmation emails for this run.")
         Console.WriteLine("Credentials: SUPABASE_API_KEY (or SUPABASE_PUBLISHABLE_KEY / SUPABASE_ANON_KEY) and PROPERTY_FEED_IMPORT_TOKEN.")
         Console.WriteLine("Set PROPERTY_FEED_IMPORT_ENDPOINT to override the default HTTPS endpoint.")
     End Sub
@@ -295,6 +299,7 @@ Module Program
         Public Property ZipDirectory As String = String.Empty
         Public Property OutputPath As String = String.Empty
         Public Property DryRun As Boolean
+        Public Property SkipAlertDispatch As Boolean
         Public Property ShowHelp As Boolean
     End Class
 

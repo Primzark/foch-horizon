@@ -81,27 +81,30 @@ Deno.serve(async (request) => {
     }
     const data = await response.json();
 
+    const skipAlertDispatch = request.headers.get("x-property-feed-skip-alert-dispatch") === "true";
     let alertDispatch: Record<string, unknown> | null = null;
-    try {
-      const dispatchResponse = await fetch(`${supabaseUrl.replace(/\/$/, "")}/functions/v1/property-alerts`, {
-        method: "POST",
-        headers: {
-          apikey: serviceRoleKey,
-          Authorization: `Bearer ${serviceRoleKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ action: "dispatch" }),
-      });
-      if (dispatchResponse.ok) {
-        alertDispatch = await dispatchResponse.json();
-      } else {
-        console.warn("Property alert dispatch was deferred after feed import.", { status: dispatchResponse.status });
+    if (!skipAlertDispatch) {
+      try {
+        const dispatchResponse = await fetch(`${supabaseUrl.replace(/\/$/, "")}/functions/v1/property-alerts`, {
+          method: "POST",
+          headers: {
+            apikey: serviceRoleKey,
+            Authorization: `Bearer ${serviceRoleKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ action: "dispatch" }),
+        });
+        if (dispatchResponse.ok) {
+          alertDispatch = await dispatchResponse.json();
+        } else {
+          console.warn("Property alert dispatch was deferred after feed import.", { status: dispatchResponse.status });
+        }
+      } catch {
+        console.warn("Property alert dispatch was deferred after feed import.");
       }
-    } catch {
-      console.warn("Property alert dispatch was deferred after feed import.");
     }
 
-    return jsonResponse({ ok: true, dryRun: false, imported: data, alerts: alertDispatch, validated: summary });
+    return jsonResponse({ ok: true, dryRun: false, imported: data, alerts: alertDispatch, alertsSkipped: skipAlertDispatch, validated: summary });
   } catch (error) {
     console.error("Property feed import failed:", error);
     return jsonResponse({ error: "Property feed could not be imported." }, 500);
