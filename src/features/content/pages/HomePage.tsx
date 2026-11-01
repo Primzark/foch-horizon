@@ -107,7 +107,7 @@ export default function HomePage() {
             <MainSearchBar seedItems={instantSearchItems} />
           </div>
         </div>
-        <PhotoAttribution credit={HERO_IMAGE_CREDIT} mobileFlow />
+        <PhotoAttribution credit={HERO_IMAGE_CREDIT} heroOverlay />
       </section>
       <section data-live-content="/biens" className="container mx-auto px-4 pt-5 pb-12 md:pt-8 md:pb-12">
         <ScrollReveal mood={heroMood}>
