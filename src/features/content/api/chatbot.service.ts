@@ -2765,7 +2765,7 @@ function normalizeReplyOutput(reply: ChatbotReply, language: "fr" | "en" = "fr")
   const containsRentalOutput = containsRentalLanguage([
     answer,
     ...prompts,
-    ...citations.map((citation) => citation.title ?? ""),
+    ...((citations ?? []).flatMap((citation) => [citation.title ?? "", citation.path, citation.sourceUrl ?? ""])),
     JSON.stringify(actions ?? []),
     JSON.stringify(analysisCards ?? []),
     JSON.stringify(reply.propertySuggestions ?? []),
