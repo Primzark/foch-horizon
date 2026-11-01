@@ -37,15 +37,14 @@ export function PhotoAttribution({
 
   if (placement === "hero-footer") {
     return (
-      <div className="relative z-50 ml-auto flex w-full max-w-full flex-col items-end text-right">
-        {open && (
-          <div
-            id="hero-photo-credit-panel"
-            className="mb-1 max-h-[min(10rem,35vh)] w-[min(18rem,calc(100vw-2rem))] overflow-y-auto rounded-lg border border-white/15 bg-slate-950/85 px-3 py-2 text-left text-[10px] leading-snug text-white/90 shadow-sm backdrop-blur-sm sm:text-xs"
-          >
-            {creditContent}
-          </div>
-        )}
+      <div className="absolute bottom-2 right-2 z-50 flex w-fit max-w-[calc(100vw-1rem)] flex-col items-end text-right">
+        <div
+          id="hero-photo-credit-panel"
+          hidden={!open}
+          className="mb-1 max-h-[min(7.5rem,30vh)] w-[min(18rem,calc(100vw-1rem))] overflow-y-auto rounded-lg border border-white/15 bg-slate-950/85 px-3 py-2 text-left text-[10px] leading-snug text-white/90 shadow-sm backdrop-blur-sm sm:text-xs"
+        >
+          {creditContent}
+        </div>
         <button
           type="button"
           aria-expanded={open}
@@ -54,7 +53,7 @@ export function PhotoAttribution({
             if (!open) onBeforeOpen?.();
             onOpenChange?.(!open);
           }}
-          className="inline-flex min-h-7 items-center rounded-full px-2 py-1 text-[10px] text-white/60 underline decoration-white/25 underline-offset-4 transition-colors hover:text-white/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/70"
+          className="inline-flex min-h-7 items-center rounded-full px-2 py-1 text-[10px] text-white/60 underline decoration-white/25 underline-offset-4 [text-shadow:0_1px_2px_rgba(0,0,0,0.9)] transition-colors hover:text-white/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/70"
         >
           Crédits photo
         </button>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Compass, Handshake } from "lucide-react";
@@ -47,18 +47,6 @@ const HERO_IMAGE_CREDIT: PhotoAttributionCredit = {
 
 export default function HomePage() {
   const [heroCreditsOpen, setHeroCreditsOpen] = useState(false);
-  useEffect(() => {
-    if (heroCreditsOpen) {
-      document.body.dataset.heroPhotoCreditsOpen = "true";
-    } else {
-      delete document.body.dataset.heroPhotoCreditsOpen;
-    }
-
-    return () => {
-      delete document.body.dataset.heroPhotoCreditsOpen;
-    };
-  }, [heroCreditsOpen]);
-
   const featuredQuery = useQuery({
     queryKey: ["featured-properties"],
     queryFn: getFeaturedProperties,
@@ -108,7 +96,7 @@ export default function HomePage() {
           />
         </picture>
         <div className="absolute inset-0 bg-gradient-to-r from-black/38 via-black/16 to-black/0" />
-        <div className="page-banner homepage-hero-content container relative z-[5] mx-auto flex flex-col px-4 py-5 md:py-8">
+        <div className="page-banner homepage-hero-content container relative z-[5] mx-auto flex flex-col px-4 pt-5 pb-40 md:pt-8 md:pb-40">
           <div className="flex w-full flex-1 flex-col justify-center">
             <h1 className="max-w-4xl font-display text-3xl text-white md:text-5xl">
               <span className="block text-4xl font-semibold sm:text-5xl md:text-7xl">Depuis 1972</span>
@@ -124,15 +112,14 @@ export default function HomePage() {
               />
             </div>
           </div>
-
-          <PhotoAttribution
-            credit={HERO_IMAGE_CREDIT}
-            placement="hero-footer"
-            open={heroCreditsOpen}
-            onOpenChange={setHeroCreditsOpen}
-            onBeforeOpen={() => document.getElementById("main-property-search")?.blur()}
-          />
         </div>
+        <PhotoAttribution
+          credit={HERO_IMAGE_CREDIT}
+          placement="hero-footer"
+          open={heroCreditsOpen}
+          onOpenChange={setHeroCreditsOpen}
+          onBeforeOpen={() => document.getElementById("main-property-search")?.blur()}
+        />
       </section>
       <section data-live-content="/biens" className="container mx-auto px-4 pt-5 pb-12 md:pt-8 md:pb-12">
         <ScrollReveal mood={heroMood}>
