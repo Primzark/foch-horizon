@@ -37,7 +37,7 @@ export function PhotoAttribution({
 
   if (placement === "hero-footer") {
     return (
-      <div className="absolute bottom-2 right-2 z-50 flex w-fit max-w-[calc(100vw-1rem)] flex-col items-end text-right">
+      <div id="hero-photo-credit-anchor" className="absolute bottom-2 right-2 z-50 flex w-fit max-w-[calc(100vw-1rem)] flex-col items-end text-right">
         <div
           id="hero-photo-credit-panel"
           hidden={!open}

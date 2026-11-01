@@ -549,6 +549,12 @@
 .homepage-hero-content { height: auto; min-height: 520px; }
 @media (min-width: 768px) { .homepage-hero-content { min-height: 620px; } }
 
+body[data-hero-credit-chat-collision="true"] [data-site-chatbot-launcher] {
+  left: max(0.75rem, env(safe-area-inset-left)) !important;
+  right: auto !important;
+  align-items: flex-start !important;
+}
+
 .storefront-page-hero__background { object-position: center top; }
 
 @media (max-width: 767px) {

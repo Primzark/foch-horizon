@@ -70,6 +70,7 @@ export function SiteChatbotLoader() {
 
   return (
     <div
+      data-site-chatbot-launcher
       className={cn(
         "pointer-events-none fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] right-[max(0.75rem,env(safe-area-inset-right))] z-[160] flex max-w-[calc(100vw-env(safe-area-inset-left)-env(safe-area-inset-right)-1.5rem)] flex-col items-end",
         isHomePage && "w-[min(420px,calc(100vw-1.5rem))]",

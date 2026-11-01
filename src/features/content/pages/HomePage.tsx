@@ -1,4 +1,4 @@
-import { useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Compass, Handshake } from "lucide-react";
@@ -47,6 +47,63 @@ const HERO_IMAGE_CREDIT: PhotoAttributionCredit = {
 
 export default function HomePage() {
   const [heroCreditsOpen, setHeroCreditsOpen] = useState(false);
+  useEffect(() => {
+    const creditAnchor = document.getElementById("hero-photo-credit-anchor");
+    const chatbotLauncher = document.querySelector<HTMLElement>("[data-site-chatbot-launcher]");
+    if (!creditAnchor || !chatbotLauncher) return;
+
+    let frameId: number | null = null;
+    const updateCollision = () => {
+      if (frameId !== null) window.cancelAnimationFrame(frameId);
+      frameId = window.requestAnimationFrame(() => {
+        frameId = null;
+        const chatbotButton = chatbotLauncher.querySelector<HTMLElement>(
+          'button[aria-label="Assistant immobilier IA"]',
+        );
+        if (!chatbotButton) {
+          delete document.body.dataset.heroCreditChatCollision;
+          return;
+        }
+
+        // Measure the chatbot in its normal bottom-right position before deciding
+        // whether to move it temporarily out of the credits panel's way.
+        delete document.body.dataset.heroCreditChatCollision;
+        const creditRect = creditAnchor.getBoundingClientRect();
+        const chatbotRect = chatbotButton.getBoundingClientRect();
+        const isVisible =
+          creditRect.right > 0 &&
+          creditRect.left < window.innerWidth &&
+          creditRect.bottom > 0 &&
+          creditRect.top < window.innerHeight;
+        const gap = 8;
+        const overlaps =
+          creditRect.left < chatbotRect.right + gap &&
+          creditRect.right > chatbotRect.left - gap &&
+          creditRect.top < chatbotRect.bottom + gap &&
+          creditRect.bottom > chatbotRect.top - gap;
+
+        if (isVisible && overlaps) {
+          document.body.dataset.heroCreditChatCollision = "true";
+        }
+      });
+    };
+
+    const resizeObserver = new ResizeObserver(updateCollision);
+    resizeObserver.observe(creditAnchor);
+    resizeObserver.observe(chatbotLauncher);
+    updateCollision();
+    window.addEventListener("resize", updateCollision);
+    window.addEventListener("scroll", updateCollision, true);
+
+    return () => {
+      if (frameId !== null) window.cancelAnimationFrame(frameId);
+      resizeObserver.disconnect();
+      window.removeEventListener("resize", updateCollision);
+      window.removeEventListener("scroll", updateCollision, true);
+      delete document.body.dataset.heroCreditChatCollision;
+    };
+  }, [heroCreditsOpen]);
+
   const featuredQuery = useQuery({
     queryKey: ["featured-properties"],
     queryFn: getFeaturedProperties,
