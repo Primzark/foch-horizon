@@ -450,7 +450,8 @@ export const chatbotExamplePrompts = [
 const processIntentPattern = /compromis|notaire|process|etape|signature|acte|financement|offre acceptee/;
 const propertyIntentPattern = /appartement|maison|bien|acheter|achat|vente|investissement|studio|t2|t3|t4|chambre|budget|m2|surface|quartier|annonce/;
 const serviceIntentPattern = /service|gestion|administration|syndic|vendre|estimation|accompagnement|mandat|mise en vente/;
-const contactIntentPattern = /contact|telephone|tel|appeler|email|mail|adresse|horaire|ouvert|ouverture|rdv|rendez vous|rappel/;
+// The place name Sainte-Adresse must not trigger the agency-contact intent.
+const contactIntentPattern = /contact|telephone|tel|appeler|email|mail|(?<!sainte[-\s])adresse|horaire|ouvert|ouverture|rdv|rendez vous|rappel/;
 const reviewsIntentPattern = /avis|review|google|note|reputation|temoignage/;
 const feesIntentPattern = /honoraire|bareme|frais|commission|pdf/;
 const historyIntentPattern = /geographie|secteurs|sainte adresse|gobelins|saint michel|octeville|saint romain|etretat|deauville|trouville|histoire|historique|fondation|unesco|perret|saint francois|saint-vincent|saint vincent|sanvic|graville|docks vauban|eure/;
