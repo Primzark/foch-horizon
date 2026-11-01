@@ -89,7 +89,7 @@ async function sendWebhookNotification(payload: z.infer<typeof payloadSchema>, a
 async function sendResendNotification(payload: z.infer<typeof payloadSchema>, assignedAgentId: string | null): Promise<void> {
   const resendApiKey = Deno.env.get("RESEND_API_KEY") ?? "";
   if (!resendApiKey) {
-    return;
+    throw new Error("RESEND_API_KEY is not configured.");
   }
 
   const to = Deno.env.get("LEADS_NOTIFICATION_EMAIL") ?? "vendre@fochimmobilier.com";
@@ -133,16 +133,36 @@ async function sendResendNotification(payload: z.infer<typeof payloadSchema>, as
     }),
   });
 
+  const responseBody = await response.json().catch(() => null);
   if (!response.ok) {
-    throw new Error(`Resend email failed (${response.status})`);
+    const errorCode = typeof responseBody?.name === "string"
+      ? responseBody.name
+      : typeof responseBody?.code === "string"
+        ? responseBody.code
+        : "";
+    const errorMessage = typeof responseBody?.message === "string"
+      ? responseBody.message.replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, "[redacted email]").slice(0, 240)
+      : "";
+    const details = [errorCode, errorMessage].filter(Boolean).join(": ");
+    throw new Error(`Resend rejected notification (HTTP ${response.status}${details ? `; ${details}` : ""}).`);
   }
+
+  console.info(`Lead notification email accepted by Resend (HTTP ${response.status}).`);
 }
 
 async function notifyLead(payload: z.infer<typeof payloadSchema>, assignedAgentId: string | null): Promise<void> {
-  await Promise.allSettled([
+  const [webhookResult, emailResult] = await Promise.allSettled([
     sendWebhookNotification(payload, assignedAgentId),
     sendResendNotification(payload, assignedAgentId),
   ]);
+
+  if (webhookResult.status === "rejected") {
+    console.error("Lead webhook notification failed.", webhookResult.reason instanceof Error ? webhookResult.reason.message : "Unknown error");
+  }
+
+  if (emailResult.status === "rejected") {
+    console.error("Lead email notification failed.", emailResult.reason instanceof Error ? emailResult.reason.message : "Unknown error");
+  }
 }
 
 Deno.serve(async (request) => {
