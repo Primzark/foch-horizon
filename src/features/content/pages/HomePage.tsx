@@ -95,7 +95,6 @@ export default function HomePage() {
           />
         </picture>
         <div className="absolute inset-0 bg-gradient-to-r from-black/38 via-black/16 to-black/0" />
-        <PhotoAttribution credit={HERO_IMAGE_CREDIT} />
         <div className="page-banner homepage-hero-content container relative z-[5] mx-auto flex flex-col justify-center px-4 py-5 md:py-8">
           <h1 className="max-w-4xl font-display text-3xl text-white md:text-5xl">
             <span className="block text-4xl font-semibold sm:text-5xl md:text-7xl">Depuis 1972</span>
@@ -108,6 +107,7 @@ export default function HomePage() {
             <MainSearchBar seedItems={instantSearchItems} />
           </div>
         </div>
+        <PhotoAttribution credit={HERO_IMAGE_CREDIT} mobileFlow />
       </section>
       <section data-live-content="/biens" className="container mx-auto px-4 pt-5 pb-12 md:pt-8 md:pb-12">
         <ScrollReveal mood={heroMood}>
