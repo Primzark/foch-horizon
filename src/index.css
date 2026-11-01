@@ -547,7 +547,12 @@
 @media (min-width: 768px) { .page-banner { height: 420px; } }
 
 .homepage-hero-content { height: auto; min-height: 440px; }
-@media (min-width: 768px) { .homepage-hero-content { height: 620px; min-height: 0; } }
+@media (min-width: 768px) { .homepage-hero-content { min-height: 620px; } }
+
+body[data-hero-photo-credits-open="true"] button[aria-label="Assistant immobilier IA"] {
+  visibility: hidden;
+  pointer-events: none;
+}
 
 .storefront-page-hero__background { object-position: center top; }
 

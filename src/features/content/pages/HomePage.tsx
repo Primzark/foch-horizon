@@ -1,4 +1,4 @@
-import { useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Compass, Handshake } from "lucide-react";
@@ -47,6 +47,18 @@ const HERO_IMAGE_CREDIT: PhotoAttributionCredit = {
 
 export default function HomePage() {
   const [heroCreditsOpen, setHeroCreditsOpen] = useState(false);
+  useEffect(() => {
+    if (heroCreditsOpen) {
+      document.body.dataset.heroPhotoCreditsOpen = "true";
+    } else {
+      delete document.body.dataset.heroPhotoCreditsOpen;
+    }
+
+    return () => {
+      delete document.body.dataset.heroPhotoCreditsOpen;
+    };
+  }, [heroCreditsOpen]);
+
   const featuredQuery = useQuery({
     queryKey: ["featured-properties"],
     queryFn: getFeaturedProperties,
@@ -96,29 +108,30 @@ export default function HomePage() {
           />
         </picture>
         <div className="absolute inset-0 bg-gradient-to-r from-black/38 via-black/16 to-black/0" />
-        <div className="page-banner homepage-hero-content container relative z-[5] mx-auto flex flex-col justify-center px-4 py-5 md:py-8">
-          <h1 className="max-w-4xl font-display text-3xl text-white md:text-5xl">
-            <span className="block text-4xl font-semibold sm:text-5xl md:text-7xl">Depuis 1972</span>
-          </h1>
-          <p className="mt-3 max-w-2xl text-base text-white drop-shadow-sm md:text-lg">
-            Notre cabinet accompagne vendeurs et acquéreurs avec une approche sur mesure.
-          </p>
+        <div className="page-banner homepage-hero-content container relative z-[5] mx-auto flex flex-col px-4 py-5 md:py-8">
+          <div className="flex w-full flex-1 flex-col justify-center">
+            <h1 className="max-w-4xl font-display text-3xl text-white md:text-5xl">
+              <span className="block text-4xl font-semibold sm:text-5xl md:text-7xl">Depuis 1972</span>
+            </h1>
+            <p className="mt-3 max-w-2xl text-base text-white drop-shadow-sm md:text-lg">
+              Notre cabinet accompagne vendeurs et acquéreurs avec une approche sur mesure.
+            </p>
 
-          <div className="relative top-0 lg:top-12" style={ctaSweepStyle}>
-            <MainSearchBar
-              seedItems={instantSearchItems}
-              onSearchFocus={() => setHeroCreditsOpen(false)}
-              renderAfterControls={(dismissSuggestions) => (
-                <PhotoAttribution
-                  credit={HERO_IMAGE_CREDIT}
-                  placement="below-search-controls"
-                  open={heroCreditsOpen}
-                  onOpenChange={setHeroCreditsOpen}
-                  onBeforeOpen={dismissSuggestions}
-                />
-              )}
-            />
+            <div className="relative top-0 lg:top-12" style={ctaSweepStyle}>
+              <MainSearchBar
+                seedItems={instantSearchItems}
+                onSearchFocus={() => setHeroCreditsOpen(false)}
+              />
+            </div>
           </div>
+
+          <PhotoAttribution
+            credit={HERO_IMAGE_CREDIT}
+            placement="hero-footer"
+            open={heroCreditsOpen}
+            onOpenChange={setHeroCreditsOpen}
+            onBeforeOpen={() => document.getElementById("main-property-search")?.blur()}
+          />
         </div>
       </section>
       <section data-live-content="/biens" className="container mx-auto px-4 pt-5 pb-12 md:pt-8 md:pb-12">
