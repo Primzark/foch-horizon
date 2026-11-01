@@ -3,6 +3,8 @@ import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.53.0
 const defaultAllowedOrigins = new Set([
   "https://foch-horizon.vercel.app",
   "https://foch-horizon-primzarks-projects.vercel.app",
+  "https://www.fochimmobilier.com",
+  "https://fochimmobilier.com",
   "http://localhost:5173",
   "http://127.0.0.1:5173",
   "http://localhost:8080",

@@ -3,6 +3,8 @@ declare const process: { env: Record<string, string | undefined> };
 const allowedOrigins = new Set([
   "https://foch-horizon.vercel.app",
   "https://foch-horizon-primzarks-projects.vercel.app",
+  "https://www.fochimmobilier.com",
+  "https://fochimmobilier.com",
 ]);
 
 const supabaseLeadsUrl = "https://rcrulfdobtmfxzpuyryn.supabase.co/functions/v1/leads-create";
