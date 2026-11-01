@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent, type KeyboardEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, House, Search, SlidersHorizontal } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -35,6 +35,7 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
   const [focused, setFocused] = useState(false);
   const [suggestionsDismissed, setSuggestionsDismissed] = useState(false);
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
+  const searchRootRef = useRef<HTMLDivElement>(null);
 
   const inventoryQuery = useQuery({
     queryKey: ["main-search-inventory"],
@@ -84,6 +85,18 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
   useEffect(() => {
     setActiveSuggestionIndex(-1);
   }, [query, transaction, inventoryQuery.data]);
+
+  useEffect(() => {
+    const dismissSuggestionsOutsideSearch = (event: PointerEvent) => {
+      if (event.target instanceof Node && !searchRootRef.current?.contains(event.target)) {
+        setFocused(false);
+        setActiveSuggestionIndex(-1);
+      }
+    };
+
+    document.addEventListener("pointerdown", dismissSuggestionsOutsideSearch);
+    return () => document.removeEventListener("pointerdown", dismissSuggestionsOutsideSearch);
+  }, []);
 
   useEffect(() => {
     setQuery(readLastAppliedPropertySearchFilters()?.q ?? "");
@@ -187,7 +200,7 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
 
   return (
     <div className="w-full max-w-3xl">
-      <div className="relative z-20">
+      <div ref={searchRootRef} className="relative z-20">
         <form
           action="/biens"
           method="get"
@@ -232,7 +245,12 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
                   setFocused(true);
                   setSuggestionsDismissed(false);
                 }}
-                onBlur={() => window.setTimeout(() => setFocused(false), 120)}
+                onBlur={(event) => {
+                  const nextFocusedElement = event.relatedTarget;
+                  if (nextFocusedElement instanceof Node && searchRootRef.current?.contains(nextFocusedElement)) return;
+                  setFocused(false);
+                  setActiveSuggestionIndex(-1);
+                }}
                 onKeyDown={handleInputKeyDown}
                 placeholder=""
                 autoComplete="off"
