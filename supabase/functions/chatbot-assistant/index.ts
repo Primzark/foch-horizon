@@ -3777,6 +3777,103 @@ function extractSearchParamsFromQuestion(
   return mergeSearchParams(stateParams, { ...inferredParams, ...actionParams }, 1, fallbackPageSize);
 }
 
+function hasUserSearchFilters(params: ToolSearchParams): boolean {
+  return Boolean(
+    params.type ||
+      params.city ||
+      params.q ||
+      params.bedroomsMin != null ||
+      params.bathroomsMin != null ||
+      params.garagesMin != null ||
+      params.priceMin != null ||
+      params.priceMax != null ||
+      params.surfaceMin != null ||
+      params.surfaceMax != null ||
+      params.terrainMin != null ||
+      params.terrainMax != null ||
+      (params.features?.length ?? 0) > 0,
+  );
+}
+
+function keepDefinedSearchParams(params: ToolSearchParams): ToolSearchParams {
+  return Object.fromEntries(Object.entries(params).filter(([, value]) => value !== undefined)) as ToolSearchParams;
+}
+
+function isClarificationQuestion(message: string): boolean {
+  const normalized = normalizeText(message);
+  const asksForSearchDetails =
+    /\b(?:preciser|souhaitez|pourriez|dans quelle|dans quel|quelle ville|quel secteur|quel type|quel budget|where|which city|what type|what budget)\b/.test(
+      normalized,
+    ) || /\bou (?:le|la|les) (?:cherchez|recherchez)\b/.test(normalized);
+  return message.includes("?") && asksForSearchDetails;
+}
+
+function getClarifiedSearchContext(
+  question: string,
+  chatHistory: Array<{ role: "user" | "assistant"; content: string }> | undefined,
+): ToolSearchParams | undefined {
+  const history = [...(chatHistory ?? [])];
+  const lastTurn = history.at(-1);
+  if (lastTurn?.role === "user" && normalizeText(lastTurn.content) === normalizeText(question)) {
+    history.pop();
+  }
+
+  let clarificationIndex = -1;
+  for (let index = history.length - 1; index >= 0; index -= 1) {
+    if (history[index]?.role === "assistant") {
+      clarificationIndex = index;
+      break;
+    }
+  }
+  if (clarificationIndex < 0 || !isClarificationQuestion(history[clarificationIndex]?.content ?? "")) {
+    return undefined;
+  }
+
+  let contextStart = 0;
+  for (let index = clarificationIndex - 1; index >= 0; index -= 1) {
+    const turn = history[index];
+    if (turn?.role === "assistant" && !isClarificationQuestion(turn.content)) {
+      contextStart = index + 1;
+      break;
+    }
+  }
+
+  const fallbackPageSize = clamp(Math.floor(parseNumberEnv("CHATBOT_AGENT_TOOLS_MAX_RESULTS", 5)), 1, 10);
+  let contextParams: ToolSearchParams = {};
+  let foundSearchFilters = false;
+  for (const turn of history.slice(contextStart, clarificationIndex)) {
+    if (turn?.role !== "user") continue;
+    const turnParams = extractSearchParamsFromQuestion(turn.content, undefined, undefined);
+    if (!hasUserSearchFilters(turnParams)) continue;
+    contextParams = mergeSearchParams(contextParams, keepDefinedSearchParams(turnParams), 1, fallbackPageSize);
+    foundSearchFilters = true;
+  }
+
+  return foundSearchFilters ? contextParams : undefined;
+}
+
+function extractSearchParamsForRequest(
+  question: string,
+  state: ToolConversationState | undefined,
+  actionRequest: ToolActionRequest | undefined,
+  chatHistory: Array<{ role: "user" | "assistant"; content: string }> | undefined,
+): ToolSearchParams {
+  const currentParams = extractSearchParamsFromQuestion(question, state, actionRequest);
+  const clarifiedSearchContext = getClarifiedSearchContext(question, chatHistory);
+  if (!clarifiedSearchContext) return currentParams;
+
+  // A short answer to a planner clarification supplies missing fields. Keep the
+  // original user filters when the answer or planner tool call omits them.
+  const followUpParams = extractSearchParamsFromQuestion(question, undefined, actionRequest);
+  const fallbackPageSize = clamp(Math.floor(parseNumberEnv("CHATBOT_AGENT_TOOLS_MAX_RESULTS", 5)), 1, 10);
+  return mergeSearchParams(
+    clarifiedSearchContext,
+    keepDefinedSearchParams(followUpParams),
+    1,
+    followUpParams.pageSize ?? fallbackPageSize,
+  );
+}
+
 function buildCriteriaSummary(params: ToolSearchParams): string {
   const parts: string[] = [];
   const transactionLabel = params.transaction === "vente" ? "à vendre" : undefined;
@@ -5220,7 +5317,12 @@ async function orchestrateToolRequest(input: {
   const runSearch = async (): Promise<ToolOrchestrationResult> => {
     const startedAt = Date.now();
     try {
-      const params = extractSearchParamsFromQuestion(input.question, mergedConversationState, effectiveActionRequest);
+      const params = extractSearchParamsForRequest(
+        input.question,
+        mergedConversationState,
+        effectiveActionRequest,
+        input.chatHistory,
+      );
       const result = await executeSearchPropertiesTool(supabase, params);
       toolTrace.push({
         tool: "search_properties",
@@ -5350,7 +5452,12 @@ async function orchestrateToolRequest(input: {
     const normalizedQuestion = normalizeText(input.question);
     const mentionsGlobal = /\b(stock|global|tout|tous|ensemble|marche)\b/.test(normalizedQuestion);
     const mentionsSelection = /\b(selection|selectionnes|compare|ces biens|biens choisis)\b/.test(normalizedQuestion);
-    const inferredSearchParams = extractSearchParamsFromQuestion(input.question, mergedConversationState, effectiveActionRequest);
+    const inferredSearchParams = extractSearchParamsForRequest(
+      input.question,
+      mergedConversationState,
+      effectiveActionRequest,
+      input.chatHistory,
+    );
     const hasSearchCriteria =
       Boolean(inferredSearchParams.transaction || inferredSearchParams.type || inferredSearchParams.city || inferredSearchParams.q) ||
       inferredSearchParams.bedroomsMin != null ||
@@ -5875,7 +5982,12 @@ async function orchestrateToolRequest(input: {
   };
 
   const clarifyBroadInvestmentSearch = (): ToolOrchestrationResult | null => {
-    const inferred = extractSearchParamsFromQuestion(input.question, mergedConversationState, effectiveActionRequest);
+    const inferred = extractSearchParamsForRequest(
+      input.question,
+      mergedConversationState,
+      effectiveActionRequest,
+      input.chatHistory,
+    );
     if (!isBroadInvestmentSearchQuestion(input.question, inferred)) return null;
 
     plannerMeta = {
