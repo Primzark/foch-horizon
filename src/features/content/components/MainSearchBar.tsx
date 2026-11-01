@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent, type KeyboardEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, House, Search, SlidersHorizontal } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -21,9 +21,11 @@ export type MainSearchSeedItem = PropertySearchItem & { description?: string };
 
 interface MainSearchBarProps {
   seedItems?: MainSearchSeedItem[];
+  renderAfterControls?: (dismissSuggestions: () => void) => ReactNode;
+  onSearchFocus?: () => void;
 }
 
-export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
+export function MainSearchBar({ seedItems = [], renderAfterControls, onSearchFocus }: MainSearchBarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
@@ -70,6 +72,12 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
       .slice(0, 5);
   }, [queryText, searchableInventory, transaction]);
   const showSuggestions = focused && !suggestionsDismissed && queryText.length >= 2;
+
+  const dismissSuggestions = () => {
+    setFocused(false);
+    setSuggestionsDismissed(true);
+    setActiveSuggestionIndex(-1);
+  };
 
   useEffect(() => {
     if (reducedMotion || focused || query) return;
@@ -186,8 +194,8 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
       : "main-search-browse-option";
 
   return (
-    <div className="w-full max-w-3xl">
-      <div className="relative z-20">
+    <div className="relative z-20 w-full max-w-3xl">
+      <div>
         <form
           action="/biens"
           method="get"
@@ -229,6 +237,7 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
                   setSuggestionsDismissed(false);
                 }}
                 onFocus={() => {
+                  onSearchFocus?.();
                   setFocused(true);
                   setSuggestionsDismissed(false);
                 }}
@@ -272,61 +281,6 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
           </div>
         </form>
 
-        {showSuggestions && (
-          <AnimatePresence>
-            <motion.div
-              initial={reducedMotion ? false : { opacity: 0, y: -5 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={reducedMotion ? undefined : { opacity: 0, y: -5 }}
-              transition={{ duration: reducedMotion ? 0 : 0.16, ease: "easeOut" }}
-              className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-40 overflow-hidden rounded-2xl border border-border bg-background text-foreground shadow-xl"
-            >
-              {suggestions.length === 0 && inventoryQuery.isLoading && (
-                <div className="p-2">
-                  <SearchThinkingState
-                    label="Je recherche les biens"
-                    details="Je vérifie les annonces correspondant à votre recherche."
-                    className="max-w-full"
-                  />
-                </div>
-              )}
-              <div id="main-search-suggestions" role="listbox" aria-label="Suggestions de biens" className="max-h-[min(24rem,60vh)] overflow-y-auto p-2">
-                {suggestions.length === 0 && inventoryQuery.isFetched && (
-                  <p role="status" className="px-3 py-4 text-sm text-muted-foreground">
-                    Aucun bien trouvé pour « {queryText} ».
-                  </p>
-                )}
-                {suggestions.map((suggestion, index) => (
-                    <PropertySearchSuggestion
-                      key={suggestion.id}
-                      idPrefix="main-search-suggestion"
-                      property={suggestion}
-                      revealIndex={index}
-                      isActive={activeSuggestionIndex === index}
-                      reducedMotion={reducedMotion}
-                      variant="main"
-                      onSelect={() => openSuggestion(index)}
-                    />
-                ))}
-
-                <button
-                  id="main-search-browse-option"
-                  type="button"
-                  role="option"
-                  aria-selected={activeSuggestionIndex === suggestions.length}
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={navigateToResults}
-                  className={`mt-1 flex w-full items-center gap-2 rounded-xl border-t border-border px-3 py-3 text-left text-sm text-brand-strong transition-colors hover:bg-brand-soft/60 ${
-                    activeSuggestionIndex === suggestions.length ? "bg-brand-soft/60" : ""
-                  }`}
-                >
-                  <Search className="h-4 w-4 shrink-0" />
-                  <span className="truncate">Voir tous les résultats pour « {queryText} »</span>
-                </button>
-              </div>
-            </motion.div>
-          </AnimatePresence>
-        )}
       </div>
 
       <div className="mt-4">
@@ -341,7 +295,64 @@ export function MainSearchBar({ seedItems = [] }: MainSearchBarProps) {
             <ArrowRight aria-hidden="true" className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
           </button>
         </div>
+        {renderAfterControls?.(dismissSuggestions)}
       </div>
+
+      {showSuggestions && (
+        <AnimatePresence>
+          <motion.div
+            initial={reducedMotion ? false : { opacity: 0, y: -5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={reducedMotion ? undefined : { opacity: 0, y: -5 }}
+            transition={{ duration: reducedMotion ? 0 : 0.16, ease: "easeOut" }}
+            className="absolute left-0 right-0 top-full z-40 mt-2 overflow-hidden rounded-2xl border border-border bg-background text-foreground shadow-xl"
+          >
+            {suggestions.length === 0 && inventoryQuery.isLoading && (
+              <div className="p-2">
+                <SearchThinkingState
+                  label="Je recherche les biens"
+                  details="Je vérifie les annonces correspondant à votre recherche."
+                  className="max-w-full"
+                />
+              </div>
+            )}
+            <div id="main-search-suggestions" role="listbox" aria-label="Suggestions de biens" className="max-h-[min(24rem,60vh)] overflow-y-auto p-2">
+              {suggestions.length === 0 && inventoryQuery.isFetched && (
+                <p role="status" className="px-3 py-4 text-sm text-muted-foreground">
+                  Aucun bien trouvé pour « {queryText} ».
+                </p>
+              )}
+              {suggestions.map((suggestion, index) => (
+                <PropertySearchSuggestion
+                  key={suggestion.id}
+                  idPrefix="main-search-suggestion"
+                  property={suggestion}
+                  revealIndex={index}
+                  isActive={activeSuggestionIndex === index}
+                  reducedMotion={reducedMotion}
+                  variant="main"
+                  onSelect={() => openSuggestion(index)}
+                />
+              ))}
+
+              <button
+                id="main-search-browse-option"
+                type="button"
+                role="option"
+                aria-selected={activeSuggestionIndex === suggestions.length}
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={navigateToResults}
+                className={`mt-1 flex w-full items-center gap-2 rounded-xl border-t border-border px-3 py-3 text-left text-sm text-brand-strong transition-colors hover:bg-brand-soft/60 ${
+                  activeSuggestionIndex === suggestions.length ? "bg-brand-soft/60" : ""
+                }`}
+              >
+                <Search className="h-4 w-4 shrink-0" />
+                <span className="truncate">Voir tous les résultats pour « {queryText} »</span>
+              </button>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+      )}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useMemo, type CSSProperties } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Compass, Handshake } from "lucide-react";
@@ -46,6 +46,7 @@ const HERO_IMAGE_CREDIT: PhotoAttributionCredit = {
 };
 
 export default function HomePage() {
+  const [heroCreditsOpen, setHeroCreditsOpen] = useState(false);
   const featuredQuery = useQuery({
     queryKey: ["featured-properties"],
     queryFn: getFeaturedProperties,
@@ -104,10 +105,21 @@ export default function HomePage() {
           </p>
 
           <div className="relative top-0 lg:top-12" style={ctaSweepStyle}>
-            <MainSearchBar seedItems={instantSearchItems} />
+            <MainSearchBar
+              seedItems={instantSearchItems}
+              onSearchFocus={() => setHeroCreditsOpen(false)}
+              renderAfterControls={(dismissSuggestions) => (
+                <PhotoAttribution
+                  credit={HERO_IMAGE_CREDIT}
+                  placement="below-search-controls"
+                  open={heroCreditsOpen}
+                  onOpenChange={setHeroCreditsOpen}
+                  onBeforeOpen={dismissSuggestions}
+                />
+              )}
+            />
           </div>
         </div>
-        <PhotoAttribution credit={HERO_IMAGE_CREDIT} heroOverlay />
       </section>
       <section data-live-content="/biens" className="container mx-auto px-4 pt-5 pb-12 md:pt-8 md:pb-12">
         <ScrollReveal mood={heroMood}>
