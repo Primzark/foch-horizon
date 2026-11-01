@@ -494,7 +494,6 @@ const knownInternalPaths = [
   "/accessibilite",
   "/plan-du-site",
   "/buy",
-  "/rent",
   "/legal/fees",
   "/legal/privacy",
   "/legal/cookies",
@@ -507,7 +506,6 @@ const topicPathAliases = new Map<string, string>([
   ["/my-selection", "/biens-sauvegardes"],
   ["/biens-immobiliers", "/biens"],
   ["/buy", "/biens"],
-  ["/rent", "/biens"],
   ["/legal/fees", "/honoraires"],
   ["/legal/privacy", "/confidentialite"],
   ["/legal/cookies", "/cookies"],
@@ -967,87 +965,26 @@ function detectTransactionPreference(text: string): "vente" | null {
   return null;
 }
 
-function isRentalQuestion(text: string): boolean {
-  return /\b(louer|loue|louent|locations?|locatifs?|locatives?|loyers?|bailleurs?|locataires?|rent|rental|renting|tenants?|leases?)\b/.test(normalizeKeyword(text));
-}
-
-function isRentalStatisticsQuestion(text: string): boolean {
+function isRentalQuestion(text: string, language: "fr" | "en" = "fr"): boolean {
   const normalized = normalizeKeyword(text);
-  const hasRentalTopic = /\b(loyers?|locations?|locatifs?|locatives?|rent|rental|renting)\b/.test(normalized);
-  const asksForMarketData =
-    /\b(moyen|moyenne|median|prix|combien|quel|quelle|quels|quelles|cout|statistique|taux|rendement|estimation|marche|average|typical|median|price|cost|statistics|rate|yield|market|how much|what)\b/.test(normalized) ||
-    /\b(?:m2|sqm)\b/.test(normalized);
-  return hasRentalTopic && asksForMarketData;
+  return containsRentalLanguage(normalized, language) || (language === "fr" && /\b(?:location|locations)\b/.test(normalized));
 }
 
-function buildRentalUnavailableAnswer(context?: ConversationContext, language: "fr" | "en" = "fr"): ChatbotReply {
-  if (language === "en") {
-    if (context && districtComparisonPattern.test(context.normalizedQuestion) && /investissement locatif|locatif|locative/.test(context.normalizedQuestion)) {
-      return {
-        source: "local",
-        answer: "For a buy-to-let project in Le Havre, Saint-François, Eure–Docks and Perret are worth comparing against your budget, property type and target yield. Foch Immobilier does not list rentals; the agency helps with purchases, sales and valuations. Visit /geographie for area guides or /biens for properties for sale.",
-        suggestedPrompts: ["What properties are for sale in Saint-François, Eure–Docks or Perret?", "What are the advantages of these neighbourhoods?", "Open /geographie", "Open /biens"],
-      };
-    }
+export function containsRentalLanguage(text: string, language: "fr" | "en" = "fr"): boolean {
+  const normalized = normalizeKeyword(text);
+  const rentalTerms = /\b(?:louer|loue|louent|loues|louee|louees|louons|louez|louant|locatif\w*|locative\w*|loyer\w*|bail\w*|bailleur\w*|locataire\w*|rent\w*|lease\w*|tenant\w*|landlord\w*|buy[ -]?to[ -]?let)\b|\b(?:en|de|pour|a la)\s+locations?\b/;
+  return rentalTerms.test(normalized) || (language === "fr" && /\blocat\w*\b/.test(normalized));
+}
 
-    if (context && context.normalizedHistory.length > 0 && hasPropertyContext(context)) {
-      return {
-        source: "local",
-        answer: "I’ll keep your search criteria in mind. Foch Immobilier does not list rentals; the catalogue shows properties for sale at /biens.",
-        suggestedPrompts: ["Show properties for sale matching my criteria", "I want to buy in Le Havre", "I’d like a valuation"],
-      };
-    }
-
-    return {
-      source: "local",
-      answer: "Foch Immobilier does not list rental properties. The agency helps with purchases, sales and valuations; browse properties for sale at /biens.",
-      suggestedPrompts: ["View properties for sale", "I want to sell my property", "I’d like a valuation"],
-    };
-  }
-
-  if (
-    context &&
-    districtComparisonPattern.test(context.normalizedQuestion) &&
-    /investissement locatif|locatif|locative/.test(context.normalizedQuestion)
-  ) {
-    return {
-      source: "local",
-      answer:
-        "Pour un projet d’investissement locatif au Havre, Saint-François, Eure–Docks et Perret méritent d’être comparés selon votre budget, le type de bien et le rendement visé. Foch Immobilier ne propose pas d’annonces en location ; l’agence accompagne les projets d’achat, de vente et d’estimation. Consultez /geographie pour découvrir les secteurs et /biens pour les biens à vendre.",
-      suggestedPrompts: normalizePromptList([
-        "Quels biens à vendre avez-vous à Saint-François, Eure–Docks ou Perret ?",
-        "Quels sont les atouts de ces quartiers ?",
-        "Ouvrir /geographie",
-        "Ouvrir /biens",
-      ]),
-    };
-  }
-
-  if (context && context.normalizedHistory.length > 0 && hasPropertyContext(context)) {
-    const criteria = formatCriteriaSummary(context).replace(/, en vente/, "");
-    const criteriaText = criteria ? ` vos critères (${criteria})` : " le contexte de votre recherche";
-
-    return {
-      source: "local",
-      answer:
-        `Pour une recherche en location, je garde${criteriaText}. Foch Immobilier ne propose pas d’annonces en location ; le catalogue présente des biens à vendre sur /biens.`,
-      suggestedPrompts: normalizePromptList([
-        "Voir les biens à vendre correspondant à mes critères",
-        "Je veux acheter un bien au Havre",
-        "Je veux faire estimer mon bien",
-      ]),
-    };
-  }
-
+function buildPurchaseOnlyRedirectAnswer(language: "fr" | "en" = "fr"): ChatbotReply {
   return {
     source: "local",
-    answer:
-      "Foch Immobilier ne propose pas d’annonces en location. L’agence accompagne les projets d’achat, de vente et d’estimation immobilière ; vous pouvez consulter les biens à vendre sur /biens.",
-    suggestedPrompts: normalizePromptList([
-      "Voir les biens à vendre",
-      "Je veux vendre mon bien",
-      "Je veux faire estimer mon bien",
-    ]),
+    answer: language === "en"
+      ? "I can help with buying, selling, or valuing a property. Would you like to search for an apartment or a house to buy?"
+      : "Je peux vous aider à acheter, vendre ou faire estimer un bien. Cherchez-vous un appartement ou une maison à acheter ?",
+    suggestedPrompts: language === "en"
+      ? ["View properties for sale", "Find an apartment to buy", "Request a property valuation"]
+      : ["Voir les biens à vendre", "Je cherche un appartement à acheter", "Je veux faire estimer mon bien"],
   };
 }
 
@@ -1730,8 +1667,8 @@ function buildFallbackReply(): ChatbotReply {
   };
 }
 
-async function buildLocalReply(question: string, context: ConversationContext): Promise<ChatbotReply> {
-  if (isRentalQuestion(question)) return buildRentalUnavailableAnswer(context);
+async function buildLocalReply(question: string, context: ConversationContext, language: "fr" | "en" = "fr"): Promise<ChatbotReply> {
+  if (isRentalQuestion(question, language)) return buildPurchaseOnlyRedirectAnswer(language);
 
   if (pageSummaryPattern.test(context.normalizedQuestion)) {
     const pageSummaryReply = buildPageSummaryAnswer(context);
@@ -1892,10 +1829,6 @@ export function decideChatbotRoute(
 
   if (!options.edgeApiEnabled) {
     return { target: "local", category: "fallback", reason: "edge_disabled", intent: context.inferredIntent };
-  }
-
-  if (isRentalStatisticsQuestion(context.normalizedQuestion)) {
-    return { target: "edge", category: "edge_general", reason: "rental_statistics_research", intent: "unknown" };
   }
 
   const needsEdgeRag =
@@ -2798,7 +2731,7 @@ function sanitizeActions(raw: unknown): ChatbotUiAction[] | undefined {
   return actions.length > 0 ? actions : undefined;
 }
 
-function normalizeReplyOutput(reply: ChatbotReply): ChatbotReply {
+function normalizeReplyOutput(reply: ChatbotReply, language: "fr" | "en" = "fr"): ChatbotReply {
   const answer = typeof reply.answer === "string" && reply.answer.trim().length > 0 ? reply.answer.trim() : buildFallbackReply().answer;
   const prompts = normalizePromptList(reply.suggestedPrompts ?? []);
   const citations = sanitizeCitations(reply.citations);
@@ -2829,6 +2762,15 @@ function normalizeReplyOutput(reply: ChatbotReply): ChatbotReply {
   const toolTrace = sanitizeToolTrace(reply.toolTrace);
   const planner = sanitizePlannerMeta(reply.planner);
   const analysisCards = sanitizeAnalysisCards(reply.analysisCards);
+  const containsRentalOutput = containsRentalLanguage([
+    answer,
+    ...prompts,
+    ...citations.map((citation) => citation.title ?? ""),
+    JSON.stringify(actions ?? []),
+    JSON.stringify(analysisCards ?? []),
+    JSON.stringify(reply.propertySuggestions ?? []),
+  ].join(" "), language);
+  const purchaseOnlyRedirect = containsRentalOutput ? buildPurchaseOnlyRedirectAnswer(language) : undefined;
   const memory = sanitizeMemoryMeta(reply.memory);
   const costHints = sanitizeCostHints(reply.costHints);
   const streamSupported = typeof reply.streamSupported === "boolean" ? reply.streamSupported : undefined;
@@ -2854,20 +2796,21 @@ function normalizeReplyOutput(reply: ChatbotReply): ChatbotReply {
 
   return {
     ...reply,
-    answer,
-    suggestedPrompts: prompts.length > 0 ? prompts : normalizePromptList(chatbotExamplePrompts),
-    citations,
+    answer: purchaseOnlyRedirect?.answer ?? answer,
+    suggestedPrompts: purchaseOnlyRedirect?.suggestedPrompts ?? (prompts.length > 0 ? prompts : normalizePromptList(chatbotExamplePrompts)),
+    citations: purchaseOnlyRedirect ? undefined : citations,
     edgeProvider,
     retrievalMode,
     routeCategory,
     routeDecision: routeDecision && routeDecision.length > 0 ? routeDecision : undefined,
     requestId: requestId && requestId.length > 0 ? requestId : undefined,
     agentMode,
-    actions,
+    actions: purchaseOnlyRedirect ? undefined : actions,
     conversationStatePatch,
     toolTrace,
     planner,
-    analysisCards,
+    analysisCards: purchaseOnlyRedirect ? undefined : analysisCards,
+    propertySuggestions: purchaseOnlyRedirect ? undefined : reply.propertySuggestions,
     memory,
     pageContextUsed,
     pageContextMode,
@@ -2898,8 +2841,8 @@ export const chatbotServiceTestInternals = {
 
 export async function askAgencyChatbot(request: ChatbotRequest): Promise<ChatbotReply> {
   const context = buildConversationContext(request.question, request.chatHistory);
-  if (isRentalQuestion(request.question) && !isRentalStatisticsQuestion(request.question)) {
-    return normalizeReplyOutput(buildRentalUnavailableAnswer(context, request.language));
+  if (isRentalQuestion(request.question, request.language)) {
+    return normalizeReplyOutput(buildPurchaseOnlyRedirectAnswer(request.language), request.language);
   }
 
   const edgeRagForWebsiteQuestionsEnabled =
@@ -2923,13 +2866,13 @@ export async function askAgencyChatbot(request: ChatbotRequest): Promise<Chatbot
   let localReplyCache: ChatbotReply | null = null;
   const getLocalReply = async () => {
     if (!localReplyCache) {
-      localReplyCache = normalizeReplyOutput(await buildLocalReply(request.question, context));
+      localReplyCache = normalizeReplyOutput(await buildLocalReply(request.question, context, request.language), request.language);
     }
     return localReplyCache;
   };
 
   if (routeDecision.target === "local") {
-    return normalizeReplyOutput(applyRouteMetadata(await getLocalReply(), routeDecision));
+    return normalizeReplyOutput(applyRouteMetadata(await getLocalReply(), routeDecision), request.language);
   }
 
   const { signal, ...requestPayload } = request;
@@ -2949,6 +2892,7 @@ export async function askAgencyChatbot(request: ChatbotRequest): Promise<Chatbot
           category: "fallback",
           reason: "edge_invalid_payload",
         }),
+        request.language,
       );
     }
 
@@ -2963,6 +2907,7 @@ export async function askAgencyChatbot(request: ChatbotRequest): Promise<Chatbot
         },
         routeDecision,
       ),
+      request.language,
     );
   } catch {
     return normalizeReplyOutput(
@@ -2972,6 +2917,7 @@ export async function askAgencyChatbot(request: ChatbotRequest): Promise<Chatbot
         category: "fallback",
         reason: "edge_request_failed",
       }),
+      request.language,
     );
   }
 }
@@ -2999,6 +2945,7 @@ function streamEndpointPath(): string {
 async function parseSseResponseStream(
   response: Response,
   handlers?: ChatbotStreamHandlers,
+  language: "fr" | "en" = "fr",
 ): Promise<ChatbotReply> {
   if (!response.ok || !response.body) {
     const text = await response.text().catch(() => "");
@@ -3052,7 +2999,7 @@ async function parseSseResponseStream(
             ...maybeReply,
             source: "edge",
             edgeProvider: maybeReply.edgeProvider ?? getLegacyEdgeProvider(maybeReply),
-          });
+          }, language);
         }
       }
     } else if (currentEvent === "error" && payload && typeof payload === "object") {
@@ -3103,8 +3050,8 @@ export async function askAgencyChatbotStream(
   handlers?: ChatbotStreamHandlers,
 ): Promise<ChatbotReply> {
   const context = buildConversationContext(request.question, request.chatHistory);
-  if (isRentalQuestion(request.question) && !isRentalStatisticsQuestion(request.question)) {
-    return normalizeReplyOutput(buildRentalUnavailableAnswer(context, request.language));
+  if (isRentalQuestion(request.question, request.language)) {
+    return normalizeReplyOutput(buildPurchaseOnlyRedirectAnswer(request.language), request.language);
   }
 
   const edgeRagForWebsiteQuestionsEnabled =
@@ -3128,13 +3075,13 @@ export async function askAgencyChatbotStream(
   let localReplyCache: ChatbotReply | null = null;
   const getLocalReply = async () => {
     if (!localReplyCache) {
-      localReplyCache = normalizeReplyOutput(await buildLocalReply(request.question, context));
+      localReplyCache = normalizeReplyOutput(await buildLocalReply(request.question, context, request.language), request.language);
     }
     return localReplyCache;
   };
 
   if (routeDecision.target === "local") {
-    return normalizeReplyOutput(applyRouteMetadata(await getLocalReply(), routeDecision));
+    return normalizeReplyOutput(applyRouteMetadata(await getLocalReply(), routeDecision), request.language);
   }
 
   const { signal, ...requestPayload } = request;
@@ -3147,8 +3094,8 @@ export async function askAgencyChatbotStream(
       },
       body: JSON.stringify(requestPayload),
     });
-    const streamedReply = await parseSseResponseStream(response, handlers);
-    return normalizeReplyOutput(applyRouteMetadata(streamedReply, routeDecision));
+    const streamedReply = await parseSseResponseStream(response, handlers, request.language);
+    return normalizeReplyOutput(applyRouteMetadata(streamedReply, routeDecision), request.language);
   } catch {
     return normalizeReplyOutput(
       applyRouteMetadata(await getLocalReply(), {
@@ -3157,6 +3104,7 @@ export async function askAgencyChatbotStream(
         category: "fallback",
         reason: "edge_stream_failed",
       }),
+      request.language,
     );
   }
 }

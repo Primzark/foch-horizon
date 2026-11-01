@@ -11,6 +11,7 @@ import { FormErrorSummary, type FormErrorItem } from "@/components/forms/FormErr
 import {
   askAgencyChatbot,
   askAgencyChatbotStream,
+  containsRentalLanguage,
   type ChatbotActionRequest,
   type ChatbotAnalysisCard,
   type ChatbotCitation,
@@ -514,6 +515,7 @@ function sanitizeStoredMessages(raw: unknown): ChatMessage[] {
       routeCategory?: unknown;
       requestId?: unknown;
       planner?: unknown;
+      actions?: unknown;
       analysisCards?: unknown;
       memory?: unknown;
       pageContextUsed?: unknown;
@@ -530,13 +532,29 @@ function sanitizeStoredMessages(raw: unknown): ChatMessage[] {
     const content = candidate.content.trim();
     if (content.length === 0) continue;
 
+    const suggestedPrompts = sanitizePromptList(candidate.suggestedPrompts)
+      .filter((prompt) => !containsRentalLanguage(prompt));
+    if (
+      candidate.role === "assistant" &&
+      containsRentalLanguage([
+        content,
+        JSON.stringify(suggestedPrompts),
+        JSON.stringify(candidate.propertySuggestions ?? []),
+        JSON.stringify(candidate.citations ?? []),
+        JSON.stringify(candidate.actions ?? []),
+        JSON.stringify(candidate.analysisCards ?? []),
+      ].join(" "))
+    ) {
+      continue;
+    }
+
     sanitized.push({
       id: typeof candidate.id === "string" && candidate.id.trim().length > 0 ? candidate.id : createMessageId(),
       role: candidate.role,
       content: content.slice(0, 3200),
       propertySuggestions: sanitizePropertySuggestions(candidate.propertySuggestions),
       citations: sanitizeCitations(candidate.citations),
-      suggestedPrompts: sanitizePromptList(candidate.suggestedPrompts),
+      suggestedPrompts,
       source: candidate.source === "local" || candidate.source === "edge" ? candidate.source : undefined,
       edgeProvider:
         candidate.edgeProvider === "gemini" || candidate.edgeProvider === "fallback"
