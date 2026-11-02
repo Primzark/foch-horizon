@@ -240,8 +240,8 @@ export default function CityHubPage() {
             {propertiesQuery.isLoading
               ? "Chargement des annonces du secteur…"
               : propertiesQuery.isError
-              ? "Les annonces ne sont pas disponibles pour le moment. Retrouvez ci-dessous les repères sur le secteur."
-              : `Aucune annonce active pour le moment ${atLocation(cityGuide.name)}. Retrouvez ci-dessous les repères sur le secteur.`}
+              ? "Les annonces ne sont pas disponibles pour le moment."
+              : `Aucune annonce active pour le moment ${atLocation(cityGuide.name)}.`}
           </p>
         ) : (
           <section className="mt-8" aria-labelledby="city-properties-title">

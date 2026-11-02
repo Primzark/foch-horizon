@@ -928,10 +928,10 @@ function translateDynamicFrench(source: string): string | undefined {
   const hotelHeading = source.match(/^Immobilier près de l[’']Hôtel de Ville du Havre$/i);
   if (hotelHeading) return "Property near Hôtel de Ville, Le Havre";
 
-  const noListings = source.match(/^Aucune annonce active pour le moment (.+)\. Retrouvez ci-dessous les repères sur le secteur\.$/i);
+  const noListings = source.match(/^Aucune annonce active pour le moment (.+)\.$/i);
   if (noListings) {
     const location = translateDynamicFrench(noListings[1]) ?? noListings[1];
-    return `No active listings ${location}. Explore the area guide below.`;
+    return `No active listings ${location}.`;
   }
 
   if (/^(?:Le Havre|Seine-Maritime|Calvados)(?:\s+·|$)/i.test(source)) {
