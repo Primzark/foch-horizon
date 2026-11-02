@@ -5311,7 +5311,10 @@ async function orchestrateToolRequest(input: {
   if (!toolsEnabled) return null;
 
   const persistentMemory = await loadPersistentMemoryRecord(input.sessionId);
-  const mergedConversationState = mergeConversationStateWithPersistentMemory(input.conversationState, persistentMemory);
+  let mergedConversationState = mergeConversationStateWithPersistentMemory(input.conversationState, persistentMemory);
+  if (!input.actionRequest && /^(?:je (?:cherche|recherche|souhaite)|find|search for|i am looking|i m looking)\b/.test(normalizeText(input.question))) {
+    mergedConversationState = { selectedPropertyIds: mergedConversationState?.selectedPropertyIds };
+  }
 
   const agentMode = detectAgentMode(input.question, input.actionRequest, mergedConversationState);
   if (agentMode !== "tool") return null;
