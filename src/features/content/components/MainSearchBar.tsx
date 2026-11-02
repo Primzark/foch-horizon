@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useMemo, useState, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, House, Search, SlidersHorizontal } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -23,9 +23,10 @@ interface MainSearchBarProps {
   seedItems?: MainSearchSeedItem[];
   renderAfterControls?: (dismissSuggestions: () => void) => ReactNode;
   onSearchFocus?: () => void;
+  suppressSuggestions?: boolean;
 }
 
-export function MainSearchBar({ seedItems = [], renderAfterControls, onSearchFocus }: MainSearchBarProps) {
+export function MainSearchBar({ seedItems = [], renderAfterControls, onSearchFocus, suppressSuggestions = false }: MainSearchBarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
@@ -37,6 +38,7 @@ export function MainSearchBar({ seedItems = [], renderAfterControls, onSearchFoc
   const [focused, setFocused] = useState(false);
   const [suggestionsDismissed, setSuggestionsDismissed] = useState(false);
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
+  const [suggestionMaxHeight, setSuggestionMaxHeight] = useState<number | null>(null);
 
   const inventoryQuery = useQuery({
     queryKey: ["main-search-inventory"],
@@ -71,13 +73,59 @@ export function MainSearchBar({ seedItems = [], renderAfterControls, onSearchFoc
       .map(({ item }) => item)
       .slice(0, 5);
   }, [queryText, searchableInventory, transaction]);
-  const showSuggestions = focused && !suggestionsDismissed && queryText.length >= 2;
+  const showSuggestions = focused && !suggestionsDismissed && !suppressSuggestions && queryText.length >= 2;
 
   const dismissSuggestions = () => {
     setFocused(false);
     setSuggestionsDismissed(true);
     setActiveSuggestionIndex(-1);
   };
+
+  useLayoutEffect(() => {
+    if (!showSuggestions) {
+      setSuggestionMaxHeight(null);
+      return;
+    }
+
+    const input = document.getElementById("main-property-search");
+    const form = input?.closest("form");
+    const creditAnchor = document.getElementById("hero-photo-credit-anchor");
+    if (!form || !creditAnchor) {
+      setSuggestionMaxHeight(null);
+      return;
+    }
+
+    const updateMaxHeight = () => {
+      const formBottom = form.getBoundingClientRect().bottom;
+      const creditTop = creditAnchor.getBoundingClientRect().top;
+      const viewport = window.visualViewport;
+      const viewportBottom = Math.min(
+        window.innerHeight,
+        (viewport?.offsetTop ?? 0) + (viewport?.height ?? window.innerHeight),
+      );
+      const safeBottom = Math.min(creditTop, viewportBottom) - 8;
+      const nextHeight = Math.max(0, Math.floor(safeBottom - formBottom));
+
+      setSuggestionMaxHeight((current) => current === nextHeight ? current : nextHeight);
+    };
+
+    const resizeObserver = new ResizeObserver(updateMaxHeight);
+    resizeObserver.observe(form);
+    resizeObserver.observe(creditAnchor);
+    updateMaxHeight();
+    window.addEventListener("resize", updateMaxHeight);
+    window.addEventListener("scroll", updateMaxHeight, true);
+    window.visualViewport?.addEventListener("resize", updateMaxHeight);
+    window.visualViewport?.addEventListener("scroll", updateMaxHeight);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener("resize", updateMaxHeight);
+      window.removeEventListener("scroll", updateMaxHeight, true);
+      window.visualViewport?.removeEventListener("resize", updateMaxHeight);
+      window.visualViewport?.removeEventListener("scroll", updateMaxHeight);
+    };
+  }, [showSuggestions]);
 
   useEffect(() => {
     if (reducedMotion || focused || query) return;
@@ -195,7 +243,7 @@ export function MainSearchBar({ seedItems = [], renderAfterControls, onSearchFoc
 
   return (
     <div className="relative z-20 w-full max-w-3xl">
-      <div>
+      <div className="relative z-30">
         <form
           action="/biens"
           method="get"
@@ -281,6 +329,62 @@ export function MainSearchBar({ seedItems = [], renderAfterControls, onSearchFoc
           </div>
         </form>
 
+        {showSuggestions && (
+          <AnimatePresence>
+            <motion.div
+              initial={reducedMotion ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={reducedMotion ? undefined : { opacity: 0 }}
+              transition={{ duration: reducedMotion ? 0 : 0.16, ease: "easeOut" }}
+              style={{ maxHeight: suggestionMaxHeight === null ? undefined : suggestionMaxHeight + "px" }}
+              className="absolute left-0 right-0 top-full z-40 max-h-[min(24rem,60vh)] overflow-y-auto overscroll-contain rounded-2xl border border-border bg-background text-foreground shadow-xl"
+            >
+              {suggestions.length === 0 && inventoryQuery.isLoading && (
+                <div className="p-2">
+                  <SearchThinkingState
+                    label="Je recherche les biens"
+                    details="Je vérifie les annonces correspondant à votre recherche."
+                    className="max-w-full"
+                  />
+                </div>
+              )}
+              <div id="main-search-suggestions" role="listbox" aria-label="Suggestions de biens" className="p-2">
+                {suggestions.length === 0 && inventoryQuery.isFetched && (
+                  <p role="status" className="px-3 py-4 text-sm text-muted-foreground">
+                    Aucun bien trouvé pour « {queryText} ».
+                  </p>
+                )}
+                {suggestions.map((suggestion, index) => (
+                  <PropertySearchSuggestion
+                    key={suggestion.id}
+                    idPrefix="main-search-suggestion"
+                    property={suggestion}
+                    revealIndex={index}
+                    isActive={activeSuggestionIndex === index}
+                    reducedMotion={reducedMotion}
+                    variant="main"
+                    onSelect={() => openSuggestion(index)}
+                  />
+                ))}
+
+                <button
+                  id="main-search-browse-option"
+                  type="button"
+                  role="option"
+                  aria-selected={activeSuggestionIndex === suggestions.length}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={navigateToResults}
+                  className={`mt-1 flex w-full items-center gap-2 rounded-xl border-t border-border px-3 py-3 text-left text-sm text-brand-strong transition-colors hover:bg-brand-soft/60 ${
+                    activeSuggestionIndex === suggestions.length ? "bg-brand-soft/60" : ""
+                  }`}
+                >
+                  <Search className="h-4 w-4 shrink-0" />
+                  <span className="truncate">Voir tous les résultats pour « {queryText} »</span>
+                </button>
+              </div>
+            </motion.div>
+          </AnimatePresence>
+        )}
       </div>
 
       <div className="mt-4">
@@ -298,61 +402,6 @@ export function MainSearchBar({ seedItems = [], renderAfterControls, onSearchFoc
         {renderAfterControls?.(dismissSuggestions)}
       </div>
 
-      {showSuggestions && (
-        <AnimatePresence>
-          <motion.div
-            initial={reducedMotion ? false : { opacity: 0, y: -5 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={reducedMotion ? undefined : { opacity: 0, y: -5 }}
-            transition={{ duration: reducedMotion ? 0 : 0.16, ease: "easeOut" }}
-            className="absolute left-0 right-0 top-full z-40 mt-2 overflow-hidden rounded-2xl border border-border bg-background text-foreground shadow-xl"
-          >
-            {suggestions.length === 0 && inventoryQuery.isLoading && (
-              <div className="p-2">
-                <SearchThinkingState
-                  label="Je recherche les biens"
-                  details="Je vérifie les annonces correspondant à votre recherche."
-                  className="max-w-full"
-                />
-              </div>
-            )}
-            <div id="main-search-suggestions" role="listbox" aria-label="Suggestions de biens" className="max-h-[min(24rem,60vh)] overflow-y-auto p-2">
-              {suggestions.length === 0 && inventoryQuery.isFetched && (
-                <p role="status" className="px-3 py-4 text-sm text-muted-foreground">
-                  Aucun bien trouvé pour « {queryText} ».
-                </p>
-              )}
-              {suggestions.map((suggestion, index) => (
-                <PropertySearchSuggestion
-                  key={suggestion.id}
-                  idPrefix="main-search-suggestion"
-                  property={suggestion}
-                  revealIndex={index}
-                  isActive={activeSuggestionIndex === index}
-                  reducedMotion={reducedMotion}
-                  variant="main"
-                  onSelect={() => openSuggestion(index)}
-                />
-              ))}
-
-              <button
-                id="main-search-browse-option"
-                type="button"
-                role="option"
-                aria-selected={activeSuggestionIndex === suggestions.length}
-                onMouseDown={(event) => event.preventDefault()}
-                onClick={navigateToResults}
-                className={`mt-1 flex w-full items-center gap-2 rounded-xl border-t border-border px-3 py-3 text-left text-sm text-brand-strong transition-colors hover:bg-brand-soft/60 ${
-                  activeSuggestionIndex === suggestions.length ? "bg-brand-soft/60" : ""
-                }`}
-              >
-                <Search className="h-4 w-4 shrink-0" />
-                <span className="truncate">Voir tous les résultats pour « {queryText} »</span>
-              </button>
-            </div>
-          </motion.div>
-        </AnimatePresence>
-      )}
     </div>
   );
 }
