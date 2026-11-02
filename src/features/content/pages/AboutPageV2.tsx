@@ -7,7 +7,7 @@ import { AgentInitialsAvatar } from "@/features/listings/components/AgentInitial
 import { useSeo } from "@/lib/seo/useSeo";
 import { AgencyPageHeader } from "@/features/content/components/AgencyPageHeader";
 
-const feesPdfUrl = "https://www.fochimmobilier.com/static/pdf/honoraires-fochimmobilier-le-havre-76.pdf";
+const feesPdfUrl = "/static/pdf/honoraires-fochimmobilier-le-havre-2026.pdf";
 
 const fadeUp = {
   initial: { opacity: 0, y: 18 },
