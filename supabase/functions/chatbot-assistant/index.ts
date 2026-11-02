@@ -2,7 +2,7 @@ import { geographyReply, chatbotPlaces, normalizePlace, resolvePlaces } from "..
 import { z } from "https://esm.sh/zod@3.25.76";
 import { createServiceClient } from "../_shared/client.ts";
 import { consumeRequestLimit, isAllowedSiteOrigin, secureJsonResponse, secureOptionsResponse } from "../_shared/request-security.ts";
-import { parseBedroomsMin, parsePriceHints } from "../_shared/chatbot-search-criteria.ts";
+import { parseBedroomsMin, parsePriceHints, filterExcludedFeatures } from "../_shared/chatbot-search-criteria.ts";
 import {
   CHATBOT_EMBEDDING_DIMENSION,
   CHATBOT_EMBEDDING_MODEL,
@@ -3784,7 +3784,7 @@ function extractSearchParamsFromQuestion(
   const room = normalizeText(question).match(/\bt([1-9])\b/);
   const excluded = [...normalizeText(question).matchAll(/\b(?:sans|without|retire|enleve)\s+(?:de\s+|le\s+|la\s+)?(balcon|terrasse|ascenseur|garage|parking|jardin)\b/g)].map(m=>m[1]);
   const merged = mergeSearchParams(stateParams, { ...keepDefinedSearchParams(inferredParams), ...actionParams, ...(room ? {rooms:Number(room[1])} : {}) }, 1, fallbackPageSize);
-  if (excluded.length) { merged.excludedFeatures = excluded; merged.features = (merged.features ?? []).filter(f => !excluded.includes(f));
+  if (excluded.length) { merged.excludedFeatures = excluded; merged.features = filterExcludedFeatures(merged.features ?? [], excluded);
     if (merged.q) { merged.q = merged.q.replace(/\b(?:sans|without|retire|enleve)\s+(?:de\s+|le\s+|la\s+)?(?:balcon|terrasse|ascenseur|garage|parking|jardin)\b/gi, "").trim(); if (!merged.q) delete merged.q; } }
   if (/sans (?:limite de )?budget|no budget limit/.test(normalizeText(question))) { delete merged.priceMax; delete merged.priceMin; }
   return merged;

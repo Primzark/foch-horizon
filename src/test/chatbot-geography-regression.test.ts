@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { chatbotPlaces, geographyReply } from '../../supabase/functions/_shared/chatbot-geography';
-import { parsePriceHints } from '../../supabase/functions/_shared/chatbot-search-criteria';
+import { parsePriceHints, filterExcludedFeatures } from '../../supabase/functions/_shared/chatbot-search-criteria';
 import { buildConversationContext, decideChatbotRoute } from '@/features/content/api/chatbot.service';
 describe('chatbot audit regressions', () => {
+ it('removes negated planner feature phrases without dropping unrelated requirements', () => expect(filterExcludedFeatures(['sans balcon','balcon','terrasse'],['balcon'])).toEqual(['terrasse']));
  for (const place of chatbotPlaces) it(`answers the supported guide ${place.name}`, () => {
   const reply = geographyReply(`Parlez-moi de ${place.name}.`);
   expect(reply?.answer).toContain(place.name);

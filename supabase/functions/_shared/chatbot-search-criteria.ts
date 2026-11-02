@@ -96,3 +96,8 @@ export function parsePriceHints(question: string): PriceHints {
 
   return {};
 }
+
+/** Planner feature values may contain a whole negative phrase rather than a key. */
+export function filterExcludedFeatures(features: string[], excluded: string[]): string[] {
+  return features.filter(feature => !excluded.some(key => normalizeText(feature).split(/\s+/).includes(normalizeText(key))));
+}
