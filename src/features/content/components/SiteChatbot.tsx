@@ -1233,6 +1233,10 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
   }, [cancelPendingRequest]);
 
   useEffect(() => {
+    if (open && !loading && !showLeadCapture) document.getElementById("assistant-question")?.focus();
+  }, [open, loading, showLeadCapture]);
+
+  useEffect(() => {
     if (!open) return;
     const previous = document.activeElement as HTMLElement | null;
     const panel = document.querySelector<HTMLElement>('[role="dialog"][aria-modal="true"]');
@@ -3466,7 +3470,6 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
                 <Label htmlFor="assistant-question" className="sr-only">Posez une question à l’assistant</Label>
                 <Input
                   maxLength={1200}
-                  autoFocus
                   minLength={2}
                   id="assistant-question"
                   name="question"

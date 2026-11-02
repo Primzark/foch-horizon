@@ -49,7 +49,6 @@ function splitTextIntoChunks(text: string): string[] {
     }
     chunks.push(normalized.slice(cursor, next < normalized.length ? next + 1 : next));
     cursor = next < normalized.length ? next + 1 : next;
-    while (normalized[cursor] === " ") cursor += 1;
   }
   return chunks;
 }
