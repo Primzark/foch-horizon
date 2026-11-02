@@ -86,7 +86,7 @@ function tokenMatches(queryTerm: string, sourceTerms: Set<string>): boolean {
 
 /** Removes only a leading web-search command, keeping the user's actual search topic. */
 export function buildTavilySearchQuery(question: string): string {
-  const commandPrefix = /^(?:(?:please|s'il vous plait)\s+)?(?:(?:recherche|rechercher|recherchez|cherche|chercher)\s+(?:sur\s+)?(?:le\s+)?(?:web|internet)|(?:search|browse|look\s+up)\s+(?:the\s+)?(?:web|internet))(?:\s+(?:for|about|sur|pour))?\s*[:,\-]?\s*/iu;
+  const commandPrefix = /^(?:(?:please|s'il vous plait)\s+)?(?:(?:recherche|rechercher|recherchez|cherche|chercher)\s+(?:sur\s+)?(?:le\s+)?(?:web|internet)|(?:search|browse|look\s+up)\s+(?:the\s+)?(?:web|internet))(?:\s+(?:for|about|sur|pour))?\s*[:,-]?\s*/iu;
   return question.trim().replace(commandPrefix, "").replace(/\s+/g, " ").trim().slice(0, 400);
 }
 

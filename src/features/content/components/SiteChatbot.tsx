@@ -1167,6 +1167,8 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
     setLeadLoading(false);
     setInput("");
     setPendingFeedbackMessageId(null);
+    sessionIdRef.current = createMessageId();
+    window.localStorage.setItem(CHATBOT_SESSION_STORAGE_KEY, sessionIdRef.current);
     conversationIdRef.current = createMessageId();
     setConversationState({});
     setLeadForm({ firstName: "", lastName: "", email: "", criteria: "" });
@@ -1229,6 +1231,22 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
       void flushChatbotTelemetryQueue();
     };
   }, [cancelPendingRequest]);
+
+  useEffect(() => {
+    if (!open) return;
+    const previous = document.activeElement as HTMLElement | null;
+    const panel = document.querySelector<HTMLElement>('[role="dialog"][aria-modal="true"]');
+    const frame = window.requestAnimationFrame(() => panel?.querySelector<HTMLInputElement>('#assistant-question')?.focus());
+    const trap = (event: KeyboardEvent) => {
+      if (event.key !== "Tab" || !panel) return;
+      const controls = Array.from(panel.querySelectorAll<HTMLElement>('button:not([disabled]),a[href],input:not([disabled]),textarea:not([disabled])')).filter(el=>el.getClientRects().length > 0);
+      const first = controls[0], last = controls[controls.length-1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+      if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+    };
+    document.addEventListener("keydown", trap);
+    return () => { window.cancelAnimationFrame(frame); document.removeEventListener("keydown",trap); previous?.focus(); };
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -1674,6 +1692,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
               },
               {
                 onTextDelta: (delta) => {
+                  if (requestSequenceRef.current !== nextRequestId) return;
                   streamedContent += delta;
                   if (!streamedPlaceholderId) return;
                   updateMessageById(streamedPlaceholderId, (current) => ({
@@ -2941,6 +2960,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
       <div className={assistantContainerClassName}>
       {open && (
         <motion.section
+          role="dialog" aria-modal="true" aria-label={language === "en" ? "Property assistant" : "Assistant immobilier"}
           initial={prefersReducedMotion ? false : { opacity: 0, y: 10, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: prefersReducedMotion ? 0 : 0.12, ease: "easeOut" }}
@@ -3055,7 +3075,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
               </div>
             )}
 
-            <div ref={scrollRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4">
+            <div ref={scrollRef} role="log" aria-live="polite" aria-relevant="additions text" className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4">
               {messages.map((message) => (
                 <article
                   key={message.id}
@@ -3445,6 +3465,9 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
               <form onSubmit={handleSubmit} className="flex items-center gap-2">
                 <Label htmlFor="assistant-question" className="sr-only">Posez une question à l’assistant</Label>
                 <Input
+                  maxLength={1200}
+                  autoFocus
+                  minLength={2}
                   id="assistant-question"
                   name="question"
                   value={input}
@@ -3452,7 +3475,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
                   placeholder="Posez une question sur les biens, les quartiers ou les étapes de votre projet..."
                   disabled={loading}
                 />
-                <Button type="submit" size="icon" disabled={loading || input.trim().length === 0}>
+                <Button type="submit" size="icon" aria-label={language === "en" ? "Send message" : "Envoyer le message"} disabled={loading || input.trim().length < 2}>
                   <Send className="h-4 w-4" />
                 </Button>
               </form>

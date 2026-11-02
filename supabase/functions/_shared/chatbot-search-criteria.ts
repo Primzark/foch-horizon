@@ -50,7 +50,7 @@ export function parseBedroomsMin(question: string): number | undefined {
 export function parsePriceHints(question: string): PriceHints {
   const normalized = normalizeText(question);
   const extract = (value: string) => Number(value.replace(/\s+/g, ""));
-  const compactQuestion = question.replace(/\u00a0/g, " ");
+  const compactQuestion = question.replace(/\u00a0/g, " ").replace(/(\d+(?:[.,]\d+)?)\s*(k|millions?)\b/gi, (_, n, unit) => String(Number(n.replace(",", ".")) * (unit.toLowerCase() === "k" ? 1000 : 1000000)));
 
   const betweenMatch = compactQuestion.match(
     /entre\s+([0-9][0-9\s.,]{2,})\s*(?:€|eur|euros)?\s+et\s+([0-9][0-9\s.,]{2,})/i,

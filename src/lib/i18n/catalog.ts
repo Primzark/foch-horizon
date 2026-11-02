@@ -768,6 +768,17 @@ export const englishCopy: Record<string, string> = {
   "NOUVEAUTE GAINNEVILLE CENTRE": "New listing · Gainneville town centre",
   "Immobilier aux": "Property in",
   "en images": "in pictures",
+  "Ouvrir": "Open",
+  "Sélectionner": "Select",
+  "Sélectionné": "Selected",
+  "Affinages rapides": "Quick refinements",
+  "Appliquez un ajustement en un clic, puis relancez la recherche.": "Apply an adjustment, then run the search again.",
+  "Salle(s) de bain": "Bathrooms",
+  "Ville": "Town",
+  "Vos messages sont traités par Gemini ; les questions soumises à la recherche web sont transmises à Tavily. L’historique est enregistré dans ce navigateur.": "Your messages are processed by Gemini; web search questions are sent to Tavily. Conversation history is stored in this browser.",
+  "appartement à vendre": "apartment for sale",
+  "maison à vendre": "house for sale",
+  "Préremplir le formulaire de contact": "Prefill the contact form",
   "Foch Immobilier": "Foch Immobilier",
 };
 
@@ -800,6 +811,11 @@ function translateDelimitedPhrase(source: string): string {
 }
 
 function translateDynamicFrench(source: string): string | undefined {
+  const city = source.match(/^sur (.+)$/i); if (city) return `in ${city[1]}`;
+  const bedrooms = source.match(/^min\. (\d+) chambres$/i); if (bedrooms) return `min. ${bedrooms[1]} bedrooms`;
+  const budget = source.match(/^budget max (.+)$/i); if (budget) return `maximum budget ${budget[1]}`;
+  const rooms = source.match(/^(\d+) ch\.$/i); if (rooms) return `${rooms[1]} bedrooms`;
+
   const propertyCount = source.match(/^([\d\s\u202f,.]+)\s+biens?$/i);
   if (propertyCount) {
     const count = propertyCount[1].trim();

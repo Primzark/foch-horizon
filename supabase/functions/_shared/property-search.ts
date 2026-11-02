@@ -7,6 +7,8 @@ export interface SharedPropertySearchQueryParams {
   featuredOnly?: boolean;
   type?: string;
   city?: string;
+  rooms?: number;
+  excludedFeatures?: string[];
   q?: string;
   bedroomsMin?: number | null;
   bathroomsMin?: number | null;
@@ -95,7 +97,7 @@ export async function collectPropertyIdsForTextQuery(
   const likePattern = `%${q}%`;
   const collectedIds = new Set<number>();
 
-  for (const field of ["title", "slug", "postal_code"] as const) {
+  for (const field of ["title", "slug", "postal_code", "description"] as const) {
     let query = supabase
       .from("properties")
       .select("id");
@@ -344,6 +346,7 @@ export async function runSharedPropertySearchQuery(
     query = query.eq("slug", exactSlug);
   }
 
+  if (input.rooms) query = query.eq("rooms", input.rooms);
   if (input.type) query = query.eq("property_type", input.type);
 
   if (input.city) {
@@ -384,6 +387,10 @@ export async function runSharedPropertySearchQuery(
     }
   }
 
+  for (const feature of input.excludedFeatures ?? []) {
+    const ids = await collectPropertyIdsForFeatureFilters(supabase, [feature]);
+    if (ids?.length) query = query.not("id", "in", `(${ids.join(",")})`);
+  }
   query = applySort(query, input.sort);
 
   const { data, error, count } = await query;
@@ -529,6 +536,7 @@ export async function fetchAggregateRowsForSearchFilters(
     .neq("status", "sold");
 
   if (input.transaction) query = query.eq("transaction_type", input.transaction);
+  if (input.rooms) query = query.eq("rooms", input.rooms);
   if (input.type) query = query.eq("property_type", input.type);
   if (typeof input.priceMin === "number" && Number.isFinite(input.priceMin)) query = query.gte("price_amount", input.priceMin);
   if (typeof input.priceMax === "number" && Number.isFinite(input.priceMax)) query = query.lte("price_amount", input.priceMax);

@@ -1,3 +1,4 @@
+import { geographyReply } from "../../../../supabase/functions/_shared/chatbot-geography";
 import { cities, cityById } from "@/features/cities/data/cities";
 import { leHavreDistrictHistory, leHavreFaq } from "@/features/content/data/leHavreHistoryContent";
 import { agencyReviewsFallbackSnapshot, getAgencyReviews } from "@/features/content/api/googleReviews.service";
@@ -26,6 +27,8 @@ export interface ToolSearchParams {
   type?: "appartement" | "maison_villa" | "autre";
   city?: string;
   q?: string;
+  rooms?: number;
+  excludedFeatures?: string[];
   bedroomsMin?: number;
   bathroomsMin?: number;
   garagesMin?: number;
@@ -447,11 +450,11 @@ export const chatbotExamplePrompts = [
   "Je ne trouve pas de bien adapte, pouvez-vous me rappeler ?",
 ];
 
-const processIntentPattern = /compromis|notaire|process|etape|signature|acte|financement|offre acceptee/;
+const processIntentPattern = /\b(compromis|notaire|process|etape|signature|acte|financement|offre acceptee)\b/;
 const propertyIntentPattern = /appartement|maison|bien|acheter|achat|vente|investissement|studio|t2|t3|t4|chambre|budget|m2|surface|quartier|annonce/;
 const serviceIntentPattern = /service|gestion|administration|syndic|vendre|estimation|accompagnement|mandat|mise en vente/;
 // The place name Sainte-Adresse must not trigger the agency-contact intent.
-const contactIntentPattern = /contact|telephone|tel|appeler|email|mail|(?<!sainte[-\s])adresse|horaire|ouvert|ouverture|rdv|rendez vous|rappel/;
+const contactIntentPattern = /contact|telephone|\btel\b|appeler|email|mail|(?<!sainte[-\s])adresse|horaire|ouvert|ouverture|rdv|rendez vous|rappel/;
 const reviewsIntentPattern = /avis|review|google|note|reputation|temoignage/;
 const feesIntentPattern = /honoraire|bareme|frais|commission|pdf/;
 const historyIntentPattern = /geographie|secteurs|sainte adresse|gobelins|saint michel|octeville|saint romain|etretat|deauville|trouville|histoire|historique|fondation|unesco|perret|saint francois|saint-vincent|saint vincent|sanvic|graville|docks vauban|eure/;
@@ -1802,6 +1805,12 @@ export function decideChatbotRoute(
   options: ChatbotRoutingOptions,
   meta?: ChatbotRoutingMeta,
 ): ChatbotRouteDecision {
+  if (meta?.actionRequest) {
+    if (!options.edgeApiEnabled) {
+      return { target: "local", category: "fallback", reason: "edge_disabled_for_tool_action", intent: context.inferredIntent };
+    }
+    return { target: "edge", category: "edge_tools", reason: "tool_action_request", intent: context.inferredIntent };
+  }
   const edgeAgentToolsEnabled = options.edgeAgentToolsEnabled === true;
   if (!options.routerV2Enabled) {
     if (!options.edgeApiEnabled) {
@@ -1820,12 +1829,7 @@ export function decideChatbotRoute(
     return { target: "local", category: "deterministic_local", reason: "deterministic_local_match", intent: context.inferredIntent };
   }
 
-  if (meta?.actionRequest) {
-    if (!options.edgeApiEnabled) {
-      return { target: "local", category: "fallback", reason: "edge_disabled_for_tool_action", intent: context.inferredIntent };
-    }
-    return { target: "edge", category: "edge_tools", reason: "tool_action_request", intent: context.inferredIntent };
-  }
+
 
   if (!options.edgeApiEnabled) {
     return { target: "local", category: "fallback", reason: "edge_disabled", intent: context.inferredIntent };
@@ -1943,6 +1947,9 @@ function sanitizeToolSearchParams(raw: unknown): ToolSearchParams | undefined {
   if (typeof params.terrainMin === "number" && typeof params.terrainMax === "number" && params.terrainMin > params.terrainMax) {
     [params.terrainMin, params.terrainMax] = [params.terrainMax, params.terrainMin];
   }
+  const extra = raw as Record<string, unknown>;
+  if (typeof extra.rooms === "number" && Number.isInteger(extra.rooms) && extra.rooms > 0 && extra.rooms < 20) params.rooms = extra.rooms;
+  if (Array.isArray(extra.excludedFeatures)) params.excludedFeatures = extra.excludedFeatures.filter((v): v is string => typeof v === "string").slice(0,12);
   return Object.keys(params).length > 0 ? params : undefined;
 }
 
@@ -2840,7 +2847,13 @@ export const chatbotServiceTestInternals = {
 };
 
 export async function askAgencyChatbot(request: ChatbotRequest): Promise<ChatbotReply> {
-  const context = buildConversationContext(request.question, request.chatHistory);
+  const text = request.question.trim();
+  if (text.length < 2 || text.length > 1200) throw new Error(request.language === "en" ? "Use between 2 and 1200 characters." : "Utilisez entre 2 et 1200 caractères.");
+  if (!request.actionRequest) {
+    const geographic = geographyReply(text, request.language);
+    if (geographic) return { ...geographic, source: "local" };
+  }
+  const context = buildConversationContext(text, request.chatHistory);
   if (isRentalQuestion(request.question, request.language)) {
     return normalizeReplyOutput(buildPurchaseOnlyRedirectAnswer(request.language), request.language);
   }
@@ -2911,7 +2924,7 @@ export async function askAgencyChatbot(request: ChatbotRequest): Promise<Chatbot
     );
   } catch {
     return normalizeReplyOutput(
-      applyRouteMetadata(await getLocalReply(), {
+      applyRouteMetadata({ source: "local", answer: request.language === "en" ? "The live assistant is temporarily unavailable. Please retry; your search has not been updated." : "L’assistant en direct est temporairement indisponible. Réessayez ; votre recherche n’a pas été modifiée.", suggestedPrompts: [] }, {
         ...routeDecision,
         target: "local",
         category: "fallback",
@@ -3049,7 +3062,13 @@ export async function askAgencyChatbotStream(
   request: ChatbotRequest,
   handlers?: ChatbotStreamHandlers,
 ): Promise<ChatbotReply> {
-  const context = buildConversationContext(request.question, request.chatHistory);
+  const text = request.question.trim();
+  if (text.length < 2 || text.length > 1200) throw new Error(request.language === "en" ? "Use between 2 and 1200 characters." : "Utilisez entre 2 et 1200 caractères.");
+  if (!request.actionRequest) {
+    const geographic = geographyReply(text, request.language);
+    if (geographic) return { ...geographic, source: "local" };
+  }
+  const context = buildConversationContext(text, request.chatHistory);
   if (isRentalQuestion(request.question, request.language)) {
     return normalizeReplyOutput(buildPurchaseOnlyRedirectAnswer(request.language), request.language);
   }
@@ -3098,7 +3117,7 @@ export async function askAgencyChatbotStream(
     return normalizeReplyOutput(applyRouteMetadata(streamedReply, routeDecision), request.language);
   } catch {
     return normalizeReplyOutput(
-      applyRouteMetadata(await getLocalReply(), {
+      applyRouteMetadata({ source: "local", answer: request.language === "en" ? "The live assistant is temporarily unavailable. Please retry; your search has not been updated." : "L’assistant en direct est temporairement indisponible. Réessayez ; votre recherche n’a pas été modifiée.", suggestedPrompts: [] }, {
         ...routeDecision,
         target: "local",
         category: "fallback",

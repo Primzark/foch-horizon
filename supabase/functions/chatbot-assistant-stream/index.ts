@@ -3,7 +3,7 @@ import { createServiceClient } from "../_shared/client.ts";
 import { consumeRequestLimit, getSiteCorsHeaders, isAllowedSiteOrigin, secureJsonResponse, secureOptionsResponse } from "../_shared/request-security.ts";
 
 const streamPayloadSchema = z.object({
-  question: z.string().min(2).max(1200),
+  question: z.string().trim().min(2).max(1200),
   language: z.enum(["fr", "en"]).optional(),
   chatHistory: z
     .array(
@@ -47,8 +47,8 @@ function splitTextIntoChunks(text: string): string[] {
         next = lastSpace;
       }
     }
-    chunks.push(normalized.slice(cursor, next));
-    cursor = next;
+    chunks.push(normalized.slice(cursor, next < normalized.length ? next + 1 : next));
+    cursor = next < normalized.length ? next + 1 : next;
     while (normalized[cursor] === " ") cursor += 1;
   }
   return chunks;
@@ -115,10 +115,12 @@ Deno.serve(async (request) => {
   const streamFlag = ["1", "true", "yes", "on"].includes(streamEnabled);
   const requestId = `stream-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
 
+  let cancelled = false;
+  let activeProxyController: AbortController | undefined;
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       const encoder = new TextEncoder();
-      const send = (event: string, data: unknown) => controller.enqueue(encoder.encode(sseEvent(event, data)));
+      const send = (event: string, data: unknown) => { if (!cancelled) controller.enqueue(encoder.encode(sseEvent(event, data))); };
       try {
         send("meta", { requestId, streamSupported: streamFlag, synthetic: true });
         send("status", { phase: "parsing" });
@@ -133,6 +135,7 @@ Deno.serve(async (request) => {
         const proxyApiKey = serviceRoleKey;
         const proxyAuth = `Bearer ${serviceRoleKey}`;
         const proxyController = new AbortController();
+        activeProxyController = proxyController;
         const effectiveProxyTimeoutMs = Number.isFinite(proxyTimeoutMs) ? proxyTimeoutMs : 45000;
         const proxyTimeoutId = setTimeout(() => proxyController.abort(), effectiveProxyTimeoutMs);
         send("status", { phase: "searching" });
@@ -236,11 +239,12 @@ Deno.serve(async (request) => {
         });
         send("done", { ok: false });
       } finally {
-        controller.close();
+        try { controller.close(); } catch { /* Already closed or cancelled. */ }
       }
     },
     cancel() {
-      // No-op for synthetic streaming proxy; downstream request completes independently.
+      cancelled = true;
+      activeProxyController?.abort();
     },
   });
 

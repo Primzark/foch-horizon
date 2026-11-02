@@ -63,15 +63,15 @@ describe("chatbot service", () => {
     expect(reply.needsLeadCapture).toBe(true);
   });
 
-  it("returns district guidance for investment prompt", async () => {
+  it("redirects rental investment requests to the sale-only scope", async () => {
     const reply = await askAgencyChatbot({
       question: "Quel quartier du Havre est le plus adapte pour un investissement locatif ?",
     });
 
-    expect(reply.answer).toMatch(/Saint-Francois|Eure|Perret/i);
+    expect(reply.answer).toMatch(/acheter, vendre/);
   });
 
-  it("keeps context on short follow-up questions", async () => {
+  it("redirects a rental follow-up without advertising rental stock", async () => {
     const firstQuestion = "Je cherche un appartement 2 chambres a Perret avec un budget de 260000 euros";
     const firstReply = await askAgencyChatbot({ question: firstQuestion });
 
@@ -84,18 +84,16 @@ describe("chatbot service", () => {
       ],
     });
 
-    expect(followUpReply.answer.toLowerCase()).toContain("location");
+    expect(followUpReply.answer).toContain("acheter");
     expect(followUpReply.suggestedPrompts.length).toBeGreaterThan(0);
-    expect(followUpReply.answer).toContain("Perret");
-    expect(followUpReply.answer.replace(/[\s\u202f\u00a0]/g, "")).toContain("260000");
-    expect(followUpReply.answer).toMatch(/ne propose pas d’annonces en location/i);
+    expect(followUpReply.propertySuggestions).toBeUndefined();
   });
 
   it("does not imply rental listings are available", async () => {
     const reply = await askAgencyChatbot({ question: "Je cherche un appartement à louer au Havre" });
 
-    expect(reply.answer).toMatch(/ne propose pas d’annonces en location/i);
-    expect(reply.answer).toContain("/biens");
+    expect(reply.answer).toContain("acheter");
+    expect(reply.propertySuggestions).toBeUndefined();
   });
 
   it("answers prompts suggested by property replies", async () => {
@@ -239,7 +237,7 @@ describe("chatbot service", () => {
     expect(route.category).toBe("edge_general");
   });
 
-  it("routes rent-statistics questions to live search while rental listings stay local", () => {
+  it("keeps routing metadata separate from the sale-only request guard", () => {
     const route = decideChatbotRoute(buildConversationContext("Quel est le loyer moyen au Havre ?", []), {
       edgeApiEnabled: true,
       edgeRagForWebsiteQuestionsEnabled: true,
@@ -248,7 +246,7 @@ describe("chatbot service", () => {
 
     expect(route.target).toBe("edge");
     expect(route.category).toBe("edge_general");
-    expect(route.reason).toBe("rental_statistics_research");
+    expect(route.reason).toBe("unknown_intent_edge_general");
   });
 
   it("falls back to local when edge api is disabled", () => {

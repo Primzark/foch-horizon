@@ -1,0 +1,272 @@
+[
+  {
+    "id": "le-havre",
+    "name": "Le Havre",
+    "kind": "commune",
+    "text": "Ville portuaire, centre reconstruit et quartiers aux identités contrastées\n\nFondé en 1517 comme port royal, Le Havre a été lourdement détruit en 1944 puis reconstruit sous la direction d’Auguste Perret. Le centre reconstruit, inscrit au patrimoine mondial de l’UNESCO, est marqué par le béton armé, la trame régulière, les rues larges et les immeubles à ossature visible. Saint-François conserve un tissu plus ancien ; les quartiers de coteaux mêlent villas, maisons de brique et silex, et pavillons.\n\nLe parc est diversifié : appartements de la Reconstruction des années 1950–60, immeubles plus anciens en brique et pierre, maisons de ville, villas de coteau et pavillons avec jardin. Les surfaces vont du studio en centre-ville aux maisons familiales de 90 à 150 m² ; ascenseur, stationnement, balcon, vue mer et travaux de copropriété pèsent fortement dans la valeur.",
+    "city": "le-havre"
+  },
+  {
+    "id": "sainte-adresse",
+    "name": "Sainte-Adresse",
+    "kind": "commune",
+    "text": "Station balnéaire en balcon sur la mer, à la limite ouest du Havre\n\nAncien village de pêcheurs devenu lieu de villégiature au XIXe siècle, Sainte-Adresse s’est développée sur le coteau face à la Manche. Villas balnéaires de la Belle Époque, maisons bourgeoises, immeubles de bord de mer et pavillons plus récents composent un paysage étagé. La mairie de Sainte-Adresse renseigne sur la vie communale ; les vues, l’exposition au vent et la pente changent beaucoup d’une rue à l’autre.\n\nVillas de caractère parfois divisées en appartements, maisons de ville en pente, résidences avec vue mer et pavillons familiaux dominent. Beaucoup de biens datent de la fin du XIXe ou du début du XXe siècle ; les surfaces sont souvent généreuses. Vérifier toiture, façades, humidité, stationnement et accessibilité sur les terrains pentus.",
+    "city": "sainte-adresse"
+  },
+  {
+    "id": "la-plage",
+    "name": "La plage et Saint-Vincent",
+    "kind": "quartier",
+    "text": "Front de mer, commerces de quartier et promenades\n\nLe front de mer s’est urbanisé avec l’essor des bains de mer et des promenades au XIXe siècle. Saint-Vincent est un ancien faubourg rattaché au Havre en 1852. On y voit des villas et immeubles anciens, des maisons de ville, puis des constructions de la Reconstruction ; la Ville du Havre détaille les équipements du secteur Saint-Vincent–Gobelins.\n\nAppartements anciens, maisons de ville et villas côtières côtoient les immeubles de la Reconstruction. Les petits logements proches de la plage sont recherchés pour un pied-à-terre ; les maisons disposent parfois de jardins en retrait. Contrôler exposition aux embruns, état des menuiseries, parties communes, vues réelles et nuisances estivales.",
+    "city": "le-havre"
+  },
+  {
+    "id": "gobelins",
+    "name": "Les Gobelins",
+    "kind": "quartier",
+    "text": "Un quartier résidentiel entre le centre et le littoral\n\nLes Gobelins faisaient partie de la basse commune de Sanvic, annexée au Havre en 1852. Le quartier s’est développé comme faubourg habité à proximité du centre et de la mer. Le bâti mêle maisons de ville et immeubles d’avant-guerre, petites copropriétés, villas et constructions de la Reconstruction ; la Ville publie les équipements et actualités du quartier.\n\nOn trouve surtout des appartements dans de petites copropriétés, des maisons mitoyennes et quelques villas, généralement de surfaces compactes à familiales (environ 40–120 m²). Les biens anciens ont souvent du cachet mais peuvent demander une rénovation énergétique ou des travaux de façade ; jardin, garage et stationnement sont rares dans les rues les plus denses.",
+    "city": "le-havre"
+  },
+  {
+    "id": "saint-michel",
+    "name": "Saint-Michel",
+    "kind": "quartier",
+    "text": "Un secteur de coteau proche du centre et des transports\n\nSaint-Michel se situe sur les hauteurs à l’ouest du centre. Le secteur a grandi avec les faubourgs du XIXe siècle, puis a été complété par les opérations de la Reconstruction. Le tissu alterne petits immeubles de brique et pierre, maisons de ville, pavillons sur les pentes et ensembles plus récents ; les escaliers et dénivelés font partie du paysage urbain. Les ressources du Pays d’art et d’histoire donnent des repères complémentaires sur le patrimoine havrais.\n\nPetits et moyens appartements en immeubles anciens ou de la Reconstruction, maisons de ville et pavillons de coteau. Les logements font souvent 40 à 100 m², avec des variations d’étage, de luminosité et d’accès liées au relief. Examiner l’isolation, les façades, la copropriété et la facilité de stationnement.",
+    "city": "le-havre"
+  },
+  {
+    "id": "octeville-sur-mer",
+    "name": "Octeville-sur-Mer",
+    "kind": "commune",
+    "text": "Bourg résidentiel entre campagne, falaise et agglomération\n\nAncienne commune rurale en surplomb de la Manche, Octeville-sur-Mer a gardé un cœur de bourg autour de son église et de ses bâtiments communaux. Le patrimoine domestique mêle longères et fermes normandes en brique, silex et colombages, maisons de bourg, puis pavillons construits avec l’extension résidentielle du XXe siècle. La mairie présente les informations et services aux habitants.\n\nLe marché est dominé par les maisons individuelles, pavillons familiaux et propriétés avec jardin ; quelques appartements se trouvent dans le bourg ou des résidences récentes. Les maisons des années 1970 à aujourd’hui côtoient des longères et bâtisses anciennes, souvent entre 90 et 160 m². Examiner assainissement, toiture, terrain, exposition aux vents et temps de trajet."
+  },
+  {
+    "id": "montivilliers",
+    "name": "Montivilliers",
+    "kind": "commune",
+    "text": "Ville-centre patrimoniale et pôle de services de l’estuaire\n\nL’histoire de Montivilliers s’organise autour de son abbaye bénédictine, fondée au VIIe siècle et reconstruite à partir du XIe. Église romane, cloître, réfectoire gothique et logis anciens composent le cœur historique. Le bâti alentour va des maisons de bourg et maisons à pans de bois aux immeubles et pavillons plus récents dans les quartiers résidentiels. La Ville de Montivilliers détaille son patrimoine et ses services.\n\nAppartements en centre et résidences récentes, maisons de ville et maisons familiales avec jardin. Le centre ancien offre des logements de caractère parfois compacts ; en périphérie, pavillons des années 1960–2000 et maisons plus récentes sont fréquents, souvent autour de 85 à 140 m². Vérifier risques de ruissellement près de la Lézarde, stationnement et travaux patrimoniaux.",
+    "city": "montivilliers"
+  },
+  {
+    "id": "maneglise",
+    "name": "Manéglise",
+    "kind": "commune",
+    "text": "Village rural préservé à l’ouest de l’agglomération havraise\n\nLe village possède une église romane, des fermes anciennes et des traces d’un habitat seigneurial, notamment autour du château des Hellandes. La commune a grandi depuis les années 1970 avec des lotissements tout en conservant un paysage bocager. L’architecture va des longères en brique et silex aux maisons de bourg et pavillons familiaux. La fiche communale de Manéglise centralise les informations pratiques.\n\nMaisons individuelles majoritaires : longères, maisons de bourg, anciennes fermes avec dépendances et pavillons de lotissement (souvent 90–150 m²). Les terrains sont généralement plus grands qu’en ville ; les appartements et studios sont peu courants. Contrôler assainissement individuel, servitudes, état des granges et coût énergétique des maisons anciennes.",
+    "city": "maneglise"
+  },
+  {
+    "id": "gainneville",
+    "name": "Gainneville",
+    "kind": "commune",
+    "text": "Bourg familial en croissance entre Le Havre et l’estuaire\n\nGainneville est un ancien village du pays de Caux, formé autour de son bourg et de ses terres agricoles. Le bâti associe maisons de brique et silex, anciennes fermes, maisons de bourg et lotissements pavillonnaires. Le tissu résidentiel récent conserve généralement des jardins et des stationnements privatifs. Les actualités et services de la mairie complètent ces repères locaux.\n\nLe parc est très majoritairement composé de maisons individuelles, des maisons anciennes du bourg aux pavillons des années 1970–2020, souvent de 85 à 130 m² avec jardin et garage. Quelques appartements existent mais sont rares. Examiner l’état énergétique, la proximité des axes, le risque de ruissellement et l’avancement des aménagements autour du site des Jonquilles.",
+    "city": "gainneville"
+  },
+  {
+    "id": "saint-romain",
+    "name": "Saint-Romain-de-Colbosc",
+    "kind": "commune",
+    "text": "Bourg-centre commerçant au cœur du pays de Caux\n\nBourg historique du pays de Caux, Saint-Romain s’est développé autour de son église, de ses marchés et des routes reliant les villages environnants. Le centre mêle maisons de bourg en brique et silex, commerces en rez-de-chaussée et bâtisses anciennes ; les quartiers périphériques sont plus pavillonnaires, avec jardins et vues sur la campagne. La mairie de Saint-Romain-de-Colbosc publie les informations communales.\n\nMaisons de bourg, maisons de maître, petites copropriétés au centre et pavillons familiaux en périphérie. Les surfaces courantes vont d’appartements de 40–80 m² à des maisons de 90–150 m² avec jardin. Les biens anciens peuvent demander des travaux d’isolation ou de toiture ; les pavillons récents offrent souvent garage et stationnement."
+  },
+  {
+    "id": "etretat",
+    "name": "Étretat",
+    "kind": "commune",
+    "text": "Station littorale et village de vallée au pied des falaises\n\nPort de pêche devenu station de bains de mer au XIXe siècle, Étretat a attiré artistes et villégiateurs. Le village se compose de maisons de pêcheurs et de commerçants, villas balnéaires, maisons bourgeoises en brique et pierre, et quelques immeubles de rapport. Les falaises, la valleuse et les vues sont protégées par des règles patrimoniales et paysagères ; la mairie d’Étretat renseigne sur l’urbanisme et les services.\n\nMaisons de pêcheurs mitoyennes, petites maisons de bourg, villas balnéaires et appartements de villégiature composent l’offre. Les petites maisons centrales sont souvent anciennes et compactes (environ 50–90 m²) ; villas et maisons familiales peuvent dépasser 120 m². Vérifier humidité, toiture, contraintes patrimoniales, risques littoraux, stationnement et éventuelle exploitation saisonnière."
+  },
+  {
+    "id": "deauville",
+    "name": "Deauville",
+    "kind": "commune",
+    "text": "Station balnéaire, commerces, courses hippiques et vie culturelle\n\nCréée comme station balnéaire à partir de 1860, Deauville s’est structurée avec hôtels, casino, villas et grands équipements. Son architecture éclectique emprunte aux styles normand, néo-médiéval, classique et anglo-normand : colombages décoratifs, tourelles, bow-windows, balcons et toitures complexes. La Ville de Deauville publie les informations sur le patrimoine ; la réglementation protège plusieurs ensembles et perspectives.\n\nStudios et appartements de villégiature dans des résidences de la fin XIXe au XXe siècle, villas bourgeoises et maisons anglo-normandes, ainsi que résidences récentes. Les surfaces vont du studio de 20–35 m² aux villas familiales de 150 m² et plus. Ascenseur, balcon, parking, proximité plage, qualité de rénovation et contraintes patrimoniales sont déterminants."
+  },
+  {
+    "id": "trouville",
+    "name": "Trouville-sur-Mer",
+    "kind": "commune",
+    "text": "Port de pêche, station de bord de mer et quartiers en coteau\n\nAncien port de pêche, Trouville est devenue une station balnéaire réputée au XIXe siècle. Le centre garde des maisons de pêcheurs, des immeubles étroits, des villas balnéaires et des hôtels particuliers. Colombages, brique, pierre, bow-windows et toitures à forte pente reflètent les styles normands et éclectiques ; la Ville de Trouville-sur-Mer présente ses informations patrimoniales et pratiques.\n\nAppartements dans des immeubles anciens et résidences de villégiature, maisons de pêcheurs de petite surface, villas en coteau et maisons familiales à Hennequeville. Le bâti va du XIXe siècle aux résidences contemporaines. Escaliers, absence d’ascenseur, humidité, stationnement, bruit saisonnier et vues réelles doivent être évalués sur place."
+  },
+  {
+    "id": "halles-centrales",
+    "name": "Halles Centrales",
+    "kind": "quartier",
+    "text": "Un secteur commerçant du centre reconstruit, autour du marché couvert et près du Volcan\n\nLes Halles Centrales sont un secteur du centre-ville du Havre, et non une commune distincte. Le marché couvert a retrouvé son emplacement d’avant-guerre au sein du centre reconstruit. La Ville du Havre documente son architecture et sa rénovation de 1999. Les rues voisines associent logements de la Reconstruction et commerces en rez-de-chaussée.\n\nAppartements de la Reconstruction, petites surfaces et logements familiaux composent l’essentiel des recherches dans ce secteur. Pour acheter, vérifier luminosité, ascenseur, isolation, travaux de copropriété et stationnement. La présence de commerces, livraisons et terrasses invite à visiter à plusieurs moments de la journée.",
+    "city": "le-havre"
+  },
+  {
+    "id": "hotel-de-ville",
+    "name": "Hôtel de Ville",
+    "kind": "quartier",
+    "text": "La place, ses jardins et les rues voisines au cœur du centre reconstruit\n\nL’Hôtel de Ville est un repère du centre reconstruit du Havre ; le secteur présenté désigne la place et ses rues voisines. Les Archives municipales retracent sa construction et son inauguration en 1958. Les perspectives, les jardins et les immeubles de la Reconstruction structurent ce cadre urbain.\n\nAppartements de la Reconstruction et logements familiaux sont les principaux biens recherchés autour de la place. Les étages, l’orientation, la vue, l’ascenseur, les charges et les travaux créent des différences importantes. Vérifier les possibilités de rénovation dans le périmètre patrimonial ainsi que l’exposition au bruit des axes proches.",
+    "city": "le-havre"
+  },
+  {
+    "id": "avenue-foch",
+    "name": "Avenue Foch",
+    "kind": "quartier",
+    "text": "Une grande avenue du centre-ville, près du square Saint-Roch et des commerces\n\nL’avenue Foch traverse le centre-ville du Havre. Le square Saint-Roch s’ouvre sur l’avenue ; la Ville du Havre en présente l’histoire et les accès.\n\nLes logements du secteur varient selon le tronçon et l’immeuble. Pour comparer des biens, vérifier l’étage, l’ascenseur, la luminosité, les charges, l’état de la copropriété et l’exposition à la circulation.",
+    "city": "le-havre"
+  },
+  {
+    "id": "notre-dame",
+    "name": "Notre-Dame",
+    "kind": "quartier",
+    "text": "Le premier quartier du Havre, entre la cathédrale, les bassins et les quais\n\nLe Havre est fondé en 1517 et Notre-Dame en est le premier quartier. En 1541, François Ier confie à Girolamo Bellarmato son extension à l’est du bassin du Roy : rues rectilignes, places et perspectives s’inspirent de la Renaissance italienne. La cathédrale conserve plusieurs périodes de construction, du gothique tardif au baroque. Retrouvez les repères patrimoniaux auprès du Pays d’art et d’histoire Le Havre Seine Métropole.\n\nL’offre mêle logements dans les immeubles anciens autour des bassins, appartements de la Reconstruction et résidences plus récentes comme la tour Alta. Petites et moyennes surfaces côtoient des appartements familiaux. Pour un achat, examiner l’état de la copropriété, l’exposition, le stationnement et les contraintes de rénovation dans le centre patrimonial.",
+    "city": "le-havre"
+  },
+  {
+    "id": "saint-francois",
+    "name": "Saint-François",
+    "kind": "quartier",
+    "text": "Un quartier historique autour du bassin du Roy et des bassins du port\n\nSaint-François est l’un des plus anciens quartiers du Havre. À partir de 1541, le plan de Bellarmato organise ce secteur près du bassin du Roy ; les bassins de la Barre et du Commerce lui donnent ensuite son caractère insulaire. Une partie du tissu ancien et du tracé a été préservée à la Reconstruction. La Ville documente ce patrimoine sur sa page Notre-Dame / Saint-François.\n\nOn trouve des appartements dans des immeubles de plusieurs époques, des logements familiaux autour des bassins et quelques maisons de ville. La forme des lots, la luminosité et le calme varient selon les rues et les vues sur les quais. Les biens anciens et les copropriétés exigent une lecture attentive des travaux, des charges et des protections patrimoniales.",
+    "city": "le-havre"
+  },
+  {
+    "id": "perrey",
+    "name": "Le Perrey",
+    "kind": "quartier",
+    "text": "Un secteur central entre la plage, l’hôtel de ville et le front de mer\n\nLe Perrey s’est urbanisé au XIXe siècle, avant d’être associé au centre reconstruit après 1944. Le secteur Perrey-Perret juxtapose immeubles de la Reconstruction, ensembles de l’atelier Perret, rues commerçantes et front de mer. Les immeubles sans affectation individuelle (ISAI) autour de l’hôtel de ville témoignent de cette histoire architecturale ; le centre reconstruit est inscrit au patrimoine mondial de l’UNESCO.\n\nAppartements dans les immeubles Perret et dans les résidences du XXe siècle, logements plus anciens côté front de mer et quelques maisons de ville composent l’offre. Les surfaces sont variées, du studio aux appartements familiaux. Ascenseur, balcon, lumière, stationnement et travaux de copropriété sont des critères déterminants.",
+    "city": "le-havre"
+  },
+  {
+    "id": "danton",
+    "name": "Danton",
+    "kind": "quartier",
+    "text": "Équipements de quartier, places et squares dans le centre-ouest du Havre\n\nDanton est un quartier du centre ancien du Havre, desservi par des rues commerçantes et des places de proximité. Le secteur a connu des opérations de renouvellement urbain autour du pôle Simone-Veil et des espaces publics voisins. La Ville du Havre présente les projets et équipements du quartier.\n\nLe quartier associe appartements en immeubles urbains, logements de la Reconstruction et maisons de ville. Les rues et l’état du bâti créent des écarts importants : contrôler l’isolation, les charges, les travaux de copropriété, le stationnement et le bruit des axes voisins.",
+    "city": "le-havre"
+  },
+  {
+    "id": "bleville",
+    "name": "Bois de Bléville",
+    "kind": "quartier",
+    "text": "Un quartier résidentiel des hauteurs nord du Havre, avec écoles et équipements de proximité\n\nLe Bois de Bléville est un quartier municipal des secteurs nord-centre du Havre. Son paysage résidentiel réunit maisons et immeubles de différentes périodes. Consultez la page officielle du quartier pour ses actualités et les projets en cours.\n\nMaisons individuelles, pavillons et appartements composent le parc résidentiel. Pour chaque bien, vérifier le DPE, l’état de la toiture et des menuiseries, les travaux récents, le stationnement et l’accès aux transports et aux commerces.",
+    "city": "le-havre"
+  },
+  {
+    "id": "centre-ville",
+    "name": "Le centre-ville",
+    "kind": "quartier",
+    "text": "Centre reconstruit, grands équipements, commerces et services accessibles à pied\n\nLa destruction de 1944 a conduit à la reconstruction du centre sous la direction d’Auguste Perret. Le béton armé, les îlots réguliers et les perspectives urbaines donnent au quartier son identité ; plusieurs ensembles sont inscrits au patrimoine mondial de l’UNESCO. Saint-François et Notre-Dame conservent des formes urbaines plus anciennes à proximité.\n\nLa majorité de l’offre se compose d’appartements : immeubles de la Reconstruction, résidences récentes et quelques bâtiments plus anciens près des bassins. Studios et petites surfaces côtoient des appartements familiaux. Examiner la performance énergétique, les charges, les travaux votés, l’ascenseur, le stationnement et les règles patrimoniales.",
+    "city": "le-havre"
+  },
+  {
+    "id": "harfleur",
+    "name": "Harfleur",
+    "kind": "commune",
+    "text": "Une ville ancienne à l’est du Havre, entre centre historique et vallée de la Lézarde\n\nHarfleur est une ancienne ville portuaire de l’estuaire, façonnée par son port médiéval et le cours de la Lézarde. L’église Saint-Martin, les ruelles du centre ancien et les maisons de bourg côtoient des quartiers résidentiels plus récents. La communauté urbaine présente les repères communaux et les contacts de la mairie.\n\nMaisons de bourg, maisons mitoyennes, pavillons familiaux et appartements de résidence sont représentés. Les biens anciens du centre peuvent offrir du caractère mais demander des travaux ; les logements plus récents disposent plus souvent d’un jardin ou d’un stationnement. Comparer le quartier, l’accès aux transports et l’état de la parcelle."
+  },
+  {
+    "id": "gonfreville-l-orcher",
+    "name": "Gonfreville-l’Orcher",
+    "kind": "commune",
+    "text": "Commune aux paysages contrastés, entre quartiers résidentiels et activités portuaires\n\nLa commune s’organise entre le bourg, les secteurs résidentiels et les paysages industriels du sud de l’estuaire. Le nom d’Orcher rappelle un patrimoine seigneurial ancien ; le château d’Orcher domine la vallée de la Seine à proximité. Pour les équipements et l’histoire locale, consulter la mairie de Gonfreville-l’Orcher.\n\nL’offre associe appartements collectifs dans certains quartiers, maisons de ville et pavillons avec jardin. Les secteurs sont contrastés : examiner l’environnement immédiat, les nuisances, les accès, le stationnement et les diagnostics du bien. Les prix moyens de commune ne remplacent pas une estimation à l’adresse."
+  },
+  {
+    "id": "rogerville",
+    "name": "Rogerville",
+    "kind": "commune",
+    "text": "Une commune entre le Havre, l’aéroport et les paysages de l’estuaire\n\nRogerville est une commune de l’estuaire dans laquelle le bourg et les hameaux s’inscrivent dans un paysage de plateau rural, à proximité du port et des zones d’activités. Le bâti mêle maisons normandes, fermes et constructions résidentielles récentes. La fiche de la commune par Le Havre Seine Métropole donne accès aux coordonnées et informations municipales.\n\nMaisons individuelles avec jardin et propriétés dans les hameaux dominent ; l’offre d’appartements est réduite. Les parcelles, dépendances et annexes jouent souvent un rôle majeur dans le prix. Contrôler l’assainissement, l’accès, les servitudes et l’environnement autour des zones d’activité."
+  },
+  {
+    "id": "saint-laurent-de-brevedent",
+    "name": "Saint-Laurent-de-Brèvedent",
+    "kind": "commune",
+    "text": "Un village résidentiel entre la vallée de la Lézarde et le pays de Caux\n\nLa commune s’étend entre le plateau et la vallée de la Lézarde. Son bourg et ses hameaux gardent une échelle rurale, avec bâti ancien en brique, silex ou colombage et maisons plus récentes autour des axes. La mairie et la communauté urbaine publient les informations pratiques sur la fiche officielle de la commune.\n\nPavillons, maisons de village, fermes rénovées et propriétés avec terrain dominent, avec peu d’appartements. Les tailles de parcelle, la pente, l’accès et l’assainissement individuel sont des points de visite importants."
+  },
+  {
+    "id": "etainhus",
+    "name": "Étainhus",
+    "kind": "commune",
+    "text": "Une commune du pays de Caux dotée d’une gare sur la ligne Le Havre–Fécamp\n\nLe nom d’Étainhus est attesté dès le XIIe siècle et pourrait évoquer une « maison de pierre ». L’église Saint-Jacques, dont le chœur remonte au XIIe siècle, constitue un repère du bourg. Des maisons traditionnelles, longères et pavillons plus récents s’égrènent dans un paysage rural. La fiche de la Métropole renvoie aussi au site de la mairie.\n\nLes maisons individuelles, pavillons et anciennes fermes avec jardin constituent l’essentiel de l’offre ; les appartements sont rares. Une gare à proximité peut convenir à un trajet ferroviaire régulier, sous réserve de vérifier la distance réelle depuis le logement. Examiner rénovation, toiture, isolation et assainissement."
+  },
+  {
+    "id": "epretot",
+    "name": "Épretot",
+    "kind": "commune",
+    "text": "Un village cauchois entre Le Havre et Saint-Romain-de-Colbosc\n\nÉpretot est mentionné sous la forme « Espretot » dans une charte de 1114. L’église Saint-Pierre, des XIIe et XVIe siècles, et plusieurs colombiers rappellent l’histoire du village et des fermes du pays de Caux. Pour les informations locales et les éléments patrimoniaux, voir la fiche communale de la Métropole.\n\nMaisons de village, pavillons, corps de ferme et maisons avec jardin ou dépendances dominent ; l’offre d’appartements est très limitée. La surface habitable n’explique pas seule le prix : terrain, bâtiments annexes, état de la toiture et assainissement individuel comptent beaucoup."
+  },
+  {
+    "id": "saint-aubin-routot",
+    "name": "Saint-Aubin-Routot",
+    "kind": "commune",
+    "text": "Une commune rurale à l’est de l’agglomération havraise\n\nSaint-Aubin-Routot regroupe bourg et hameaux dans un paysage agricole du pays de Caux. L’église et les bâtiments communaux forment des repères autour du centre ; le bâti résidentiel comprend maisons de bourg, fermes et pavillons. La fiche officielle de la Métropole centralise les coordonnées de la mairie.\n\nMaisons individuelles, pavillons avec jardin, maisons de bourg et anciennes fermes forment la majorité du parc. Les appartements sont rares. Avant achat, vérifier l’assainissement, les annexes, le voisinage agricole, les temps de trajet et le coût de rénovation des bâtiments anciens."
+  },
+  {
+    "id": "la-remuee",
+    "name": "La Remuée",
+    "kind": "commune",
+    "text": "Un village du pays de Caux entre Le Havre et Saint-Romain-de-Colbosc\n\nLa Remuée, anciennement Notre-Dame-sur-Seine, est mentionnée à partir du XIIe siècle. Le village s’est développé le long de l’ancienne voie reliant Lillebonne à Harfleur. L’église du XVIIIe siècle et le château de Maréfosse, visible sur la route vers Saint-Romain, sont des repères du patrimoine local ; la fiche de la Métropole présente les services municipaux.\n\nMaisons individuelles, pavillons, maisons de bourg, fermes et propriétés avec dépendances composent l’essentiel du marché. Il y a peu d’appartements. Examiner l’état des toitures, les bâtiments annexes, le terrain, l’assainissement et la distance réelle aux services."
+  },
+  {
+    "id": "gommerville",
+    "name": "Gommerville",
+    "kind": "commune",
+    "text": "Une petite commune rurale à proximité du pôle de Saint-Romain-de-Colbosc\n\nGommerville est une petite commune agricole du pays de Caux, organisée en bourg et hameaux. Le bâti mêle maisons de village, anciennes fermes et pavillons, avec des matériaux normands comme la brique, le silex et le colombage. Les informations de mairie et les repères communaux sont rassemblés sur la fiche de la communauté urbaine Le Havre Seine Métropole.\n\nMaisons de bourg, pavillons, fermes et propriétés avec terrain dominent, avec peu ou pas d’appartements disponibles. Terrain, dépendances, état de rénovation et assainissement individuel ont un poids important dans le prix. Les repères communaux reposent sur un petit nombre de transactions."
+  },
+  {
+    "id": "la-cerlangue",
+    "name": "La Cerlangue",
+    "kind": "commune",
+    "text": "Une vaste commune rurale entre le pays de Caux et l’estuaire de la Seine\n\nLa Cerlangue est une commune étendue composée de hameaux et de paysages ruraux à la transition du pays de Caux et de l’estuaire. Les bâtiments anciens, fermes et maisons normandes se répartissent loin d’un centre unique. La Métropole présente la commune et ses contacts officiels.\n\nMaisons anciennes, corps de ferme, pavillons isolés et propriétés avec dépendances forment le parc le plus courant. Les appartements sont exceptionnels. Contrôler l’état du bâti ancien, les installations d’assainissement, les servitudes agricoles et les kilomètres quotidiens vers les services."
+  },
+  {
+    "id": "les-trois-pierres",
+    "name": "Les Trois-Pierres",
+    "kind": "commune",
+    "text": "Un village du pays de Caux entre Saint-Romain-de-Colbosc et Bolbec\n\nLe nom « Tribus Petris » apparaît en 1222 ; il évoquerait trois blocs de pierre autrefois présents dans le cimetière. Le village conserve une échelle agricole et des maisons de pays, avec des fermes et pavillons autour du bourg. La fiche de la Métropole décrit son histoire et ses services.\n\nMaisons individuelles, pavillons, fermes rénovées et maisons avec jardin ou dépendances constituent l’essentiel de l’offre. Les appartements sont rares. La rénovation, les annexes, la toiture, la superficie du terrain et l’accès aux réseaux influencent fortement chaque bien."
+  },
+  {
+    "id": "honfleur",
+    "name": "Honfleur",
+    "kind": "commune",
+    "text": "Un port historique, des ruelles anciennes et des quartiers résidentiels entre bassin et plateau\n\nLe Vieux Bassin est au cœur de l’histoire portuaire de la ville. L’ancien havre d’échouage est transformé en bassin à flot entre 1684 et 1690 ; les quais et maisons qui l’entourent forment aujourd’hui l’un des paysages bâtis les plus reconnaissables de Honfleur. La Lieutenance conserve une partie des fortifications médiévales et accueille un centre d’interprétation du patrimoine maritime.\n\nLe centre historique propose des maisons de ville et des appartements dans des immeubles anciens, parfois avec colombages ou éléments patrimoniaux. Sur le plateau et dans les quartiers en retrait du port, on trouve davantage de maisons familiales, de pavillons et de résidences. Pour un logement ancien, vérifier l’état de la toiture et des façades, l’humidité, l’isolation, les accès et les possibilités de stationnement.",
+    "city": "honfleur"
+  },
+  {
+    "id": "cauville-sur-mer",
+    "name": "Cauville-sur-Mer",
+    "kind": "commune",
+    "text": "Une commune de hameaux et de clos-masures, entre plateau agricole et littoral\n\nCauville-sur-Mer s’est formée autour de plusieurs hameaux et lieux-dits, dont Briquemare, Buglise, la Chesnaie et Marfauville, avec des clos-masures caractéristiques du pays de Caux. La fusion de Rimbertot, Cauville et Buglise date de 1823 ; le nom « sur-Mer » est ajouté en 1913. L’église Saint-Nicolas, en brique et silex, domine le bourg, tandis que l’église de Buglise rappelle l’histoire des anciens hameaux.\n\nLe parc est principalement composé de maisons individuelles, pavillons, fermes et bâtiments agricoles réhabilités, souvent avec jardin ou dépendances ; les appartements sont peu représentés. Les clos-masures et les écarts impliquent de vérifier l’accès, les réseaux, l’assainissement, les servitudes, l’entretien des toitures et la constructibilité des parcelles auprès du service d’urbanisme."
+  },
+  {
+    "id": "les-docks",
+    "name": "Les Docks",
+    "kind": "quartier",
+    "text": "Un quartier portuaire en mutation, entre bassin Vauban, gare et nouveaux lieux de vie\n\nLe paysage des Docks associe bassins, entrepôts et constructions urbaines contemporaines. Les Docks Vauban ont été transformés en centre commercial en 2009, tandis que les anciens sites portuaires accueillent progressivement de nouveaux usages. La Ville du Havre documente cette transformation et la place des équipements récents dans l’histoire architecturale du secteur.\n\nL’offre est surtout urbaine : appartements en résidences, logements récents et bâtiments réhabilités dans les secteurs en renouvellement. Les maisons individuelles sont moins courantes près des bassins ; les quartiers voisins apportent d’autres formes d’habitat. À la visite, comparer l’exposition, le bruit lié aux axes et aux événements, les charges, le stationnement et la qualité des espaces communs.",
+    "city": "le-havre"
+  },
+  {
+    "id": "perret",
+    "name": "Quartier Perret",
+    "kind": "quartier",
+    "text": "Le quartier Perret concentre une demande soutenue en centre-ville. Les immeubles de la reconstruction, les vues dégagées et la cohérence architecturale attirent acquéreurs occupants, investisseurs et professions libérales. Dans ce secteur, l'accompagnement se joue sur la maîtrise des copropriétés anciennes, la lecture énergétique et la valorisation patrimoniale.\n\nPour un achat patrimonial, Perret offre une bonne lisibilité du marché et une profondeur d'acheteurs à la revente.\n\n",
+    "city": "le-havre"
+  },
+  {
+    "id": "saint-vincent",
+    "name": "Quartier Saint-Vincent",
+    "kind": "quartier",
+    "text": "Entre plage, commerces de proximité et immeubles de caractère, Saint-Vincent demeure une adresse recherchée pour les appartements familiaux et les maisons proches du littoral. Le marché valorise fortement les extérieurs, la luminosité et la proximité immédiate de la promenade maritime.\n\nLe quartier combine sécurité patrimoniale et rareté foncière, ce qui soutient la valeur à long terme et facilite la revente.\n\n",
+    "city": "le-havre"
+  },
+  {
+    "id": "graville",
+    "name": "Graville et ville basse",
+    "kind": "quartier",
+    "text": "Graville offre un positionnement équilibré : maisons de ville, petits collectifs et parc résidentiel établi. Le secteur attire les ménages recherchant un budget plus contenu tout en restant connecté aux zones d'emploi et aux axes de mobilité.\n\nLa profondeur de marché et le niveau de prix d'entrée en font un secteur à considérer pour un premier achat ou un projet de rénovation.\n\n",
+    "city": "le-havre"
+  },
+  {
+    "id": "sanvic",
+    "name": "Sanvic",
+    "kind": "quartier",
+    "text": "Sanvic reste central pour la recherche de maisons avec jardin et garage, à proximité des établissements scolaires. Le marché y est porté par une demande familiale continue, une qualité de vie reconnue et un parc de maisons individuelles bien entretenu.\n\nMoins spéculatif que les secteurs hyper-centraux, Sanvic offre une bonne stabilité de valeur et un rythme de rotation sain.\n\n",
+    "city": "le-havre"
+  },
+  {
+    "id": "eure-docks",
+    "name": "Eure - Docks Vauban",
+    "kind": "quartier",
+    "text": "Le secteur Eure - Docks Vauban incarne le nouveau cycle immobilier havrais : programmes récents, commerces, mobilités et mixité habitat-activités. Les acquéreurs y trouvent des logements récents et des petites surfaces proches des transports.\n\nLa zone combine potentiel de valorisation à moyen terme et accès aux commerces, aux transports et aux équipements du quartier.\n\n",
+    "city": "le-havre"
+  }
+]

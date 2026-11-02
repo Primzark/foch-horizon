@@ -1,3 +1,4 @@
+import { geographyReply, chatbotPlaces, normalizePlace, resolvePlaces } from "../_shared/chatbot-geography.ts";
 import { z } from "https://esm.sh/zod@3.25.76";
 import { createServiceClient } from "../_shared/client.ts";
 import { consumeRequestLimit, isAllowedSiteOrigin, secureJsonResponse, secureOptionsResponse } from "../_shared/request-security.ts";
@@ -26,6 +27,8 @@ import {
 } from "../_shared/property-search.ts";
 
 const toolSearchParamsFieldsSchema = z.object({
+  rooms: z.number().int().min(1).max(19).optional(),
+  excludedFeatures: z.array(z.string().max(80)).max(12).optional(),
   type: z.enum(["appartement", "maison_villa", "autre"]).optional(),
   city: z.string().min(1).max(80).optional(),
   q: z.string().min(1).max(120).optional(),
@@ -103,7 +106,7 @@ const actionRequestSchema = z.object({
 });
 
 const payloadSchema = z.object({
-  question: z.string().min(2).max(1200),
+  question: z.string().trim().min(2).max(1200),
   language: z.enum(["fr", "en"]).optional(),
   chatHistory: z
     .array(
@@ -156,6 +159,8 @@ interface ToolSearchParams {
   type?: "appartement" | "maison_villa" | "autre";
   city?: string;
   q?: string;
+  rooms?: number;
+  excludedFeatures?: string[];
   bedroomsMin?: number;
   bathroomsMin?: number;
   garagesMin?: number;
@@ -734,6 +739,10 @@ function secureChatbotResponse(
   payload: Record<string, unknown>,
   language: "fr" | "en",
 ): Response {
+  if (language === "en" && Array.isArray(payload.actions)) {
+    const kinds = (payload.actions as Array<{kind:string}>).map(a=>a.kind);
+    payload = { ...payload, answer: kinds.includes("search_results") ? "Your matching properties and applied filters are shown below. Select properties to compare them or prepare a contact request." : kinds.includes("compare_summary") ? "Here is the comparison of your selected properties." : "The requested results are shown below.", suggestedPrompts: ["Refine my search", "Prepare a contact request"] };
+  }
   return secureJsonResponse(request, protectVisibleChatbotReply(payload, language));
 }
 
@@ -2581,6 +2590,8 @@ function sanitizePlannerSearchArgs(rawArgs: unknown): ToolSearchParams {
   if (!rawArgs || typeof rawArgs !== "object") return {};
   const candidate = rawArgs as Record<string, unknown>;
   const parsed: ToolSearchParams = {};
+  if (typeof candidate.rooms === "number" && Number.isInteger(candidate.rooms) && candidate.rooms > 0 && candidate.rooms < 20) parsed.rooms = candidate.rooms;
+  if (Array.isArray(candidate.excludedFeatures)) parsed.excludedFeatures = candidate.excludedFeatures.filter((v): v is string => typeof v === "string").slice(0,12);
 
   if (candidate.transaction === "vente") parsed.transaction = "vente";
   if (candidate.type === "appartement" || candidate.type === "maison_villa" || candidate.type === "autre") {
@@ -3447,7 +3458,7 @@ interface PropertySearchQueryRow {
 }
 
 const toolPropertyIntentPattern =
-  /appartement|maison|villa|studio|t[1-9]\b|bien(?:s)?|acheter|achat|vente|budget|chambre|surface|m2|annonce/;
+  /apartment|flat|house|bedroom|appartement|maison|villa|studio|t[1-9]\b|bien(?:s)?|acheter|achat|vente|budget|chambre|surface|m2|annonce/;
 const toolAggregateIntentPattern =
   /moyenn|average|mediane|median|stat(?:s|istiques)?|surface\s*(?:moyenne|moyen)/;
 const toolCompareIntentPattern = /compar|compare|lequel est mieux|laquelle est mieux|entre les deux|entre ces biens/;
@@ -3464,6 +3475,7 @@ const toolCityAliases: Array<{ slug: string; aliases: string[] }> = [
 ];
 
 function parseToolSearchParamsFromState(rawState: ToolConversationState | undefined): ToolSearchParams {
+  if (rawState?.recentSearch?.params) return { ...rawState.recentSearch.params, transaction: "vente" };
   const { transaction: _savedPreferenceTransaction, ...preferences } = rawState?.preferences ?? {};
   const { transaction: _savedSearchTransaction, ...recentSearch } = rawState?.recentSearch?.params ?? {};
   return {
@@ -3583,15 +3595,15 @@ function detectTransaction(question: string): "vente" | undefined {
 
 function detectPropertyType(question: string): "appartement" | "maison_villa" | "autre" | undefined {
   const normalized = normalizeText(question);
-  if (/\bmaison\b|\bvilla\b/.test(normalized)) return "maison_villa";
-  if (/\bappartement\b|\bstudio\b|\bt[1-9]\b/.test(normalized)) return "appartement";
+  if (/\bmaison\b|\bvilla\b|\bhouse\b/.test(normalized)) return "maison_villa";
+  if (/\bappartement\b|\bapartment\b|\bflat\b|\bstudio\b|\bt[1-9]\b/.test(normalized)) return "appartement";
   return undefined;
 }
 
 function detectCitySlug(question: string): string | undefined {
-  const normalized = normalizeText(question);
-  for (const city of toolCityAliases) {
-    if (city.aliases.some((alias) => normalized.includes(alias))) {
+  const normalized = normalizePlace(question);
+  for (const city of [...toolCityAliases, ...chatbotPlaces.filter(g => g.kind === "commune").map(g => ({slug: g.city || g.id, aliases:[normalizePlace(g.name), g.id]}))]) {
+    if (city.aliases.some((alias) => ` ${normalized} `.includes(` ${normalizePlace(alias)} `))) {
       return city.slug;
     }
   }
@@ -3681,7 +3693,7 @@ function parseTerrainHints(question: string): Pick<ToolSearchParams, "terrainMin
 }
 
 function detectFeatureFilters(question: string): string[] | undefined {
-  const normalized = normalizeText(question);
+  const normalized = normalizeText(question).replace(/\b(?:sans|without|retire|enleve)\s+(?:de\s+|le\s+|la\s+)?(?:balcon|terrasse|ascenseur|garage|parking|jardin)\b/g, "");
   const rules: Array<{ key: string; patterns: RegExp[] }> = [
     { key: "balcon", patterns: [/\bbalcon\b/] },
     { key: "terrasse", patterns: [/\bterrasse\b/] },
@@ -3689,7 +3701,7 @@ function detectFeatureFilters(question: string): string[] | undefined {
     { key: "garage", patterns: [/\bgarage\b/] },
     { key: "parking", patterns: [/\bparking\b/, /\bstationnement\b/] },
     { key: "jardin", patterns: [/\bjardin\b/] },
-    { key: "vue mer", patterns: [/\bvue mer\b/, /\bmer\b/] },
+    { key: "vue mer", patterns: [/\bvue (?:sur (?:la )?)?mer\b/] },
   ];
   const features = rules
     .filter((rule) => rule.patterns.some((pattern) => pattern.test(normalized)))
@@ -3732,7 +3744,7 @@ function extractSearchParamsFromQuestion(
   actionRequest: ToolActionRequest | undefined,
 ): ToolSearchParams {
   const fallbackPageSize = clamp(Math.floor(parseNumberEnv("CHATBOT_AGENT_TOOLS_MAX_RESULTS", 5)), 1, 10);
-  const stateParams = parseToolSearchParamsFromState(state);
+  const stateParams = /\b(oublie|nouvelle recherche|start over|forget)\b/.test(normalizeText(question)) ? {} : parseToolSearchParamsFromState(state);
   const inferredParams: ToolSearchParams = {
     transaction: detectTransaction(question),
     type: detectPropertyType(question),
@@ -3744,6 +3756,7 @@ function extractSearchParamsFromQuestion(
     ...parseSurfaceHints(question),
     ...parseTerrainHints(question),
     features: detectFeatureFilters(question),
+    q: normalizePlace(question).match(/\b(perret|sanvic|graville|saint francois|saint vincent|danton|les docks)\b/)?.[1],
   };
 
   let actionParams: ToolSearchParams = {};
@@ -3768,7 +3781,13 @@ function extractSearchParamsFromQuestion(
     }
   }
 
-  return mergeSearchParams(stateParams, { ...inferredParams, ...actionParams }, 1, fallbackPageSize);
+  const room = normalizeText(question).match(/\bt([1-9])\b/);
+  const excluded = [...normalizeText(question).matchAll(/\b(?:sans|without|retire|enleve)\s+(?:de\s+|le\s+|la\s+)?(balcon|terrasse|ascenseur|garage|parking|jardin)\b/g)].map(m=>m[1]);
+  const merged = mergeSearchParams(stateParams, { ...keepDefinedSearchParams(inferredParams), ...actionParams, ...(room ? {rooms:Number(room[1])} : {}) }, 1, fallbackPageSize);
+  if (excluded.length) { merged.excludedFeatures = excluded; merged.features = (merged.features ?? []).filter(f => !excluded.includes(f));
+    if (merged.q) { merged.q = merged.q.replace(/\b(?:sans|without|retire|enleve)\s+(?:de\s+|le\s+|la\s+)?(?:balcon|terrasse|ascenseur|garage|parking|jardin)\b/gi, "").trim(); if (!merged.q) delete merged.q; } }
+  if (/sans (?:limite de )?budget|no budget limit/.test(normalizeText(question))) { delete merged.priceMax; delete merged.priceMin; }
+  return merged;
 }
 
 function hasUserSearchFilters(params: ToolSearchParams): boolean {
@@ -3959,6 +3978,7 @@ function detectAgentMode(
   conversationState: ToolConversationState | undefined,
 ): AgentMode {
   if (actionRequest) return "tool";
+  if (conversationState?.recentSearch && /^(et|avec|sans|meme|retire|enleve|and|with|without|same)\b/.test(normalizeText(question))) return "tool";
   if (isLikelyWebsiteContentQuestion(question)) return "rag";
   if (isLikelyAggregateQuestion(question)) return "tool";
   if (
@@ -4311,9 +4331,9 @@ function buildCompareSummaryText(
   const minSurface = surfaces.length > 0 ? Math.min(...surfaces) : null;
   const maxSurface = surfaces.length > 0 ? Math.max(...surfaces) : null;
 
-  const budget = state?.preferences?.priceMax;
-  const bedroomsMin = state?.preferences?.bedroomsMin;
-  const cityPreference = state?.preferences?.city;
+  const budget = (state?.recentSearch ? state.recentSearch.params?.priceMax : state?.preferences?.priceMax);
+  const bedroomsMin = (state?.recentSearch ? state.recentSearch.params?.bedroomsMin : state?.preferences?.bedroomsMin);
+  const cityPreference = (state?.recentSearch ? state.recentSearch.params?.city : state?.preferences?.city);
   let recommendedPropertyId: number | undefined;
 
   const ranked = [...properties]
@@ -4328,7 +4348,7 @@ function buildCompareSummaryText(
       }
       if (cityPreference && property.cityName) {
         const normalizedCity = normalizeText(property.cityName);
-        if (normalizedCity.includes(normalizeText(cityPreference))) score += 1;
+        if (normalizePlace(normalizedCity) === normalizePlace(cityPreference)) score += 1;
       }
       if (property.surfaceM2 && property.priceAmount > 0) {
         score += Math.min(1, property.surfaceM2 / 200);
@@ -5131,6 +5151,7 @@ async function getPropertyAnalysisCards(
 
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
     const response = await fetch(endpoint, {
+      signal: AbortSignal.timeout(timeoutMs),
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -5319,6 +5340,10 @@ async function orchestrateToolRequest(input: {
         effectiveActionRequest,
         input.chatHistory,
       );
+      const knownCities = new Set([...toolCityAliases.map(c=>c.slug), ...chatbotPlaces.filter(g=>g.kind === "commune").map(g=>g.city || g.id), "fontaine-la-mallet"]);
+      if ((params.city && !knownCities.has(params.city)) || (!params.city && !params.q && /\b(?:a|in)\s+(?!vendre|acheter|buy)\w/.test(normalizeText(input.question)))) return {
+        answer: input.language === "en" ? "Please specify a supported town near Le Havre. I could not reliably resolve this location." : "Précisez une commune de nos secteurs autour du Havre : je n’ai pas pu identifier ce lieu de façon fiable.", suggestedPrompts:["Le Havre", "Sainte-Adresse"], actions:[], toolTrace, agentMode:"tool"
+      };
       const result = await executeSearchPropertiesTool(supabase, params);
       toolTrace.push({
         tool: "search_properties",
@@ -6226,7 +6251,12 @@ Deno.serve(async (request) => {
     }
 
     const requestId = createRequestId();
+    const geographic = !payload.actionRequest && geographyReply(payload.question, payload.language);
+    if (geographic) return secureJsonResponse(request, { ...geographic, source: "fallback", edgeProvider: "fallback", requestId, ragUsed: false, agentMode: "rag" });
 
+    if (!payload.actionRequest && ((resolvePlaces(payload.question).filter(p=>p.kind === "commune").length > 1 && /\b(ou|or|et|and)\b/i.test(payload.question)) || /(?:\b(?:ou|or)\b.*(?:adresse|havre|ville)|\b\d+\s*km\b)/i.test(payload.question))) {
+      return secureJsonResponse(request, { source: "fallback", requestId, answer: payload.language === "en" ? "I can search one town at a time. Which town should I use? Radius searches are not currently supported." : "Je peux rechercher une commune à la fois. Quelle commune souhaitez-vous privilégier ? La recherche par rayon kilométrique n’est pas disponible.", suggestedPrompts: ["Le Havre", "Sainte-Adresse"] });
+    }
     const explicitWebSearchRequested =
       !payload.actionRequest && isExplicitWebSearchQuestion(payload.question);
 

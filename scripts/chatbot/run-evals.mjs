@@ -81,7 +81,7 @@ function getSupabaseConfig() {
 }
 
 function getHeaders() {
-  const headers = { 'Content-Type': 'application/json' };
+  const headers = { 'Content-Type': 'application/json', Origin: process.env.CHATBOT_EVAL_ORIGIN || 'https://foch-horizon.vercel.app' };
   const anonKey = (process.env.EDGE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || '').trim();
   if (anonKey) {
     headers.apikey = anonKey;
