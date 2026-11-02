@@ -740,8 +740,21 @@ function secureChatbotResponse(
   language: "fr" | "en",
 ): Response {
   if (language === "en" && Array.isArray(payload.actions)) {
-    const kinds = (payload.actions as Array<{kind:string}>).map(a=>a.kind);
-    payload = { ...payload, answer: kinds.includes("search_results") ? "Your matching properties and applied filters are shown below. Select properties to compare them or prepare a contact request." : kinds.includes("compare_summary") ? "Here is the comparison of your selected properties." : "The requested results are shown below.", suggestedPrompts: ["Refine my search", "Prepare a contact request"] };
+    const actions = payload.actions as Array<{ kind: string; data?: { total?: number } }>;
+    const search = actions.find((action) => action.kind === "search_results");
+    const kinds = actions.map((action) => action.kind);
+    const answer = search
+      ? search.data?.total === 0
+        ? "No properties match these filters. Try changing the budget, town or property type."
+        : "Your matching properties and applied filters are shown below. Select properties to compare them or prepare a contact request."
+      : kinds.includes("compare_summary")
+        ? "Here is the comparison of your selected properties."
+        : kinds.includes("stats_summary")
+          ? "Here are the statistics for your search."
+          : undefined;
+    if (answer) {
+      payload = { ...payload, answer, suggestedPrompts: ["Refine my search", "Prepare a contact request"] };
+    }
   }
   return secureJsonResponse(request, protectVisibleChatbotReply(payload, language));
 }
@@ -5363,10 +5376,10 @@ async function orchestrateToolRequest(input: {
         {
           id: buildToolActionId("search"),
           kind: "search_results",
-          title: result.total > 0 ? `${result.total} bien${result.total > 1 ? "s" : ""} trouvés` : "Aucun bien trouvé",
+          title: result.total > 0 ? `${result.total} bien${result.total > 1 ? "s" : ""} trouvé${result.total > 1 ? "s" : ""}` : "Aucun bien trouvé",
           description:
             result.total > 0
-              ? `Voici une sélection correspondant à votre demande (${Math.min(result.items.length, result.total)} affichés).`
+              ? `Voici une sélection correspondant à votre demande (${Math.min(result.items.length, result.total)} affiché${Math.min(result.items.length, result.total) > 1 ? "s" : ""}).`
               : "Je peux affiner la recherche avec un budget, une ville ou un type de bien.",
           data: {
             criteriaSummary,
