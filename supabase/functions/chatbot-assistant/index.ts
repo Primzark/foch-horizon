@@ -3889,6 +3889,8 @@ function extractSearchParamsForRequest(
 
 function buildCriteriaSummary(params: ToolSearchParams): string {
   const parts: string[] = [];
+  if (params.rooms) parts.push(`T${params.rooms} (${params.rooms} pièces)`);
+  if (params.excludedFeatures?.length) parts.push(`sans ${params.excludedFeatures.join(", ")}`);
   const transactionLabel = params.transaction === "vente" ? "à vendre" : undefined;
   const typeLabel =
     params.type === "appartement" ? "appartement" : params.type === "maison_villa" ? "maison" : params.type;

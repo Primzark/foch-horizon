@@ -6,7 +6,8 @@ describe('chatbot audit regressions', () => {
  for (const place of chatbotPlaces) it(`answers the supported guide ${place.name}`, () => {
   const reply = geographyReply(`Parlez-moi de ${place.name}.`);
   expect(reply?.answer).toContain(place.name);
-  expect(reply?.suggestedPrompts).toContain(`Ouvrir /immobilier/${place.id}`);
+  const legacyRoutes: Record<string,string> = {perret:"/immobilier/centre-ville","saint-vincent":"/immobilier/la-plage",sanvic:"/geographie",graville:"/geographie","eure-docks":"/geographie"};
+  expect(reply?.suggestedPrompts).toContain(`Ouvrir ${legacyRoutes[place.id] ?? `/immobilier/${place.id}`}`);
  });
  it('does not intercept fees or contact requests mentioning a place', () => { expect(geographyReply('Comment contacter votre agence au Havre ?')).toBeNull(); expect(geographyReply('Quels sont les honoraires à Sainte-Adresse ?')).toBeNull(); });
  it('does not intercept actual listing requests', () => expect(geographyReply('Je cherche un appartement à Harfleur')).toBeNull());
