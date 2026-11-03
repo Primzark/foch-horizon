@@ -201,6 +201,8 @@ export type ChatbotUiAction =
           dpeLabel: string | null;
           transaction: string;
           type: string;
+          status: string;
+          dataQualityWarning?: string | null;
         }>;
         canCompare: boolean;
         compareSelectionLimit: number;
@@ -443,11 +445,11 @@ interface SiteTopicDescriptor {
 }
 
 export const chatbotExamplePrompts = [
-  "Je cherche un appartement a vendre dans le quartier Perret avec 2 chambres.",
+  "Je cherche un appartement à vendre dans le quartier Perret avec 2 chambres.",
   "Quel quartier du Havre choisir pour acheter ?",
   "Comment se passe un compromis de vente avec votre agence ?",
   "Quels services proposez-vous pour vendre un bien au Havre ?",
-  "Je ne trouve pas de bien adapte, pouvez-vous me rappeler ?",
+  "Je ne trouve pas de bien adapté, pouvez-vous me rappeler ?",
 ];
 
 const processIntentPattern = /\b(compromis|notaire|process|etape|signature|acte|financement|offre acceptee)\b/;
@@ -462,8 +464,10 @@ const aboutIntentPattern = /agence|equipe|apropos|a propos|depuis 1972|unis/;
 const siteNavigationIntentPattern = /site|page|rubrique|navigation|plan du site|sitemap|ou trouver|ou puis je|ou puis-je|lien/;
 const directLeadCapturePattern = /ne trouve pas|introuvable|aucun bien|pas de bien|pas adapte|rappeler|etre contacte|etre rappele|laisser mon email|alerte email/;
 const shortFollowUpPattern = /^(et|sinon|plutot|du coup|ok|daccord|avec|sans|plus|moins|meme budget|dans ce cas)/;
-const districtComparisonPattern = /(quel quartier|quels quartiers|meilleur quartier|meilleurs quartiers).*(investissement|achat|acheter)|investissement immobilier/;
+const districtComparisonPattern = /(quel(?:s)? quartier(?:s)?).*(choisir|conseiller|recommander|investissement|achat|acheter|habiter|vivre)|meilleur(?:s)? quartier(?:s)?.*(investissement|achat|acheter|habiter|vivre)|investissement immobilier/;
+const sellingDocumentsPattern = /(?:document|papier|piece|justificatif).*(?:prepar|fournir|vendre|vente)|(?:prepar|fournir).*(?:document|papier|piece|justificatif).*(?:vendre|vente)|(?:vendre|vente).*(?:document|papier|piece|justificatif)/;
 const pageSummaryPattern = /resum|resume|que contient|a quoi sert|explique|detaille|aide moi sur|sur la page/;
+const explicitPathOpenPattern = /\b(?:ouvrir|ouvre|open|go to|aller sur)\s+\/[a-z0-9-]+/i;
 const greetingPattern = /^(bonjour|salut|hello|bonsoir|coucou)\b/;
 const thanksPattern = /\bmerci\b|^\s*top\b|^\s*parfait\b/;
 const capabilityPattern = /qui es tu|qui etes vous|que peux tu|que pouvez vous|aide moi|help/;
@@ -488,6 +492,7 @@ const knownInternalPaths = [
   "/services",
   "/avis",
   "/geographie",
+  "/histoire-immobilier-le-havre",
   "/honoraires",
   "/biens-sauvegardes",
   "/my-selection",
@@ -583,7 +588,7 @@ const siteTopics: SiteTopicDescriptor[] = [
     path: "/",
     title: "Accueil",
     summary:
-      "Page d'accueil avec hero immobilier, selection du moment, villes couvertes, avis Google et presentation de l'equipe.",
+      "Page d’accueil avec présentation immobilière, sélection du moment, villes couvertes, avis Google et présentation de l’équipe.",
     keywords: ["accueil", "hero", "selection", "villes", "avis", "equipe", "agence", "bien immobilier"],
     suggestedPrompts: ["Ouvrir /", "Ouvrir /biens", "Ouvrir /avis"],
   },
@@ -601,18 +606,18 @@ const siteTopics: SiteTopicDescriptor[] = [
     path: "/vendre",
     title: "Vendre",
     summary:
-      "Parcours vendeur: estimation, strategie de mise en marche, qualification acheteurs et accompagnement jusqu'a la signature.",
+      "Parcours vendeur : estimation, stratégie de mise en marché, qualification des acheteurs et accompagnement jusqu’à la signature.",
     keywords: ["vendre", "mise en vente", "mandat", "strategie", "acheteur", "signature", "acte"],
-    suggestedPrompts: ["Ouvrir /vendre", "Ouvrir /estimation", "Je veux parler a un conseiller"],
+    suggestedPrompts: ["Ouvrir /vendre", "Ouvrir /estimation", "Je veux parler à un conseiller"],
   },
   {
     id: "estimation",
     path: "/estimation",
     title: "Estimation",
     summary:
-      "Demande d'estimation avec analyse du bien, comparables locaux et proposition de strategie de commercialisation.",
+      "Demande d’estimation avec analyse du bien, comparables locaux et proposition d’une stratégie de commercialisation.",
     keywords: ["estimation", "estimer", "avis de valeur", "comparables", "prix", "strategie de vente"],
-    suggestedPrompts: ["Ouvrir /estimation", "Quels documents preparer ?", "Ouvrir /contact"],
+    suggestedPrompts: ["Ouvrir /estimation", "Quels documents préparer ?", "Ouvrir /contact"],
   },
   {
     id: "services",
@@ -628,7 +633,7 @@ const siteTopics: SiteTopicDescriptor[] = [
     path: "/avis",
     title: "Avis clients",
     summary:
-      "Page reputation avec note Google, volume d'avis, extraits de temoignages et suivi des retours clients.",
+      "Page de réputation avec la note Google, le nombre d’avis, des extraits de témoignages et le suivi des retours clients.",
     keywords: ["avis", "google", "note", "reputation", "temoignages", "retours clients"],
     suggestedPrompts: ["Ouvrir /avis", "Quelle est la note Google ?", "Je veux contacter l'agence"],
   },
@@ -637,25 +642,34 @@ const siteTopics: SiteTopicDescriptor[] = [
     path: "/geographie",
     title: "Géographie",
     summary:
-      "Nos secteurs : Sainte-Adresse, La plage, Les gobelins, Saint Michel, Octeville sur mer, la campagne dans un rayon de 30 km du Havre, de Saint-Romain à Etretat et Deauville–Trouville.",
+      "Nos secteurs : Sainte-Adresse, la plage, les Gobelins, Saint-Michel, Octeville-sur-Mer et la campagne dans un rayon de 30 km autour du Havre, de Saint-Romain à Étretat, ainsi que Deauville et Trouville.",
     keywords: ["geographie", "secteurs", "sainte adresse", "plage", "gobelins", "saint michel", "octeville", "saint romain", "etretat", "deauville", "trouville"],
     suggestedPrompts: ["Ouvrir /geographie", "Quel quartier pour investir ?", "Ouvrir /biens"],
+  },
+  {
+    id: "history-article",
+    path: "/histoire-immobilier-le-havre",
+    title: "Histoire de l’immobilier au Havre",
+    summary:
+      "Article consacré aux repères historiques du marché havrais, à l’architecture de la Reconstruction et aux évolutions des quartiers du Havre.",
+    keywords: ["histoire immobilier le havre", "histoire du marché immobilier", "patrimoine", "reconstruction", "auguste perret"],
+    suggestedPrompts: ["Ouvrir /histoire-immobilier-le-havre", "Ouvrir /geographie", "Quel quartier du Havre choisir pour acheter ?"],
   },
   {
     id: "fees",
     path: "/honoraires",
     title: "Honoraires",
     summary:
-      "Bareme d'honoraires TTC, telechargement du PDF officiel et tableau de synthese par tranches de prix.",
+      "Barème d’honoraires TTC, téléchargement du PDF officiel et tableau de synthèse par tranches de prix.",
     keywords: ["honoraires", "bareme", "frais", "commission", "pdf", "ttc"],
-    suggestedPrompts: ["Ouvrir /honoraires", "Telecharger le PDF des honoraires", "Ouvrir /contact"],
+    suggestedPrompts: ["Ouvrir /honoraires", "Télécharger le PDF des honoraires", "Ouvrir /contact"],
   },
   {
     id: "about",
     path: "/apropos",
-    title: "A propos",
+    title: "À propos",
     summary:
-      "Presentation de l'agence Foch Immobilier depuis 1972, equipe, valeurs et ancrage local au Havre.",
+      "Présentation de l’agence Foch Immobilier, active depuis 1972, de son équipe, de ses valeurs et de son ancrage local au Havre.",
     keywords: ["apropos", "agence", "equipe", "1972", "unis", "presentation"],
     suggestedPrompts: ["Ouvrir /apropos", "Qui sont les conseillers ?", "Ouvrir /contact"],
   },
@@ -666,14 +680,14 @@ const siteTopics: SiteTopicDescriptor[] = [
     summary:
       "Coordonnées, horaires, carte et formulaire de contact pour vos projets d’achat, de vente et d’estimation.",
     keywords: ["contact", "telephone", "email", "adresse", "horaires", "rendez vous", "carte"],
-    suggestedPrompts: ["Ouvrir /contact", "Quels sont vos horaires ?", "Je veux etre rappele"],
+    suggestedPrompts: ["Ouvrir /contact", "Quels sont vos horaires ?", "Je veux être rappelé"],
   },
   {
     id: "saved",
     path: "/biens-sauvegardes",
-    title: "Biens sauvegardes",
+    title: "Biens sauvegardés",
     summary:
-      "Espace de selection personnelle pour retrouver, comparer et partager les biens favoris.",
+      "Espace de sélection personnelle pour retrouver, comparer et partager vos biens favoris.",
     keywords: ["biens sauvegardes", "selection", "favoris", "wishlist", "coeur", "partager"],
     suggestedPrompts: ["Ouvrir /biens-sauvegardes", "Ouvrir /biens", "Comment ajouter un favori ?"],
   },
@@ -689,18 +703,18 @@ const siteTopics: SiteTopicDescriptor[] = [
   {
     id: "legal",
     path: "/mentions-legales",
-    title: "Mentions legales",
+    title: "Mentions légales",
     summary:
-      "Informations legales de l'editeur, carte professionnelle et hebergement de l'application.",
+      "Informations légales sur l’éditeur, la carte professionnelle et l’hébergement de l’application.",
     keywords: ["mentions legales", "editeur", "cpi", "hebergement", "legal"],
     suggestedPrompts: ["Ouvrir /mentions-legales", "Ouvrir /confidentialite", "Ouvrir /cookies"],
   },
   {
     id: "privacy",
     path: "/confidentialite",
-    title: "Confidentialite",
+    title: "Confidentialité",
     summary:
-      "Politique RGPD: donnees collectees, finalites, duree de conservation et droits des utilisateurs.",
+      "Politique RGPD : données collectées, finalités, durée de conservation et droits des utilisateurs.",
     keywords: ["confidentialite", "rgpd", "donnees", "vie privee", "droits", "traitement"],
     suggestedPrompts: ["Ouvrir /confidentialite", "Ouvrir /cookies", "Ouvrir /contact"],
   },
@@ -709,16 +723,16 @@ const siteTopics: SiteTopicDescriptor[] = [
     path: "/cookies",
     title: "Cookies",
     summary:
-      "Informations sur cookies essentiels, cookies de mesure et gestion des preferences utilisateur.",
+      "Informations sur les cookies essentiels et de mesure, et gestion des préférences utilisateur.",
     keywords: ["cookies", "consentement", "mesure", "preferences", "traceurs"],
     suggestedPrompts: ["Ouvrir /cookies", "Ouvrir /confidentialite", "Ouvrir /plan-du-site"],
   },
   {
     id: "accessibility",
     path: "/accessibilite",
-    title: "Accessibilite",
+    title: "Accessibilité",
     summary:
-      "Declaration d'accessibilite numerique, objectifs WCAG AA et canal de signalement.",
+      "Déclaration d’accessibilité numérique, objectifs WCAG AA et canal de signalement.",
     keywords: ["accessibilite", "wcag", "navigation clavier", "contraste", "a11y", "signalement"],
     suggestedPrompts: ["Ouvrir /accessibilite", "Ouvrir /contact", "Ouvrir /plan-du-site"],
   },
@@ -752,7 +766,7 @@ const cityTopics: SiteTopicDescriptor[] = cities.map((city) => ({
   path: `/immobilier/${city.slug}`,
   title: `Immobilier ${city.name}`,
   summary:
-    `Page ville ${city.name}: contexte local, selection de biens actifs dans la commune, lien direct vers /biens?city=${city.slug} et acces rapide a /estimation?ville=${city.slug}.`,
+    `Page ville ${city.name} : contexte local, sélection de biens actifs dans la commune, lien vers /biens?city=${city.slug} et accès rapide à /estimation?ville=${city.slug}.`,
   keywords: [
     city.name,
     city.slug.replace(/-/g, " "),
@@ -778,11 +792,17 @@ function normalizePromptList(prompts: string[]): string[] {
 }
 
 function detectDistrict(text: string): DistrictDescriptor | null {
-  return districtVocabulary.find((district) => district.aliases.some((alias) => text.includes(alias))) ?? null;
+  return districtVocabulary.find((district) => district.aliases.some((alias) => text.includes(normalizeKeyword(alias)))) ?? null;
 }
 
 function detectCityRoute(text: string): CityRouteDescriptor | null {
-  return cityRouteVocabulary.find((city) => city.aliases.some((alias) => text.includes(alias))) ?? null;
+  return cityRouteVocabulary.find((city) => city.aliases.some((alias) => text.includes(normalizeKeyword(alias)))) ?? null;
+}
+
+function isSearchLocationFollowUp(question: string, conversationState?: ChatbotConversationState): boolean {
+  if (!conversationState?.recentSearch) return false;
+  const normalized = normalizeKeyword(question);
+  return /^(?:et\s+)?(?:a|au|aux|dans|sur)\s+/.test(normalized) && Boolean(detectCityRoute(normalized));
 }
 
 function normalizeInternalPath(path: string): string {
@@ -993,6 +1013,7 @@ function buildPurchaseOnlyRedirectAnswer(language: "fr" | "en" = "fr"): ChatbotR
 
 function detectIntent(text: string): ChatbotIntent {
   if (directLeadCapturePattern.test(text)) return "lead_capture";
+  if (sellingDocumentsPattern.test(text)) return "service";
   if (processIntentPattern.test(text)) return "process";
   if (contactIntentPattern.test(text)) return "contact";
   if (reviewsIntentPattern.test(text)) return "reviews";
@@ -1005,7 +1026,11 @@ function detectIntent(text: string): ChatbotIntent {
   return "unknown";
 }
 
-export function buildConversationContext(question: string, chatHistory: ChatbotRequest["chatHistory"]): ConversationContext {
+export function buildConversationContext(
+  question: string,
+  chatHistory: ChatbotRequest["chatHistory"],
+  conversationState?: ChatbotConversationState,
+): ConversationContext {
   const normalizedQuestion = normalizeKeyword(question);
   const historyMessages = (chatHistory ?? []).map((message) => message.content.trim()).filter((content) => content.length > 0);
   const historyUserMessages = (chatHistory ?? [])
@@ -1027,16 +1052,22 @@ export function buildConversationContext(question: string, chatHistory: ChatbotR
   const inferredIntent =
     explicitIntent !== "unknown"
       ? explicitIntent
+      : isSearchLocationFollowUp(question, conversationState)
+        ? "property"
       : shortFollowUpPattern.test(normalizedQuestion) && historicalIntent !== "unknown"
         ? historicalIntent
         : detectIntent(normalizedCorpus) !== "unknown"
           ? detectIntent(normalizedCorpus)
           : detectIntent(normalizedFullHistory);
 
-  const budgetMax = extractBudget(normalizedQuestion) ?? extractBudget(normalizedHistory);
-  const bedroomsMin = extractBedrooms(normalizedQuestion) ?? extractBedrooms(normalizedHistory);
-  const propertyType = detectPropertyType(normalizedQuestion) ?? detectPropertyType(normalizedHistory);
-  const transactionPreference = detectTransactionPreference(normalizedQuestion) ?? detectTransactionPreference(normalizedHistory);
+  const recentSearchParams = conversationState?.recentSearch?.params ?? conversationState?.preferences;
+  const budgetMax = extractBudget(normalizedQuestion) ?? extractBudget(normalizedHistory) ?? recentSearchParams?.priceMax ?? null;
+  const bedroomsMin = extractBedrooms(normalizedQuestion) ?? extractBedrooms(normalizedHistory) ?? recentSearchParams?.bedroomsMin ?? null;
+  const propertyType =
+    detectPropertyType(normalizedQuestion) ??
+    detectPropertyType(normalizedHistory) ??
+    (recentSearchParams?.type === "appartement" || recentSearchParams?.type === "maison_villa" ? recentSearchParams.type : null);
+  const transactionPreference = detectTransactionPreference(normalizedQuestion) ?? detectTransactionPreference(normalizedHistory) ?? (recentSearchParams?.transaction === "vente" ? "vente" : null);
   const district = detectDistrict(normalizedQuestion) ?? detectDistrict(normalizedHistory);
   const cityRoute = detectCityRoute(normalizedQuestion) ?? detectCityRoute(normalizedHistory);
   const explicitRequestedPath = extractRequestedPath(normalizedQuestion);
@@ -1088,6 +1119,30 @@ function buildPropertySuggestions(question: string, context: ConversationContext
   const propertyType = detectPropertyType(normalized) ?? context.propertyType;
   const district = detectDistrict(normalized) ?? context.district;
   const requestedCity = detectCityRoute(normalized) ?? context.cityRoute;
+  const excludedFeatures = Array.from(
+    normalized.matchAll(/\b(?:sans|aucun(?:e)?|pas de|absence de)\s+(?:de\s+|le\s+|la\s+)?(balcon|terrasse|ascenseur|garage|parking|jardin)\b/g),
+    (match) => match[1],
+  );
+
+  const propertyCopy = (property: (typeof properties)[number]) => normalizeKeyword(`${property.title} ${property.description}`);
+  const propertyTypeConflicts = (property: (typeof properties)[number]) => {
+    const copy = propertyCopy(property);
+    const describesHouse = /\b(?:maison|villa|pavillon)\s+(?:de\s+)?(?:\d+|[a-z]+)\s+pieces?\b/.test(copy);
+    const describesApartment = /\bappartement\s+(?:de\s+)?(?:\d+|[a-z]+)\s+pieces?\b/.test(copy);
+    return (property.propertyType === "appartement" && describesHouse) ||
+      (property.propertyType === "maison_villa" && describesApartment);
+  };
+  const propertyHasFeature = (property: (typeof properties)[number], feature: string) => {
+    const terms = feature === "garage" ? ["garage", "garages", "garag"] : [feature, `${feature}s`];
+    const structuredMatch = property.features.some((item) =>
+      terms.some((term) => normalizeKeyword(`${item.featureKey} ${item.labelFr}`).includes(term))
+    );
+    return structuredMatch || new RegExp(`\\b(?:${terms.join("|")})\\b`).test(propertyCopy(property));
+  };
+  const propertyExplicitlyLacksFeature = (property: (typeof properties)[number], feature: string) => {
+    const terms = feature === "garage" ? "garage(?:s)?|garag(?:e|es)" : `${feature}(?:s)?`;
+    return new RegExp(`\\b(?:sans|aucun(?:e)?|pas de|absence de)\\s+(?:de\\s+|le\\s+|la\\s+)?(?:${terms})\\b`).test(propertyCopy(property));
+  };
 
   const requestSpecificity =
     Number(Boolean(district)) +
@@ -1104,6 +1159,13 @@ function buildPropertySuggestions(question: string, context: ConversationContext
       if (bedroomsMin != null && (property.bedrooms ?? 0) < bedroomsMin) return false;
       if (budgetMax != null && property.priceAmount > budgetMax) return false;
       if (propertyType && property.propertyType !== propertyType) return false;
+      if (propertyTypeConflicts(property)) return false;
+      if (excludedFeatures.some((feature) =>
+        propertyHasFeature(property, feature) || !propertyExplicitlyLacksFeature(property, feature)
+      )) return false;
+
+      const copy = propertyCopy(property);
+      if (district && !district.aliases.some((alias) => copy.includes(normalizeKeyword(alias)))) return false;
 
       if (requestedCity) {
         const citySlug = cityById.get(property.cityId)?.slug;
@@ -1115,7 +1177,7 @@ function buildPropertySuggestions(question: string, context: ConversationContext
     .map((property) => {
       const city = cityById.get(property.cityId)?.name ?? "Le Havre";
       const citySlug = cityById.get(property.cityId)?.slug ?? "";
-      const haystack = normalizeKeyword(`${property.title} ${property.description} ${city}`);
+      const haystack = normalizeKeyword(`${property.title} ${property.description} ${city} ${property.features.map((feature) => `${feature.featureKey} ${feature.labelFr}`).join(" ")}`);
       let score = 0;
 
       if (district && district.aliases.some((alias) => haystack.includes(alias))) score += 4;
@@ -1153,11 +1215,11 @@ function buildLeadCaptureAnswer(context: ConversationContext): ChatbotReply {
     source: "local",
     answer:
       criteriaSummary.length > 0
-        ? `Je vous accompagne avec plaisir. Je n'ai pas encore de bien parfaitement aligne sur vos criteres (${criteriaSummary}). Laissez votre email ici dans le chat ou via /contact et je transmets votre demande a l'agence.`
-        : "Je vous accompagne avec plaisir. Si vous ne trouvez pas le bon bien, laissez votre email, votre budget et le secteur souhaite: je transmets directement votre demande a l'agence via /contact.",
+        ? `Je peux préparer une demande de rappel avec vos critères (${criteriaSummary}). Vérifiez vos coordonnées puis envoyez le formulaire sur /contact ; rien n’est transmis avant cet envoi.`
+        : "Je peux préparer une demande de rappel. Ouvrez /contact, complétez le formulaire et envoyez-le quand vous êtes prêt ; aucune demande n’est transmise depuis ce message.",
     suggestedPrompts: normalizePromptList([
-      "Je veux laisser mon email pour etre rappelle",
-      "Je cherche un T3 a Perret avec balcon",
+      "Je veux laisser mon e-mail pour être rappelé",
+      "Je cherche un T3 à Perret avec balcon",
       "Je cherche une maison familiale a Sanvic",
       "Ouvrir /contact",
     ]),
@@ -1169,11 +1231,11 @@ function buildProcessAnswer(): ChatbotReply {
   return {
     source: "local",
     answer:
-      "Bien sur. Processus type: 1) offre acceptee, 2) verification financement et pieces, 3) compromis de vente, 4) delai legal + conditions suspensives, 5) acte authentique chez le notaire. L'agence coordonne chaque etape pour securiser le dossier. Pour un accompagnement direct: /vendre puis /contact.",
+      "Bien sûr. Le parcours comprend généralement : 1) l’offre acceptée, 2) la vérification du financement et des pièces, 3) la signature du compromis, 4) le délai légal et les conditions suspensives, puis 5) l’acte authentique chez le notaire. L’agence peut vous accompagner à chaque étape. Découvrez /vendre puis contactez-nous sur /contact.",
     suggestedPrompts: normalizePromptList([
-      "Quel delai moyen entre compromis et acte ?",
+      "Quel délai moyen entre compromis et acte ?",
       "Quels documents faut-il pour vendre ?",
-      "Pouvez-vous m'accompagner sur un achat avec pret ?",
+      "Pouvez-vous m'accompagner sur un achat avec prêt ?",
       "Ouvrir /vendre",
     ]),
   };
@@ -1183,11 +1245,11 @@ function buildContactAnswer(): ChatbotReply {
   return {
     source: "local",
     answer:
-      "Avec plaisir. Coordonnees agence: 109 Av. Foch, 76600 Le Havre, tel 02 35 42 51 76, email vendre@fochimmobilier.com. Horaires: lundi-vendredi 09:30-12:00 et 14:00-18:30, samedi sur rendez-vous. Page complete: /contact.",
+      "Avec plaisir. Coordonnées de l’agence : 109 avenue Foch, 76600 Le Havre ; téléphone : 02 35 42 51 76 ; e-mail : vendre@fochimmobilier.com. Horaires : du lundi au vendredi, de 9 h 30 à 12 h et de 14 h à 18 h 30 ; le samedi sur rendez-vous. Tous les détails sont sur /contact.",
     suggestedPrompts: normalizePromptList([
       "Pouvez-vous me rappeler demain matin ?",
       "Je veux envoyer une demande d'estimation",
-      "Ou est situee l'agence exactement ?",
+      "Où est située l'agence exactement ?",
       "Ouvrir /contact",
     ]),
   };
@@ -1195,45 +1257,83 @@ function buildContactAnswer(): ChatbotReply {
 
 function buildReviewsAnswerFromSnapshot(
   snapshot: Pick<typeof agencyReviewsFallbackSnapshot, "rating" | "userRatingCount" | "reviews">,
+  summarize = false,
 ): ChatbotReply {
-  const rating = `${snapshot.rating.toFixed(1)} / 5`;
-  const count = `${snapshot.userRatingCount} avis`;
+  const rating = snapshot.rating > 0 ? `${snapshot.rating.toFixed(1)} / 5` : null;
+  const count = snapshot.userRatingCount > 0 ? `${snapshot.userRatingCount} avis` : null;
   const highlights = snapshot.reviews
     .slice(0, 2)
     .map((review) => `${review.authorName}: ${review.text}`)
     .join(" | ");
+  const normalizedReviews = snapshot.reviews.map((review) => normalizeKeyword(review.text));
+  const themes = [
+    { label: "le professionnalisme et l’accompagnement", pattern: /profession|competent|conseil|accompagn/ },
+    { label: "l’écoute et la disponibilité de l’équipe", pattern: /ecoute|disponibil|accueil|reactif|repon/ },
+    { label: "la confiance et les recommandations", pattern: /confiance|recommand|satisf/ },
+  ]
+    .map((theme) => ({ ...theme, count: normalizedReviews.filter((review) => theme.pattern.test(review)).length }))
+    .filter((theme) => theme.count > 0)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 2);
+  const summary = themes.length > 0
+    ? `Les commentaires disponibles mettent notamment en avant ${themes.map((theme) => theme.label).join(" et ")}.`
+    : "Les témoignages et la note affichée sont consultables sur la page de l’agence.";
 
   return {
     source: "local",
     answer:
-      `Oui. La page /avis affiche la note Google (${rating}, ${count}) et les retours clients. Extraits: ${highlights}. Pour lire tous les avis et la mise a jour, ouvrez /avis.`,
+      summarize
+        ? `Résumé des avis Foch Immobilier : ${summary}${rating ? ` Note Google affichée : ${rating}${count ? ` sur ${count}` : ""}.` : ""} ${highlights ? `Extraits : ${highlights}.` : ""} Pour consulter les témoignages et la note à jour, ouvrez /avis.`
+        : `La page /avis présente${rating ? ` la note Google (${rating}${count ? `, ${count}` : ""})` : " les avis clients"} et les retours clients. ${highlights ? `Quelques extraits : ${highlights}.` : "Les témoignages sont consultables sur la page."} Ouvrez /avis pour tout lire.`,
     suggestedPrompts: normalizePromptList([
       "Ouvrir /avis",
       "Quelle est la note Google actuelle ?",
-      "Je veux contacter un conseiller apres lecture des avis",
-      "Quels services sont cites dans les avis ?",
+      "Je veux contacter un conseiller après lecture des avis",
+      "Quels services sont cités dans les avis ?",
     ]),
   };
 }
 
-async function buildReviewsAnswer(): Promise<ChatbotReply> {
+function buildSellingDocumentsAnswer(): ChatbotReply {
+  const diagnosticsUrl = "https://www.service-public.gouv.fr/particuliers/vosdroits/F10798";
+  const copropertyUrl = "https://www.service-public.gouv.fr/particuliers/vosdroits/F2604";
+  return {
+    source: "local",
+    answer:
+      "Pour vendre un appartement, rassemblez le titre de propriété, les pièces d’identité des propriétaires et les diagnostics immobiliers applicables, réunis dans le dossier de diagnostic technique (DDT). En copropriété, prévoyez aussi les documents de l’immeuble : règlement et état descriptif de division, procès-verbaux des assemblées générales des trois dernières années, carnet d’entretien, fiche synthétique et informations financières de la copropriété. La surface Loi Carrez doit également être indiquée. Les diagnostics requis dépendent notamment de l’âge et de la situation du logement ; le notaire ou l’agence vérifiera la liste correspondant à votre bien.",
+    citations: [
+      { kind: "web", path: diagnosticsUrl, sourceUrl: diagnosticsUrl, title: "Service-Public.fr — Diagnostics à fournir en cas de vente" },
+      { kind: "web", path: copropertyUrl, sourceUrl: copropertyUrl, title: "Service-Public.fr — Vente d’un logement en copropriété" },
+    ],
+    suggestedPrompts: normalizePromptList([
+      "Quels diagnostics sont nécessaires pour mon appartement ?",
+      "Je veux faire estimer mon appartement",
+      "Ouvrir /contact",
+    ]),
+  };
+}
+
+async function buildReviewsAnswer(question: string): Promise<ChatbotReply> {
+  const summarize = /resum|synthese/.test(normalizeKeyword(question));
   let timeoutHandle: number | undefined;
   try {
     const timeoutPromise = new Promise<never>((_, reject) => {
       timeoutHandle = window.setTimeout(() => reject(new Error("reviews_fetch_timeout")), 1500);
     });
     const liveReviews = await Promise.race([getAgencyReviews(), timeoutPromise]);
-    return buildReviewsAnswerFromSnapshot(liveReviews);
+    return buildReviewsAnswerFromSnapshot(liveReviews, summarize);
   } catch {
     return {
       source: "local",
       answer:
-        "Oui. La page /avis affiche la note Google actuelle et les retours clients avec mise a jour sur le site. Ouvrez /avis pour consulter les derniers avis et la note la plus recente.",
+        summarize
+          ? "Je n’ai pas pu charger les avis en direct pour en faire un résumé fiable. Consultez la page /avis pour voir les témoignages et la note Google affichée."
+          : "Je n’ai pas pu charger les avis en direct. Consultez /avis pour voir les témoignages et la note Google affichée.",
       suggestedPrompts: normalizePromptList([
         "Ouvrir /avis",
         "Quelle est la note Google actuelle ?",
-        "Je veux contacter un conseiller apres lecture des avis",
-        "Quels services sont cites dans les avis ?",
+        "Je veux contacter un conseiller après lecture des avis",
+        "Quels services sont cités dans les avis ?",
       ]),
     };
   } finally {
@@ -1247,11 +1347,11 @@ function buildFeesAnswer(): ChatbotReply {
   return {
     source: "local",
     answer:
-      "Bien note. Les honoraires sont detailles sur /honoraires avec acces au PDF officiel et une synthese des tranches tarifaires TTC. Vous pouvez verifier la grille complete directement sur /honoraires.",
+      "Les honoraires sont détaillés sur /honoraires, avec le PDF officiel et une synthèse des tranches tarifaires TTC. Vous pouvez y consulter la grille complète.",
     suggestedPrompts: normalizePromptList([
       "Ouvrir /honoraires",
-      "Comment sont calcules les frais de vente ?",
-      "Pouvez-vous m'expliquer le bareme TTC ?",
+      "Comment sont calculés les frais de vente ?",
+      "Pouvez-vous m'expliquer le barème TTC ?",
     ]),
   };
 }
@@ -1268,7 +1368,7 @@ function buildHistoryAnswer(context: ConversationContext): ChatbotReply {
       answer: `Bonne question. ${faqMatch.answer} Pour découvrir nos secteurs, ouvrez /geographie.`,
       suggestedPrompts: normalizePromptList([
         "Quels quartiers suivre pour investir au Havre ?",
-        "Resumez-moi Perret, Saint-Francois et Saint-Vincent",
+        "Résumez-moi Perret, Saint-François et Saint-Vincent",
         "Ouvrir /geographie",
       ]),
     };
@@ -1277,7 +1377,7 @@ function buildHistoryAnswer(context: ConversationContext): ChatbotReply {
   return {
     source: "local",
     answer:
-      "La page /geographie présente nos secteurs : Sainte-Adresse, La plage, Les gobelins, Saint Michel, Octeville sur mer, la campagne dans un rayon de 30 km du Havre, de Saint-Romain à Etretat et Deauville–Trouville.",
+      "La page /geographie présente nos secteurs : Sainte-Adresse, la plage, les Gobelins, Saint-Michel, Octeville-sur-Mer et la campagne dans un rayon de 30 km autour du Havre, de Saint-Romain à Étretat, ainsi que Deauville et Trouville.",
     suggestedPrompts: normalizePromptList([
       "Quels sont les atouts du quartier Perret ?",
       "Quel quartier choisir pour acheter ?",
@@ -1290,7 +1390,7 @@ function buildAboutAnswer(): ChatbotReply {
   return {
     source: "local",
     answer:
-      "Foch Immobilier est une agence du Havre active depuis 1972. L'equipe accompagne les projets d'achat, de vente et d'estimation. Presentation complete sur /apropos.",
+      "Foch Immobilier est une agence du Havre active depuis 1972. L’équipe accompagne les projets d’achat, de vente et d’estimation. Présentation complète sur /apropos.",
     suggestedPrompts: normalizePromptList([
       "Quels services propose l'agence ?",
       "Comment contacter un conseiller ?",
@@ -1314,10 +1414,11 @@ function buildDistrictComparisonAnswer(): ChatbotReply | null {
   return {
     source: "local",
     answer:
-      `Pour un achat au Havre, ${rankedDistricts[0].name}, ${rankedDistricts[1].name} et ${rankedDistricts[2].name} offrent des cadres variés, entre patrimoine, renouvellement urbain et accès aux commerces. Vous pouvez approfondir sur /geographie puis consulter les biens à vendre sur /biens.`,
+      `Le meilleur quartier dépend de vos priorités. ${rankedDistricts[0].name} peut convenir si vous cherchez un cadre portuaire et patrimonial ; ${rankedDistricts[1].name} si vous privilégiez le renouvellement urbain et les espaces réaménagés ; ${rankedDistricts[2].name} si vous recherchez une architecture de la Reconstruction et un emplacement central. Pour vous orienter précisément, quel budget avez-vous et privilégiez-vous le calme, les commerces, les transports ou un extérieur ? Vous pouvez aussi consulter /geographie.`,
     suggestedPrompts: normalizePromptList([
       "Quels biens avez-vous dans ces quartiers ?",
-      "Je veux un comparatif rendement / budget",
+      "Je privilégie le calme et les espaces verts",
+      "Je cherche un appartement près des commerces",
       "Ouvrir /biens",
       "Ouvrir /geographie",
     ]),
@@ -1352,7 +1453,7 @@ function buildDistrictAnswer(context: ConversationContext): ChatbotReply | null 
 
   return {
     source: "local",
-    answer: `${districtData.name}: ${districtData.summary} ${districtData.investmentAngle} Detail historique: /geographie.`,
+    answer: `${districtData.name} : ${districtData.summary} ${districtData.investmentAngle} Détail historique : /geographie.`,
     suggestedPrompts: normalizePromptList([
       `Quels biens avez-vous actuellement dans ${districtData.name} ?`,
       `Quelle strategie de vente recommandez-vous dans ${districtData.name} ?`,
@@ -1366,11 +1467,11 @@ function buildSellPageAnswer(): ChatbotReply {
   return {
     source: "local",
     answer:
-      "Pour vendre, la page la plus adaptee est /vendre. Vous y trouverez la methode (mise en valeur, qualification acheteurs, suivi jusqu'a l'acte), puis vous pouvez lancer une estimation sur /estimation.",
+      "Pour vendre, la page la plus adaptée est /vendre. Vous y trouverez la méthode (mise en valeur, qualification des acheteurs, suivi jusqu’à l’acte), puis vous pourrez demander une estimation sur /estimation.",
     suggestedPrompts: normalizePromptList([
       "Ouvrir /vendre",
       "Ouvrir /estimation",
-      "Je veux etre rappele pour vendre",
+      "Je veux être rappelé pour vendre",
     ]),
   };
 }
@@ -1379,10 +1480,10 @@ function buildEstimationPageAnswer(): ChatbotReply {
   return {
     source: "local",
     answer:
-      "Pour estimer votre bien, utilisez /estimation. Le parcours couvre les caracteristiques du bien, les comparables et la strategie de commercialisation. Contact direct possible sur /contact.",
+      "Pour estimer votre bien, utilisez /estimation. Le parcours couvre les caractéristiques du bien, les comparables et la stratégie de commercialisation. Vous pouvez aussi nous contacter directement sur /contact.",
     suggestedPrompts: normalizePromptList([
       "Ouvrir /estimation",
-      "Quels documents preparer pour une estimation ?",
+      "Quels documents préparer pour une estimation ?",
       "Ouvrir /contact",
     ]),
   };
@@ -1396,7 +1497,7 @@ function buildListingsPageAnswer(context: ConversationContext): ChatbotReply {
     answer: `Pour consulter toutes les annonces, ouvrez /biens${cityHint}. Vous pourrez ensuite filtrer par budget, typologie, transaction et secteur.`,
     suggestedPrompts: normalizePromptList([
       "Ouvrir /biens",
-      context.cityRoute ? `Ouvrir /immobilier/${context.cityRoute.slug}` : "Je veux filtrer les biens a la vente",
+      context.cityRoute ? `Ouvrir /immobilier/${context.cityRoute.slug}` : "Je veux filtrer les biens à la vente",
       "Je veux des biens avec vue mer",
       "Je cherche un T3 avec 2 chambres",
     ]),
@@ -1409,11 +1510,11 @@ function buildCityPageAnswer(context: ConversationContext): ChatbotReply | null 
   return {
     source: "local",
     answer:
-      `Pour ${context.cityRoute.name}, la page dediee est /immobilier/${context.cityRoute.slug}. Vous y trouverez le contexte local puis les annonces liees a la ville.`,
+      `Pour ${context.cityRoute.name}, la page dédiée est /immobilier/${context.cityRoute.slug}. Vous y trouverez le contexte local, puis les annonces liées à la ville.`,
     suggestedPrompts: normalizePromptList([
       `Ouvrir /immobilier/${context.cityRoute.slug}`,
       "Ouvrir /biens",
-      "Je veux des biens a vendre dans cette ville",
+      "Je veux des biens à vendre dans cette ville",
     ]),
   };
 }
@@ -1422,10 +1523,10 @@ function buildSelectionAnswer(): ChatbotReply {
   return {
     source: "local",
     answer:
-      "Votre selection sauvegardee est accessible sur /biens-sauvegardes. Vous pouvez y retrouver les biens favoris puis partager la selection.",
+      "Votre sélection sauvegardée est accessible sur /biens-sauvegardes. Vous pouvez y retrouver vos biens favoris, puis partager la sélection.",
     suggestedPrompts: normalizePromptList([
       "Ouvrir /biens-sauvegardes",
-      "Je veux ajouter des biens a ma selection",
+      "Je veux ajouter des biens à ma sélection",
       "Ouvrir /biens",
     ]),
   };
@@ -1464,7 +1565,7 @@ function buildListingsQueryHint(path: string): string {
     hints.push(`prix max ${new Intl.NumberFormat("fr-FR").format(Number(maxPrice))} EUR`);
   }
 
-  return hints.length > 0 ? ` Filtres detectes: ${hints.join(", ")}.` : "";
+  return hints.length > 0 ? ` Filtres détectés : ${hints.join(", ")}.` : "";
 }
 
 function buildPageSummaryAnswer(context: ConversationContext): ChatbotReply | null {
@@ -1482,7 +1583,7 @@ function buildPageSummaryAnswer(context: ConversationContext): ChatbotReply | nu
 
   return {
     source: "local",
-    answer: `La page ${topic.path} (${topic.title}) sert a ceci: ${topic.summary}${queryHint}`,
+    answer: `La page ${topic.path} (${topic.title}) sert à ceci : ${topic.summary}${queryHint}`,
     suggestedPrompts: normalizePromptList([
       `Ouvrir ${topic.path}`,
       ...topic.suggestedPrompts,
@@ -1499,7 +1600,7 @@ function buildTopicGuidanceAnswer(context: ConversationContext): ChatbotReply | 
   const [primaryTopic, ...relatedTopics] = relevantTopics;
   const relatedPaths = relatedTopics.map((topic) => topic.path);
   const relatedSuffix =
-    relatedPaths.length > 0 ? ` Pages proches: ${relatedPaths.join(", ")}.` : "";
+    relatedPaths.length > 0 ? ` Pages proches : ${relatedPaths.join(", ")}.` : "";
 
   return {
     source: "local",
@@ -1520,17 +1621,35 @@ function buildDirectPathAnswer(path: string): ChatbotReply {
   if (topic) {
     return {
       source: "local",
-      answer: `Parfait, ${topic.path} (${topic.title}) est la page adaptee. ${topic.summary}${queryHint}`,
-      suggestedPrompts: normalizePromptList([`Ouvrir ${topic.path}`, ...topic.suggestedPrompts, "Je veux un resume de cette page"]),
+      answer: `La page ${topic.path} (${topic.title}) est prête à être ouverte. ${topic.summary}${queryHint}`,
+      actions: [
+        {
+          id: `open-page-${topic.path}`,
+          kind: "open_page",
+          title: "Ouvrir la page",
+          description: topic.title,
+          data: { path: topic.path, label: topic.title, reason: "user_requested" },
+        },
+      ],
+      suggestedPrompts: normalizePromptList([`Ouvrir ${topic.path}`, ...topic.suggestedPrompts, "Je veux un résumé de cette page"]),
     };
   }
 
   return {
     source: "local",
-    answer: `Parfait, la page demandee est ${path}. Cliquez sur ce lien pour y acceder directement depuis le chat.`,
+    answer: `Vous avez demandé la page ${path}. Ouvrez-la avec le bouton ci-dessous.`,
+    actions: [
+      {
+        id: `open-page-${path}`,
+        kind: "open_page",
+        title: "Ouvrir la page",
+        description: path,
+        data: { path, label: path, reason: "user_requested" },
+      },
+    ],
     suggestedPrompts: normalizePromptList([
       `Ouvrir ${path}`,
-      "Je veux un resume de cette page",
+      "Je veux un résumé de cette page",
       "Je veux contacter un conseiller",
     ]),
   };
@@ -1548,7 +1667,7 @@ function buildLegalAnswer(context: ConversationContext): ChatbotReply {
   return {
     source: "local",
     answer:
-      `Pour ce sujet legal, la page adaptee est ${targetPath}. Vous pouvez aussi retrouver toutes les pages legales depuis /plan-du-site.`,
+      `Pour ce sujet légal, la page adaptée est ${targetPath}. Vous pouvez aussi retrouver toutes les pages légales depuis /plan-du-site.`,
     suggestedPrompts: normalizePromptList([
       `Ouvrir ${targetPath}`,
       "Ouvrir /plan-du-site",
@@ -1561,7 +1680,7 @@ function buildServiceAnswer(): ChatbotReply {
   return {
     source: "local",
     answer:
-      "Nos services couvrent l'achat, la vente et l'estimation immobilière. Selon votre besoin: /vendre, /services, /estimation et /contact.",
+      "Nos services couvrent l’achat, la vente et l’estimation immobilière. Selon votre besoin : /vendre, /services, /estimation et /contact.",
     suggestedPrompts: normalizePromptList([
       "Ouvrir /services",
       "Je veux vendre mon bien au Havre",
@@ -1583,13 +1702,13 @@ function buildPropertyAnswer(question: string, context: ConversationContext): Ch
     source: "local",
     answer:
       criteriaSummary.length > 0
-        ? `Parfait, j'ai une premiere selection coherente avec vos criteres (${criteriaSummary}). Vous pouvez aussi ouvrir /biens pour tout le catalogue.`
-        : "Parfait, voici une premiere selection de biens qui correspondent a votre demande. Vous pouvez aussi ouvrir /biens pour tout le catalogue.",
+        ? `Parfait, j’ai une première sélection cohérente avec vos critères (${criteriaSummary}). Vous pouvez aussi ouvrir /biens pour consulter tout le catalogue.`
+        : "Parfait, voici une première sélection de biens qui correspondent à votre demande. Vous pouvez aussi ouvrir /biens pour consulter tout le catalogue.",
     suggestedPrompts: normalizePromptList([
       "Ouvrir /biens",
-      "Affinez sur un budget precis",
-      "Je veux prioriser les quartiers proches mer",
-      "Je ne trouve pas le bon bien, je veux etre rappelle",
+      "Affinez avec un budget précis",
+      "Je veux privilégier les quartiers proches de la mer",
+      "Je ne trouve pas le bon bien, je veux être rappelé",
     ]),
     propertySuggestions: suggestions,
   };
@@ -1610,7 +1729,7 @@ function buildSiteNavigationAnswer(): ChatbotReply {
   return {
     source: "local",
     answer:
-      "Vous pouvez naviguer rapidement vers: /biens, /vendre, /estimation, /services, /geographie, /avis, /honoraires, /contact et /plan-du-site.",
+      "Vous pouvez accéder rapidement à /biens, /vendre, /estimation, /services, /geographie, /avis, /honoraires, /contact et /plan-du-site.",
     suggestedPrompts: normalizePromptList([
       "Ouvrir /biens",
       "Ouvrir /avis",
@@ -1624,7 +1743,7 @@ function buildGreetingAnswer(): ChatbotReply {
   return {
     source: "local",
     answer:
-      "Bonjour, avec plaisir. Je peux vous guider sur les biens, quartiers du Havre, services agence, avis clients et etapes de vente/achat. Dites-moi votre objectif et je vous redirige vers la bonne page.",
+      "Bonjour, avec plaisir. Je peux vous guider sur les biens, les quartiers du Havre, les services de l’agence, les avis clients et les étapes de vente ou d’achat. Dites-moi votre objectif et je vous orienterai vers la bonne page.",
     suggestedPrompts: normalizePromptList(chatbotExamplePrompts),
   };
 }
@@ -1636,8 +1755,8 @@ function buildThanksAnswer(): ChatbotReply {
       "Avec plaisir. Je peux maintenant affiner votre recherche par budget, quartier, type de bien et ville, puis vous rediriger vers la page la plus utile.",
     suggestedPrompts: normalizePromptList([
       "Ouvrir /biens",
-      "Je veux comparer Perret et Saint-Francois",
-      "Je ne trouve pas de bien adapte, pouvez-vous me rappeler ?",
+      "Je veux comparer Perret et Saint-François",
+      "Je ne trouve pas de bien adapté, pouvez-vous me rappeler ?",
     ]),
   };
 }
@@ -1646,7 +1765,7 @@ function buildCapabilitiesAnswer(): ChatbotReply {
   return {
     source: "local",
     answer:
-      "Je suis l'assistant immobilier du site. Je reponds sur les annonces, quartiers (Perret, Saint-Francois, Saint-Vincent, Sanvic, Graville, Eure-Docks), villes, services, honoraires, avis clients, process de vente/achat et contacts.",
+      "Je suis l’assistant immobilier du site. Je réponds aux questions sur les annonces, les quartiers (Perret, Saint-François, Saint-Vincent, Sanvic, Graville et Eure-Docks), les villes, les services, les honoraires, les avis clients, les étapes de vente ou d’achat et les contacts.",
     suggestedPrompts: normalizePromptList([
       "Ouvrir /biens",
       "Ouvrir /avis",
@@ -1660,7 +1779,7 @@ function buildFallbackReply(): ChatbotReply {
   return {
     source: "local",
     answer:
-      "Je suis la pour vous guider. Je peux vous aider sur les biens disponibles, les quartiers du Havre, les services de l'agence, les avis clients, les etapes de vente/achat et les pages du site. Navigation rapide: /plan-du-site.",
+      "Je suis là pour vous guider. Je peux vous aider sur les biens disponibles, les quartiers du Havre, les services de l’agence, les avis clients, les étapes de vente ou d’achat et les pages du site. Plan du site : /plan-du-site.",
     suggestedPrompts: normalizePromptList([
       "Ouvrir /plan-du-site",
       "Ouvrir /biens",
@@ -1673,6 +1792,16 @@ function buildFallbackReply(): ChatbotReply {
 async function buildLocalReply(question: string, context: ConversationContext, language: "fr" | "en" = "fr"): Promise<ChatbotReply> {
   if (isRentalQuestion(question, language)) return buildPurchaseOnlyRedirectAnswer(language);
 
+  if (context.requestedPath && explicitPathOpenPattern.test(context.normalizedQuestion)) {
+    return buildDirectPathAnswer(context.requestedPath);
+  }
+  if (sellingDocumentsPattern.test(context.normalizedQuestion)) return buildSellingDocumentsAnswer();
+  if (context.inferredIntent === "reviews") return await buildReviewsAnswer(context.normalizedQuestion);
+  if (districtComparisonPattern.test(context.normalizedQuestion)) {
+    const advice = buildDistrictComparisonAnswer();
+    if (advice) return advice;
+  }
+
   if (pageSummaryPattern.test(context.normalizedQuestion)) {
     const pageSummaryReply = buildPageSummaryAnswer(context);
     if (pageSummaryReply) return pageSummaryReply;
@@ -1682,7 +1811,6 @@ async function buildLocalReply(question: string, context: ConversationContext, l
   if (context.inferredIntent === "lead_capture") return buildLeadCaptureAnswer(context);
   if (context.inferredIntent === "process") return buildProcessAnswer();
   if (context.inferredIntent === "contact") return buildContactAnswer();
-  if (context.inferredIntent === "reviews") return await buildReviewsAnswer();
   if (context.inferredIntent === "fees") return buildFeesAnswer();
   if (legalIntentPattern.test(context.normalizedQuestion)) return buildLegalAnswer(context);
   if (selectionIntentPattern.test(context.normalizedQuestion)) return buildSelectionAnswer();
@@ -1810,6 +1938,19 @@ export function decideChatbotRoute(
       return { target: "local", category: "fallback", reason: "edge_disabled_for_tool_action", intent: context.inferredIntent };
     }
     return { target: "edge", category: "edge_tools", reason: "tool_action_request", intent: context.inferredIntent };
+  }
+  if (context.requestedPath && explicitPathOpenPattern.test(context.normalizedQuestion)) {
+    return { target: "local", category: "deterministic_local", reason: "explicit_path_navigation", intent: context.inferredIntent };
+  }
+  if (
+    context.inferredIntent === "reviews" ||
+    sellingDocumentsPattern.test(context.normalizedQuestion) ||
+    districtComparisonPattern.test(context.normalizedQuestion)
+  ) {
+    return { target: "local", category: "deterministic_local", reason: "accepted_information_intent", intent: context.inferredIntent };
+  }
+  if (isSearchLocationFollowUp(context.normalizedQuestion, meta?.conversationState) && options.edgeApiEnabled && options.edgeAgentToolsEnabled) {
+    return { target: "edge", category: "edge_tools", reason: "recent_search_location_refinement", intent: "property" };
   }
   const edgeAgentToolsEnabled = options.edgeAgentToolsEnabled === true;
   if (!options.routerV2Enabled) {
@@ -2385,6 +2526,9 @@ function sanitizeActions(raw: unknown): ChatbotUiAction[] | undefined {
               dpeLabel: typeof item.dpeLabel === "string" ? item.dpeLabel.trim().slice(0, 10) : null,
               transaction: typeof item.transaction === "string" ? item.transaction.trim().slice(0, 30) : "",
               type: typeof item.type === "string" ? item.type.trim().slice(0, 30) : "",
+              status: typeof item.status === "string" ? item.status.trim().slice(0, 40) : "unknown",
+              dataQualityWarning:
+                typeof item.dataQualityWarning === "string" ? item.dataQualityWarning.trim().slice(0, 200) : null,
             }))
             .filter((item) => Number.isInteger(item.id) && item.id > 0 && item.title.length > 0 && item.path.startsWith("/"))
             .slice(0, 5)
@@ -2849,11 +2993,11 @@ export const chatbotServiceTestInternals = {
 export async function askAgencyChatbot(request: ChatbotRequest): Promise<ChatbotReply> {
   const text = request.question.trim();
   if (text.length < 2 || text.length > 1200) throw new Error(request.language === "en" ? "Use between 2 and 1200 characters." : "Utilisez entre 2 et 1200 caractères.");
-  if (!request.actionRequest) {
+  if (!request.actionRequest && !isSearchLocationFollowUp(text, request.conversationState)) {
     const geographic = geographyReply(text, request.language);
     if (geographic) return { ...geographic, source: "local" };
   }
-  const context = buildConversationContext(text, request.chatHistory);
+  const context = buildConversationContext(text, request.chatHistory, request.conversationState);
   if (isRentalQuestion(request.question, request.language)) {
     return normalizeReplyOutput(buildPurchaseOnlyRedirectAnswer(request.language), request.language);
   }
@@ -3028,7 +3172,7 @@ async function parseSseResponseStream(
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
-    buffer += decoder.decode(value, { stream: true });
+    buffer = `${buffer}${decoder.decode(value, { stream: true })}`.replace(/\r\n/g, "\n");
     let delimiterIndex = buffer.indexOf("\n\n");
     while (delimiterIndex !== -1) {
       const rawEvent = buffer.slice(0, delimiterIndex);
@@ -3064,11 +3208,11 @@ export async function askAgencyChatbotStream(
 ): Promise<ChatbotReply> {
   const text = request.question.trim();
   if (text.length < 2 || text.length > 1200) throw new Error(request.language === "en" ? "Use between 2 and 1200 characters." : "Utilisez entre 2 et 1200 caractères.");
-  if (!request.actionRequest) {
+  if (!request.actionRequest && !isSearchLocationFollowUp(text, request.conversationState)) {
     const geographic = geographyReply(text, request.language);
     if (geographic) return { ...geographic, source: "local" };
   }
-  const context = buildConversationContext(text, request.chatHistory);
+  const context = buildConversationContext(text, request.chatHistory, request.conversationState);
   if (isRentalQuestion(request.question, request.language)) {
     return normalizeReplyOutput(buildPurchaseOnlyRedirectAnswer(request.language), request.language);
   }

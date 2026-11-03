@@ -38,6 +38,7 @@ export interface SharedPropertySearchRow {
   property_type: string;
   status: string;
   description?: string | null;
+  dataQualityWarning?: string | null;
   admin_status_override?: string | null;
   is_featured?: boolean;
   source_status?: string | null;
@@ -74,6 +75,51 @@ function parsePositiveInt(value: number | null | undefined, fallback: number): n
   if (!Number.isFinite(value)) return fallback;
   const integer = Math.trunc(value);
   return integer > 0 ? integer : fallback;
+}
+
+function normalizePropertyCopy(value: string): string {
+  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+
+function featureTerms(rawFeature: string): string[] {
+  const feature = normalizePropertyCopy(rawFeature);
+  if (feature.includes("balcon")) return ["balcon(?:s)?"];
+  if (feature.includes("terrasse")) return ["terrasse(?:s)?"];
+  if (feature.includes("ascenseur")) return ["ascenseur(?:s)?"];
+  if (feature.includes("garage")) return ["garage(?:s)?", "garag(?:e|es)"];
+  if (feature.includes("parking") || feature.includes("stationnement")) return ["parking", "stationnement"];
+  if (feature.includes("jardin")) return ["jardin(?:s)?"];
+  if (feature.includes("vue") && feature.includes("mer")) return ["vue\\s+(?:sur\\s+(?:la\\s+)?)?mer"];
+  return [feature.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")];
+}
+
+function hasExplicitFeatureAbsence(description: string, terms: string[]): boolean {
+  if (!description) return false;
+  const termPattern = `(?:${terms.join("|")})`;
+  const before = new RegExp(
+    `\\b(?:sans|aucun(?:e)?|pas\\s+de|absence\\s+(?:de|d)|ne\\s+(?:possede|dispose|comprend)\\s+pas\\s+(?:de|d))\\s+${termPattern}\\b`,
+    "i",
+  );
+  const after = new RegExp(`\\b${termPattern}\\b.{0,18}\\b(?:absent|absente|inexistant|inexistante)\\b`, "i");
+  return before.test(description) || after.test(description);
+}
+
+function descriptionHasFeature(description: string, terms: string[]): boolean {
+  if (!description || hasExplicitFeatureAbsence(description, terms)) return false;
+  return new RegExp(`\\b(?:${terms.join("|")})\\b`, "i").test(description);
+}
+
+function propertyTypeConflict(row: SharedPropertySearchRow): string | null {
+  const copy = normalizePropertyCopy(`${row.title} ${row.description ?? ""}`);
+  const houseDescription = /\b(?:maison|villa|pavillon)\s+(?:de\s+)?(?:\d+|[a-z]+)\s+pieces?\b/.test(copy);
+  const apartmentDescription = /\bappartement\s+(?:de\s+)?(?:\d+|[a-z]+)\s+pieces?\b/.test(copy);
+  if (row.property_type === "appartement" && houseDescription) {
+    return "Le type indiqué et la description ne concordent pas ; à confirmer auprès de l’agence.";
+  }
+  if (row.property_type === "maison_villa" && apartmentDescription) {
+    return "Le type indiqué et la description ne concordent pas ; à confirmer auprès de l’agence.";
+  }
+  return null;
 }
 
 export function dedupePositiveIntegers(values: number[]): number[] {
@@ -322,9 +368,11 @@ export async function runSharedPropertySearchQuery(
   const from = Math.max(0, (page - 1) * pageSize);
   const to = from + pageSize - 1;
   const features = (input.features ?? []).map((value) => String(value)).filter(Boolean);
+  const excludedFeatures = (input.excludedFeatures ?? []).map((value) => String(value)).filter(Boolean);
+  const contentAwareFiltering = Boolean(input.type || features.length > 0 || excludedFeatures.length > 0);
   const q = normalizeTerm(input.q ?? "");
 
-  const selectFields = options.includeDescription
+  const selectFields = options.includeDescription || contentAwareFiltering
     ? "id,title,slug,transaction_type,property_type,status,admin_status_override,source_status,price_amount,price_currency,surface_m2,terrain_m2,bedrooms,bathrooms,parking_count,garage_count,postal_code,dpe_label,city:cities(name,slug),images:property_images(source_url,sort_order),description"
     : "id,title,slug,transaction_type,property_type,status,admin_status_override,source_status,price_amount,price_currency,surface_m2,terrain_m2,bedrooms,bathrooms,parking_count,garage_count,postal_code,dpe_label,city:cities(name,slug),images:property_images(source_url,sort_order)";
 
@@ -332,8 +380,7 @@ export async function runSharedPropertySearchQuery(
     .from("properties")
     .select(selectFields, { count: "exact" })
     .eq("transaction_type", "vente")
-    .eq("is_online", true)
-    .range(from, to);
+    .eq("is_online", true);
   if (input.featuredOnly) {
     query = query.eq("is_featured", true);
   } else {
@@ -377,32 +424,63 @@ export async function runSharedPropertySearchQuery(
     query = query.in("id", matchingIds);
   }
 
-  if (features.length > 0) {
-    const featureIds = await collectPropertyIdsForFeatureFilters(supabase, features);
-    if (featureIds && featureIds.length === 0) {
-      return { page, pageSize, total: 0, rows: [] };
-    }
-    if (featureIds && featureIds.length > 0) {
-      query = query.in("id", dedupePositiveIntegers(featureIds));
-    }
-  }
-
-  for (const feature of input.excludedFeatures ?? []) {
+  const featureEvidenceIds = new Map<string, Set<number>>();
+  for (const feature of [...features, ...excludedFeatures]) {
+    if (featureEvidenceIds.has(feature)) continue;
     const ids = await collectPropertyIdsForFeatureFilters(supabase, [feature]);
-    if (ids?.length) query = query.not("id", "in", `(${ids.join(",")})`);
+    featureEvidenceIds.set(feature, new Set(ids ?? []));
   }
   query = applySort(query, input.sort);
 
-  const { data, error, count } = await query;
-  if (error) throw error;
+  let candidateRows: SharedPropertySearchRow[] = [];
+  let count: number | null = null;
+  if (contentAwareFiltering) {
+    const batchSize = 500;
+    let offset = 0;
+    while (true) {
+      const { data, error, count: queryCount } = await query.range(offset, offset + batchSize - 1);
+      if (error) throw error;
+      const rows = (data as unknown as SharedPropertySearchRow[] | null) ?? [];
+      candidateRows = candidateRows.concat(rows);
+      count = queryCount ?? candidateRows.length;
+      if (rows.length < batchSize || candidateRows.length >= count) break;
+      offset += rows.length;
+    }
+
+    candidateRows = candidateRows
+      .filter((row) => {
+        const typeWarning = propertyTypeConflict(row);
+        if (input.type && typeWarning) return false;
+        const description = normalizePropertyCopy(`${row.title} ${row.description ?? ""}`);
+        for (const feature of features) {
+          const terms = featureTerms(feature);
+          const structuredMatch = featureEvidenceIds.get(feature)?.has(row.id) ?? false;
+          if (!structuredMatch && !descriptionHasFeature(description, terms)) return false;
+        }
+        for (const feature of excludedFeatures) {
+          const terms = featureTerms(feature);
+          const structuredMatch = featureEvidenceIds.get(feature)?.has(row.id) ?? false;
+          if (structuredMatch || descriptionHasFeature(description, terms)) return false;
+          if (!hasExplicitFeatureAbsence(description, terms)) return false;
+        }
+        return true;
+      })
+      .map((row) => ({ ...row, dataQualityWarning: propertyTypeConflict(row) }));
+
+    count = candidateRows.length;
+    candidateRows = candidateRows.slice(from, to + 1);
+  } else {
+    const { data, error, count: queryCount } = await query.range(from, to);
+    if (error) throw error;
+    candidateRows = (data as unknown as SharedPropertySearchRow[] | null) ?? [];
+    count = queryCount ?? candidateRows.length;
+  }
 
   return {
     page,
     pageSize,
-    total: count ?? (Array.isArray(data) ? data.length : 0),
-    // The description column is selected only for map requests, so Supabase's
-    // static select parser cannot infer one common row shape for both variants.
-    rows: (data as unknown as SharedPropertySearchRow[] | null) ?? [],
+    total: count ?? candidateRows.length,
+    rows: candidateRows,
   };
 }
 

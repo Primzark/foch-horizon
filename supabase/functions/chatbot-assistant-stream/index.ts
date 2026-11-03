@@ -29,30 +29,6 @@ function sseEvent(event: string, data: unknown): string {
   return `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
 }
 
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-function splitTextIntoChunks(text: string): string[] {
-  const normalized = text.trim();
-  if (!normalized) return [];
-  const targetSize = 70;
-  const chunks: string[] = [];
-  let cursor = 0;
-  while (cursor < normalized.length) {
-    let next = Math.min(normalized.length, cursor + targetSize);
-    if (next < normalized.length) {
-      const lastSpace = normalized.lastIndexOf(" ", next);
-      if (lastSpace > cursor + 20) {
-        next = lastSpace;
-      }
-    }
-    chunks.push(normalized.slice(cursor, next < normalized.length ? next + 1 : next));
-    cursor = next < normalized.length ? next + 1 : next;
-  }
-  return chunks;
-}
-
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") {
     return secureOptionsResponse(request);
@@ -111,7 +87,7 @@ Deno.serve(async (request) => {
   const serviceRoleKey = (Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "").trim();
   const proxyTimeoutMs = Number.parseInt(Deno.env.get("CHATBOT_STREAM_PROXY_TIMEOUT_MS") ?? "45000", 10);
   const streamEnabled = (Deno.env.get("CHATBOT_STREAM_ENABLED") ?? "").trim().toLowerCase();
-  const streamFlag = ["1", "true", "yes", "on"].includes(streamEnabled);
+  const streamFlag = streamEnabled.length === 0 || ["1", "true", "yes", "on"].includes(streamEnabled);
   const requestId = `stream-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
 
   let cancelled = false;
@@ -121,7 +97,7 @@ Deno.serve(async (request) => {
       const encoder = new TextEncoder();
       const send = (event: string, data: unknown) => { if (!cancelled) controller.enqueue(encoder.encode(sseEvent(event, data))); };
       try {
-        send("meta", { requestId, streamSupported: streamFlag, synthetic: true });
+        send("meta", { requestId, streamSupported: streamFlag, synthetic: false });
         send("status", { phase: "parsing" });
 
         if (!supabaseUrl || !serviceRoleKey) {
@@ -145,6 +121,7 @@ Deno.serve(async (request) => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "x-chatbot-stream": "true",
             ...(siteOrigin ? { Origin: siteOrigin } : {}),
             ...(proxyApiKey ? { apikey: proxyApiKey } : {}),
             ...(proxyAuth ? { Authorization: proxyAuth } : {}),
@@ -174,63 +151,47 @@ Deno.serve(async (request) => {
           clearTimeout(proxyTimeoutId);
         }
 
-        const responseText = await response.text();
-        let data: Record<string, unknown> = {};
-        try {
-          data = JSON.parse(responseText) as Record<string, unknown>;
-        } catch {
-          send("error", { code: "stream_proxy_invalid_json", message: "Invalid chatbot response." });
-          send("done", { ok: false });
-          controller.close();
-          return;
-        }
-
         if (!response.ok) {
+          const responseText = await response.text();
+          let data: Record<string, unknown> = {};
+          try { data = JSON.parse(responseText) as Record<string, unknown>; } catch { /* Keep a safe generic error. */ }
           send("error", {
             code: "stream_proxy_http_error",
             status: response.status,
             message: typeof data.error === "string" ? data.error : `HTTP ${response.status}`,
           });
           send("done", { ok: false });
-          controller.close();
           return;
         }
 
-        const answer = typeof data.answer === "string" ? data.answer : "";
-        const actions = Array.isArray(data.actions) ? data.actions : [];
-        const hasAggregateAction = actions.some((action) =>
-          Boolean(action && typeof action === "object" && (action as Record<string, unknown>).kind === "stats_summary")
-        );
-        if (hasAggregateAction) {
-          send("status", { phase: "aggregating" });
-        }
-        send("meta", {
-          requestId: typeof data.requestId === "string" ? data.requestId : requestId,
-          agentMode: data.agentMode,
-          route: data.routeCategory,
-        });
-        send("status", { phase: "building_response" });
-
-        const chunks = splitTextIntoChunks(answer);
-        for (const chunk of chunks) {
-          send("text_delta", { delta: chunk });
-          await sleep(22);
-        }
-
-        if (Array.isArray(data.citations)) {
-          send("citation", { citations: data.citations });
-        }
-        if (actions.length > 0) {
-          send("action", { actions });
-        }
-        if (Array.isArray(data.analysisCards)) {
-          send("action", { analysisCards: data.analysisCards });
+        if (!response.body || !response.headers.get("content-type")?.toLowerCase().includes("text/event-stream")) {
+          const responseText = await response.text();
+          let data: Record<string, unknown> = {};
+          try { data = JSON.parse(responseText) as Record<string, unknown>; } catch {
+            send("error", { code: "stream_proxy_invalid_response", message: "Invalid chatbot response." });
+            send("done", { ok: false });
+            return;
+          }
+          if (typeof data.answer !== "string" || !data.answer.trim()) {
+            send("error", { code: "stream_proxy_invalid_response", message: "The assistant returned no answer." });
+            send("done", { ok: false });
+            return;
+          }
+          send("meta", { requestId: data.requestId ?? requestId, agentMode: data.agentMode, route: data.routeCategory });
+          send("text_delta", { delta: data.answer });
+          if (Array.isArray(data.citations)) send("citation", { citations: data.citations });
+          if (Array.isArray(data.actions) && data.actions.length > 0) send("action", { actions: data.actions });
+          if (Array.isArray(data.analysisCards) && data.analysisCards.length > 0) send("action", { analysisCards: data.analysisCards });
+          send("done", { ok: true, reply: data });
+          return;
         }
 
-        send("done", {
-          ok: true,
-          reply: data,
-        });
+        const reader = response.body.getReader();
+        while (!cancelled) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          controller.enqueue(value);
+        }
       } catch {
         send("error", {
           code: "stream_exception",

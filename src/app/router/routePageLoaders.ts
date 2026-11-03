@@ -16,6 +16,7 @@ export const routePageLoaders = {
   services: () => import("@/features/content/pages/ServicesPage"),
   reviews: () => import("@/features/content/pages/ReviewsPage"),
   geography: () => import("@/features/content/pages/GeographyPage"),
+  historyArticle: () => import("@/features/content/pages/LeHavreHistoryPage"),
   recentSales: () => import("@/features/content/pages/RecentSalesPage"),
   legalText: () => import("@/features/content/pages/LegalTextPage"),
   siteMap: () => import("@/features/content/pages/SiteMapPage"),
@@ -51,8 +52,8 @@ export function getRoutePageKey(pathname: string): RoutePageKey {
     case "/estimation": return "estimation";
     case "/services": return "services";
     case "/avis": return "reviews";
-    case "/geographie":
-    case "/histoire-immobilier-le-havre": return "geography";
+    case "/geographie": return "geography";
+    case "/histoire-immobilier-le-havre": return "historyArticle";
     case "/nos-dernieres-ventes": return "recentSales";
     case "/mentions-legales":
     case "/confidentialite":

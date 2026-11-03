@@ -26,6 +26,7 @@ const EstimationPageV2 = lazy(routePageLoaders.estimation);
 const ServicesPage = lazy(routePageLoaders.services);
 const ReviewsPage = lazy(routePageLoaders.reviews);
 const GeographyPage = lazy(routePageLoaders.geography);
+const LeHavreHistoryPage = lazy(routePageLoaders.historyArticle);
 const RecentSalesPage = lazy(routePageLoaders.recentSales);
 const LegalTextPage = lazy(routePageLoaders.legalText);
 const SiteMapPage = lazy(routePageLoaders.siteMap);
@@ -276,7 +277,7 @@ function AppRoutes() {
             <Route path="/avis" element={<ReviewsPage />} />
             <Route path="/geographie" element={<GeographyPage />} />
             <Route path="/nos-dernieres-ventes" element={<RecentSalesPage />} />
-            <Route path="/histoire-immobilier-le-havre" element={<Navigate to="/geographie" replace />} />
+            <Route path="/histoire-immobilier-le-havre" element={<LeHavreHistoryPage />} />
             <Route path="/honoraires" element={<FeesPage />} />
             <Route path="/reglementation-immobiliere" element={<RealEstateRegulationsPage />} />
             <Route path="/biens-sauvegardes" element={<SelectionPage />} />

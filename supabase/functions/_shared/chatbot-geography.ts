@@ -11,6 +11,7 @@ function guidePath(id: string): string {
  return legacy[id] ?? `/immobilier/${id}`;
 }
 export function geographyReply(question: string, language = "fr") {
+ if (/\b(?:ouvrir|ouvre|open|go to|aller sur)\s+\/[a-z0-9-]+/i.test(question)) return null;
  if (/\b(cherche|recherche|trouve|acheter|budget|chambres?|search|find|buy|bedrooms?)\b/i.test(normalizePlace(question)) && !/\b(quel quartier|quels quartiers|atouts|avantages)\b/.test(normalizePlace(question))) return null;
  const normalized = normalizePlace(question);
  if (/\b(locatif|locative|loyer|louer|rent|rental|lease|honoraires?|commission|contact|contacter|telephone|email|notaire|compromis|biens?|annonces?|properties|listings|fees|call)\b/.test(normalized)) return null;

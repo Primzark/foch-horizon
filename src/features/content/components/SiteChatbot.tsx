@@ -179,13 +179,22 @@ const CHATBOT_HISTORY_LIMIT = 24;
 const CHATBOT_HISTORY_CHAR_LIMIT = 12000;
 const CHATBOT_HISTORY_MIN_KEEP = 8;
 const CHATBOT_HISTORY_MESSAGE_LIMIT = 1400;
-const CHATBOT_MIN_REPLY_DELAY_MS = 900;
-const CHATBOT_MAX_REPLY_DELAY_MS = 2600;
-const CHATBOT_STREAMING_ENABLED = ((import.meta.env.VITE_CHATBOT_STREAMING_ENABLED as string | undefined) ?? "false").toLowerCase() === "true";
+const CHATBOT_STREAMING_ENABLED = ((import.meta.env.VITE_CHATBOT_STREAMING_ENABLED as string | undefined) ?? "true").toLowerCase() === "true";
 const CHATBOT_MULTIMODAL_CARDS_ENABLED =
   ((import.meta.env.VITE_CHATBOT_MULTIMODAL_CARDS_ENABLED as string | undefined) ?? "true").toLowerCase() !== "false";
 const CHATBOT_PERSISTENT_MEMORY_ENABLED =
   ((import.meta.env.VITE_CHATBOT_PERSISTENT_MEMORY_ENABLED as string | undefined) ?? "false").toLowerCase() === "true";
+const chatbotPropertyStatusLabels: Record<string, string> = {
+  active: "Disponible",
+  new: "Nouveauté",
+  exclusive: "Exclusivité",
+  price_reduced: "Prix réduit",
+  under_contract: "Sous compromis",
+  under_offer: "Sous offre",
+  reserved: "Réservé",
+  sold: "Vendu",
+  off_market: "Retiré du marché",
+};
 
 const chatbotFeedbackReasonOptions = [
   "Hors sujet",
@@ -306,12 +315,6 @@ function buildOpeningGreetingMessage(index: number): ChatMessage {
 
 function clampNumber(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
-}
-
-function computeReplyDelayMs(question: string): number {
-  const normalizedLength = clampNumber(question.trim().length, 12, 260);
-  const dynamicDelay = 520 + normalizedLength * 8;
-  return clampNumber(dynamicDelay, CHATBOT_MIN_REPLY_DELAY_MS, CHATBOT_MAX_REPLY_DELAY_MS);
 }
 
 function trimMessages(messages: ChatMessage[]): ChatMessage[] {
@@ -1732,13 +1735,6 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
 
       const reply = await Promise.race([requestPromise, timeoutPromise]);
 
-      const elapsedMs = performance.now() - requestStartedAt;
-      const minDelayMs = computeReplyDelayMs(text);
-
-      if (elapsedMs < minDelayMs) {
-        await new Promise((resolve) => window.setTimeout(resolve, minDelayMs - elapsedMs));
-      }
-
       if (requestSequenceRef.current !== nextRequestId) {
         return;
       }
@@ -2723,6 +2719,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
                           {item.cityName || item.citySlug} · {formatCompactPrice(item.priceAmount, item.currency)}
                           {item.surfaceM2 ? ` · ${formatSurface(item.surfaceM2)}` : ""}
                           {typeof item.bedrooms === "number" ? ` · ${item.bedrooms} ch.` : ""}
+                          {` · ${chatbotPropertyStatusLabels[item.status] ?? "Statut à confirmer"}`}
                         </p>
                       </div>
                       {item.dpeLabel && (
@@ -2731,6 +2728,9 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
                         </span>
                       )}
                     </div>
+                    {item.dataQualityWarning && (
+                      <p className="mt-1 text-amber-700 dark:text-amber-400">{item.dataQualityWarning}</p>
+                    )}
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       <button
                         type="button"

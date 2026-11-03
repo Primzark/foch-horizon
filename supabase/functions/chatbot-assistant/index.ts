@@ -1,7 +1,7 @@
 import { geographyReply, chatbotPlaces, normalizePlace, resolvePlaces } from "../_shared/chatbot-geography.ts";
 import { z } from "https://esm.sh/zod@3.25.76";
 import { createServiceClient } from "../_shared/client.ts";
-import { consumeRequestLimit, isAllowedSiteOrigin, secureJsonResponse, secureOptionsResponse } from "../_shared/request-security.ts";
+import { consumeRequestLimit, getSiteCorsHeaders, isAllowedSiteOrigin, secureJsonResponse, secureOptionsResponse } from "../_shared/request-security.ts";
 import { parseBedroomsMin, parsePriceHints, filterExcludedFeatures } from "../_shared/chatbot-search-criteria.ts";
 import {
   CHATBOT_EMBEDDING_DIMENSION,
@@ -132,8 +132,8 @@ function buildAssistantSystemPrompt(language: "fr" | "en"): string {
   return `You are the assistant for Foch Immobilier in Le Havre, France.
 ${language === "en" ? "Respond in concise English." : "Use concise French."}
 Focus exclusively on properties for sale, neighborhoods (Perret, Saint-Francois, Saint-Vincent, Sanvic, Graville, Eure-Docks), services (buying, selling, valuations), and the property process (offers, preliminary agreements, notaries, completion). Every property search is for purchase. Never ask the user to choose a transaction type, and do not discuss unsupported property services or market information. If a request is outside the agency's services, briefly redirect to buying, selling, or a valuation without repeating the unsupported request.
-If no perfect property match, invite the user to leave email + criteria so agency can follow up.
-Do not invent exact legal claims. Keep answers practical. Use plain text without Markdown markers, raw URLs, or link syntax.`;
+If no perfect property match, explain how the user can prepare and submit a contact form. Never say a callback request has been sent or transmitted unless the user has submitted the form and a successful submission result is available in this request.
+Do not invent exact legal claims. Keep answers practical. In French, use correct accents and say “au Havre”, never “au Le Havre”. Use plain text without Markdown markers, raw URLs, or link syntax.`;
 }
 
 interface GeminiGenerateContentResponse {
@@ -235,6 +235,8 @@ interface ToolSearchResultItem {
   dpeLabel: string | null;
   transaction: string;
   type: string;
+  status: string;
+  dataQualityWarning?: string | null;
 }
 
 interface ToolCompareProperty {
@@ -709,15 +711,23 @@ function protectVisibleChatbotReply(
   payload: Record<string, unknown>,
   language: "fr" | "en",
 ): Record<string, unknown> {
+  const correctedPayload = language === "fr"
+    ? {
+        ...payload,
+        answer: typeof payload.answer === "string"
+          ? payload.answer.replace(/\b(?:a|au)\s+le\s+havre\b/gi, "au Havre")
+          : payload.answer,
+      }
+    : payload;
   const visibleFields = {
-    answer: payload.answer,
+    answer: correctedPayload.answer,
     suggestedPrompts: payload.suggestedPrompts,
     citations: payload.citations,
     actions: payload.actions,
     analysisCards: payload.analysisCards,
     propertySuggestions: payload.propertySuggestions,
   };
-  if (!containsRentalLanguage(visibleFields, language)) return payload;
+  if (!containsRentalLanguage(visibleFields, language)) return correctedPayload;
 
   return {
     ...payload,
@@ -1693,6 +1703,58 @@ function extractGeminiOutputText(payload: unknown): string {
   return fragments.join("\n\n");
 }
 
+function extractGeminiStreamDelta(payload: unknown): string {
+  if (!payload || typeof payload !== "object") return "";
+  const candidates = (payload as GeminiGenerateContentResponse).candidates;
+  if (!Array.isArray(candidates)) return "";
+  return candidates
+    .flatMap((candidate) => candidate?.content?.parts ?? [])
+    .map((part) => (typeof part?.text === "string" ? part.text : ""))
+    .join("");
+}
+
+async function readGeminiStream(
+  response: Response,
+  onTextDelta: (delta: string) => void,
+): Promise<string> {
+  if (!response.body) return "";
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let answer = "";
+  const consumeEvent = (eventText: string) => {
+    const data = eventText
+      .split(/\r?\n/)
+      .filter((line) => line.startsWith("data:"))
+      .map((line) => line.slice(5).trim())
+      .join("\n");
+    if (!data || data === "[DONE]") return;
+    try {
+      const delta = extractGeminiStreamDelta(JSON.parse(data));
+      if (!delta) return;
+      answer += delta;
+      onTextDelta(delta);
+    } catch {
+      // Ignore malformed keep-alive or partial SSE events.
+    }
+  };
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer = `${buffer}${decoder.decode(value, { stream: true })}`.replace(/\r\n/g, "\n");
+    let delimiterIndex = buffer.indexOf("\n\n");
+    while (delimiterIndex !== -1) {
+      consumeEvent(buffer.slice(0, delimiterIndex));
+      buffer = buffer.slice(delimiterIndex + 2);
+      delimiterIndex = buffer.indexOf("\n\n");
+    }
+  }
+  buffer = `${buffer}${decoder.decode()}`.replace(/\r\n/g, "\n");
+  if (buffer.trim()) consumeEvent(buffer);
+  return answer;
+}
+
 function buildGeminiContents(
   question: string,
   normalizedHistory: Array<{ role: "user" | "assistant"; content: string }>,
@@ -2469,6 +2531,8 @@ async function generateAssistantAnswer(
   ragContext: RAGContextResult,
   webSearch: TavilyWebSearchResult | null,
   language: "fr" | "en",
+  onTextDelta?: (delta: string) => void,
+  requestSignal?: AbortSignal,
 ): Promise<AssistantGenerationResult | null> {
   const providerConfig = resolveGenerationProvider();
   if (!providerConfig) return null;
@@ -2491,9 +2555,14 @@ async function generateAssistantAnswer(
     : normalizedHistory;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), generationTimeoutMs());
+  const abortFromRequest = () => controller.abort();
+  if (requestSignal?.aborted) abortFromRequest();
+  else requestSignal?.addEventListener("abort", abortFromRequest, { once: true });
   try {
     const model = Deno.env.get("GEMINI_MODEL") ?? "gemini-2.5-flash-lite";
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+    const endpoint = onTextDelta
+      ? `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse`
+      : `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
     const requestBody: Record<string, unknown> = {
       systemInstruction: {
         parts: [
@@ -2531,8 +2600,9 @@ async function generateAssistantAnswer(
       return null;
     }
 
-    const data = await response.json();
-    const answer = extractGeminiOutputText(data);
+    const answer = onTextDelta
+      ? await readGeminiStream(response, onTextDelta)
+      : extractGeminiOutputText(await response.json());
     if (!answer.trim()) {
       logGenerationFailure(providerConfig.provider, "empty_model_output");
       return null;
@@ -2550,6 +2620,7 @@ async function generateAssistantAnswer(
     return null;
   } finally {
     clearTimeout(timeoutId);
+    requestSignal?.removeEventListener("abort", abortFromRequest);
   }
 }
 
@@ -3332,11 +3403,11 @@ function buildFallback(question: string, language: "fr" | "en" = "fr") {
   if (/compromis|notaire|acte|signature/.test(q)) {
     return {
       answer:
-        "Etapes classiques: offre acceptee, verification du financement, signature du compromis, delai legal/conditions suspensives, puis acte authentique chez le notaire. L'agence suit le dossier de bout en bout.",
+        "Étapes classiques : offre acceptée, vérification du financement, signature du compromis, délai légal et conditions suspensives, puis acte authentique chez le notaire. L’agence suit le dossier de bout en bout.",
       suggestedPrompts: [
-        "Quel delai entre compromis et acte ?",
+        "Quel délai entre compromis et acte ?",
         "Quels documents dois-je fournir pour vendre ?",
-        "Pouvez-vous m'accompagner sur le financement ?",
+        "Pouvez-vous m’accompagner sur le financement ?",
       ],
     };
   }
@@ -3344,20 +3415,20 @@ function buildFallback(question: string, language: "fr" | "en" = "fr") {
   if (/service|vente|estimation/.test(q)) {
     return {
       answer:
-        "Foch Immobilier accompagne les projets d'achat, de vente et d'estimation au Havre.",
+        "Foch Immobilier accompagne les projets d’achat, de vente et d’estimation au Havre.",
       suggestedPrompts: [
-        "Je veux une estimation de mon appartement",
+        "Je veux faire estimer mon appartement",
         "Quels services proposez-vous pour vendre ?",
-        "Je cherche un bien a acheter au Havre",
+        "Je cherche un bien à acheter au Havre",
       ],
     };
   }
 
   return {
     answer:
-      "Je peux vous aider sur les biens disponibles, les quartiers du Havre et les etapes de vente/achat. Si vous ne trouvez pas le bon bien, laissez votre email et vos criteres pour un rappel agence.",
+      "Je peux vous aider sur les biens disponibles, les quartiers du Havre et les étapes de vente ou d’achat. Si vous souhaitez être rappelé, ouvrez /contact, complétez le formulaire et envoyez-le ; rien n’est transmis avant cet envoi.",
     suggestedPrompts: [
-      "Je cherche un appartement a vendre quartier Perret",
+      "Je cherche un appartement à vendre dans le quartier Perret",
       "Quel quartier choisir pour acheter au Havre ?",
       "Comment se passe un compromis de vente ?",
     ],
@@ -3458,6 +3529,9 @@ interface PropertySearchQueryRow {
   transaction_type: string;
   property_type: string;
   status: string;
+  admin_status_override?: string | null;
+  description?: string | null;
+  dataQualityWarning?: string | null;
   price_amount: number;
   price_currency: string;
   surface_m2: number | null;
@@ -3485,6 +3559,16 @@ const toolCityAliases: Array<{ slug: string; aliases: string[] }> = [
   { slug: "montivilliers", aliases: ["montivilliers"] },
   { slug: "maneglise", aliases: ["maneglise", "maneglise"] },
   { slug: "gainneville", aliases: ["gainneville"] },
+];
+
+const toolDistrictAliases: Array<{ slug: string; label: string; aliases: string[] }> = [
+  { slug: "perret", label: "Perret", aliases: ["perret", "hotel de ville", "saint joseph"] },
+  { slug: "saint-francois", label: "Saint-François", aliases: ["saint francois", "bassin du roy"] },
+  { slug: "saint-vincent", label: "Saint-Vincent", aliases: ["saint vincent", "front de mer"] },
+  { slug: "sanvic", label: "Sanvic", aliases: ["sanvic", "ville haute"] },
+  { slug: "graville", label: "Graville", aliases: ["graville", "ville basse"] },
+  { slug: "eure-docks", label: "Eure-Docks", aliases: ["eure docks", "docks vauban", "vauban"] },
+  { slug: "saint-michel", label: "Saint-Michel", aliases: ["saint michel"] },
 ];
 
 function parseToolSearchParamsFromState(rawState: ToolConversationState | undefined): ToolSearchParams {
@@ -3623,6 +3707,13 @@ function detectCitySlug(question: string): string | undefined {
   return undefined;
 }
 
+function detectDistrictSearchArea(question: string): { slug: string; label: string } | undefined {
+  const normalized = ` ${normalizePlace(question)} `;
+  return toolDistrictAliases.find((district) =>
+    district.aliases.some((alias) => normalized.includes(` ${normalizePlace(alias)} `))
+  );
+}
+
 function parseBathroomsMin(question: string): number | undefined {
   const normalized = normalizeText(question);
   const match = normalized.match(/(\d{1,2})\s*(?:sdb|salle(?:s)? de bain|salles? de bains?)/);
@@ -3758,10 +3849,11 @@ function extractSearchParamsFromQuestion(
 ): ToolSearchParams {
   const fallbackPageSize = clamp(Math.floor(parseNumberEnv("CHATBOT_AGENT_TOOLS_MAX_RESULTS", 5)), 1, 10);
   const stateParams = /\b(oublie|nouvelle recherche|start over|forget)\b/.test(normalizeText(question)) ? {} : parseToolSearchParamsFromState(state);
+  const districtArea = detectDistrictSearchArea(question);
   const inferredParams: ToolSearchParams = {
     transaction: detectTransaction(question),
     type: detectPropertyType(question),
-    city: detectCitySlug(question),
+    city: detectCitySlug(question) ?? (districtArea ? "le-havre" : undefined),
     bedroomsMin: parseBedroomsMin(question),
     bathroomsMin: parseBathroomsMin(question),
     garagesMin: parseGaragesMin(question),
@@ -3769,7 +3861,7 @@ function extractSearchParamsFromQuestion(
     ...parseSurfaceHints(question),
     ...parseTerrainHints(question),
     features: detectFeatureFilters(question),
-    q: normalizePlace(question).match(/\b(perret|sanvic|graville|saint francois|saint vincent|danton|les docks)\b/)?.[1],
+    q: districtArea?.label ?? normalizePlace(question).match(/\b(danton|les docks)\b/)?.[1],
   };
 
   let actionParams: ToolSearchParams = {};
@@ -3797,6 +3889,11 @@ function extractSearchParamsFromQuestion(
   const room = normalizeText(question).match(/\bt([1-9])\b/);
   const excluded = [...normalizeText(question).matchAll(/\b(?:sans|without|retire|enleve)\s+(?:de\s+|le\s+|la\s+)?(balcon|terrasse|ascenseur|garage|parking|jardin)\b/g)].map(m=>m[1]);
   const merged = mergeSearchParams(stateParams, { ...keepDefinedSearchParams(inferredParams), ...actionParams, ...(room ? {rooms:Number(room[1])} : {}) }, 1, fallbackPageSize);
+  if (districtArea) {
+    const explicitCity = detectCitySlug(question);
+    if (!explicitCity || explicitCity === "le-havre") merged.city = "le-havre";
+    merged.q = districtArea.label;
+  }
   if (excluded.length) { merged.excludedFeatures = excluded; merged.features = filterExcludedFeatures(merged.features ?? [], excluded);
     if (merged.q) { merged.q = merged.q.replace(/\b(?:sans|without|retire|enleve)\s+(?:de\s+|le\s+|la\s+)?(?:balcon|terrasse|ascenseur|garage|parking|jardin)\b/gi, "").trim(); if (!merged.q) delete merged.q; } }
   if (/sans (?:limite de )?budget|no budget limit/.test(normalizeText(question))) { delete merged.priceMax; delete merged.priceMin; }
@@ -4028,6 +4125,8 @@ function mapSearchRowToToolItem(row: PropertySearchQueryRow): ToolSearchResultIt
     dpeLabel: row.dpe_label ?? null,
     transaction: row.transaction_type,
     type: row.property_type,
+    status: row.admin_status_override ?? row.status,
+    dataQualityWarning: row.dataQualityWarning ?? null,
   };
 }
 
@@ -6216,7 +6315,20 @@ async function orchestrateToolRequest(input: {
   return null;
 }
 
-Deno.serve(async (request) => {
+interface AssistantStreamCallbacks {
+  onMeta?: (payload: Record<string, unknown>) => void;
+  onStatus?: (phase: string) => void;
+  onTextDelta?: (delta: string) => void;
+  onActions?: (actions: unknown[]) => void;
+  onCitations?: (citations: unknown[]) => void;
+  onAnalysisCards?: (cards: unknown[]) => void;
+}
+
+async function handleChatbotAssistantRequest(
+  request: Request,
+  streamCallbacks?: AssistantStreamCallbacks,
+): Promise<Response> {
+  streamCallbacks?.onStatus?.("parsing");
   if (request.method === "OPTIONS") {
     return secureOptionsResponse(request);
   }
@@ -6269,7 +6381,15 @@ Deno.serve(async (request) => {
     }
 
     const requestId = createRequestId();
-    const geographic = !payload.actionRequest && geographyReply(payload.question, payload.language);
+    streamCallbacks?.onMeta?.({ requestId });
+    streamCallbacks?.onStatus?.("searching");
+    const recentSearchFollowUp = Boolean(
+      payload.conversationState?.recentSearch &&
+      /^(?:et\s+)?(?:a|au|aux|dans|sur)\s+/.test(normalizeText(payload.question)) &&
+      detectCitySlug(payload.question),
+    );
+    const explicitPathOpen = /\b(?:ouvrir|ouvre|open|go to|aller sur)\s+\/[a-z0-9-]+/i.test(payload.question);
+    const geographic = !payload.actionRequest && !recentSearchFollowUp && !explicitPathOpen && geographyReply(payload.question, payload.language);
     if (geographic) return secureJsonResponse(request, { ...geographic, source: "fallback", edgeProvider: "fallback", requestId, ragUsed: false, agentMode: "rag" });
 
     if (!payload.actionRequest && ((resolvePlaces(payload.question).filter(p=>p.kind === "commune").length > 1 && /\b(ou|or|et|and)\b/i.test(payload.question)) || /(?:\b(?:ou|or)\b.*(?:adresse|havre|ville)|\b\d+\s*km\b)/i.test(payload.question))) {
@@ -6293,7 +6413,7 @@ Deno.serve(async (request) => {
         suggestedPrompts: english
           ? ["View properties for sale", "Find an apartment to buy", "Request a property valuation"]
           : ["Voir les biens à vendre", "Je cherche un appartement à acheter", "Je veux faire estimer mon bien"],
-        streamSupported: parseBooleanEnv("CHATBOT_STREAM_ENABLED", false),
+        streamSupported: parseBooleanEnv("CHATBOT_STREAM_ENABLED", true),
       }, payload.language ?? "fr");
     }
 
@@ -6314,15 +6434,19 @@ Deno.serve(async (request) => {
     }
 
     if (toolResult) {
-      const memoryMeta =
-        toolResult.memory ??
-        await persistStructuredMemory({
+      streamCallbacks?.onActions?.(toolResult.actions ?? []);
+      streamCallbacks?.onAnalysisCards?.(toolResult.analysisCards ?? []);
+      const memoryPromise = toolResult.memory
+        ? Promise.resolve(toolResult.memory)
+        : persistStructuredMemory({
           sessionId: payload.sessionId,
           baseState: payload.conversationState as ToolConversationState | undefined,
           patch: toolResult.conversationStatePatch,
           question: payload.question,
           chatHistory: payload.chatHistory,
         });
+      const memoryMeta = streamCallbacks ? undefined : await memoryPromise;
+      if (streamCallbacks) void memoryPromise.catch(() => undefined);
       return secureChatbotResponse(request, {
         source: "fallback",
         edgeProvider: "fallback",
@@ -6339,7 +6463,7 @@ Deno.serve(async (request) => {
         analysisCards: toolResult.analysisCards,
         memory: memoryMeta,
         costHints: toolResult.costHints,
-        streamSupported: parseBooleanEnv("CHATBOT_STREAM_ENABLED", false),
+        streamSupported: parseBooleanEnv("CHATBOT_STREAM_ENABLED", true),
       }, payload.language ?? "fr");
     }
 
@@ -6384,7 +6508,7 @@ Deno.serve(async (request) => {
         agentMode: "fallback",
         webSearchUsed: false,
         webSearchStatus: webSearch?.status ?? "unavailable",
-        streamSupported: parseBooleanEnv("CHATBOT_STREAM_ENABLED", false),
+        streamSupported: parseBooleanEnv("CHATBOT_STREAM_ENABLED", true),
         ...fallback,
       }, payload.language ?? "fr");
     }
@@ -6414,18 +6538,21 @@ Deno.serve(async (request) => {
         pageContextUsed: ragContext.pageContextMeta?.used,
         pageContextMode: ragContext.pageContextMeta?.fetchMode,
         pageContextCacheHit: ragContext.pageContextMeta?.cacheHit,
-        streamSupported: parseBooleanEnv("CHATBOT_STREAM_ENABLED", false),
+        streamSupported: parseBooleanEnv("CHATBOT_STREAM_ENABLED", true),
         ...fallback,
       }, payload.language ?? "fr");
     }
 
     const normalizedHistory = normalizeHistoryForModel(payload.chatHistory, payload.question);
+    streamCallbacks?.onStatus?.("generating");
     const generationResult = await generateAssistantAnswer(
       payload.question,
       normalizedHistory,
       ragContext,
       webSearch,
       payload.language ?? "fr",
+      streamCallbacks?.onTextDelta,
+      request.signal,
     );
 
     if (!generationResult) {
@@ -6453,7 +6580,7 @@ Deno.serve(async (request) => {
         pageContextUsed: ragContext.pageContextMeta?.used,
         pageContextMode: ragContext.pageContextMeta?.fetchMode,
         pageContextCacheHit: ragContext.pageContextMeta?.cacheHit,
-        streamSupported: parseBooleanEnv("CHATBOT_STREAM_ENABLED", false),
+        streamSupported: parseBooleanEnv("CHATBOT_STREAM_ENABLED", true),
         ...fallback,
       }, payload.language ?? "fr");
     }
@@ -6467,13 +6594,15 @@ Deno.serve(async (request) => {
     );
 
     const ragConversationPatch: Partial<ToolConversationState> | undefined = undefined;
-    const memoryMeta = await persistStructuredMemory({
+    const memoryPromise = persistStructuredMemory({
       sessionId: payload.sessionId,
       baseState: payload.conversationState as ToolConversationState | undefined,
       patch: ragConversationPatch,
       question: payload.question,
       chatHistory: payload.chatHistory,
     });
+    const memoryMeta = streamCallbacks ? undefined : await memoryPromise;
+    if (streamCallbacks) void memoryPromise.catch(() => undefined);
 
     return secureChatbotResponse(request, {
       source: generationResult.provider,
@@ -6507,10 +6636,119 @@ Deno.serve(async (request) => {
       pageContextCacheHit: ragContext.pageContextMeta?.cacheHit,
       memory: memoryMeta,
       costHints: { route: "edge_rag", estimatedClass: ragContext.contextBlock ? "medium" : "low" },
-      streamSupported: parseBooleanEnv("CHATBOT_STREAM_ENABLED", false),
+      streamSupported: parseBooleanEnv("CHATBOT_STREAM_ENABLED", true),
     }, payload.language ?? "fr");
   } catch (error) {
     console.error("Chatbot request failed.", error instanceof Error ? error.message : "Unknown error");
     return secureJsonResponse(request, { ok: false, error: "The assistant could not complete the request." }, 500);
   }
+}
+
+Deno.serve(async (request) => {
+  if (request.headers.get("x-chatbot-stream") !== "true") {
+    return await handleChatbotAssistantRequest(request);
+  }
+  if (request.method === "OPTIONS") return secureOptionsResponse(request);
+  if (request.method !== "POST") {
+    return secureJsonResponse(request, { ok: false, error: "Method not allowed" }, 405);
+  }
+
+  let cancelled = false;
+  let streamController: ReadableStreamDefaultController<Uint8Array> | null = null;
+  const encoder = new TextEncoder();
+  const sse = (event: string, data: unknown) => `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+  const body = new ReadableStream<Uint8Array>({
+    start(controller) {
+      streamController = controller;
+      let emittedText = false;
+      let emittedActions = false;
+      let emittedAnalysisCards = false;
+      const send = (event: string, data: unknown) => {
+        if (cancelled || !streamController) return;
+        try {
+          streamController.enqueue(encoder.encode(sse(event, data)));
+        } catch {
+          cancelled = true;
+        }
+      };
+
+      void (async () => {
+        try {
+          const response = await handleChatbotAssistantRequest(request, {
+            onMeta: (payload) => send("meta", { ...payload, streamSupported: true, synthetic: false }),
+            onStatus: (phase) => send("status", { phase }),
+            onTextDelta: (delta) => {
+              if (!delta) return;
+              emittedText = true;
+              send("text_delta", { delta });
+            },
+            onActions: (actions) => {
+              if (actions.length === 0) return;
+              emittedActions = true;
+              send("action", { actions });
+            },
+            onAnalysisCards: (analysisCards) => {
+              if (analysisCards.length === 0) return;
+              emittedAnalysisCards = true;
+              send("action", { analysisCards });
+            },
+          });
+          const payload = await response.json().catch(() => ({})) as Record<string, unknown>;
+          const answer = typeof payload.answer === "string" ? payload.answer : "";
+          if (!response.ok || !answer.trim()) {
+            send("error", {
+              code: "assistant_request_failed",
+              status: response.status,
+              message: typeof payload.error === "string" ? payload.error : "The assistant could not complete the request.",
+            });
+            send("done", { ok: false });
+            return;
+          }
+
+          send("meta", {
+            requestId: payload.requestId,
+            agentMode: payload.agentMode,
+            route: payload.routeCategory,
+            streamSupported: true,
+            synthetic: false,
+          });
+          send("status", { phase: "building_response" });
+          if (!emittedText) send("text_delta", { delta: answer });
+          if (Array.isArray(payload.citations)) send("citation", { citations: payload.citations });
+          if (!emittedActions && Array.isArray(payload.actions) && payload.actions.length > 0) {
+            send("action", { actions: payload.actions });
+          }
+          if (!emittedAnalysisCards && Array.isArray(payload.analysisCards) && payload.analysisCards.length > 0) {
+            send("action", { analysisCards: payload.analysisCards });
+          }
+          send("done", { ok: true, reply: payload });
+        } catch (error) {
+          send("error", {
+            code: "assistant_stream_exception",
+            message: error instanceof Error ? error.message : "The assistant stream failed.",
+          });
+          send("done", { ok: false });
+        } finally {
+          try {
+            streamController?.close();
+          } catch {
+            // The client may have cancelled the stream.
+          }
+        }
+      })();
+    },
+    cancel() {
+      cancelled = true;
+      streamController = null;
+    },
+  });
+
+  return new Response(body, {
+    headers: {
+      ...getSiteCorsHeaders(request),
+      "Content-Type": "text/event-stream; charset=utf-8",
+      "Cache-Control": "no-cache, no-transform",
+      Connection: "keep-alive",
+    },
+  });
 });
