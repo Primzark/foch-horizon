@@ -1,5 +1,6 @@
 import { z } from "https://esm.sh/zod@3.25.76";
 import { createServiceClient } from "../_shared/client.ts";
+import { markOutboundEmailFailed, markOutboundEmailSent, recordOutboundEmail } from "../_shared/outbound-email.ts";
 import { consumeRequestLimit, getRequestIpHash, isAllowedSiteOrigin, secureJsonResponse, secureOptionsResponse } from "../_shared/request-security.ts";
 
 const payloadSchema = z.object({
@@ -125,13 +126,17 @@ async function sendWebhookNotification(payload: z.infer<typeof payloadSchema>, a
   }
 }
 
-async function sendResendNotification(payload: z.infer<typeof payloadSchema>): Promise<void> {
+async function sendResendNotification(
+  supabase: ReturnType<typeof createServiceClient>,
+  payload: z.infer<typeof payloadSchema>,
+  leadId: string,
+): Promise<void> {
   const resendApiKey = Deno.env.get("RESEND_API_KEY") ?? "";
   if (!resendApiKey) {
     throw new Error("RESEND_API_KEY is not configured.");
   }
 
-  const to = Deno.env.get("LEADS_NOTIFICATION_EMAIL") ?? "vendre@fochimmobilier.com";
+  const to = Deno.env.get("LEADS_NOTIFICATION_EMAIL") ?? "alexisliva@orange.fr";
   const from = Deno.env.get("LEADS_FROM_EMAIL") ?? "Foch Immobilier <vendre@fochimmobilier.com>";
   const replyTo = payload.email;
   const requestTitle = getRequestTitle(payload.source);
@@ -247,43 +252,74 @@ async function sendResendNotification(payload: z.infer<typeof payloadSchema>): P
   </body>
 </html>`;
 
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${resendApiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from,
-      to: [to],
-      subject,
-      html,
-      text,
-      reply_to: replyTo,
-    }),
+  const emailLogId = await recordOutboundEmail(supabase, {
+    emailType: "lead_notification",
+    recipientEmail: to,
+    sender: from,
+    replyToEmail: replyTo,
+    subject,
+    htmlBody: html,
+    textBody: text,
+    leadId,
+    metadata: { source: payload.source, property_id: payload.propertyId ?? null },
   });
 
-  const responseBody = await response.json().catch(() => null);
-  if (!response.ok) {
-    const errorCode = typeof responseBody?.name === "string"
-      ? responseBody.name
-      : typeof responseBody?.code === "string"
-        ? responseBody.code
-        : "";
-    const errorMessage = typeof responseBody?.message === "string"
-      ? responseBody.message.replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, "[redacted email]").slice(0, 240)
-      : "";
-    const details = [errorCode, errorMessage].filter(Boolean).join(": ");
-    throw new Error(`Resend rejected notification (HTTP ${response.status}${details ? `; ${details}` : ""}).`);
-  }
+  try {
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${resendApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from,
+        to: [to],
+        subject,
+        html,
+        text,
+        reply_to: replyTo,
+      }),
+    });
 
-  console.info(`Lead notification email accepted by Resend (HTTP ${response.status}).`);
+    const responseBody = await response.json().catch(() => null);
+    if (!response.ok) {
+      const errorCode = typeof responseBody?.name === "string"
+        ? responseBody.name
+        : typeof responseBody?.code === "string"
+          ? responseBody.code
+          : "";
+      const errorMessage = typeof responseBody?.message === "string"
+        ? responseBody.message.replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, "[redacted email]").slice(0, 240)
+        : "";
+      const details = [errorCode, errorMessage].filter(Boolean).join(": ");
+      throw new Error(`Resend rejected notification (HTTP ${response.status}${details ? `; ${details}` : ""}).`);
+    }
+
+    await markOutboundEmailSent(
+      supabase,
+      emailLogId,
+      typeof responseBody?.id === "string" ? responseBody.id : null,
+    );
+    console.info(`Lead notification email accepted by Resend (HTTP ${response.status}).`);
+  } catch (error) {
+    await markOutboundEmailFailed(
+      supabase,
+      emailLogId,
+      error instanceof Error ? error.message : "Lead notification email failed.",
+    );
+    throw error;
+  }
 }
 
-async function notifyLead(payload: z.infer<typeof payloadSchema>, assignedAgentId: string | null): Promise<void> {
+async function notifyLead(
+  supabase: ReturnType<typeof createServiceClient>,
+  payload: z.infer<typeof payloadSchema>,
+  assignedAgentId: string | null,
+  leadId: string,
+): Promise<void> {
   const [webhookResult, emailResult] = await Promise.allSettled([
     sendWebhookNotification(payload, assignedAgentId),
-    sendResendNotification(payload),
+    sendResendNotification(supabase, payload, leadId),
   ]);
 
   if (webhookResult.status === "rejected") {
@@ -440,7 +476,7 @@ Deno.serve(async (request) => {
 
     if (error) throw error;
 
-    await notifyLead(payload, assignedAgentId);
+    await notifyLead(supabase, payload, assignedAgentId, data.id);
 
     return secureJsonResponse(request, { ok: true, leadId: data.id, assignedAgentId });
   } catch (error) {

@@ -1,5 +1,6 @@
 import { z } from "https://esm.sh/zod@3.25.76";
 import { createServiceClient } from "../_shared/client.ts";
+import { markOutboundEmailFailed, markOutboundEmailSent, recordOutboundEmail } from "../_shared/outbound-email.ts";
 import {
   consumeRequestLimit,
   isAllowedSiteOrigin,
@@ -176,30 +177,74 @@ function propertyPath(property: Pick<PropertyRecord, "id" | "slug">): string {
   return `/biens/${property.id}-${slug}`;
 }
 
-async function sendResendEmail(input: {
-  to: string;
-  subject: string;
-  html: string;
-  idempotencyKey: string;
-}): Promise<void> {
+async function sendResendEmail(
+  supabase: ReturnType<typeof createServiceClient>,
+  input: {
+    emailType: "property_alert_confirmation" | "property_alert_delivery";
+    to: string;
+    subject: string;
+    html: string;
+    text: string;
+    idempotencyKey: string;
+    subscriptionId: string;
+    deliveryId?: string;
+    metadata?: Record<string, unknown>;
+  },
+): Promise<void> {
   const apiKey = Deno.env.get("RESEND_API_KEY") ?? "";
   if (!apiKey) throw new Error("RESEND_API_KEY is not configured.");
 
   const from = Deno.env.get("LEADS_FROM_EMAIL") ?? "Foch Immobilier <vendre@fochimmobilier.com>";
   const replyTo = Deno.env.get("LEADS_REPLY_TO_EMAIL") ?? "vendre@fochimmobilier.com";
-  const result = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-      "Idempotency-Key": input.idempotencyKey,
-    },
-    body: JSON.stringify({ from, to: [input.to], subject: input.subject, html: input.html, reply_to: replyTo }),
+  const emailLogId = await recordOutboundEmail(supabase, {
+    emailType: input.emailType,
+    recipientEmail: input.to,
+    sender: from,
+    replyToEmail: replyTo,
+    subject: input.subject,
+    htmlBody: input.html,
+    textBody: input.text,
+    propertyAlertSubscriptionId: input.subscriptionId,
+    propertyAlertDeliveryId: input.deliveryId,
+    metadata: input.metadata,
   });
 
-  if (!result.ok) {
-    const details = await result.text().catch(() => "");
-    throw new Error(`Resend request failed (${result.status}): ${details.slice(0, 400)}`);
+  try {
+    const result = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+        "Idempotency-Key": input.idempotencyKey,
+      },
+      body: JSON.stringify({
+        from,
+        to: [input.to],
+        subject: input.subject,
+        html: input.html,
+        text: input.text,
+        reply_to: replyTo,
+      }),
+    });
+
+    const responseBody = await result.json().catch(() => null);
+    if (!result.ok) {
+      const details = typeof responseBody?.message === "string" ? responseBody.message.slice(0, 400) : "";
+      throw new Error(`Resend request failed (${result.status})${details ? `: ${details}` : ""}`);
+    }
+
+    await markOutboundEmailSent(
+      supabase,
+      emailLogId,
+      typeof responseBody?.id === "string" ? responseBody.id : null,
+    );
+  } catch (error) {
+    await markOutboundEmailFailed(
+      supabase,
+      emailLogId,
+      error instanceof Error ? error.message : "Property alert email failed.",
+    );
+    throw error;
   }
 }
 
@@ -229,12 +274,23 @@ async function sendConfirmationEmails(
           <p>Les annonces déjà publiées ne seront pas envoyées. Ce lien expire dans 48 heures.</p>
           <p style="font-size:12px;color:#5b6470">Si vous n’êtes pas à l’origine de cette demande, ignorez cet e-mail.</p>
         </div>`;
+      const text = [
+        "Confirmez votre alerte Foch Immobilier",
+        "",
+        "Vous avez demandé à recevoir les nouvelles annonces correspondant à vos critères.",
+        `Confirmer mon adresse e-mail : ${confirmationUrl.toString()}`,
+        "Les annonces déjà publiées ne seront pas envoyées. Ce lien expire dans 48 heures.",
+        "Si vous n’êtes pas à l’origine de cette demande, ignorez cet e-mail.",
+      ].join("\n");
       const expires = Math.floor(new Date(row.confirmation_expires_at).getTime() / 1000);
-      await sendResendEmail({
+      await sendResendEmail(supabase, {
+        emailType: "property_alert_confirmation",
         to: row.email,
         subject: "Confirmez votre alerte immobilière",
         html,
+        text,
         idempotencyKey: `foch-alert-confirm-${row.subscription_id}-${expires}`,
+        subscriptionId: row.subscription_id,
       });
       const { error: completeError } = await supabase.rpc("complete_property_alert_confirmation", {
         p_subscription_id: row.subscription_id,
@@ -305,6 +361,11 @@ async function sendPropertyAlert(
     property.surface_m2 != null ? `${new Intl.NumberFormat("fr-FR").format(property.surface_m2)} m²` : null,
     property.bedrooms != null ? `${property.bedrooms} chambre${property.bedrooms > 1 ? "s" : ""}` : null,
   ].filter((value): value is string => typeof value === "string" && value.length > 0).map(escapeHtml).join(" · ");
+  const textDetails = [
+    property.city?.name,
+    property.surface_m2 != null ? `${new Intl.NumberFormat("fr-FR").format(property.surface_m2)} m²` : null,
+    property.bedrooms != null ? `${property.bedrooms} chambre${property.bedrooms > 1 ? "s" : ""}` : null,
+  ].filter((value): value is string => typeof value === "string" && value.length > 0).join(" · ");
   const formattedPrice = `${new Intl.NumberFormat("fr-FR").format(property.price_amount)} €`;
   const safeTitle = escapeHtml(property.title);
   const imageBlock = imageUrl
@@ -321,12 +382,27 @@ async function sendPropertyAlert(
       <hr style="border:0;border-top:1px solid #e4e7e5;margin:28px 0" />
       <p style="font-size:12px;color:#69736f">Vous recevez cet e-mail parce que vous avez créé une alerte sur le site Foch Immobilier. <a href="${escapeHtml(unsubscribeUrl.toString())}">Arrêter cette alerte</a>.</p>
     </div>`;
+  const text = [
+    "Nouvelle annonce correspondant à votre recherche",
+    "",
+    property.title,
+    textDetails || null,
+    formattedPrice,
+    "",
+    `Voir le bien : ${propertyUrl}`,
+    `Arrêter cette alerte : ${unsubscribeUrl.toString()}`,
+  ].filter(Boolean).join("\n");
 
-  await sendResendEmail({
+  await sendResendEmail(supabase, {
+    emailType: "property_alert_delivery",
     to: subscription.email,
     subject: `Nouvelle annonce : ${property.title.replace(/[\r\n]+/g, " ").slice(0, 180)}`,
     html,
+    text,
     idempotencyKey: `foch-alert-property-${delivery.delivery_id}`,
+    subscriptionId: delivery.subscription_id,
+    deliveryId: delivery.delivery_id,
+    metadata: { property_id: property.id },
   });
   return "sent";
 }
