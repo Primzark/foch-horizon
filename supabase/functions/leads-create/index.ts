@@ -131,14 +131,13 @@ async function sendResendNotification(payload: z.infer<typeof payloadSchema>): P
     throw new Error("RESEND_API_KEY is not configured.");
   }
 
-  const to = Deno.env.get("LEADS_NOTIFICATION_EMAIL") ?? "nicolaslivapro@gmail.com";
+  const to = Deno.env.get("LEADS_NOTIFICATION_EMAIL") ?? "vendre@fochimmobilier.com";
   const from = Deno.env.get("LEADS_FROM_EMAIL") ?? "Foch Immobilier <vendre@fochimmobilier.com>";
   const replyTo = payload.email;
   const requestTitle = getRequestTitle(payload.source);
   const sourceLabel = getSourceLabel(payload.source);
   const fullName = `${payload.firstName} ${payload.lastName}`.replace(/[\r\n]+/g, " ").trim();
-  const isTest = /\btest\b/i.test(fullName);
-  const subject = `${isTest ? "[TEST] " : ""}${requestTitle} — ${fullName}`.slice(0, 180);
+  const subject = `${requestTitle} — ${fullName}`.slice(0, 180);
   const dateLabel = new Intl.DateTimeFormat("fr-FR", {
     dateStyle: "long",
     timeStyle: "short",
@@ -223,7 +222,6 @@ async function sendResendNotification(payload: z.infer<typeof payloadSchema>): P
             <p style="margin:0 0 9px;color:#7a6849;font-size:12px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase">${escapeHtml(sourceLabel)}</p>
             <h1 style="margin:0;color:#1c2925;font-size:25px;line-height:1.25;font-weight:700">${safeRequestTitle}</h1>
             <p style="margin:9px 0 22px;color:#707976;font-size:14px;line-height:1.6">${safeFullName} vous a écrit depuis le site.</p>
-            ${isTest ? `<p style="margin:0 0 18px;padding:10px 12px;border-radius:6px;background:#fff4dc;color:#76520a;font-size:12px;font-weight:700">E-mail de test — ne pas traiter comme une demande client.</p>` : ""}
             <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 25px">
               <tr><td bgcolor="#183b35" style="border-radius:6px">
                 <a href="${escapeHtml(replyUrl)}" style="display:inline-block;padding:12px 18px;color:#fff;font-size:14px;font-weight:700;text-decoration:none">Répondre à ${escapeHtml(payload.firstName)}</a>
