@@ -56,6 +56,7 @@ Public NotInheritable Class LegacyCsvFeedBuilder
     Private Const DpeLabelIndex As Integer = 176
     Private Const GesValueIndex As Integer = 177
     Private Const GesLabelIndex As Integer = 178
+    Private Const RequiredFieldCount As Integer = GesLabelIndex + 1
 
     Private Sub New()
     End Sub
@@ -70,9 +71,21 @@ Public NotInheritable Class LegacyCsvFeedBuilder
         Dim headerRow As Boolean = IsHeaderRow(rows(0))
         Dim statusIndex As Integer = If(headerRow, FindColumn(rows(0), {"statut", "status"}), -1)
         If headerRow Then rows.RemoveAt(0)
+        If rows.Count = 0 Then Throw New InvalidDataException("Annonces.csv contains a header but no property records.")
+
+        Dim expectedFieldCount As Integer = rows(0).Length
+        If expectedFieldCount < RequiredFieldCount Then
+            Throw New InvalidDataException($"CSV record 1 has {expectedFieldCount} fields; at least {RequiredFieldCount} are required by the property export format.")
+        End If
+        For rowIndex As Integer = 1 To rows.Count - 1
+            If rows(rowIndex).Length <> expectedFieldCount Then
+                Throw New InvalidDataException($"CSV record {rowIndex + 1} has {rows(rowIndex).Length} fields; expected {expectedFieldCount}. The CSV may be truncated or malformed.")
+            End If
+        Next
 
         Dim warnings As New List(Of String)()
-        Dim propertyIds As Integer() = NormalizePropertyReferences(rows, warnings)
+        Dim ignoredProperties As New List(Of IgnoredFeedProperty)()
+        Dim propertyIds As Integer() = NormalizePropertyReferences(rows, warnings, ignoredProperties)
         Dim uniqueRows As New List(Of String())()
         Dim uniquePropertyIds As New List(Of Integer)()
         For rowIndex As Integer = 0 To rows.Count - 1
@@ -212,11 +225,16 @@ Public NotInheritable Class LegacyCsvFeedBuilder
         Return New FeedBuildResult With {
             .Feed = feed,
             .Delimiter = delimiter,
-            .Warnings = warnings
+            .Warnings = warnings,
+            .IgnoredProperties = ignoredProperties
         }
     End Function
 
-    Private Shared Function NormalizePropertyReferences(rows As List(Of String()), warnings As List(Of String)) As Integer()
+    Private Shared Function NormalizePropertyReferences(
+        rows As List(Of String()),
+        warnings As List(Of String),
+        ignoredProperties As List(Of IgnoredFeedProperty)
+    ) As Integer()
         Dim normalizedIds As Integer() = New Integer(rows.Count - 1) {}
         Dim firstRowByReference As New Dictionary(Of Integer, Integer)()
 
@@ -234,7 +252,16 @@ Public NotInheritable Class LegacyCsvFeedBuilder
 
             Dim firstRow As Integer
             If firstRowByReference.TryGetValue(id, firstRow) Then
-                warnings.Add($"CSV record {rowIndex + 1}: duplicate property reference {id}; kept the first occurrence at record {firstRow + 1} and skipped this row.")
+                Dim title As String = Cell(rows(rowIndex), TitleIndex)
+                Dim reason As String = $"Duplicate property reference {id}; kept CSV record {firstRow + 1}."
+                warnings.Add($"CSV record {rowIndex + 1}: {reason} Skipped '{title}'.")
+                ignoredProperties.Add(New IgnoredFeedProperty With {
+                    .ReferenceId = id,
+                    .SkippedRow = rowIndex + 1,
+                    .KeptRow = firstRow + 1,
+                    .Title = title,
+                    .Reason = reason
+                })
                 Continue For
             End If
 
@@ -633,6 +660,15 @@ Public Class FeedBuildResult
     Public Property Feed As PropertyImportFeed
     Public Property Delimiter As String
     Public Property Warnings As List(Of String)
+    Public Property IgnoredProperties As List(Of IgnoredFeedProperty)
+End Class
+
+Public Class IgnoredFeedProperty
+    Public Property ReferenceId As Integer
+    Public Property SkippedRow As Integer
+    Public Property KeptRow As Integer
+    Public Property Title As String
+    Public Property Reason As String
 End Class
 
 Public Class PropertyImportFeed

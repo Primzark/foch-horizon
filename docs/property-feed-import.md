@@ -12,13 +12,19 @@ This writes `supabase/fixtures/property-feed.json` with properties, cities, agen
 
 ## POST path
 
-An import upserts only the property references present in the feed. Existing properties with the same reference are updated, new references are inserted, and properties missing from the feed remain in the database. A feed status such as `sold` or `off_market` never deletes a listing or changes its status. The manually managed `status`, `source_status`, `admin_status_override`, `is_online`, and `is_featured` fields are preserved on existing listings; new listings default to active and online. Existing listings also keep their current negotiator assignment, while a new listing can use the negotiator supplied in the feed. Existing negotiator rows are never updated or deleted; an import may add a negotiator only when its stable ID is not already present. Images and features are replaced only for property references included in that import.
+The .NET ZIP uploader completes ZIP extraction, CSV parsing, and feed validation before it sends any request to Supabase. An unreadable ZIP/CSV or invalid feed therefore cannot trigger inventory reconciliation. Empty feeds are rejected.
 
-The intended path is:
+The import upserts property references present in the feed. Existing references are updated and new references are inserted. After all feed rows and their images/features have been applied, every database property absent from the feed is set offline unless either its current status or admin status override is `sold`. Sold properties are left untouched by this reconciliation. No property rows are deleted. This upsert and reconciliation run in one database transaction, so a database error rolls back the complete sync.
 
-`provider export → JSON feed → PowerShell POST → property-feed-import Edge Function → Supabase → website API`
+For properties included in the feed, existing `status`, `source_status`, `admin_status_override`, `is_online`, `is_featured`, and negotiator assignment remain under manual control. New properties use database defaults (active and online) and may use the negotiator supplied in the feed. Existing negotiator rows are never updated or deleted; an import may add a negotiator only when its stable ID is not already present. Images and features are replaced only for property references included in the feed.
 
-The Edge Function requires a server-side `PROPERTY_FEED_IMPORT_TOKEN`, validates the feed, and calls the `import_property_feed(jsonb)` database function. Property `id` is the external reference and the conflict key, so later imports overwrite that property instead of creating a second row. The SQL function applies property, image, and feature updates in one transaction. Repeating the same feed is safe, and an empty or partial feed never removes other listings. The one-time property reset is performed separately from this import function.
+The RPC returns the references and titles added, updated, taken offline, or ignored. Ignored entries include sold properties absent from the feed and already-offline properties absent from the feed.
+
+The supported Fochimmo inventory path is:
+
+`Annonces.zip → .NET Fochimmo.exe → property-feed-import Edge Function → Supabase transaction → website API`
+
+The executable is the only supported entry point for Fochimmo ZIP inventory synchronization. It extracts and validates the ZIP/CSV, creates the JSON feed, and sends it to the Supabase Edge Function. The Edge Function requires a server-side `PROPERTY_FEED_IMPORT_TOKEN`, validates the feed, and calls the `import_property_feed(jsonb)` database function. Property `id` is the external reference and conflict key, so later imports update that row instead of creating a second row. The function serializes concurrent imports and reconciles missing references in the same transaction. Repeating the same feed is safe; omitted non-sold listings remain in the database but are offline.
 
 Apply the migration to the local Supabase stack and serve the function locally before importing test data:
 
@@ -27,7 +33,7 @@ supabase migration up --local
 supabase functions serve property-feed-import --env-file /path/to/local-property-feed.env --no-verify-jwt
 ```
 
-The local function env file should contain a test-only `PROPERTY_FEED_IMPORT_TOKEN`; `supabase functions serve` supplies the local `SUPABASE_URL` and service role credentials. Do not place the import token in a `VITE_` variable or commit it. The uploader is `scripts/import-property-feed.ps1`; it requires an explicit endpoint and token, and supports validation-only requests with `-DryRun`.
+The local function env file should contain a test-only `PROPERTY_FEED_IMPORT_TOKEN`; `supabase functions serve` supplies the local `SUPABASE_URL` and service role credentials. Do not place the import token in a `VITE_` variable or commit it. `scripts/import-property-feed.ps1` is retained only as a local development helper for validation/import checks against the local Supabase stack; it is not the Fochimmo inventory sync entry point.
 
 Example validation-only request:
 
@@ -52,6 +58,6 @@ For deployment, first link the CLI to the intended development project and verif
 
 ## Upsert behavior check
 
-For a development-only update check, change a property's title or price and its images/features, import it twice, and verify that its row with the same `id` is updated without increasing the listing count. Also verify that a property omitted from the feed remains present, its manually managed status/display fields are unchanged, and existing negotiator details are unchanged. Do not use live listings for update checks.
+For a development-only update check, change a property's title or price and its images/features, import it twice, and verify that its row with the same `id` is updated without creating a duplicate. Also verify that an omitted non-sold listing becomes offline but remains in the table, an omitted sold listing retains its online setting and status, existing feed-row status/display fields are unchanged, and existing negotiator details are unchanged. Do not use live listings for update checks.
 
 The admin console is the authority for sold status and online visibility. Imports do not change those settings.

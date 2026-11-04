@@ -35,8 +35,8 @@ export function validatePropertyFeed(value: unknown): ProviderPropertyFeed {
     throw new Error("Unsupported property feed format. Expected schemaVersion 1.");
   }
 
-  if (!Array.isArray(value.properties) || value.properties.length > 250) {
-    throw new Error("The feed must contain at most 250 properties.");
+  if (!Array.isArray(value.properties) || value.properties.length === 0 || value.properties.length > 250) {
+    throw new Error("The feed must contain between 1 and 250 properties.");
   }
   if (!Array.isArray(value.cities) || value.cities.length > 100) {
     throw new Error("The feed must contain at most 100 cities.");

@@ -84,6 +84,11 @@ Module Program
                 logEntries.Add(New LogInfo(True, "Warning", warning))
                 Console.WriteLine($"Warning: {warning}")
             Next
+            For Each ignored As IgnoredFeedProperty In buildResult.IgnoredProperties
+                Dim ignoredMessage As String = $"id={ignored.ReferenceId}; row={ignored.SkippedRow}; keptRow={ignored.KeptRow}; title={ignored.Title}; reason={ignored.Reason}"
+                logEntries.Add(New LogInfo(True, "Ignored", ignoredMessage))
+                Console.WriteLine($"Ignored property {ignored.ReferenceId} on CSV row {ignored.SkippedRow}; kept row {ignored.KeptRow}.")
+            Next
 
             Dim feedJson As String = JsonSerializer.Serialize(buildResult.Feed, JsonOptions)
             Dim feedSize As Long = Encoding.UTF8.GetByteCount(feedJson)
@@ -131,6 +136,7 @@ Module Program
 
                     logEntries.Add(New LogInfo(True, "UploadFile", $"Supabase accepted {buildResult.Feed.Properties.Count} listings."))
                     Console.WriteLine("Feed imported successfully.")
+                    LogImportResults(responseBody, logEntries)
                     If Not String.IsNullOrWhiteSpace(responseBody) Then Console.WriteLine(responseBody)
                 End Using
             End Using
@@ -163,6 +169,70 @@ Module Program
         End Try
 
         Return exitCode
+    End Function
+
+    Private Sub LogImportResults(responseBody As String, logEntries As List(Of LogInfo))
+        If String.IsNullOrWhiteSpace(responseBody) Then
+            logEntries.Add(New LogInfo(True, "SyncSummary", "Supabase accepted the feed but returned no reconciliation details."))
+            Return
+        End If
+
+        Try
+            Using responseDocument As JsonDocument = JsonDocument.Parse(responseBody)
+                Dim imported As JsonElement
+                If responseDocument.RootElement.ValueKind <> JsonValueKind.Object _
+                    OrElse Not responseDocument.RootElement.TryGetProperty("imported", imported) _
+                    OrElse imported.ValueKind <> JsonValueKind.Object Then
+                    logEntries.Add(New LogInfo(True, "SyncSummary", "Supabase accepted the feed but returned no reconciliation details."))
+                    Return
+                End If
+
+                LogImportItems(imported, "added", "Added", logEntries)
+                LogImportItems(imported, "updated", "Updated", logEntries)
+                LogImportItems(imported, "offline", "Offlined", logEntries)
+                LogImportItems(imported, "ignored", "Ignored", logEntries)
+
+                Dim summary As String = String.Join(
+                    "; ",
+                    New String() {
+                        "properties=" & ReadJsonText(imported, "properties"),
+                        "added=" & ReadJsonText(imported, "addedCount"),
+                        "updated=" & ReadJsonText(imported, "updatedCount"),
+                        "offlined=" & ReadJsonText(imported, "offlineCount"),
+                        "ignored=" & ReadJsonText(imported, "ignoredCount"),
+                        "images=" & ReadJsonText(imported, "images"),
+                        "features=" & ReadJsonText(imported, "features")
+                    })
+                logEntries.Add(New LogInfo(True, "SyncSummary", summary))
+            End Using
+        Catch ex As JsonException
+            logEntries.Add(New LogInfo(False, "ReadSyncResult", $"Import succeeded but its reconciliation summary could not be parsed: {ex.Message}"))
+        End Try
+    End Sub
+
+    Private Sub LogImportItems(imported As JsonElement, resultName As String, actionName As String, logEntries As List(Of LogInfo))
+        Dim resultItems As JsonElement
+        If Not imported.TryGetProperty(resultName, resultItems) OrElse resultItems.ValueKind <> JsonValueKind.Array Then Return
+
+        For Each item As JsonElement In resultItems.EnumerateArray()
+            Dim details As String = "id=" & ReadJsonText(item, "id")
+            Dim title As String = ReadJsonText(item, "title")
+            Dim status As String = ReadJsonText(item, "status")
+            Dim reason As String = ReadJsonText(item, "reason")
+            If title.Length > 0 Then details &= "; title=" & title
+            If status.Length > 0 Then details &= "; status=" & status
+            If reason.Length > 0 Then details &= "; reason=" & reason
+            logEntries.Add(New LogInfo(True, actionName, details))
+        Next
+    End Sub
+
+    Private Function ReadJsonText(value As JsonElement, propertyName As String) As String
+        If value.ValueKind <> JsonValueKind.Object Then Return String.Empty
+
+        Dim propertyValue As JsonElement
+        If Not value.TryGetProperty(propertyName, propertyValue) Then Return String.Empty
+        If propertyValue.ValueKind = JsonValueKind.Null OrElse propertyValue.ValueKind = JsonValueKind.Undefined Then Return String.Empty
+        Return propertyValue.ToString()
     End Function
 
     Private Function ParseOptions(args As String()) As RunOptions
@@ -317,7 +387,7 @@ Module Program
         Public Sub New(ok As Boolean, funcName As String, errMsg As String)
             Me.Ok = ok
             Me.FuncName = funcName
-            Me.ErrMsg = errMsg.Replace(ControlChars.Cr, " ").Replace(ControlChars.Lf, " ")
+            Me.ErrMsg = errMsg.Replace(ControlChars.Cr, " ").Replace(ControlChars.Lf, " ").Replace(";", ",")
         End Sub
     End Structure
 End Module
