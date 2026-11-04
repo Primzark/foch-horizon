@@ -6,6 +6,7 @@ import { agents } from "@/features/listings/data/agents";
 import { AgentInitialsAvatar } from "@/features/listings/components/AgentInitialsAvatar";
 import { useSeo } from "@/lib/seo/useSeo";
 import { AgencyPageHeader } from "@/features/content/components/AgencyPageHeader";
+import { trackEvent } from "@/lib/analytics/events";
 
 const feesPdfUrl = "/static/pdf/honoraires-fochimmobilier-le-havre-2026.pdf";
 
@@ -105,15 +106,27 @@ export default function AboutPageV2() {
                 <p className="text-sm text-muted-foreground">{agent.role}</p>
                 <p className="mt-3 text-sm text-muted-foreground">{agent.bio}</p>
                 <div className="mt-4 text-sm">
-                  <a href={`tel:${agent.phone.replace(/\s+/g, "")}`} className="block hover:underline">
+                  <a
+                    href={`tel:${agent.phone.replace(/\s+/g, "")}`}
+                    className="block hover:underline"
+                    onClick={() => trackEvent("phone_clicked", { source: "about_page", method: "phone" })}
+                  >
                     {agent.phone}
                   </a>
                   {agent.mobile && (
-                    <a href={`tel:${agent.mobile.replace(/\s+/g, "")}`} className="block hover:underline">
+                    <a
+                      href={`tel:${agent.mobile.replace(/\s+/g, "")}`}
+                      className="block hover:underline"
+                      onClick={() => trackEvent("phone_clicked", { source: "about_page", method: "phone" })}
+                    >
                       {agent.mobile}
                     </a>
                   )}
-                  <a href={`mailto:${agent.email}`} className="block hover:underline">
+                  <a
+                    href={`mailto:${agent.email}`}
+                    className="block hover:underline"
+                    onClick={() => trackEvent("email_clicked", { source: "about_page", method: "email" })}
+                  >
                     {agent.email}
                   </a>
                 </div>

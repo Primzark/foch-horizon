@@ -3,6 +3,7 @@ import { agents } from "@/features/listings/data/agents";
 import { getMotionDirectorProfile } from "@/lib/visuals/motionDirector";
 import { ScrollReveal } from "@/components/visuals/ScrollReveal";
 import type { PlaceImageMood } from "@/lib/visuals/placeImageMotion";
+import { trackEvent } from "@/lib/analytics/events";
 
 export function AgencyTeamSection({ mood = "urban" }: { mood?: PlaceImageMood }) {
   const motionDirector = getMotionDirectorProfile(mood);
@@ -20,7 +21,11 @@ export function AgencyTeamSection({ mood = "urban" }: { mood?: PlaceImageMood })
               <AgentInitialsAvatar name={agent.fullName} className="h-16 w-16 text-sm transition-transform duration-300 group-hover:scale-105" />
               <h3 className="mt-3 font-display text-xl">{agent.fullName}</h3>
               <p className="text-sm text-muted-foreground">{agent.role}</p>
-              <a className="mt-2 block text-sm hover:underline" href={`tel:${agent.phone.replace(/\s+/g, "")}`}>
+              <a
+                className="mt-2 block text-sm hover:underline"
+                href={`tel:${agent.phone.replace(/\s+/g, "")}`}
+                onClick={() => trackEvent("phone_clicked", { source: "agency_team", method: "phone" })}
+              >
                 {agent.phone}
               </a>
             </article>

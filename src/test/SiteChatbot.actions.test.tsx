@@ -321,5 +321,88 @@ describe("SiteChatbot tool action cards", () => {
       consent: true,
       message: expect.stringContaining("Appartement T3 avec balcon au Havre."),
     }));
+    expect(trackEventMock).toHaveBeenCalledWith("chatbot_message_sent", { source: "site_chatbot" });
+    expect(trackEventMock).toHaveBeenCalledWith("chatbot_tool_handoff_prefill_opened", {
+      source: "site_chatbot",
+      form_type: "chatbot_contact",
+      action: "request_contact",
+    });
+    expect(trackEventMock).toHaveBeenCalledWith("form_start", {
+      source: "site_chatbot",
+      form_type: "chatbot_contact",
+      action: "start",
+    });
+    expect(trackEventMock).toHaveBeenCalledWith("form_error", {
+      source: "site_chatbot",
+      form_type: "chatbot_contact",
+      action: "validation",
+    });
+    expect(trackEventMock).toHaveBeenCalledWith("lead_submitted", {
+      source: "site_chatbot",
+      form_type: "chatbot_contact",
+      action: "success",
+    });
+  });
+
+  it("tracks a recommended property click without forwarding the path or message text", async () => {
+    askAgencyChatbotMock.mockResolvedValueOnce({
+      source: "edge",
+      edgeProvider: "gemini",
+      routeCategory: "edge_tools",
+      requestId: "req-open-property",
+      answer: "Voici un bien qui correspond à votre recherche.",
+      suggestedPrompts: [],
+      actions: [{
+        id: "open-property-1",
+        kind: "open_page",
+        title: "Appartement recommandé",
+        data: { path: "/biens/5213-appartement-au-havre", label: "Ouvrir le bien" },
+      }],
+    });
+
+    const view = await renderChatbot();
+    const ui = within(view.container);
+    fireEvent.click(ui.getByRole("button", { name: /assistant/i }));
+    const question = ui.getByPlaceholderText(/posez une question/i);
+    fireEvent.change(question, { target: { value: "Je cherche un appartement." } });
+    fireEvent.submit(question.closest("form")!);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Ouvrir le bien" }));
+
+    expect(trackEventMock).toHaveBeenCalledWith("chatbot_tool_action_clicked", {
+      property_id: 5213,
+      source: "site_chatbot",
+      action: "open_property",
+    });
+  });
+
+  it("tracks a recommended property card without forwarding its path or message text", async () => {
+    askAgencyChatbotMock.mockResolvedValueOnce({
+      source: "edge",
+      answer: "Voici un bien qui correspond à votre recherche.",
+      suggestedPrompts: [],
+      propertySuggestions: [{
+        id: 5213,
+        title: "Appartement recommandé",
+        city: "Le Havre",
+        price: "245 000 €",
+        path: "/biens/5213-appartement-au-havre",
+      }],
+    });
+
+    const view = await renderChatbot();
+    const ui = within(view.container);
+    fireEvent.click(ui.getByRole("button", { name: /assistant/i }));
+    const question = ui.getByPlaceholderText(/posez une question/i);
+    fireEvent.change(question, { target: { value: "Je cherche un appartement." } });
+    fireEvent.submit(question.closest("form")!);
+
+    fireEvent.click(await screen.findByRole("link", { name: /Appartement recommandé/ }));
+
+    expect(trackEventMock).toHaveBeenCalledWith("chatbot_tool_action_clicked", {
+      property_id: 5213,
+      source: "site_chatbot",
+      action: "open_property",
+    });
   });
 });

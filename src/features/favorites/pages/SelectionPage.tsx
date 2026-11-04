@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Heart, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -7,10 +7,18 @@ import { ListingCard } from "@/features/listings/components/ListingCard";
 import { propertyById } from "@/features/listings/data/properties";
 import { toSearchItem } from "@/features/listings/utils/mappers";
 import { useSeo } from "@/lib/seo/useSeo";
+import { trackEvent } from "@/lib/analytics/events";
 
 export default function SelectionPage() {
   const ids = useFavoritesStore((state) => state.ids);
   const clear = useFavoritesStore((state) => state.clear);
+  const trackedOpenRef = useRef(false);
+
+  useEffect(() => {
+    if (trackedOpenRef.current) return;
+    trackedOpenRef.current = true;
+    trackEvent("favorites_opened", { source: "favorites_page", action: "open_saved_list" });
+  }, []);
 
   const savedListings = useMemo(
     () =>

@@ -1016,6 +1016,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
     criteria: "",
   });
   const leadFormStartedAtRef = useRef(Date.now());
+  const leadFormStartTrackedRef = useRef(false);
   const leadWebsiteRef = useRef<HTMLInputElement | null>(null);
   const leadErrorSummaryRef = useRef<HTMLElement | null>(null);
   const leadServerErrorRef = useRef<HTMLParagraphElement | null>(null);
@@ -1037,6 +1038,7 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
   useEffect(() => {
     if (showLeadCapture) {
       leadFormStartedAtRef.current = Date.now();
+      leadFormStartTrackedRef.current = false;
       if (leadWebsiteRef.current) leadWebsiteRef.current.value = "";
       setLeadConsent(false);
       setLeadValidationAttempted(false);
@@ -1601,15 +1603,8 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
     appendMessage({ id: createMessageId(), role: "user", content: params.syntheticPrompt?.trim() || text });
     trackEvent("chatbot_message_sent", {
       source: "site_chatbot",
-      requestChars: text.length,
-      hasHistory: chatHistory.length > 1,
-      routeHint: params.actionRequest ? "edge_tools" : undefined,
-      actionType: params.actionRequest?.type,
     });
     if (params.actionRequest) {
-      trackEvent("chatbot_tool_action_clicked", {
-        actionType: params.actionRequest.type,
-      });
       emitChatbotTelemetry("tool_action_clicked", {
         source: "edge",
         routeCategory: "edge_tools",
@@ -1918,13 +1913,29 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
     } satisfies NonNullable<Parameters<typeof submitLead>[0]["chatbotContext"]>;
   }, [conversationState, messages, showLeadCapture]);
 
+  const trackChatbotLeadFormStart = () => {
+    if (leadFormStartTrackedRef.current) return;
+    leadFormStartTrackedRef.current = true;
+    trackEvent("form_start", {
+      source: "site_chatbot",
+      form_type: "chatbot_contact",
+      action: "start",
+    });
+  };
+
   const handleLeadSubmit = async (event: FormEvent) => {
     event.preventDefault();
 
     if (leadSubmissionLockRef.current) return;
 
+    trackChatbotLeadFormStart();
     setLeadValidationAttempted(true);
     if (Object.keys(assistantLeadErrors).length > 0) {
+      trackEvent("form_error", {
+        source: "site_chatbot",
+        form_type: "chatbot_contact",
+        action: "validation",
+      });
       window.requestAnimationFrame(() => leadErrorSummaryRef.current?.focus());
       return;
     }
@@ -1946,6 +1957,12 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
         chatbotContext: buildLeadChatbotContext(),
       });
 
+      trackEvent("lead_submitted", {
+        source: "site_chatbot",
+        form_type: "chatbot_contact",
+        action: "success",
+      });
+
       appendAssistantMessage({
         id: createMessageId(),
         role: "assistant",
@@ -1960,6 +1977,11 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
       setShowLeadCapture(false);
       toast.success("Demande envoyée à l'agence.");
     } catch {
+      trackEvent("form_error", {
+        source: "site_chatbot",
+        form_type: "chatbot_contact",
+        action: "submission",
+      });
       setLeadServerError("Votre demande n’a pas pu être envoyée. Vérifiez les champs et réessayez ; vos informations sont conservées.");
       window.requestAnimationFrame(() => leadServerErrorRef.current?.focus());
     } finally {
@@ -2054,6 +2076,14 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
     (event: MouseEvent<HTMLAnchorElement>, path: string) => {
       event.preventDefault();
       event.stopPropagation();
+      const propertyId = path.match(/^\/biens\/(\d+)(?:-|\/|$)/)?.[1];
+      if (propertyId) {
+        trackEvent("chatbot_tool_action_clicked", {
+          property_id: Number(propertyId),
+          source: "site_chatbot",
+          action: "open_property",
+        });
+      }
       navigateFromChat(path);
     },
     [navigateFromChat],
@@ -2192,7 +2222,11 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
       }));
       setShowLeadCapture(true);
       setOpen(true);
-      trackEvent("chatbot_tool_handoff_prefill_opened", { source: "site_chatbot" });
+      trackEvent("chatbot_tool_handoff_prefill_opened", {
+        source: "site_chatbot",
+        form_type: "chatbot_contact",
+        action: "request_contact",
+      });
       emitChatbotTelemetry("tool_handoff_prefill_opened", {
         source: "edge",
         routeCategory: "edge_tools",
@@ -2211,11 +2245,14 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
         planner?: ChatMessage["planner"];
       },
     ) => {
-      trackEvent("chatbot_tool_action_clicked", {
-        actionKind: "open_page",
-        path,
-        routeCategory: meta?.routeCategory,
-      });
+      const propertyId = path.match(/^\/biens\/(\d+)(?:-|\/|$)/)?.[1];
+      if (propertyId) {
+        trackEvent("chatbot_tool_action_clicked", {
+          property_id: Number(propertyId),
+          source: "site_chatbot",
+          action: "open_property",
+        });
+      }
       emitChatbotTelemetry("tool_action_clicked", {
         requestId: meta?.requestId,
         source: "edge",
@@ -3294,7 +3331,13 @@ export function SiteChatbot({ initiallyOpen = false, showLauncher = true }: { in
                   Tous les champs sont obligatoires. Votre demande sera transmise à l'agence.
                 </p>
 
-                <form onSubmit={handleLeadSubmit} noValidate aria-busy={leadLoading} className="mt-3 space-y-2.5">
+                <form
+                  onSubmit={handleLeadSubmit}
+                  onFocusCapture={trackChatbotLeadFormStart}
+                  noValidate
+                  aria-busy={leadLoading}
+                  className="mt-3 space-y-2.5"
+                >
                   <FormErrorSummary
                     id="assistant-lead-error-summary"
                     ref={leadErrorSummaryRef}

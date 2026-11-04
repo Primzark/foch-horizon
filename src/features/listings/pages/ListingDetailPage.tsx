@@ -411,12 +411,12 @@ export default function ListingDetailPage({
     if (trackedPropertyViewId.current === property.id) return;
 
     trackedPropertyViewId.current = property.id;
-    trackEvent("property_view", { property_id: property.id });
+    trackEvent("property_view", { property_id: property.id, source: "property_detail" });
   }, [cookieConsent, property, propertyQuery.isPlaceholderData]);
 
-  const trackComparisonContactClick = (method: "sticky_contact" | "phone" | "email") => {
+  const trackComparisonContactClick = (method: "form" | "phone" | "email") => {
     if (!comparisonOrigin || !property) return;
-    trackEvent("comparison_contact_click", { property_id: property.id, method });
+    trackEvent("comparison_contact_click", { property_id: property.id, source: "comparison_page", method });
   };
   const isFavorite = property ? favoriteIds.includes(property.id) : false;
   const secondarySimilarItems = similarItems
@@ -546,8 +546,13 @@ export default function ListingDetailPage({
           className="h-9 shrink-0 rounded-full px-3 text-xs"
           onClick={() => {
             contactRef.current?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "center" });
-            trackEvent("listing_viewed", { propertyId: property.id, action: "sticky_contact" });
-            trackComparisonContactClick("sticky_contact");
+            trackEvent("property_contact_clicked", {
+              property_id: property.id,
+              source: "property_detail",
+              action: "open_form",
+              method: "form",
+            });
+            trackComparisonContactClick("form");
           }}
         >
           Contacter
@@ -571,8 +576,13 @@ export default function ListingDetailPage({
             className="h-12 rounded-xl bg-[#c20d1b] text-sm font-semibold text-white hover:bg-[#a90b17]"
             onClick={() => {
               contactRef.current?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "center" });
-              trackEvent("listing_viewed", { propertyId: property.id, action: "sticky_message" });
-              trackComparisonContactClick("sticky_contact");
+              trackEvent("property_contact_clicked", {
+                property_id: property.id,
+                source: "property_detail",
+                action: "open_message_form",
+                method: "form",
+              });
+              trackComparisonContactClick("form");
             }}
           >
             <Mail aria-hidden="true" className="h-4 w-4" /> Message
@@ -582,7 +592,7 @@ export default function ListingDetailPage({
           <a
             href={`tel:${contactPhone.replace(/\s+/g, "")}`}
             onClick={() => {
-              trackEvent("phone_clicked", { source: "property_modal_sticky", propertyId: property.id });
+              trackEvent("phone_clicked", { source: "property_sticky", property_id: property.id, method: "phone" });
               trackComparisonContactClick("phone");
             }}
           >
@@ -749,7 +759,7 @@ export default function ListingDetailPage({
           aria-pressed={isFavorite}
           title={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
           onClick={() => {
-            toggleFavorite(property.id, property.propertyType);
+            toggleFavorite(property.id, property.propertyType, "property_detail");
           }}
         >
           <Heart aria-hidden="true" className={`h-5 w-5 ${isFavorite ? "fill-current" : ""}`} />
@@ -853,7 +863,7 @@ export default function ListingDetailPage({
                         : undefined
                     }
                     onClick={() => {
-                      toggleFavorite(property.id, property.propertyType);
+                      toggleFavorite(property.id, property.propertyType, "property_detail");
                     }}
                     aria-label={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
                     aria-pressed={isFavorite}
@@ -867,7 +877,12 @@ export default function ListingDetailPage({
                     size="sm"
                     onClick={() => {
                       navigator.clipboard.writeText(String(property.id));
-                      trackEvent("listing_viewed", { propertyId: property.id, action: "copy_reference" });
+                      trackEvent("property_reference_copied", {
+                        property_id: property.id,
+                        source: "property_detail",
+                        action: "copy_reference",
+                        method: "clipboard",
+                      });
                     }}
                   >
                     <Copy className="mr-1 h-3.5 w-3.5" /> Réf
@@ -966,7 +981,7 @@ export default function ListingDetailPage({
               href={`tel:${contactPhone.replace(/\s+/g, "")}`}
               className="mt-3 inline-flex items-center gap-2 rounded-full border border-border px-3 py-1 text-sm"
               onClick={() => {
-                trackEvent("phone_clicked", { source: "property_sidebar", propertyId: property.id });
+                trackEvent("phone_clicked", { source: "property_sidebar", property_id: property.id, method: "phone" });
                 trackComparisonContactClick("phone");
               }}
             >
@@ -976,7 +991,14 @@ export default function ListingDetailPage({
               <a
                 href={`mailto:${agent.email}`}
                 className="mt-2 block text-sm text-muted-foreground hover:underline"
-                onClick={() => trackComparisonContactClick("email")}
+                onClick={() => {
+                  trackEvent("email_clicked", {
+                    source: "property_sidebar",
+                    property_id: property.id,
+                    method: "email",
+                  });
+                  trackComparisonContactClick("email");
+                }}
               >
                 <span className="break-words">{agent.email}</span>
               </a>
@@ -1059,7 +1081,7 @@ export default function ListingDetailPage({
                     className={`absolute right-3 top-3 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full border border-background/70 bg-background/90 text-foreground shadow-sm backdrop-blur-sm transition-colors hover:bg-background ${favorite ? "text-brand-strong" : ""}`}
                     onClick={(event) => {
                       event.stopPropagation();
-                      toggleFavorite(item.id, item.type);
+                      toggleFavorite(item.id, item.type, "property_detail");
                     }}
                     aria-label={favorite ? "Retirer des favoris" : "Ajouter aux favoris"}
                     aria-pressed={favorite}

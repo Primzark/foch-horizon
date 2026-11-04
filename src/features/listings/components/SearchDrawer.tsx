@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -63,6 +63,14 @@ export function SearchDrawer() {
   const [draft, setDraft] = useState<PropertySearchParams>(defaultFilters);
   const searchDrawerOpen = useUiStore((state) => state.searchDrawerOpen);
   const setSearchDrawerOpen = useUiStore((state) => state.setSearchDrawerOpen);
+  const wasSearchDrawerOpenRef = useRef(false);
+
+  useEffect(() => {
+    if (searchDrawerOpen && !wasSearchDrawerOpenRef.current) {
+      trackEvent("search_opened", { source: "search_drawer" });
+    }
+    wasSearchDrawerOpenRef.current = searchDrawerOpen;
+  }, [searchDrawerOpen]);
 
   useEffect(() => {
     const parsed = resolvePropertySearchFilters(location.search);
@@ -72,6 +80,17 @@ export function SearchDrawer() {
   const pushFilters = useCallback(async (next: PropertySearchParams) => {
     const normalized = normalizeFilters(next);
     persistAppliedPropertySearchFilters(normalized);
+    const hasActiveFilters = Object.entries(normalized).some(([key, value]) =>
+      value != null && !["q", "transaction", "page", "pageSize", "sort"].includes(key),
+    );
+
+    trackEvent("search_submitted", {
+      source: "search_drawer",
+      action: hasActiveFilters ? "filters" : normalized.q ? "keyword" : "browse_all",
+    });
+    if (hasActiveFilters) {
+      trackEvent("filter_applied", { source: "search_drawer", action: "apply_filters" });
+    }
 
     const reference = parseReferenceFromQuery(normalized.q ?? "");
     if (reference) {
@@ -83,14 +102,12 @@ export function SearchDrawer() {
           state: createPropertyModalRouteState(location, toSearchItem(property)),
         });
         setSearchDrawerOpen(false);
-        trackEvent("filter_applied", { reference });
         return;
       }
     }
 
     const searchParams = buildSearchParams(normalized);
     navigate({ pathname: "/biens", search: searchParams.toString() }, { replace: false });
-    trackEvent("filter_applied", normalized as Record<string, unknown>);
   }, [location, navigate, setSearchDrawerOpen]);
 
   const selectedFeatures = useMemo(() => new Set(draft.features ?? []), [draft.features]);

@@ -13,37 +13,27 @@ export function CookieConsentManager() {
   const previousPageLocation = useRef<string | null>(null);
 
   useEffect(() => {
-    const pageLocation = window.location.href;
+    const pageLocation = `${window.location.origin}${location.pathname}${location.search}`;
     const priorConsent = previousConsent.current;
     const priorPageLocation = previousPageLocation.current;
     const gtmWasAlreadyLoaded = hasGoogleTagManagerScript();
     const consentChanged = priorConsent !== consent;
     const accepted = consent === "accepted";
 
-    if (consentChanged) {
+    if (consentChanged || (accepted && !gtmWasAlreadyLoaded)) {
       syncGoogleTagManagerConsent(accepted);
     }
 
     const routeChanged = priorPageLocation !== null && priorPageLocation !== pageLocation;
     const consentRestored = accepted && consentChanged && priorConsent === "rejected" && gtmWasAlreadyLoaded;
-    let pageViewTimer: number | undefined;
-
     const initialAcceptedPage = accepted && !gtmWasAlreadyLoaded;
     if (accepted && (routeChanged || consentRestored || initialAcceptedPage)) {
-      pageViewTimer = window.setTimeout(() => {
-        trackGoogleAnalyticsPageView(pageLocation, routeChanged ? priorPageLocation ?? undefined : undefined);
-      }, 0);
+      trackGoogleAnalyticsPageView(pageLocation, routeChanged ? priorPageLocation ?? undefined : undefined);
     }
 
     previousConsent.current = consent;
     previousPageLocation.current = pageLocation;
-
-    return () => {
-      if (pageViewTimer !== undefined) {
-        window.clearTimeout(pageViewTimer);
-      }
-    };
-  }, [consent, location.pathname, location.search, location.hash]);
+  }, [consent, location.pathname, location.search]);
 
   const visible = consent === "unset" || preferencesOpen;
   if (!visible) return null;

@@ -22,6 +22,7 @@ import { createPropertyModalRouteState } from "@/features/listings/navigation/pr
 import { persistAppliedPropertySearchFilters, resolvePropertySearchFilters } from "@/features/listings/utils/searchFilterPersistence";
 import { SpotlightSearchCriteria } from "@/features/listings/components/SpotlightSearchCriteria";
 import { SearchCountBadge } from "@/features/listings/components/SearchCountBadge";
+import { trackEvent } from "@/lib/analytics/events";
 import {
   fallbackSearchKeys,
   getSearchPopularityCandidate,
@@ -176,6 +177,23 @@ export function SpotlightSearchModal({ open, onOpenChange, triggerRef }: Spotlig
     const containsOnlyTextSearch = Object.entries(appliedFilters).every(([key, value]) =>
       value == null || ["q", "transaction", "page", "pageSize", "sort"].includes(key),
     );
+    const hasActiveFilters = Object.entries(appliedFilters).some(([key, value]) =>
+      value != null && !["q", "transaction", "page", "pageSize", "sort"].includes(key),
+    );
+
+    trackEvent("search_submitted", {
+      source: "spotlight_search",
+      action: hasActiveFilters
+        ? "filters"
+        : queryText
+          ? "keyword"
+          : resetFilters
+            ? "browse_all"
+            : "suggested_search",
+    });
+    if (hasActiveFilters) {
+      trackEvent("filter_applied", { source: "spotlight_search", action: "apply_filters" });
+    }
 
     if (queryText.length >= 2 && appliedFilters.q === queryText && containsOnlyTextSearch) {
       const parsedFilters = parseSearchParams(searchParams);

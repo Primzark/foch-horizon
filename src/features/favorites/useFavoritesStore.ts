@@ -7,7 +7,7 @@ import { persistPropertyLike } from "@/features/favorites/api/propertyLikes.serv
 interface FavoritesState {
   ids: number[];
   propertyTypes: Record<number, PropertyType>;
-  toggle: (id: number, propertyType?: PropertyType) => void;
+  toggle: (id: number, propertyType?: PropertyType, source?: "property_card" | "property_detail") => void;
   clear: () => void;
   isFavorite: (id: number) => boolean;
 }
@@ -37,11 +37,16 @@ function sanitizePropertyTypes(value: unknown): Record<number, PropertyType> {
   return sanitized;
 }
 
-function trackFavoriteChange(id: number, propertyType: PropertyType | undefined, liked: boolean): void {
+function trackFavoriteChange(
+  id: number,
+  propertyType: PropertyType | undefined,
+  liked: boolean,
+  source: "property_card" | "property_detail" | "favorites_page",
+): void {
   trackEvent(liked ? "property_liked" : "property_unliked", {
     property_id: id,
-    ...(propertyType ? { property_type: propertyType } : {}),
-    occurred_at: new Date().toISOString(),
+    source,
+    action: liked ? "save" : "remove",
   });
   void persistPropertyLike(id, liked).catch((error: unknown) => {
     if (import.meta.env.DEV) console.warn("[property-likes] Could not sync favorite state", error);
@@ -53,7 +58,7 @@ export const useFavoritesStore = create<FavoritesState>()(
     (set, get) => ({
       ids: [],
       propertyTypes: {},
-      toggle: (id, propertyType) => {
+      toggle: (id, propertyType, source = "property_card") => {
         const state = get();
         const ids = state.ids;
         const knownPropertyType = propertyType ?? state.propertyTypes[id];
@@ -62,12 +67,12 @@ export const useFavoritesStore = create<FavoritesState>()(
         if (liked && propertyType) nextTypes[id] = propertyType;
         if (!liked) delete nextTypes[id];
         set({ ids: liked ? [...ids, id] : ids.filter((item) => item !== id), propertyTypes: nextTypes });
-        trackFavoriteChange(id, knownPropertyType, liked);
+        trackFavoriteChange(id, knownPropertyType, liked, source);
       },
       clear: () => {
         const { ids, propertyTypes } = get();
         set({ ids: [], propertyTypes: {} });
-        ids.forEach((id) => trackFavoriteChange(id, propertyTypes[id], false));
+        ids.forEach((id) => trackFavoriteChange(id, propertyTypes[id], false, "favorites_page"));
       },
       isFavorite: (id) => get().ids.includes(id),
     }),

@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useState, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, House, Search, SlidersHorizontal } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -15,6 +15,7 @@ import type { TransactionType } from "@/types/domain";
 import { createPropertyModalRouteState } from "@/features/listings/navigation/propertyModalNavigation";
 import { persistAppliedPropertySearchFilters, readLastAppliedPropertySearchFilters } from "@/features/listings/utils/searchFilterPersistence";
 import { SearchThinkingState } from "@/features/content/components/SearchThinkingState";
+import { trackEvent } from "@/lib/analytics/events";
 
 const searchPrompts = ["Le Havre", "Sainte-Adresse", "Montivilliers", "vue mer"];
 export type MainSearchSeedItem = PropertySearchItem & { description?: string };
@@ -36,6 +37,7 @@ export function MainSearchBar({ seedItems = [], renderAfterControls, onSearchFoc
   const [query, setQuery] = useState(() => readLastAppliedPropertySearchFilters()?.q ?? "");
   const [promptIndex, setPromptIndex] = useState(0);
   const [focused, setFocused] = useState(false);
+  const searchFocusTrackedRef = useRef(false);
   const [suggestionsDismissed, setSuggestionsDismissed] = useState(false);
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
   const [suggestionMaxHeight, setSuggestionMaxHeight] = useState<number | null>(null);
@@ -185,6 +187,10 @@ export function MainSearchBar({ seedItems = [], renderAfterControls, onSearchFoc
     }
 
     persistAppliedPropertySearchFilters(filters);
+    trackEvent("search_submitted", {
+      source: "homepage_search",
+      action: queryText ? "keyword" : "browse_all",
+    });
     navigate({ pathname: "/biens", search: searchParams.toString() });
   };
 
@@ -288,8 +294,15 @@ export function MainSearchBar({ seedItems = [], renderAfterControls, onSearchFoc
                   onSearchFocus?.();
                   setFocused(true);
                   setSuggestionsDismissed(false);
+                  if (!searchFocusTrackedRef.current) {
+                    searchFocusTrackedRef.current = true;
+                    trackEvent("search_opened", { source: "homepage_search" });
+                  }
                 }}
-                onBlur={() => window.setTimeout(() => setFocused(false), 120)}
+                onBlur={() => window.setTimeout(() => {
+                  setFocused(false);
+                  searchFocusTrackedRef.current = false;
+                }, 120)}
                 onKeyDown={handleInputKeyDown}
                 placeholder=""
                 autoComplete="off"

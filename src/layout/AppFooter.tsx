@@ -82,14 +82,19 @@ export function AppFooter({ hidden = false }: { hidden?: boolean }) {
                 href="tel:0235425176"
                 className="p-tel"
                 itemProp="telephone"
-                onClick={() => trackEvent("phone_clicked", { source: "footer" })}
+                onClick={() => trackEvent("phone_clicked", { source: "footer", method: "phone" })}
               >
                 02 35 42 51 76
               </a>
             </li>
             <li className="flex items-center gap-2">
               <Mail className="h-4 w-4" />
-              <a href="mailto:vendre@fochimmobilier.com" className="u-email break-words text-[13px]" itemProp="email">
+              <a
+                href="mailto:vendre@fochimmobilier.com"
+                className="u-email break-words text-[13px]"
+                itemProp="email"
+                onClick={() => trackEvent("email_clicked", { source: "footer", method: "email" })}
+              >
                 vendre@fochimmobilier.com
               </a>
             </li>

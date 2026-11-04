@@ -33,7 +33,8 @@ export function PropertyCompareToggle({ propertyId, className }: { propertyId: n
         if (toggle(propertyId)) {
           trackEvent(isSelected ? "comparison_remove" : "comparison_add", {
             property_id: propertyId,
-            source: window.location.pathname,
+            source: "comparison_toggle",
+            ...(isSelected ? { action: "remove" } : {}),
           });
         }
       }}

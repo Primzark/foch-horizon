@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { StorefrontPageHero } from "@/features/content/components/StorefrontPageHero";
 import { supabase } from "@/integrations/supabase/client";
 import { useSeo } from "@/lib/seo/useSeo";
+import { trackEvent } from "@/lib/analytics/events";
 
 export default function PropertyAlertActionPage() {
   const location = useLocation();
@@ -34,6 +35,14 @@ export default function PropertyAlertActionPage() {
         body: { action: isUnsubscribe ? "unsubscribe" : "confirm", token },
       });
       if (requestError) throw requestError;
+      if (!isUnsubscribe) {
+        trackEvent("alert_subscribed", {
+          source: "alert_confirmation",
+          form_type: "property_alert",
+          action: "confirm",
+          method: "email",
+        });
+      }
       setComplete(true);
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "Cette action n’a pas pu être réalisée. Réessayez dans un instant.");

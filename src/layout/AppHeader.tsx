@@ -255,13 +255,18 @@ export function AppHeader() {
               )}
               <ThemeToggle className="hidden desktop:inline-flex" />
               <LanguageSwitcher className="hidden sm:inline-flex" />
-              <a href="tel:0235425176" className="hidden items-center gap-2 text-sm hover:text-brand-strong md:inline-flex" aria-label="Appeler l'agence au 02 35 42 51 76">
+              <a
+                href="tel:0235425176"
+                className="hidden items-center gap-2 text-sm hover:text-brand-strong md:inline-flex"
+                aria-label="Appeler l'agence au 02 35 42 51 76"
+                onClick={() => trackEvent("phone_clicked", { source: "header", method: "phone" })}
+              >
                 <Phone className="h-4 w-4" /><span className="hidden desktop:inline">02 35 42 51 76</span>
               </a>
-              <NavLink to="/biens-sauvegardes" className="inline-flex h-10 min-w-10 items-center justify-center gap-1 rounded-full border border-brand-border bg-brand-soft px-2 text-brand-strong" aria-label={`Biens sauvegardés (${favoriteIds.length})`} onClick={() => trackEvent("favorites_opened", { source: "header" })}>
+              <NavLink to="/biens-sauvegardes" className="inline-flex h-10 min-w-10 items-center justify-center gap-1 rounded-full border border-brand-border bg-brand-soft px-2 text-brand-strong" aria-label={`Biens sauvegardés (${favoriteIds.length})`}>
                 <Heart className={cn("h-4 w-4", favoriteIds.length > 0 && "fill-brand")} /><span className="hidden text-xs sm:inline">{favoriteIds.length}</span>
               </NavLink>
-              <button ref={searchButtonRef} type="button" className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border" aria-label="Ouvrir la recherche de biens" aria-haspopup="dialog" aria-expanded={searchOpen} onClick={() => { setSearchOpen(true); trackEvent("search_opened", { source: "header" }); }}>
+              <button ref={searchButtonRef} type="button" className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border" aria-label="Ouvrir la recherche de biens" aria-haspopup="dialog" aria-expanded={searchOpen} onClick={() => { if (!searchOpen) trackEvent("search_opened", { source: "header" }); setSearchOpen(true); }}>
                 <Search className="h-4 w-4" />
               </button>
             </div>
@@ -307,8 +312,20 @@ export function AppHeader() {
         </nav>
         <div className="border-t border-border px-4 py-3 text-sm">
           <p>109 Av. Foch, 76600 Le Havre</p>
-          <a href="tel:0235425176" className="mt-2 block">02 35 42 51 76</a>
-          <a href="mailto:vendre@fochimmobilier.com" className="block">vendre@fochimmobilier.com</a>
+          <a
+            href="tel:0235425176"
+            className="mt-2 block"
+            onClick={() => trackEvent("phone_clicked", { source: "mobile_menu", method: "phone" })}
+          >
+            02 35 42 51 76
+          </a>
+          <a
+            href="mailto:vendre@fochimmobilier.com"
+            className="block"
+            onClick={() => trackEvent("email_clicked", { source: "mobile_menu", method: "email" })}
+          >
+            vendre@fochimmobilier.com
+          </a>
         </div>
       </SheetContent>
       <SpotlightSearchModal open={searchOpen} onOpenChange={setSearchOpen} triggerRef={searchButtonRef} />

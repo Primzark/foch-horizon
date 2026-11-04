@@ -118,15 +118,11 @@ export default function PropertyComparePage() {
   useEffect(() => {
     if (hasTrackedOpen.current) return;
     hasTrackedOpen.current = true;
-    trackEvent("comparison_open", {
-      selected_count: ids.length,
-      property_ids: ids.join(","),
-      source: "comparison_page",
-    });
+    trackEvent("comparison_open", { source: "comparison_page" });
   }, [ids.length]);
 
-  const handleRemove = (propertyId: number, placement: string) => {
-    trackEvent("comparison_remove", { property_id: propertyId, source: placement });
+  const handleRemove = (propertyId: number) => {
+    trackEvent("comparison_remove", { property_id: propertyId, source: "comparison_page", action: "remove" });
     remove(propertyId);
   };
 
@@ -207,9 +203,8 @@ export default function PropertyComparePage() {
               onCheckedChange={(enabled) => {
                 setShowOnlyDifferences(enabled);
                 trackEvent("comparison_differences_toggle", {
-                  enabled,
-                  selected_count: properties.length,
-                  property_ids: properties.map((property) => property.id).join(","),
+                  source: "comparison_page",
+                  action: enabled ? "show_differences" : "show_all",
                 });
               }}
             />
@@ -225,7 +220,7 @@ export default function PropertyComparePage() {
           </p>
           <div className="flex flex-wrap gap-2">
             {unavailable.map(({ id }) => (
-              <Button key={id} type="button" variant="outline" size="sm" className="h-8 rounded-full px-3 text-xs" onClick={() => handleRemove(id, "unavailable_notice")}>
+              <Button key={id} type="button" variant="outline" size="sm" className="h-8 rounded-full px-3 text-xs" onClick={() => handleRemove(id)}>
                 Retirer réf. {id} <X className="ml-1 h-3.5 w-3.5" />
               </Button>
             ))}
@@ -248,7 +243,7 @@ export default function PropertyComparePage() {
                 <p className="truncate text-sm font-medium">{property.title}</p>
                 <p className="text-sm text-muted-foreground">{formatPrice(property.priceAmount, property.transactionType)}</p>
               </div>
-              <Button type="button" variant="ghost" size="icon" className="h-9 w-9 shrink-0 rounded-full" aria-label={`Retirer le bien ${property.id}`} onClick={() => handleRemove(property.id, "single_property_summary")}>
+              <Button type="button" variant="ghost" size="icon" className="h-9 w-9 shrink-0 rounded-full" aria-label={`Retirer le bien ${property.id}`} onClick={() => handleRemove(property.id)}>
                 <X className="h-4 w-4" />
               </Button>
             </div>
@@ -268,7 +263,7 @@ export default function PropertyComparePage() {
                     <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-brand-strong">Bien {index + 1}</p>
                     <div className="relative">
                       <ComparisonPhoto property={property} />
-                      <Button type="button" variant="secondary" size="icon" className="absolute right-1.5 top-1.5 h-7 w-7 rounded-full shadow-sm sm:right-2 sm:top-2 sm:h-8 sm:w-8" aria-label={`Retirer ${property.title} de la comparaison`} onClick={() => handleRemove(property.id, "comparison_table")}>
+                      <Button type="button" variant="secondary" size="icon" className="absolute right-1.5 top-1.5 h-7 w-7 rounded-full shadow-sm sm:right-2 sm:top-2 sm:h-8 sm:w-8" aria-label={`Retirer ${property.title} de la comparaison`} onClick={() => handleRemove(property.id)}>
                         <X className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       </Button>
                     </div>
@@ -276,7 +271,7 @@ export default function PropertyComparePage() {
                     <Link
                       to={toCanonicalPropertyPath(property)}
                       state={{ comparisonOrigin: true }}
-                      onClick={() => trackEvent("comparison_listing_click", { property_id: property.id, placement: "comparison_title" })}
+                      onClick={() => trackEvent("comparison_listing_click", { property_id: property.id, source: "comparison_page", action: "open_property" })}
                       className="mt-1 line-clamp-2 block break-words font-display text-xs leading-snug text-foreground transition-colors hover:text-brand-strong sm:text-sm"
                     >
                       {property.title}
@@ -285,7 +280,7 @@ export default function PropertyComparePage() {
                     <Link
                       to={toCanonicalPropertyPath(property)}
                       state={{ comparisonOrigin: true }}
-                      onClick={() => trackEvent("comparison_listing_click", { property_id: property.id, placement: "comparison_link" })}
+                      onClick={() => trackEvent("comparison_listing_click", { property_id: property.id, source: "comparison_page", action: "open_property" })}
                       aria-label={`Voir l’annonce ${property.title}`}
                       className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-foreground underline decoration-brand/40 underline-offset-4 hover:text-brand-strong"
                     >
@@ -338,7 +333,7 @@ export default function PropertyComparePage() {
                       <th scope="col" key={property.id} className="w-[220px] min-w-[220px] p-3 align-top sm:w-[250px] sm:min-w-[250px]">
                         <div className="relative">
                           <ComparisonPhoto property={property} />
-                          <Button type="button" variant="secondary" size="icon" className="absolute right-2 top-2 h-8 w-8 rounded-full shadow-sm" aria-label={`Retirer ${property.title} de la comparaison`} onClick={() => handleRemove(property.id, "comparison_table")}>
+                          <Button type="button" variant="secondary" size="icon" className="absolute right-2 top-2 h-8 w-8 rounded-full shadow-sm" aria-label={`Retirer ${property.title} de la comparaison`} onClick={() => handleRemove(property.id)}>
                             <X className="h-4 w-4" />
                           </Button>
                         </div>
@@ -346,7 +341,7 @@ export default function PropertyComparePage() {
                         <Link
                           to={toCanonicalPropertyPath(property)}
                           state={{ comparisonOrigin: true }}
-                          onClick={() => trackEvent("comparison_listing_click", { property_id: property.id, placement: "comparison_title" })}
+                      onClick={() => trackEvent("comparison_listing_click", { property_id: property.id, source: "comparison_page", action: "open_property" })}
                           className="mt-1 line-clamp-2 block font-display text-lg leading-snug text-foreground transition-colors hover:text-brand-strong"
                         >
                           {property.title}
@@ -355,7 +350,7 @@ export default function PropertyComparePage() {
                         <Link
                           to={toCanonicalPropertyPath(property)}
                           state={{ comparisonOrigin: true }}
-                          onClick={() => trackEvent("comparison_listing_click", { property_id: property.id, placement: "comparison_link" })}
+                      onClick={() => trackEvent("comparison_listing_click", { property_id: property.id, source: "comparison_page", action: "open_property" })}
                           className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-foreground underline decoration-brand/40 underline-offset-4 hover:text-brand-strong"
                         >
                           Voir l’annonce <span aria-hidden="true">→</span>

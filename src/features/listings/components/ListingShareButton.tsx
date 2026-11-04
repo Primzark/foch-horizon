@@ -24,7 +24,12 @@ export function ListingShareButton({ propertyId, title, path, overlay = false }:
       if (typeof navigator.share === "function") {
         try {
           await navigator.share({ title: `${title} | Foch Immobilier`, url });
-          trackEvent("listing_viewed", { propertyId, action: "share" });
+          trackEvent("property_shared", {
+            property_id: propertyId,
+            source: "property_detail",
+            action: "share",
+            method: "native_share",
+          });
           return;
         } catch (error) {
           if (error instanceof Error && error.name === "AbortError") return;
@@ -36,7 +41,12 @@ export function ListingShareButton({ propertyId, title, path, overlay = false }:
         if (!navigator.clipboard?.writeText) throw new Error("Clipboard unavailable");
         await navigator.clipboard.writeText(url);
         toast.success("Lien du bien copié");
-        trackEvent("listing_viewed", { propertyId, action: "copy_link" });
+        trackEvent("property_shared", {
+          property_id: propertyId,
+          source: "property_detail",
+          action: "copy_link",
+          method: "clipboard",
+        });
       } catch {
         setManualShareUrl(url);
       }

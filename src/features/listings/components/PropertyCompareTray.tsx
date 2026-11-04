@@ -20,7 +20,7 @@ export function PropertyCompareTray() {
   const isVisible = ids.length > 0 && !isComparisonPage && !isPropertyPreviewModal;
   const clearComparison = () => {
     ids.forEach((propertyId) => {
-      trackEvent("comparison_remove", { property_id: propertyId, source: "comparison_tray_clear" });
+      trackEvent("comparison_remove", { property_id: propertyId, source: "comparison_tray", action: "remove" });
     });
     clear();
   };

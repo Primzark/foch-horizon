@@ -415,7 +415,11 @@ export function ListingGallery({
               preloadViewerNeighbor(safeActiveImageIndex, 1, "high");
               setMobileThumbnailLoadLimit((current) => Math.max(current, safeActiveImageIndex + 1));
               setGalleryImageIndex(safeActiveImageIndex);
-              trackEvent("gallery_opened", { property_id: propertyId });
+              trackEvent("gallery_opened", {
+                property_id: propertyId,
+                source: "property_detail",
+                action: "open_gallery",
+              });
             }}
           >
             <div className="z-[0]">

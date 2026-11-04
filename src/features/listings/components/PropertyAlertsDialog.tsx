@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { BellRing } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import type { PropertySearchParams } from "@/types/api";
 import { toPropertyAlertCriteria } from "@/features/listings/utils/propertyAlertCriteria";
+import { trackEvent } from "@/lib/analytics/events";
 
 interface PropertyAlertsDialogProps {
   filters: PropertySearchParams;
@@ -20,6 +21,7 @@ export function PropertyAlertsDialog({ filters }: PropertyAlertsDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const validationErrorTrackedRef = useRef(false);
   const criteria = toPropertyAlertCriteria(filters);
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
@@ -27,6 +29,11 @@ export function PropertyAlertsDialog({ filters }: PropertyAlertsDialogProps) {
     setMessage(null);
     setError(null);
     if (!consent) {
+      trackEvent("form_error", {
+        source: "property_alerts",
+        form_type: "property_alert",
+        action: "validation",
+      });
       setError("Votre accord est nécessaire pour recevoir cette alerte.");
       return;
     }
@@ -44,6 +51,11 @@ export function PropertyAlertsDialog({ filters }: PropertyAlertsDialogProps) {
       setEmail("");
       setConsent(false);
     } catch (submitError) {
+      trackEvent("form_error", {
+        source: "property_alerts",
+        form_type: "property_alert",
+        action: "submission",
+      });
       setError(submitError instanceof Error ? submitError.message : "L’inscription n’a pas pu être enregistrée. Réessayez dans un instant.");
     } finally {
       setIsSubmitting(false);
@@ -52,6 +64,13 @@ export function PropertyAlertsDialog({ filters }: PropertyAlertsDialogProps) {
 
   const resetWhenClosed = (nextOpen: boolean) => {
     setOpen(nextOpen);
+    if (nextOpen) {
+      trackEvent("alert_form_opened", {
+        source: "property_alerts",
+        form_type: "property_alert",
+        action: "open_form",
+      });
+    }
     if (!nextOpen) {
       setMessage(null);
       setError(null);
@@ -74,7 +93,19 @@ export function PropertyAlertsDialog({ filters }: PropertyAlertsDialogProps) {
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={submit} className="space-y-5">
+        <form
+          onSubmit={submit}
+          onInvalidCapture={() => {
+            if (validationErrorTrackedRef.current) return;
+            validationErrorTrackedRef.current = true;
+            trackEvent("form_error", {
+              source: "property_alerts",
+              form_type: "property_alert",
+              action: "validation",
+            });
+          }}
+          className="space-y-5"
+        >
           <div className="space-y-2">
             <Label htmlFor="property-alert-email">Adresse e-mail</Label>
             <Input
@@ -84,7 +115,10 @@ export function PropertyAlertsDialog({ filters }: PropertyAlertsDialogProps) {
               maxLength={254}
               required
               value={email}
-              onChange={(event) => setEmail(event.target.value)}
+              onChange={(event) => {
+                validationErrorTrackedRef.current = false;
+                setEmail(event.target.value);
+              }}
               placeholder="vous@exemple.fr"
               disabled={isSubmitting}
             />

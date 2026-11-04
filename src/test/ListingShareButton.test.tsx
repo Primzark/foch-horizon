@@ -23,7 +23,12 @@ describe("listing sharing", () => {
     const writeText = vi.fn();
     vi.stubGlobal("navigator", { share, clipboard: { writeText } });
     renderShareButton();
-    await waitFor(() => expect(trackEvent).toHaveBeenCalledWith("listing_viewed", { propertyId: 5159, action: "share" }));
+    await waitFor(() => expect(trackEvent).toHaveBeenCalledWith("property_shared", {
+      property_id: 5159,
+      source: "property_detail",
+      action: "share",
+      method: "native_share",
+    }));
     expect(share).toHaveBeenCalledWith({ title: "Appartement au Havre | Foch Immobilier", url: canonicalUrl });
     expect(writeText).not.toHaveBeenCalled();
   });
@@ -33,6 +38,12 @@ describe("listing sharing", () => {
     vi.stubGlobal("navigator", { clipboard: { writeText } });
     renderShareButton();
     await waitFor(() => expect(successToast).toHaveBeenCalledWith("Lien du bien copié"));
+    expect(trackEvent).toHaveBeenCalledWith("property_shared", {
+      property_id: 5159,
+      source: "property_detail",
+      action: "copy_link",
+      method: "clipboard",
+    });
     expect(writeText).toHaveBeenCalledWith(canonicalUrl);
   });
 
@@ -41,6 +52,12 @@ describe("listing sharing", () => {
     vi.stubGlobal("navigator", { share: vi.fn().mockRejectedValue(new Error("Denied")), clipboard: { writeText } });
     renderShareButton();
     await waitFor(() => expect(writeText).toHaveBeenCalledWith(canonicalUrl));
+    expect(trackEvent).toHaveBeenCalledWith("property_shared", {
+      property_id: 5159,
+      source: "property_detail",
+      action: "copy_link",
+      method: "clipboard",
+    });
   });
 
   it("does not copy or show errors after native sharing is cancelled", async () => {
@@ -52,6 +69,7 @@ describe("listing sharing", () => {
     await waitFor(() => expect(screen.getByRole("button", { name: "Partager" })).toBeEnabled());
     expect(writeText).not.toHaveBeenCalled();
     expect(successToast).not.toHaveBeenCalled();
+    expect(trackEvent).not.toHaveBeenCalledWith("property_shared", expect.anything());
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 

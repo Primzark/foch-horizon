@@ -28,6 +28,18 @@ interface LeadFormProps {
   disableMotion?: boolean;
 }
 
+function getAnalyticsFormType(source: LeadSource): "contact" | "property_contact" | "valuation" | "favorites_share" {
+  if (source === "property_page") return "property_contact";
+  if (source === "estimation") return "valuation";
+  if (source === "favorites_share") return "favorites_share";
+  return "contact";
+}
+
+function getAnalyticsSource(source: LeadSource): "contact_page" | "property_page" | "estimation_page" | "favorites_share" {
+  if (source === "estimation") return "estimation_page";
+  return source;
+}
+
 export function LeadForm({
   source,
   propertyId,
@@ -46,6 +58,7 @@ export function LeadForm({
   const [phoneBlurred, setPhoneBlurred] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const formStartedAtRef = useRef(Date.now());
+  const formStartTrackedRef = useRef(false);
   const websiteRef = useRef<HTMLInputElement | null>(null);
   const summaryRef = useRef<HTMLElement | null>(null);
   const serverErrorRef = useRef<HTMLParagraphElement | null>(null);
@@ -80,14 +93,32 @@ export function LeadForm({
       })
     : [];
 
+  const trackFormStart = () => {
+    if (formStartTrackedRef.current) return;
+    formStartTrackedRef.current = true;
+    trackEvent("form_start", {
+      source: getAnalyticsSource(source),
+      form_type: getAnalyticsFormType(source),
+      property_id: propertyId,
+      action: "start",
+    });
+  };
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (submissionLockRef.current) return;
 
+    trackFormStart();
     setValidationAttempted(true);
     const errors = validateLeadForm(formState);
     if (Object.keys(errors).length > 0) {
+      trackEvent("form_error", {
+        source: getAnalyticsSource(source),
+        form_type: getAnalyticsFormType(source),
+        property_id: propertyId,
+        action: "validation",
+      });
       window.requestAnimationFrame(() => summaryRef.current?.focus());
       return;
     }
@@ -117,9 +148,10 @@ export function LeadForm({
       });
 
       trackEvent("lead_submitted", {
-        source,
+        source: getAnalyticsSource(source),
+        form_type: getAnalyticsFormType(source),
         property_id: propertyId,
-        city_id: cityId,
+        action: "success",
       });
       toast.success("Votre demande a bien été transmise.");
       setSubmitted(true);
@@ -135,6 +167,12 @@ export function LeadForm({
         financingStatus: "not_defined",
       });
     } catch {
+      trackEvent("form_error", {
+        source: getAnalyticsSource(source),
+        form_type: getAnalyticsFormType(source),
+        property_id: propertyId,
+        action: "submission",
+      });
       setServerError("Votre demande n’a pas pu être envoyée. Vérifiez les champs et réessayez ; vos informations sont conservées.");
       window.requestAnimationFrame(() => serverErrorRef.current?.focus());
     } finally {
@@ -178,6 +216,7 @@ export function LeadForm({
               className="mt-4"
               onClick={() => {
                 formStartedAtRef.current = Date.now();
+                formStartTrackedRef.current = false;
                 if (websiteRef.current) websiteRef.current.value = "";
                 setValidationAttempted(false);
                 setEmailBlurred(false);
@@ -193,6 +232,7 @@ export function LeadForm({
           <motion.form
             key="lead-form"
             onSubmit={handleSubmit}
+            onFocusCapture={trackFormStart}
             noValidate
             aria-busy={loading}
             className="mt-4 space-y-3"

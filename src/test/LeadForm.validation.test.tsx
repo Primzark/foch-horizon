@@ -65,6 +65,18 @@ describe("LeadForm validation", () => {
     expect(summary).toHaveTextContent("Email");
     expect(summary).toHaveTextContent("Message");
     expect(submitLeadMock).not.toHaveBeenCalled();
+    expect(trackEventMock).toHaveBeenCalledWith("form_start", {
+      source: "contact_page",
+      form_type: "contact",
+      property_id: undefined,
+      action: "start",
+    });
+    expect(trackEventMock).toHaveBeenCalledWith("form_error", {
+      source: "contact_page",
+      form_type: "contact",
+      property_id: undefined,
+      action: "validation",
+    });
     expect(screen.getByLabelText(/Prénom/)).toHaveAttribute("aria-invalid", "true");
 
     await waitFor(() => expect(summary).toHaveFocus());
@@ -89,6 +101,12 @@ describe("LeadForm validation", () => {
       phone: undefined,
       consent: true,
     }));
+    expect(trackEventMock).toHaveBeenCalledWith("lead_submitted", {
+      source: "contact_page",
+      form_type: "contact",
+      property_id: undefined,
+      action: "success",
+    });
     expect(screen.getByRole("checkbox", { name: /J'accepte que mes données soient utilisées/i })).toBeInTheDocument();
     expect(await screen.findByRole("status")).toHaveTextContent("Demande envoyée avec succès");
   });
@@ -115,6 +133,13 @@ describe("LeadForm validation", () => {
     fireEvent.submit(screen.getByRole("button", { name: "Envoyer" }).closest("form")!);
 
     expect(await screen.findByRole("alert")).toHaveTextContent(/réessayez ; vos informations sont conservées/i);
+    expect(trackEventMock).toHaveBeenCalledWith("form_error", {
+      source: "contact_page",
+      form_type: "contact",
+      property_id: undefined,
+      action: "submission",
+    });
+    expect(trackEventMock).not.toHaveBeenCalledWith("lead_submitted", expect.anything());
     expect(screen.getByLabelText(/Prénom/)).toHaveValue("Camille");
     expect(screen.getByLabelText(/Email/)).toHaveValue("camille@example.fr");
   });
