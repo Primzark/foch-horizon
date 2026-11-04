@@ -44,7 +44,7 @@ function isPublicAnalyticsPath(): boolean {
 
 function setAnalyticsPageContext(pageLocation: string, pageReferrer?: string): {
   page_location: string;
-  page_referrer?: string;
+  page_referrer: string;
 } {
   const safePageLocation = sanitizeAnalyticsUrl(pageLocation);
   const rawPageReferrer = pageReferrer ?? document.referrer;
@@ -60,7 +60,7 @@ function setAnalyticsPageContext(pageLocation: string, pageReferrer?: string): {
 
   return {
     page_location: safePageLocation,
-    ...(usablePageReferrer ? { page_referrer: usablePageReferrer } : {}),
+    page_referrer: usablePageReferrer,
   };
 }
 
@@ -95,7 +95,8 @@ export function trackGoogleAnalyticsPageView(pageLocation: string, pageReferrer?
 
   const pageContext = setAnalyticsPageContext(pageLocation, pageReferrer);
 
-  ensureGtag()("event", "page_view", {
+  getGtmWindow().dataLayer?.push({
+    event: "page_view",
     ...pageContext,
     page_title: document.title,
   });
