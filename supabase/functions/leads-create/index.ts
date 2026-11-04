@@ -63,6 +63,45 @@ function escapeHtml(value: string): string {
     .replaceAll("'", "&#039;");
 }
 
+function getRequestTitle(source: z.infer<typeof payloadSchema>["source"]): string {
+  switch (source) {
+    case "property_page": return "Question sur une annonce";
+    case "estimation": return "Demande d’estimation";
+    case "favorites_share": return "Sélection de biens partagée";
+    default: return "Demande de contact";
+  }
+}
+
+function getSourceLabel(source: z.infer<typeof payloadSchema>["source"]): string {
+  switch (source) {
+    case "property_page": return "Depuis une annonce";
+    case "estimation": return "Estimation";
+    case "favorites_share": return "Sélection de biens";
+    default: return "Contact";
+  }
+}
+
+function formatCityLabel(value?: string): string | null {
+  const candidate = value?.trim().replace(/^city-/i, "").replaceAll("_", " ").replaceAll("-", " ");
+  if (!candidate || uuidPattern.test(candidate)) return null;
+
+  return candidate
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => `${word.charAt(0).toLocaleUpperCase("fr-FR")}${word.slice(1)}`)
+    .join(" ");
+}
+
+function getLeadEmailMessage(payload: z.infer<typeof payloadSchema>): string {
+  const chatbotMatch = payload.message.match(/^Demande chatbot\s*-\s*aucun bien trouvé\s*(?:Critères:\s*([\s\S]*))?$/i);
+  if (!chatbotMatch) return payload.message;
+
+  const criteria = chatbotMatch[1]?.trim();
+  return criteria
+    ? `Le client n’a pas trouvé de bien correspondant à ces critères.\n\nRecherche souhaitée : ${criteria}`
+    : "Le client n’a pas trouvé de bien correspondant à sa recherche.";
+}
+
 async function sendWebhookNotification(payload: z.infer<typeof payloadSchema>, assignedAgentId: string | null): Promise<void> {
   const webhookUrl = Deno.env.get("LEADS_NOTIFICATION_WEBHOOK_URL") ?? "";
   if (!webhookUrl) {
@@ -86,37 +125,124 @@ async function sendWebhookNotification(payload: z.infer<typeof payloadSchema>, a
   }
 }
 
-async function sendResendNotification(payload: z.infer<typeof payloadSchema>, assignedAgentId: string | null): Promise<void> {
+async function sendResendNotification(payload: z.infer<typeof payloadSchema>): Promise<void> {
   const resendApiKey = Deno.env.get("RESEND_API_KEY") ?? "";
   if (!resendApiKey) {
     throw new Error("RESEND_API_KEY is not configured.");
   }
 
-  const to = Deno.env.get("LEADS_NOTIFICATION_EMAIL") ?? "vendre@fochimmobilier.com";
+  const to = Deno.env.get("LEADS_NOTIFICATION_EMAIL") ?? "nicolaslivapro@gmail.com";
   const from = Deno.env.get("LEADS_FROM_EMAIL") ?? "Foch Immobilier <vendre@fochimmobilier.com>";
-  const replyTo = Deno.env.get("LEADS_REPLY_TO_EMAIL") ?? "vendre@fochimmobilier.com";
-  const subject = `[Lead ${payload.source}] ${payload.firstName} ${payload.lastName}`;
+  const replyTo = payload.email;
+  const requestTitle = getRequestTitle(payload.source);
+  const sourceLabel = getSourceLabel(payload.source);
+  const fullName = `${payload.firstName} ${payload.lastName}`.replace(/[\r\n]+/g, " ").trim();
+  const isTest = /\btest\b/i.test(fullName);
+  const subject = `${isTest ? "[TEST] " : ""}${requestTitle} — ${fullName}`.slice(0, 180);
+  const dateLabel = new Intl.DateTimeFormat("fr-FR", {
+    dateStyle: "long",
+    timeStyle: "short",
+    timeZone: "Europe/Paris",
+  }).format(new Date());
+  const displayedMessage = getLeadEmailMessage(payload);
+  const cityLabel = formatCityLabel(payload.cityId);
+  const detailRows: Array<{ label: string; value: string; href?: string }> = [
+    { label: "E-mail", value: payload.email, href: `mailto:${payload.email}` },
+  ];
 
-  const safeMessage = escapeHtml(payload.message);
-  const chatbotContextSummary = payload.chatbotContext
-    ? `
-    <h3>Contexte chatbot (structuré)</h3>
-    <pre>${escapeHtml(JSON.stringify(payload.chatbotContext, null, 2))}</pre>
-  `
-    : "";
-  const html = `
-    <h2>Nouveau lead Foch Immobilier</h2>
-    <p><strong>Source:</strong> ${escapeHtml(payload.source)}</p>
-    <p><strong>Nom:</strong> ${escapeHtml(payload.firstName)} ${escapeHtml(payload.lastName)}</p>
-    <p><strong>Email:</strong> ${escapeHtml(payload.email)}</p>
-    <p><strong>Téléphone:</strong> ${escapeHtml(payload.phone ?? "non renseigné")}</p>
-    <p><strong>Ville:</strong> ${escapeHtml(payload.cityId ?? "non renseignée")}</p>
-    <p><strong>Bien:</strong> ${escapeHtml(payload.propertyId ? String(payload.propertyId) : "non renseigné")}</p>
-    <p><strong>Agent assigné:</strong> ${escapeHtml(assignedAgentId ?? "non assigné")}</p>
-    <p><strong>Message:</strong></p>
-    <pre>${safeMessage}</pre>
-    ${chatbotContextSummary}
-  `;
+  if (payload.phone) {
+    detailRows.push({
+      label: "Téléphone",
+      value: payload.phone,
+      href: `tel:${payload.phone.replace(/[^\d+]/g, "")}`,
+    });
+  }
+  if (cityLabel) detailRows.push({ label: "Ville", value: cityLabel });
+  if (payload.propertyId) detailRows.push({ label: "Annonce concernée", value: `Réf. ${payload.propertyId}` });
+  if (payload.callbackWindow) {
+    const callbackLabels: Record<string, string> = {
+      morning: "Le matin",
+      afternoon: "L’après-midi",
+      evening: "En soirée",
+    };
+    detailRows.push({ label: "Rappel souhaité", value: callbackLabels[payload.callbackWindow] ?? payload.callbackWindow });
+  }
+  if (payload.preferredDates?.length) {
+    detailRows.push({ label: "Disponibilités", value: payload.preferredDates.join(" · ") });
+  }
+  if (payload.financingStatus && payload.financingStatus !== "not_defined") {
+    const financingLabels: Record<string, string> = {
+      cash: "Achat comptant",
+      mortgage_in_progress: "Crédit en cours",
+      needs_financing: "Financement à prévoir",
+    };
+    detailRows.push({ label: "Financement", value: financingLabels[payload.financingStatus] ?? payload.financingStatus });
+  }
+  if (payload.chatbotContext) detailRows.push({ label: "Origine", value: "Assistant en ligne" });
+
+  const safeFullName = escapeHtml(fullName);
+  const safeRequestTitle = escapeHtml(requestTitle);
+  const safeSubject = encodeURIComponent(`Re : ${requestTitle} — ${fullName}`);
+  const replyUrl = `mailto:${payload.email}?subject=${safeSubject}`;
+  const safeMessage = escapeHtml(displayedMessage).replace(/\r?\n/g, "<br>");
+  const detailRowsHtml = detailRows.map(({ label, value, href }) => `
+    <tr>
+      <td style="padding:11px 14px;border-bottom:1px solid #e9e8e2;color:#66706d;font-size:13px;vertical-align:top;width:34%">${escapeHtml(label)}</td>
+      <td style="padding:11px 14px;border-bottom:1px solid #e9e8e2;color:#1f2926;font-size:14px;vertical-align:top;word-break:break-word">${href
+        ? `<a href="${escapeHtml(href)}" style="color:#21564c;text-decoration:underline">${escapeHtml(value)}</a>`
+        : escapeHtml(value)}</td>
+    </tr>`).join("");
+  const textDetails = detailRows.map(({ label, value }) => `${label} : ${value}`).join("\n");
+  const text = [
+    `FOCH IMMOBILIER — ${requestTitle}`,
+    `Reçu le ${dateLabel}`,
+    "",
+    `Demandeur : ${fullName}`,
+    textDetails,
+    "",
+    "Message :",
+    displayedMessage,
+    "",
+    `Répondre : ${replyUrl}`,
+    "Foch Immobilier · Le Havre",
+  ].filter(Boolean).join("\n");
+  const html = `<!doctype html>
+<html lang="fr">
+  <body style="margin:0;padding:0;background:#f2f2ee;color:#1f2926;font-family:Arial,Helvetica,sans-serif">
+    <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent">${safeRequestTitle} de ${safeFullName}. Répondez directement au demandeur.</div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f2f2ee;border-collapse:collapse">
+      <tr><td align="center" style="padding:28px 14px">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:620px;border-collapse:separate;border-spacing:0">
+          <tr>
+            <td style="padding:21px 28px;background:#183b35;border-radius:12px 12px 0 0;color:#fff">
+              <span style="font-size:13px;font-weight:700;letter-spacing:2px">FOCH IMMOBILIER</span>
+              <span style="float:right;color:#d7e3df;font-size:12px;letter-spacing:.4px">DEMANDE ENTRANTE</span>
+            </td>
+          </tr>
+          <tr><td style="padding:30px 28px 28px;background:#fff;border:1px solid #e6e6df;border-top:0">
+            <p style="margin:0 0 9px;color:#7a6849;font-size:12px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase">${escapeHtml(sourceLabel)}</p>
+            <h1 style="margin:0;color:#1c2925;font-size:25px;line-height:1.25;font-weight:700">${safeRequestTitle}</h1>
+            <p style="margin:9px 0 22px;color:#707976;font-size:14px;line-height:1.6">${safeFullName} vous a écrit depuis le site.</p>
+            ${isTest ? `<p style="margin:0 0 18px;padding:10px 12px;border-radius:6px;background:#fff4dc;color:#76520a;font-size:12px;font-weight:700">E-mail de test — ne pas traiter comme une demande client.</p>` : ""}
+            <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 25px">
+              <tr><td bgcolor="#183b35" style="border-radius:6px">
+                <a href="${escapeHtml(replyUrl)}" style="display:inline-block;padding:12px 18px;color:#fff;font-size:14px;font-weight:700;text-decoration:none">Répondre à ${escapeHtml(payload.firstName)}</a>
+              </td></tr>
+            </table>
+            <h2 style="margin:0 0 10px;color:#26332f;font-size:15px;font-weight:700">Coordonnées</h2>
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e9e8e2;border-collapse:collapse;background:#fbfbf9">
+              ${detailRowsHtml}
+            </table>
+            <h2 style="margin:25px 0 10px;color:#26332f;font-size:15px;font-weight:700">Message</h2>
+            <div style="padding:16px 18px;border-left:3px solid #b69a68;border-radius:0 6px 6px 0;background:#f7f6f2;color:#303936;font-size:14px;line-height:1.7;word-break:break-word">${safeMessage}</div>
+            <p style="margin:22px 0 0;color:#818985;font-size:12px;line-height:1.5">Reçu le ${escapeHtml(dateLabel)}</p>
+          </td></tr>
+          <tr><td style="padding:15px 10px;color:#858b87;font-size:11px;line-height:1.5;text-align:center">Foch Immobilier · Le Havre · <a href="https://www.fochimmobilier.com" style="color:#5b6c65;text-decoration:underline">fochimmobilier.com</a></td></tr>
+        </table>
+      </td></tr>
+    </table>
+  </body>
+</html>`;
 
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -129,6 +255,7 @@ async function sendResendNotification(payload: z.infer<typeof payloadSchema>, as
       to: [to],
       subject,
       html,
+      text,
       reply_to: replyTo,
     }),
   });
@@ -153,7 +280,7 @@ async function sendResendNotification(payload: z.infer<typeof payloadSchema>, as
 async function notifyLead(payload: z.infer<typeof payloadSchema>, assignedAgentId: string | null): Promise<void> {
   const [webhookResult, emailResult] = await Promise.allSettled([
     sendWebhookNotification(payload, assignedAgentId),
-    sendResendNotification(payload, assignedAgentId),
+    sendResendNotification(payload),
   ]);
 
   if (webhookResult.status === "rejected") {
