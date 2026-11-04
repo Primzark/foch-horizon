@@ -6,7 +6,7 @@ export const agents: Agent[] = [
   {
     id: "agent-jeanne-morel",
     fullName: "Alain DURAME",
-    role: "Transactions",
+    role: "Transactions immobilières",
     phone: "02 35 42 51 76",
     mobile: "06 11 31 01 95",
     email: "vendre@fochimmobilier.com",
@@ -18,7 +18,7 @@ export const agents: Agent[] = [
   {
     id: "agent-lucas-bernard",
     fullName: "Emma VASSELIN",
-    role: "Transactions",
+    role: "Transactions immobilières",
     phone: "02 35 42 51 76",
     mobile: "06 27 22 87 41",
     email: "vendre@fochimmobilier.com",
@@ -30,7 +30,7 @@ export const agents: Agent[] = [
   {
     id: "agent-clara-durand",
     fullName: "Véronique FOGT",
-    role: "Transactions",
+    role: "Transactions immobilières",
     phone: "02 35 42 51 76",
     mobile: "06 60 78 01 01",
     email: "vendre@fochimmobilier.com",

@@ -19,15 +19,6 @@ export default function FeesPage() {
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
           Barème des honoraires de négociation TTC de Foch Immobilier - 2026.
         </p>
-        <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-          Le barème prévoit un forfait de 4 000 € TTC pour un bien vendu à un prix inférieur à 50 000 €, puis 4 000 € TTC
-          plus 4 % du prix de vente au-delà de 50 000 €.
-        </p>
-        <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-          Le PDF transmis indique 7 800 € pour un bien vendu 100 000 €, alors que la formule ci-dessus donne 8 000 €. Il ne
-          précise pas non plus les honoraires pour un prix de vente exactement égal à 50 000 €. Contactez l’agence pour
-          confirmation de ces deux montants.
-        </p>
       </header>
 
       <div className="mt-6 flex flex-wrap items-center gap-3">

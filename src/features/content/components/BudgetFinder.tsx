@@ -169,13 +169,10 @@ export function BudgetFinder() {
   const isSearching = isWaitingForBudget || listingsQuery.isFetching;
 
   return (
-    <section className="border-y border-border bg-muted/25" aria-labelledby="budget-finder-title">
+    <section className="border-y border-border bg-muted/25" aria-label="Explorer par budget">
       <div className="container mx-auto grid grid-cols-1 gap-9 px-4 py-12 md:py-14 lg:grid-cols-[minmax(17rem,0.8fr)_minmax(0,1.2fr)] lg:gap-12">
         <div className="min-w-0">
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-brand-strong">Explorer par budget</p>
-          <h2 id="budget-finder-title" className="mt-2 max-w-md font-display text-3xl md:text-4xl">
-            Que peut-on acheter avec votre budget ?
-          </h2>
           <p className="mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
             Parcourez les annonces actuellement publiées et affinez selon votre projet.
           </p>
