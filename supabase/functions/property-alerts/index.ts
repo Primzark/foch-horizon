@@ -185,8 +185,8 @@ async function sendResendEmail(input: {
   const apiKey = Deno.env.get("RESEND_API_KEY") ?? "";
   if (!apiKey) throw new Error("RESEND_API_KEY is not configured.");
 
-  const from = Deno.env.get("LEADS_FROM_EMAIL") ?? "Foch Immobilier <leads@fochimmobilier.com>";
-  const replyTo = Deno.env.get("LEADS_REPLY_TO_EMAIL") ?? "nicolaslivapro@gmail.com";
+  const from = Deno.env.get("LEADS_FROM_EMAIL") ?? "Foch Immobilier <vendre@fochimmobilier.com>";
+  const replyTo = Deno.env.get("LEADS_REPLY_TO_EMAIL") ?? "vendre@fochimmobilier.com";
   const result = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {

@@ -93,8 +93,8 @@ async function sendResendNotification(payload: z.infer<typeof payloadSchema>, as
   }
 
   const to = Deno.env.get("LEADS_NOTIFICATION_EMAIL") ?? "vendre@fochimmobilier.com";
-  const from = Deno.env.get("LEADS_FROM_EMAIL") ?? "Foch Immobilier <leads@fochimmobilier.com>";
-  const replyTo = Deno.env.get("LEADS_REPLY_TO_EMAIL") ?? "nicolaslivapro@gmail.com";
+  const from = Deno.env.get("LEADS_FROM_EMAIL") ?? "Foch Immobilier <vendre@fochimmobilier.com>";
+  const replyTo = Deno.env.get("LEADS_REPLY_TO_EMAIL") ?? "vendre@fochimmobilier.com";
   const subject = `[Lead ${payload.source}] ${payload.firstName} ${payload.lastName}`;
 
   const safeMessage = escapeHtml(payload.message);

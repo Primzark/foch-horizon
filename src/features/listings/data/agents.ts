@@ -45,7 +45,7 @@ export const agents: Agent[] = [
     role: "Transactions immobilières",
     phone: "02 35 42 51 76",
     mobile: "06 61 42 68 50",
-    email: "contact@fochimmobilier.com",
+    email: "vendre@fochimmobilier.com",
     facebookUrl: legacyFacebookUrl,
     bio: "Accompagnement dans vos projets d’achat et de vente.",
     isActive: true,
