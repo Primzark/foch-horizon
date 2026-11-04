@@ -1012,7 +1012,7 @@ export default function ListingDetailPage({
                 propertyId={property.id}
                 cityId={property.cityId}
                 title="Demander une visite"
-                description="Indiquez vos disponibilités, nous revenons vers vous rapidement."
+                showRequiredFieldsHint={false}
                 ctaLabel="Envoyer ma demande"
                 showAppointmentFields
               />

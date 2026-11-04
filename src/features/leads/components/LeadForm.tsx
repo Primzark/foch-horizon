@@ -22,6 +22,7 @@ interface LeadFormProps {
   cityId?: string;
   title?: string;
   description?: string;
+  showRequiredFieldsHint?: boolean;
   ctaLabel?: string;
   showAppointmentFields?: boolean;
   variant?: "card" | "plain";
@@ -46,6 +47,7 @@ export function LeadForm({
   cityId,
   title = "Envoyer un message",
   description,
+  showRequiredFieldsHint = true,
   ctaLabel = "Envoyer",
   showAppointmentFields = false,
   variant = "card",
@@ -185,7 +187,9 @@ export function LeadForm({
     <section className={variant === "card" ? "rounded-2xl border border-border bg-card p-5" : "p-0"}>
       <h3 className="font-display text-xl">{title}</h3>
       {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
-      <p className="mt-2 text-xs text-muted-foreground">Tous les champs sont obligatoires, sauf le téléphone.</p>
+      {showRequiredFieldsHint && (
+        <p className="mt-2 text-xs text-muted-foreground">Tous les champs sont obligatoires, sauf le téléphone.</p>
+      )}
 
       <AnimatePresence mode="wait" initial={false}>
         {submitted ? (
