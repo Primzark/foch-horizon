@@ -145,6 +145,9 @@ async function sendResendNotification(payload: z.infer<typeof payloadSchema>): P
   }).format(new Date());
   const displayedMessage = getLeadEmailMessage(payload);
   const cityLabel = formatCityLabel(payload.cityId);
+  const propertyUrl = payload.propertyId
+    ? new URL(`/biens/${payload.propertyId}`, "https://www.fochimmobilier.com").toString()
+    : null;
   const detailRows: Array<{ label: string; value: string; href?: string }> = [
     { label: "E-mail", value: payload.email, href: `mailto:${payload.email}` },
   ];
@@ -157,7 +160,9 @@ async function sendResendNotification(payload: z.infer<typeof payloadSchema>): P
     });
   }
   if (cityLabel) detailRows.push({ label: "Ville", value: cityLabel });
-  if (payload.propertyId) detailRows.push({ label: "Annonce concernée", value: `Réf. ${payload.propertyId}` });
+  if (payload.propertyId) {
+    detailRows.push({ label: "Annonce concernée", value: `Réf. ${payload.propertyId}`, href: propertyUrl ?? undefined });
+  }
   if (payload.callbackWindow) {
     const callbackLabels: Record<string, string> = {
       morning: "Le matin",
@@ -198,6 +203,7 @@ async function sendResendNotification(payload: z.infer<typeof payloadSchema>): P
     "",
     `Demandeur : ${fullName}`,
     textDetails,
+    propertyUrl ? `Fiche du bien : ${propertyUrl}` : null,
     "",
     "Message :",
     displayedMessage,
@@ -215,7 +221,6 @@ async function sendResendNotification(payload: z.infer<typeof payloadSchema>): P
           <tr>
             <td style="padding:21px 28px;background:#183b35;border-radius:12px 12px 0 0;color:#fff">
               <span style="font-size:13px;font-weight:700;letter-spacing:2px">FOCH IMMOBILIER</span>
-              <span style="float:right;color:#d7e3df;font-size:12px;letter-spacing:.4px">DEMANDE ENTRANTE</span>
             </td>
           </tr>
           <tr><td style="padding:30px 28px 28px;background:#fff;border:1px solid #e6e6df;border-top:0">
