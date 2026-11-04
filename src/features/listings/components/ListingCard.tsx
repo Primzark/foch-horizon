@@ -76,7 +76,7 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, eagerIma
           </ListingCardPhotoCarousel>
 
           <div>
-            <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.2em] text-foreground">
               <p>Réf {item.id}</p>
               <span className="rounded-full border border-border px-2 py-0.5 normal-case tracking-normal text-foreground/85">
                 {propertyTypeLabel}
@@ -85,7 +85,7 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, eagerIma
             <h3 className="mt-1 font-display text-xl" itemProp="name">
               {item.title}
             </h3>
-            <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
+            <p className="mt-1 flex items-center gap-1 text-sm text-foreground">
               <MapPin className="h-4 w-4" />
               <span itemProp="address" itemScope itemType="https://schema.org/PostalAddress">
                 <span itemProp="addressLocality">{item.city.name}</span> (<span itemProp="postalCode">{item.city.postalCode}</span>)
@@ -93,12 +93,12 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, eagerIma
             </p>
 
             {item.description && (
-              <p className="mt-2 line-clamp-3 max-w-3xl text-sm leading-relaxed text-muted-foreground">
+              <p className="mt-2 line-clamp-3 max-w-3xl text-sm leading-relaxed text-foreground">
                 {normalizePropertyDescription(item.description)}
               </p>
             )}
 
-            <div className="mt-3 flex flex-wrap gap-3 text-sm text-muted-foreground">
+            <div className="mt-3 flex flex-wrap gap-3 text-sm text-foreground">
               <span className="inline-flex items-center gap-1">
                 <Maximize className="h-4 w-4" /> {item.surfaceM2} m²
               </span>
@@ -194,7 +194,7 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, eagerIma
       </PropertyPreviewLink>
 
       <div className="space-y-2 p-3 sm:p-4">
-        <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.2em] text-foreground">
           <p>Réf {item.id}</p>
           <span className="rounded-full border border-border px-2 py-0.5 normal-case tracking-normal text-foreground/85">
             {propertyTypeLabel}
@@ -204,14 +204,14 @@ export function ListingCard({ item, viewMode = "grid", revealIndex = 0, eagerIma
           <h3 className="font-display text-xl" itemProp="name">
             {item.title}
           </h3>
-          <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
+          <p className="mt-1 flex items-center gap-1 text-sm text-foreground">
             <MapPin className="h-4 w-4" />
             <span itemProp="address" itemScope itemType="https://schema.org/PostalAddress">
               <span itemProp="addressLocality">{item.city.name}</span>
             </span>
           </p>
         </div>
-        <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+        <div className="flex flex-wrap gap-3 text-xs text-foreground">
           <span className="inline-flex items-center gap-1">
             <Maximize className="h-3.5 w-3.5" /> {item.surfaceM2} m²
           </span>

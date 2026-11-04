@@ -28,14 +28,6 @@ export default function FeesPage() {
           </a>
         </Button>
       </div>
-
-      <section className="mt-6 overflow-hidden rounded-2xl border border-border">
-        <iframe
-          title="Barème d’honoraires de négociation TTC de Foch Immobilier, 2026"
-          src={feesPdfUrl}
-          className="h-[760px] w-full"
-        />
-      </section>
     </section>
   );
 }

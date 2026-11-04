@@ -1,3 +1,4 @@
+import { Phone } from "lucide-react";
 import { AgentInitialsAvatar } from "@/features/listings/components/AgentInitialsAvatar";
 import { agents } from "@/features/listings/data/agents";
 import { getMotionDirectorProfile } from "@/lib/visuals/motionDirector";
@@ -16,21 +17,31 @@ export function AgencyTeamSection({ mood = "urban" }: { mood?: PlaceImageMood })
       </ScrollReveal>
       <div className="mt-6 grid gap-5 md:grid-cols-3">
         {agents.map((agent, index) => {
-          const phoneNumber = agent.mobile ?? agent.phone;
-
           return (
             <ScrollReveal key={agent.id} mood={mood} delay={Math.min(index * motionDirector.revealStagger, 0.25)}>
               <article className="group rounded-2xl border border-border p-5 transition-all duration-300 hover:-translate-y-1 hover:border-brand-border hover:shadow-[0_18px_40px_-34px_hsl(var(--brand)/0.3)]">
                 <AgentInitialsAvatar name={agent.fullName} className="h-16 w-16 text-sm transition-transform duration-300 group-hover:scale-105" />
                 <h3 className="mt-3 font-display text-xl">{agent.fullName}</h3>
                 <p className="text-sm text-muted-foreground">{agent.role}</p>
-                <a
-                  className="mt-2 block text-sm hover:underline"
-                  href={`tel:${phoneNumber.replace(/\s+/g, "")}`}
-                  onClick={() => trackEvent("phone_clicked", { source: "agency_team", method: "phone" })}
-                >
-                  {phoneNumber}
-                </a>
+                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                  {agent.mobile && (
+                    <a
+                      className="hover:underline"
+                      href={`tel:${agent.mobile.replace(/\s+/g, "")}`}
+                      onClick={() => trackEvent("phone_clicked", { source: "agency_team", method: "phone" })}
+                    >
+                      {agent.mobile}
+                    </a>
+                  )}
+                  <a
+                    className="inline-flex items-center gap-1.5 hover:underline"
+                    href={`tel:${agent.phone.replace(/\s+/g, "")}`}
+                    onClick={() => trackEvent("phone_clicked", { source: "agency_team", method: "phone" })}
+                  >
+                    <Phone aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
+                    {agent.phone}
+                  </a>
+                </div>
               </article>
             </ScrollReveal>
           );

@@ -265,31 +265,33 @@ export function BudgetFinder() {
           <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-4">
             <div className="min-w-0">
               <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Votre sélection</p>
-              <h3 className="mt-1 font-display text-2xl">
-                {!hasValidBudget
-                  ? "Saisissez votre budget"
-                  : isSearching
-                    ? "Recherche des annonces…"
-                    : listingsQuery.isError
-                      ? "Annonces momentanément indisponibles"
-                      : (
-                          <span className="inline-flex flex-wrap items-center gap-2">
-                            <SearchCountBadge size="large">
-                              {(listingsQuery.data?.total ?? 0).toLocaleString("fr-FR")}
-                            </SearchCountBadge>
-                            <span>
-                              bien{listingsQuery.data?.total === 1 ? "" : "s"} {selectedArea || propertyType ? "correspondant à vos critères" : "dans votre budget"}
+              {hasValidBudget && (
+                <>
+                  <h3 className="mt-1 font-display text-2xl">
+                    {isSearching
+                      ? "Recherche des annonces…"
+                      : listingsQuery.isError
+                        ? "Annonces momentanément indisponibles"
+                        : (
+                            <span className="inline-flex flex-wrap items-center gap-2">
+                              <SearchCountBadge size="large">
+                                {(listingsQuery.data?.total ?? 0).toLocaleString("fr-FR")}
+                              </SearchCountBadge>
+                              <span>
+                                bien{listingsQuery.data?.total === 1 ? "" : "s"} {selectedArea || propertyType ? "correspondant à vos critères" : "dans votre budget"}
+                              </span>
                             </span>
-                          </span>
-                        )}
-              </h3>
-              <div aria-label="Critères de recherche" className="mt-2 flex flex-wrap gap-1.5 text-xs text-muted-foreground">
-                <span className="rounded-full border border-border bg-background px-2 py-1">{selectedTypeLabel ?? "Tous les types"}</span>
-                <span className="rounded-full border border-border bg-background px-2 py-1">{selectedArea?.name ?? "Tous les secteurs"}</span>
-                {formattedBudget && (
-                  <span className="rounded-full border border-border bg-background px-2 py-1">Jusqu’à {formattedBudget} €</span>
-                )}
-              </div>
+                          )}
+                  </h3>
+                  <div aria-label="Critères de recherche" className="mt-2 flex flex-wrap gap-1.5 text-xs text-muted-foreground">
+                    <span className="rounded-full border border-border bg-background px-2 py-1">{selectedTypeLabel ?? "Tous les types"}</span>
+                    <span className="rounded-full border border-border bg-background px-2 py-1">{selectedArea?.name ?? "Tous les secteurs"}</span>
+                    {formattedBudget && (
+                      <span className="rounded-full border border-border bg-background px-2 py-1">Jusqu’à {formattedBudget} €</span>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
             {hasValidBudget && listingsQuery.data && listingsQuery.data.total > 0 && (
               <>
