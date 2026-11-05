@@ -136,7 +136,7 @@ async function sendResendNotification(
     throw new Error("RESEND_API_KEY is not configured.");
   }
 
-  const to = Deno.env.get("LEADS_NOTIFICATION_EMAIL") ?? "alexisliva@orange.fr";
+  const to = Deno.env.get("LEADS_NOTIFICATION_EMAIL") ?? "vendre@fochimmobilier.com";
   const from = Deno.env.get("LEADS_FROM_EMAIL") ?? "Foch Immobilier <vendre@fochimmobilier.com>";
   const replyTo = payload.email;
   const requestTitle = getRequestTitle(payload.source);
