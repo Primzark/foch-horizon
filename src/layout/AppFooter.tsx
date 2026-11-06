@@ -62,6 +62,13 @@ export function AppFooter({ hidden = false }: { hidden?: boolean }) {
           >
             Préférences cookies
           </button>
+          <div className="mt-4 border-t border-border pt-3">
+            <p className="mb-2 text-xs uppercase tracking-[0.14em] text-muted-foreground">Flux RSS</p>
+            <ul className="space-y-2 text-sm">
+              <li><a href="/feeds/agency-news.xml" className="hover:underline">Actualités et mises à jour</a></li>
+              <li><a href="/feeds/properties-for-sale.xml" className="hover:underline">Biens à vendre</a></li>
+            </ul>
+          </div>
         </div>
 
         <div>

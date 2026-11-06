@@ -151,7 +151,13 @@ const nonIndexablePreview = new URL(siteUrl).hostname.toLowerCase().endsWith('.v
 const robotsContent = nonIndexablePreview
   ? 'noindex,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1'
   : 'index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1';
-const templateWithRobots = template.replace(/<meta name="robots"[^>]*>/, `<meta name="robots" content="${robotsContent}" />`);
+const rssDiscoveryLinks = [
+  '<link rel="alternate" type="application/rss+xml" title="Foch Immobilier · Actualités et mises à jour" href="/feeds/agency-news.xml">',
+  '<link rel="alternate" type="application/rss+xml" title="Foch Immobilier · Biens à vendre" href="/feeds/properties-for-sale.xml">',
+].join('\n');
+const templateWithRobots = template
+  .replace(/<meta name="robots"[^>]*>/, `<meta name="robots" content="${robotsContent}" />`)
+  .replace('</head>', `${rssDiscoveryLinks}\n</head>`);
 // Avoid a second request waterfall before the homepage's above-the-fold hero can render.
 const homePageChunk = (await readdir('dist/assets')).find(file => /^HomePage-.+\.js$/.test(file));
 if (!homePageChunk) throw new Error('Could not find the HomePage route chunk to preload.');
@@ -319,6 +325,49 @@ try {
     ...publicListingProperties.map(toCanonicalPropertyPath),
   ])];
   const escape = value => value.replaceAll('&', '&amp;').replaceAll('<', '&lt;');
+  const escapeXml = value => String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&apos;');
+  const agencyUpdates = guides
+    .filter(guide => /^\d{4}-\d{2}-\d{2}$/.test(guide.reviewedAt ?? ''))
+    .sort((left, right) => right.reviewedAt.localeCompare(left.reviewedAt))
+    .map(guide => {
+      const link = `${siteUrl}/immobilier/${guide.id}`;
+      const title = `${guide.pageTitle} · guide mis à jour`;
+      const description = `Repères immobiliers et conseils locaux à ${guide.name}. ${guide.subtitle}`;
+      const pubDate = new Date(`${guide.reviewedAt}T12:00:00Z`).toUTCString();
+      return [
+        '    <item>',
+        `      <title>${escapeXml(title)}</title>`,
+        `      <link>${escapeXml(link)}</link>`,
+        `      <guid isPermaLink="true">${escapeXml(link)}</guid>`,
+        `      <description>${escapeXml(description)}</description>`,
+        `      <category>Guide immobilier</category>`,
+        `      <pubDate>${pubDate}</pubDate>`,
+        '    </item>',
+      ].join('\n');
+    });
+  const agencyNewsXml = [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">',
+    '  <channel>',
+    '    <title>Foch Immobilier · Actualités et mises à jour</title>',
+    `    <link>${escapeXml(siteUrl)}</link>`,
+    '    <description>Actualités de l’agence et mises à jour des guides immobiliers au Havre et dans les environs.</description>',
+    '    <language>fr-FR</language>',
+    `    <atom:link href="${escapeXml(`${siteUrl}/feeds/agency-news.xml`)}" rel="self" type="application/rss+xml" />`,
+    `    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>`,
+    '    <ttl>60</ttl>',
+    agencyUpdates.join('\n'),
+    '  </channel>',
+    '</rss>',
+    '',
+  ].join('\n');
+  await mkdir('dist/feeds', { recursive: true });
+  await writeFile('dist/feeds/agency-news.xml', agencyNewsXml);
   await writeFile('dist/sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sitemapRoutes.map(route => {
     const reviewed = guides.find(guide => route === `/immobilier/${guide.id}`)?.reviewedAt;
     return `  <url><loc>${escape(siteUrl + route)}</loc>${reviewed ? `<lastmod>${reviewed}</lastmod>` : ''}</url>`;
