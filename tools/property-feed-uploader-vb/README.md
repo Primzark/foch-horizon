@@ -7,10 +7,10 @@ The importer:
 1. Finds `Annonces.csv` inside the ZIP, including nested folders, and extracts it to `Unzip/Annonces.csv`.
 2. Reads the legacy `!#`-delimited CSV (also accepts `;#`, UTF-8, and Windows-1252), maps its listing fields to the website's property-feed schema, and writes `Prod/Annonces.json`.
 3. Reads each negotiator signature from the end of the description (`Agent co ...` / `Agent Co ...`) and associates it with the stable website agent ID. `Agences.csv` contains the agency's contact details, not per-listing negotiator names.
-4. Includes source status details in the JSON for review. The database import ignores feed status fields: a new listing defaults to active, and existing manual status and visibility settings stay unchanged.
-5. Sends the feed through the existing `property-feed-import` Supabase Edge Function. The function upserts on the property's reference number (`id`) and refreshes images and features only for references in this ZIP. After the upsert, database listings absent from the ZIP are set offline unless their status or admin override is `sold`. Sold listings are not changed by this rule, and property rows are never deleted. Existing listings in the ZIP keep their status, online setting, featured setting, and negotiator assignment; new listings use database defaults and can use a negotiator supplied in the ZIP. Existing negotiator records are preserved.
+4. Includes source status details in the JSON for review. The current fixed-width CSV mapping does not contain a mapped `site cabinet` publication field, so the client must confirm whether rows in `Annonces.csv` are already restricted to that source checkbox. Website publication is enabled for imported rows by default unless an administrator explicitly keeps a property offline. Existing manual status and featured settings remain unchanged.
+5. Sends the feed through the existing `property-feed-import` Supabase Edge Function. The function upserts on the property's reference number (`id`) and refreshes images and features only for references in this ZIP. Listings absent from the ZIP retain their current visibility by default. Use `--reconcile-missing` only when the ZIP is confirmed to be a complete current inventory; then absent non-sold listings without an explicit administrator online override are taken offline. Property rows are never deleted. Reimporting a feed row restores online visibility unless an administrator explicitly turned it off. Existing negotiator records are preserved.
 6. Keeps the first row when a property reference is repeated in the ZIP, and logs later duplicate rows as ignored with their row numbers, reference, title, and the retained row.
-7. Writes a `Fochimmo_ddMMyyyy_Hmm.txt` log using the legacy semicolon-separated `OK/KO;function;date;message` structure. Successful sync logs identify each added, updated, offlined, and ignored listing. ZIP/CSV parsing and validation, including consistent CSV row widths, must finish before any Supabase request is sent; failures are logged without changing online status.
+7. Writes a `Fochimmo_ddMMyyyy_Hmm.txt` log using the legacy semicolon-separated `OK/KO;function;date;message` structure. Successful sync logs identify each added, updated, offlined, ignored, and administrator-kept-offline listing, plus whether missing-listing reconciliation ran. ZIP/CSV parsing and validation, including consistent CSV row widths, must finish before any Supabase request is sent; failures are logged without changing online status.
 
 The feed also includes `sourceDetails` for source fields that are not columns in the current website database schema. The Edge Function stores supported listing details and ignores fields that are outside the website schema, including source status and administrator-managed display settings.
 
@@ -31,6 +31,30 @@ dotnet publish tools/property-feed-uploader-vb/PropertyFeedUploader.vbproj \
 
 The result is `tools/property-feed-uploader-vb/publish/win-x64/Fochimmo.exe`. It includes the .NET runtime and can run on 64-bit Windows without a separate .NET installation. Publishing for another Windows architecture requires that runtime identifier (for example, `win-arm64`).
 
+## Build and run on Apple Silicon macOS
+
+The Windows `.exe` cannot run directly on macOS. This .NET project also publishes as a native Apple Silicon command-line program, with no Windows compatibility layer required:
+
+```sh
+dotnet publish tools/property-feed-uploader-vb/PropertyFeedUploader.vbproj \
+  --configuration Release \
+  --runtime osx-arm64 \
+  --self-contained true \
+  -p:PublishSingleFile=true \
+  -p:EnableCompressionInSingleFile=true \
+  -p:DebugType=None \
+  --output tools/property-feed-uploader-vb/publish/osx-arm64
+```
+
+Run a local ZIP validation from the repository root with:
+
+```sh
+./tools/property-feed-uploader-vb/publish/osx-arm64/Fochimmo \
+  "/path/to/fochimmobilierlehavre.zip" --dry-run
+```
+
+For an import, set `SUPABASE_API_KEY` (or `VITE_SUPABASE_ANON_KEY`) and `PROPERTY_FEED_IMPORT_TOKEN`, then run the same command without `--dry-run`. Add `--skip-alert-dispatch` to suppress alert and confirmation emails for that run.
+
 ## Run
 
 Run the console executable from Command Prompt or PowerShell. With no ZIP argument, it searches for the only `.zip` beside `Fochimmo.exe`:
@@ -43,6 +67,12 @@ To search another folder for its only `.zip` file, pass `--zip-dir`:
 
 ```powershell
 Fochimmo.exe --zip-dir "D:\Fochimmo\Exports" --dry-run
+```
+
+By default, properties absent from the selected ZIP keep their current visibility. To take missing non-sold listings offline after reviewing that the ZIP is a complete current export, add `--reconcile-missing`:
+
+```powershell
+Fochimmo.exe "D:\Fochimmo\Exports\fochimmobilierlehavre.zip" --reconcile-missing
 ```
 
 You can also pass one ZIP file path directly. When the selected folder contains no ZIP or more than one ZIP, the program reports the issue; it never picks an arbitrary file. Before writing JSON or uploading, it removes a trailing period from an otherwise numeric reference. Duplicate normalized references keep the first row and produce a warning instead of blocking the upload. Invalid nonnumeric references still stop the import.

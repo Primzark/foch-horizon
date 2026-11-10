@@ -47,6 +47,7 @@ Deno.serve(async (request) => {
     properties: feed.properties.length,
     cities: feed.cities.length,
     agents: feed.agents.length,
+    reconcileMissing: request.headers.get("x-property-feed-reconcile-missing") === "true",
     propertyReferences: feed.properties.map((property) => property.id),
   };
 
@@ -57,6 +58,7 @@ Deno.serve(async (request) => {
   try {
     const databaseFeed = {
       ...feed,
+      reconcileMissing: summary.reconcileMissing,
       agents: await Promise.all(feed.agents.map(async (agent) => ({
         ...agent,
         sync_id: await stableAgentId(agent.id),

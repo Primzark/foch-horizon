@@ -605,6 +605,7 @@ export type Database = {
       }
       properties: {
         Row: {
+          admin_online_override: boolean | null
           admin_status_override:
             | Database["public"]["Enums"]["property_status"]
             | null
@@ -641,6 +642,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          admin_online_override?: boolean | null
           admin_status_override?:
             | Database["public"]["Enums"]["property_status"]
             | null
@@ -677,6 +679,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          admin_online_override?: boolean | null
           admin_status_override?:
             | Database["public"]["Enums"]["property_status"]
             | null

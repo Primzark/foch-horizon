@@ -89,6 +89,13 @@ Module Program
                 logEntries.Add(New LogInfo(True, "Ignored", ignoredMessage))
                 Console.WriteLine($"Ignored property {ignored.ReferenceId} on CSV row {ignored.SkippedRow}; kept row {ignored.KeptRow}.")
             Next
+            If options.ReconcileMissing Then
+                logEntries.Add(New LogInfo(True, "ReconcileMissing", "Explicit reconciliation enabled; properties absent from this ZIP may be taken offline."))
+                Console.WriteLine("Missing-listing reconciliation enabled; properties absent from this ZIP may be taken offline.")
+            Else
+                logEntries.Add(New LogInfo(True, "ReconcileMissing", "Disabled; properties absent from this ZIP retain their current visibility."))
+                Console.WriteLine("Missing-listing reconciliation disabled; absent properties retain their current visibility.")
+            End If
 
             Dim feedJson As String = JsonSerializer.Serialize(buildResult.Feed, JsonOptions)
             Dim feedSize As Long = Encoding.UTF8.GetByteCount(feedJson)
@@ -124,6 +131,7 @@ Module Program
                 request.Headers.Add("apikey", apiKey)
                 request.Headers.Add("x-property-import-token", importToken)
                 If options.SkipAlertDispatch Then request.Headers.Add("x-property-feed-skip-alert-dispatch", "true")
+                If options.ReconcileMissing Then request.Headers.Add("x-property-feed-reconcile-missing", "true")
                 request.Content = New StringContent(feedJson, New UTF8Encoding(False), "application/json")
 
                 Console.WriteLine("Sending feed to Supabase...")
@@ -191,15 +199,18 @@ Module Program
                 LogImportItems(imported, "updated", "Updated", logEntries)
                 LogImportItems(imported, "offline", "Offlined", logEntries)
                 LogImportItems(imported, "ignored", "Ignored", logEntries)
+                LogImportItems(imported, "keptOffline", "KeptOffline", logEntries)
 
                 Dim summary As String = String.Join(
                     "; ",
                     New String() {
                         "properties=" & ReadJsonText(imported, "properties"),
+                        "reconcileMissing=" & ReadJsonText(imported, "reconciledMissing"),
                         "added=" & ReadJsonText(imported, "addedCount"),
                         "updated=" & ReadJsonText(imported, "updatedCount"),
                         "offlined=" & ReadJsonText(imported, "offlineCount"),
                         "ignored=" & ReadJsonText(imported, "ignoredCount"),
+                        "keptOffline=" & ReadJsonText(imported, "keptOfflineCount"),
                         "images=" & ReadJsonText(imported, "images"),
                         "features=" & ReadJsonText(imported, "features")
                     })
@@ -257,6 +268,8 @@ Module Program
                 options.OutputPath = args(index)
             ElseIf String.Equals(argument, "--skip-alert-dispatch", StringComparison.OrdinalIgnoreCase) Then
                 options.SkipAlertDispatch = True
+            ElseIf String.Equals(argument, "--reconcile-missing", StringComparison.OrdinalIgnoreCase) Then
+                options.ReconcileMissing = True
             ElseIf String.Equals(argument, "--help", StringComparison.OrdinalIgnoreCase) OrElse String.Equals(argument, "-h", StringComparison.OrdinalIgnoreCase) Then
                 options.ShowHelp = True
             ElseIf argument.StartsWith("--", StringComparison.Ordinal) Then
@@ -264,7 +277,7 @@ Module Program
             ElseIf String.IsNullOrWhiteSpace(options.ZipPath) Then
                 options.ZipPath = argument
             Else
-                Throw New ArgumentException("Provide one ZIP path or use --zip-dir <directory>, optionally followed by --dry-run and/or --output <path>.")
+                Throw New ArgumentException("Provide one ZIP path or use --zip-dir <directory>, optionally followed by --dry-run, --skip-alert-dispatch, --reconcile-missing, and/or --output <path>.")
             End If
             index += 1
         End While
@@ -355,11 +368,12 @@ Module Program
     End Sub
 
     Private Sub PrintUsage()
-        Console.WriteLine("Usage: Fochimmo [<path-to-zip> | --zip-dir <directory>] [--dry-run] [--skip-alert-dispatch] [--output <path-to-json>]")
+        Console.WriteLine("Usage: Fochimmo [<path-to-zip> | --zip-dir <directory>] [--dry-run] [--skip-alert-dispatch] [--reconcile-missing] [--output <path-to-json>]")
         Console.WriteLine("If no ZIP path or directory is supplied, Fochimmo uses the only .zip file beside the executable.")
         Console.WriteLine("--zip-dir searches the named directory for exactly one .zip file.")
         Console.WriteLine("The ZIP must contain one Annonces.csv file. Without --dry-run, the feed is upserted through the Foch Supabase import function.")
         Console.WriteLine("--skip-alert-dispatch suppresses post-import alert and confirmation emails for this run.")
+        Console.WriteLine("--reconcile-missing opts into taking database listings absent from this ZIP offline; use only with a confirmed complete export.")
         Console.WriteLine("Credentials: SUPABASE_API_KEY (or SUPABASE_PUBLISHABLE_KEY / SUPABASE_ANON_KEY) and PROPERTY_FEED_IMPORT_TOKEN.")
         Console.WriteLine("Set PROPERTY_FEED_IMPORT_ENDPOINT to override the default HTTPS endpoint.")
     End Sub
@@ -370,6 +384,7 @@ Module Program
         Public Property OutputPath As String = String.Empty
         Public Property DryRun As Boolean
         Public Property SkipAlertDispatch As Boolean
+        Public Property ReconcileMissing As Boolean
         Public Property ShowHelp As Boolean
     End Class
 
