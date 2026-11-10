@@ -253,6 +253,15 @@ Public NotInheritable Class LegacyCsvFeedBuilder
             Dim firstRow As Integer
             If firstRowByReference.TryGetValue(id, firstRow) Then
                 Dim title As String = Cell(rows(rowIndex), TitleIndex)
+                If Not HasSameListingData(rows(firstRow), rows(rowIndex)) Then
+                    Dim firstTitle As String = Cell(rows(firstRow), TitleIndex)
+                    Dim firstPrice As String = Cell(rows(firstRow), PriceIndex)
+                    Dim duplicatePrice As String = Cell(rows(rowIndex), PriceIndex)
+                    Throw New InvalidDataException(
+                        $"Conflicting duplicate property reference {id}: CSV record {firstRow + 1} has title '{firstTitle}' and price '{firstPrice}'; " &
+                        $"CSV record {rowIndex + 1} has title '{title}' and price '{duplicatePrice}'. Each property reference must identify one listing. Correct the export before importing.")
+                End If
+
                 Dim reason As String = $"Duplicate property reference {id}; kept CSV record {firstRow + 1}."
                 warnings.Add($"CSV record {rowIndex + 1}: {reason} Skipped '{title}'.")
                 ignoredProperties.Add(New IgnoredFeedProperty With {
@@ -273,6 +282,18 @@ Public NotInheritable Class LegacyCsvFeedBuilder
         Next
 
         Return normalizedIds
+    End Function
+
+    Private Shared Function HasSameListingData(firstRow As String(), duplicateRow As String()) As Boolean
+        For columnIndex As Integer = 0 To firstRow.Length - 1
+            If columnIndex = RefIndex Then Continue For
+
+            Dim firstValue As String = firstRow(columnIndex).Trim()
+            Dim duplicateValue As String = duplicateRow(columnIndex).Trim()
+            If Not String.Equals(firstValue, duplicateValue, StringComparison.Ordinal) Then Return False
+        Next
+
+        Return True
     End Function
 
     Private Shared Function ExtractNegotiatorName(description As String) As String
