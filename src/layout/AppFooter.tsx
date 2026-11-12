@@ -127,6 +127,9 @@ export function AppFooter({ hidden = false }: { hidden?: boolean }) {
       </div>
       <div className="border-t border-border px-4 py-4 text-center text-xs text-muted-foreground">
         © {new Date().getFullYear()} Foch Immobilier. Carte professionnelle CPI et mentions contractuelles disponibles dans les mentions légales.
+        <a href="https://www.immodupeuple.fr/" className="ml-2 hover:underline">
+          Annuaire immobilier Immodupeuple
+        </a>
       </div>
     </footer>
   );
