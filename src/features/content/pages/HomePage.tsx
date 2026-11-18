@@ -128,9 +128,9 @@ export default function HomePage() {
   );
 
   useSeo({
-    title: "L'immobilier au Havre",
+    title: "Foch Immobilier | Agence immobilière au Havre",
     description:
-      "Depuis 1972, Foch Immobilier accompagne vendeurs et acquéreurs au Havre et sur le littoral.",
+      "Vente, achat, location et estimation immobilière au Havre et sur le littoral avec Foch Immobilier, agence au Havre depuis 1972.",
     canonicalPath: "/",
     image: "/images/agence-foch.jpg",
 
@@ -156,10 +156,11 @@ export default function HomePage() {
         <div className="page-banner homepage-hero-content container relative z-[5] mx-auto flex flex-col px-4 pt-5 pb-40 md:pt-8 md:pb-40">
           <div className="flex w-full flex-1 flex-col justify-center">
             <h1 className="max-w-4xl font-display text-3xl text-white md:text-5xl">
-              <span className="block text-4xl font-semibold sm:text-5xl md:text-7xl">Depuis 1972</span>
+              <span className="block text-4xl font-semibold sm:text-5xl md:text-7xl">Foch Immobilier</span>
+              <span className="mt-2 block text-xl font-medium sm:text-2xl md:text-3xl">Agence immobilière au Havre</span>
             </h1>
             <p className="mt-3 max-w-2xl text-base text-white drop-shadow-sm md:text-lg">
-              Notre cabinet accompagne vendeurs et acquéreurs avec une approche sur mesure.
+              Depuis 1972, notre cabinet accompagne vendeurs et acquéreurs avec une approche sur mesure.
             </p>
 
             <div className="relative top-2 lg:top-12" style={ctaSweepStyle}>

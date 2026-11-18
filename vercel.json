@@ -1,5 +1,12 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "redirects": [
+    {
+      "source": "/biens-immobiliers",
+      "destination": "/biens",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/api/property-feed/import",
