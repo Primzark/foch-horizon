@@ -161,10 +161,15 @@ export default function CityHubPage() {
   const city = cityQuery.data ?? cityBySlug.get(citySlug);
   const siteUrl = getSiteUrl();
   const pageTitle = cityGuide?.pageTitle ?? `Immobilier ${atLocation(city?.name ?? "")}`;
+  const pageDescription = cityGuide?.id === "le-havre"
+    ? "Immobilier au Havre : appartements et maisons à vendre, informations sur les quartiers et estimation de votre bien. Foch Immobilier vous accompagne depuis 1972."
+    : cityGuide
+      ? `${cityGuide.subtitle}. Habitat, écoles, commerces, déplacements et repères immobiliers.`
+      : `Découvrez nos biens et notre accompagnement immobilier ${atLocation(city?.name ?? "Le Havre")}.`;
 
   useSeo({
     title: cityGuide || city ? `${pageTitle} | Foch Immobilier` : "Ville introuvable | Foch Immobilier",
-    description: cityGuide ? `${cityGuide.subtitle}. Habitat, écoles, commerces, déplacements et repères immobiliers.` : `Découvrez nos biens et notre accompagnement immobilier ${atLocation(city?.name ?? "Le Havre")}.`,
+    description: pageDescription,
     canonicalPath: `/immobilier/${cityGuide?.id ?? citySlug}`,
     image: cityGuide?.heroImage.src ?? city?.heroImageUrl ?? "/images/agence-foch.jpg",
     noIndex: !cityGuide && !city,
@@ -173,7 +178,7 @@ export default function CityHubPage() {
       "@type": "CollectionPage",
       "@id": `${siteUrl}/immobilier/${cityGuide.id}#webpage`,
       name: cityGuide.pageTitle,
-      description: cityGuide.subtitle,
+      description: pageDescription,
       url: `${siteUrl}/immobilier/${cityGuide.id}`,
       inLanguage: "fr-FR",
       publisher: { "@id": `${siteUrl}/#agency` },
@@ -245,7 +250,7 @@ export default function CityHubPage() {
           </p>
         ) : (
           <section className="mt-8" aria-labelledby="city-properties-title">
-            <h2 id="city-properties-title" className="mb-4 font-display text-3xl">Biens {atLocation(cityGuide.name)}</h2>
+            <h2 id="city-properties-title" className="mb-4 font-display text-3xl">Biens immobiliers {atLocation(cityGuide.name)}</h2>
             <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
               {cityProperties.map((item, index) => (
                 <ListingCard key={item.id} item={item} browseItems={cityProperties} revealIndex={index} />
@@ -298,7 +303,7 @@ export default function CityHubPage() {
       <section data-live-content={`/biens?${allResultsParams.toString()}`} className="mt-8">
         <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h2 className="font-display text-3xl">Biens {atLocation(city.name)}</h2>
+            <h2 className="font-display text-3xl">Biens immobiliers {atLocation(city.name)}</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               {cityProperties.length} annonce{cityProperties.length > 1 ? "s" : ""} actuellement disponible{cityProperties.length > 1 ? "s" : ""}.
             </p>
