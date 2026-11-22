@@ -39,6 +39,7 @@ export interface PropertySearchItem {
   city: Pick<City, "name" | "slug"> & { postalCode: string };
   coverImageUrl: string;
   imageUrls?: string[];
+  updatedAt?: string | null;
   description?: string;
   dpeLabel: Property["dpeLabel"];
   status: Property["status"];

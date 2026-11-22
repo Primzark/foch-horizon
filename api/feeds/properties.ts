@@ -11,6 +11,8 @@ type PropertyFeedItem = {
   bedrooms?: number | null;
   city?: { name?: string; postalCode?: string };
   coverImageUrl?: string;
+  imageUrls?: string[];
+  updatedAt?: string | null;
   description?: string;
   status?: string;
   adminStatusOverride?: string | null;
@@ -59,6 +61,27 @@ function isImageUrl(value: string | undefined): value is string {
   } catch {
     return false;
   }
+}
+
+function sitemapLastmod(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const timestamp = new Date(value);
+  return Number.isNaN(timestamp.getTime()) ? null : timestamp.toISOString();
+}
+
+function sitemapUrl(property: PropertyFeedItem, siteUrl: string): string {
+  const images = [...new Set([...(property.imageUrls ?? []), property.coverImageUrl])]
+    .filter(isImageUrl)
+    .map(imageUrl => `    <image:image><image:loc>${xmlEscape(imageUrl)}</image:loc></image:image>`);
+  const lastmod = sitemapLastmod(property.updatedAt);
+
+  return [
+    "  <url>",
+    `    <loc>${xmlEscape(siteUrl + propertyPath(property))}</loc>`,
+    ...(lastmod ? [`    <lastmod>${lastmod}</lastmod>`] : []),
+    ...images,
+    "  </url>",
+  ].join("\n");
 }
 
 function formatPrice(amount: number, currency: string | undefined): string {
@@ -185,10 +208,10 @@ export default {
         .filter(property => Number.isInteger(property.id) && property.id > 0 && property.title.trim());
 
       if (sitemap) {
-        const urls = properties.map(property => `  <url><loc>${xmlEscape(siteUrl + propertyPath(property))}</loc></url>`);
+        const urls = properties.map(property => sitemapUrl(property, siteUrl));
         const body = [
           '<?xml version="1.0" encoding="UTF-8"?>',
-          '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+          '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">',
           ...urls,
           '</urlset>',
           '',

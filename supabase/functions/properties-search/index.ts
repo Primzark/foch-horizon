@@ -17,6 +17,7 @@ interface PropertyRow {
   admin_status_override: string | null;
   is_featured?: boolean;
   source_status: string | null;
+  updated_at?: string | null;
   description?: string | null;
   price_amount: number;
   price_currency: string;
@@ -120,6 +121,7 @@ Deno.serve(async (request) => {
         },
         coverImageUrl: imageUrls[0] ?? "",
         imageUrls,
+        updatedAt: item.updated_at ?? null,
         ...(includeDescription ? { description: item.description ?? "" } : {}),
         dpeLabel: item.dpe_label,
         status: item.status,
