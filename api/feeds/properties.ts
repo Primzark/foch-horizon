@@ -1,3 +1,5 @@
+import { toCanonicalPropertyPath } from "../../src/features/listings/utils/formatting.ts";
+
 declare const process: { env: Record<string, string | undefined> };
 
 type PropertyFeedItem = {
@@ -39,20 +41,6 @@ function plainText(value: unknown, maxLength = 2000): string {
   return String(value ?? "").replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "").trim().slice(0, maxLength);
 }
 
-function propertyPath(property: Pick<PropertyFeedItem, "id" | "slug">): string {
-  let slug = plainText(property.slug, 200)
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/-{2,}/g, "-")
-    .replace(/^-+|-+$/g, "");
-
-  const idSuffix = `-${property.id}`;
-  if (slug.endsWith(idSuffix)) slug = slug.slice(0, -idSuffix.length);
-  return `/biens/${property.id}-${slug || "annonce"}`;
-}
-
 function isImageUrl(value: string | undefined): value is string {
   if (!value) return false;
   try {
@@ -83,7 +71,7 @@ function propertyDescription(property: PropertyFeedItem): string {
 }
 
 function rssItem(property: PropertyFeedItem, siteUrl: string): string {
-  const link = `${siteUrl}${propertyPath(property)}`;
+  const link = `${siteUrl}${toCanonicalPropertyPath(property)}`;
   const title = [plainText(property.title, 180), plainText(property.city?.name, 100)].filter(Boolean).join(" · ");
   const image = isImageUrl(property.coverImageUrl)
     ? `\n      <media:content url="${xmlEscape(property.coverImageUrl)}" medium="image" />`
@@ -101,12 +89,11 @@ function rssItem(property: PropertyFeedItem, siteUrl: string): string {
   ].join("\n");
 }
 
-function xmlResponse(body: string, status = 200): Response {
+function xmlResponse(body: string, contentType = "application/rss+xml"): Response {
   return new Response(body, {
-    status,
     headers: {
-      "Content-Type": "application/rss+xml; charset=utf-8",
-      "Cache-Control": status === 200 ? "public, max-age=60, s-maxage=300, stale-while-revalidate=600" : "no-store",
+      "Content-Type": `${contentType}; charset=utf-8`,
+      "Cache-Control": "public, max-age=60, s-maxage=300, stale-while-revalidate=600",
       "X-Content-Type-Options": "nosniff",
     },
   });
@@ -153,6 +140,7 @@ export default {
     }
 
     const requestUrl = new URL(request.url);
+    const sitemap = requestUrl.pathname === "/sitemap-listings.xml" || requestUrl.searchParams.get("format") === "sitemap";
     const configuredSiteUrl = process.env.VITE_PUBLIC_SITE_URL?.trim().replace(/\/$/, "");
     const siteUrl = configuredSiteUrl || requestUrl.origin;
     const projectUrl = process.env.SUPABASE_URL?.trim()
@@ -184,6 +172,18 @@ export default {
         .filter(property => property.transaction === "vente" || property.transaction === undefined)
         .filter(property => availableStatuses.has(property.adminStatusOverride ?? property.status ?? ""))
         .filter(property => Number.isInteger(property.id) && property.id > 0 && property.title.trim());
+
+      if (sitemap) {
+        const urls = properties.map(property => `  <url><loc>${xmlEscape(siteUrl + toCanonicalPropertyPath(property))}</loc></url>`);
+        const body = [
+          '<?xml version="1.0" encoding="UTF-8"?>',
+          '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+          ...urls,
+          '</urlset>',
+          '',
+        ].join("\n");
+        return xmlResponse(request.method === "HEAD" ? "" : body, "application/xml");
+      }
 
       const items = properties.map(property => rssItem(property, siteUrl)).join("\n");
       const selfUrl = `${siteUrl}/feeds/properties-for-sale.xml`;

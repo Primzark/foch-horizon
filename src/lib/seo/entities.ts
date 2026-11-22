@@ -46,7 +46,10 @@ export function siteEntities(siteUrl: string) {
       name: agency.name,
       legalName: agency.legalName,
       identifier: { "@type": "PropertyValue", propertyID: "SIREN", value: agency.siren },
-      sameAs: [`https://annuaire-entreprises.data.gouv.fr/entreprise/${agency.siren}`],
+      sameAs: [
+        `https://annuaire-entreprises.data.gouv.fr/entreprise/${agency.siren}`,
+        "https://www.google.com/maps?cid=8246673428884749326",
+      ],
       url: `${siteUrl}/`,
       image: `${siteUrl}/images/agence-foch.jpg`,
       foundingDate: "1972",

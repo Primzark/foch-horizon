@@ -2,7 +2,7 @@ import { cityById, cityBySlug } from "@/features/cities/data/cities";
 import { agents, agentById } from "@/features/listings/data/agents";
 import { properties, propertyById, propertyBySlug } from "@/features/listings/data/properties";
 import { isAvailablePropertyStatus, normalizeKeyword } from "@/features/listings/utils/formatting";
-import { apiJson, isEdgeApiEnabled } from "@/lib/api/client";
+import { apiJson, ApiResponseError, isEdgeApiEnabled } from "@/lib/api/client";
 import { correctFrenchCommuneMentions, formatFrenchCommuneName } from "@/lib/utils/frenchCommuneNames";
 import type { PropertySearchItem, PropertySearchParams, PropertySearchResponse } from "@/types/api";
 import type { Property } from "@/types/domain";
@@ -404,13 +404,29 @@ export async function searchProperties(
   };
 }
 
-export async function getPropertyById(id: number): Promise<Property | null> {
+export function getPrerenderedProperty(id: number): Property | undefined {
+  if (typeof document === "undefined") return;
+  const data = document.getElementById("foch-property-snapshot")?.textContent;
+  if (!data) return;
+
+  try {
+    const row = JSON.parse(data) as EdgePropertyDetailRow;
+    if (row.id === id && row.transaction_type === "vente") return mapEdgePropertyDetailToDomain(row);
+  } catch {
+    // Live data is available even when the snapshot cannot be read.
+  }
+}
+
+export async function getPropertyById(id: number, snapshot?: Property): Promise<Property | null> {
   if (isEdgeApiEnabled()) {
     try {
       const payload = await apiJson<EdgePropertyDetailRow>(`/api/properties/${id}`);
       const property = mapEdgePropertyDetailToDomain(payload);
       return property.transactionType === "vente" ? property : null;
-    } catch {
+    } catch (error) {
+      if (snapshot?.id === id && (!(error instanceof ApiResponseError) || error.status === 429 || error.status >= 500)) {
+        return snapshot;
+      }
       return null;
     }
   }

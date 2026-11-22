@@ -1,5 +1,11 @@
 export type ApiMode = "mock" | "edge";
 
+export class ApiResponseError extends Error {
+  constructor(message: string, readonly status: number) {
+    super(message);
+  }
+}
+
 const rawMode = (import.meta.env.VITE_API_MODE as string | undefined)?.toLowerCase();
 const configuredBaseUrl = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "") ?? "";
 const supabaseAnonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined)?.trim() ?? "";
@@ -89,7 +95,7 @@ export async function apiJson<T>(path: string, init?: RequestInit): Promise<T> {
   if (!response.ok) {
     const fallbackError = `API request failed: ${response.status}`;
     const responseBody = await response.json().catch(() => null);
-    throw new Error((responseBody as { error?: string } | null)?.error ?? fallbackError);
+    throw new ApiResponseError((responseBody as { error?: string } | null)?.error ?? fallbackError, response.status);
   }
 
   return (await response.json()) as T;

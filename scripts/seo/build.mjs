@@ -233,7 +233,7 @@ try {
     return route.continue();
   });
   for (const route of routes) {
-    const routeProperty = publicListingProperties.find(property => toCanonicalPropertyPath(property) === route);
+    const routeProperty = publicPropertyDetails.find(property => toCanonicalPropertyPath(property) === route);
     const page = await context.newPage();
     await page.goto(`http://127.0.0.1:4175${route}`);
     await page.waitForSelector('main h1');
@@ -301,7 +301,12 @@ try {
     if (snapshot.h1 !== 1 || /(?:à|de)\s+Le Havre\b/i.test(snapshot.text)) throw new Error(`Invalid headings or French grammar on ${route}`);
     if (snapshot.canonical !== `${siteUrl}${route}`) throw new Error(`Unexpected canonical on ${route}: ${snapshot.canonical}`);
     const cleanTemplate = templateWithRobots.replace(/<title>[\s\S]*?<\/title>|<meta\s[^>]*(?:name="(?:description|robots|twitter:[^"]*)"|property="og:[^"]*")[^>]*>/g, '');
-    const html = cleanTemplate.replace('</head>', `${snapshot.head}\n</head>`).replace('<div id="root"></div>', snapshot.root);
+    const propertySnapshot = routeProperty
+      ? `<script id="foch-property-snapshot" type="application/json">${JSON.stringify(toEdgePropertyDetail(routeProperty)).replaceAll('<', '\\u003c')}</script>`
+      : '';
+    const html = cleanTemplate
+      .replace('</head>', () => `${snapshot.head}\n${propertySnapshot}</head>`)
+      .replace('<div id="root"></div>', () => snapshot.root);
     snapshots.push({ route, html: route === '/' ? withHomePageModulePreload(html) : html });
     await page.close();
   }
@@ -319,11 +324,7 @@ try {
     await mkdir(path.dirname(filename), { recursive: true });
     await writeFile(filename, snapshot.html);
   }
-  const sitemapRoutes = [...new Set([
-    ...staticRoutes,
-    ...guideRoutes,
-    ...publicListingProperties.map(toCanonicalPropertyPath),
-  ])];
+  const sitemapRoutes = [...new Set([...staticRoutes, ...guideRoutes])];
   const escape = value => value.replaceAll('&', '&amp;').replaceAll('<', '&lt;');
   const escapeXml = value => String(value)
     .replaceAll('&', '&amp;')
@@ -368,10 +369,17 @@ try {
   ].join('\n');
   await mkdir('dist/feeds', { recursive: true });
   await writeFile('dist/feeds/agency-news.xml', agencyNewsXml);
-  await writeFile('dist/sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sitemapRoutes.map(route => {
+  await writeFile('dist/sitemap-pages.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sitemapRoutes.map(route => {
     const reviewed = guides.find(guide => route === `/immobilier/${guide.id}`)?.reviewedAt;
     return `  <url><loc>${escape(siteUrl + route)}</loc>${reviewed ? `<lastmod>${reviewed}</lastmod>` : ''}</url>`;
   }).join('\n')}\n</urlset>\n`);
+  await writeFile('dist/sitemap.xml', [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    ...['sitemap-pages.xml', 'sitemap-listings.xml'].map(file => `  <sitemap><loc>${escape(`${siteUrl}/${file}`)}</loc></sitemap>`),
+    '</sitemapindex>',
+    '',
+  ].join('\n'));
   const robots = (await readFile('public/robots.txt', 'utf8')).replace(/^Sitemap:.*$/m, `Sitemap: ${siteUrl}/sitemap.xml`);
   await writeFile('dist/robots.txt', robots);
   console.log(`Prerendered ${snapshots.length} public pages and ${propertyAliases.length} property URL aliases; sitemap and robots use ${siteUrl}.`);

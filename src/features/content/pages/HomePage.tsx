@@ -13,6 +13,7 @@ import { properties } from "@/features/listings/data/properties";
 import { toSearchItem } from "@/features/listings/utils/mappers";
 import { cities } from "@/features/cities/data/cities";
 import { useSeo } from "@/lib/seo/useSeo";
+import { agency } from "@/lib/seo/entities";
 import { isEdgeApiEnabled } from "@/lib/api/client";
 import { getAgencyReviews } from "@/features/content/api/googleReviews.service";
 import { inferPlaceImageMood } from "@/lib/visuals/placeImageMotion";
@@ -23,13 +24,13 @@ import { AgencyTeamSection } from "@/features/content/components/AgencyTeamSecti
 
 const serviceCards = [
   {
-    title: "Avis de valeur",
+    title: "Estimation immobilière au Havre",
     description: "Une estimation précise, argumentée et alignée avec les attentes du marché havrais.",
     href: "/estimation",
     icon: Compass,
   },
   {
-    title: "Vente",
+    title: "Vendre votre bien",
     description: "Valorisation premium, ciblage qualifié des acquéreurs et pilotage jusqu'à la signature.",
     href: "/vendre",
     icon: Handshake,
@@ -266,6 +267,9 @@ export default function HomePage() {
               <GoogleGIcon size={14} decorative />
               Lire les avis clients
             </Link>
+            <Link to="/nos-dernieres-ventes" className="rounded-full border border-border px-4 py-2 text-sm hover:bg-card">
+              Nos dernières ventes
+            </Link>
           </div>
         </ScrollReveal>
       </section>
@@ -335,6 +339,20 @@ export default function HomePage() {
           </div>
         </section>
       )}
+
+      <section className="container mx-auto px-4 pt-10" aria-labelledby="home-agency-title">
+        <ScrollReveal mood={heroMood}>
+          <h2 id="home-agency-title" className="font-display text-3xl">Notre agence au Havre</h2>
+          <p className="mt-2 max-w-prose text-sm leading-relaxed text-muted-foreground">
+            Retrouvez notre équipe au{" "}
+            <Link to="/contact" className="font-medium text-foreground underline underline-offset-4">
+              {agency.streetAddress}, {agency.postalCode} {agency.city}
+            </Link>
+            . Nous accompagnons les acheteurs et les vendeurs au Havre, notamment en centre-ville,
+            à Saint-Vincent et à proximité de la plage, ainsi qu’à Sainte-Adresse.
+          </p>
+        </ScrollReveal>
+      </section>
 
       <AgencyTeamSection mood={heroMood} />
     </div>

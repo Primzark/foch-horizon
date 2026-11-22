@@ -7,7 +7,7 @@ import { ArrowRight, Bath, BedDouble, Car, ChevronLeft, ChevronRight, Copy, Hear
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cityById, cityBySlug } from "@/features/cities/data/cities";
-import { getPropertyById, getSimilarProperties, searchProperties } from "@/features/listings/api/properties.service";
+import { getPrerenderedProperty, getPropertyById, getSimilarProperties, searchProperties } from "@/features/listings/api/properties.service";
 import { ListingGallery } from "@/features/listings/components/ListingGallery";
 import { PropertyPreviewLink } from "@/features/listings/components/PropertyPreviewLink";
 import { ListingShareButton } from "@/features/listings/components/ListingShareButton";
@@ -219,10 +219,12 @@ export default function ListingDetailPage({
     () => (navigationPreview ? toPropertyPreview(navigationPreview) : undefined),
     [navigationPreview],
   );
+  const snapshot = useMemo(() => propertyId == null ? undefined : getPrerenderedProperty(propertyId), [propertyId]);
   const propertyQuery = useQuery({
     queryKey: ["property", propertyId],
     enabled: propertyId != null,
-    queryFn: () => getPropertyById(propertyId as number),
+    queryFn: () => getPropertyById(propertyId as number, snapshot),
+    initialData: snapshot,
     placeholderData: previewProperty,
     staleTime: 0,
     refetchOnWindowFocus: "always",

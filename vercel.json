@@ -2,12 +2,25 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "redirects": [
     {
+      "source": "/index.aspx",
+      "destination": "/",
+      "permanent": true
+    },
+    {
       "source": "/biens-immobiliers",
       "destination": "/biens",
       "permanent": true
     }
   ],
   "rewrites": [
+    {
+      "source": "/annonce/:id([0-9]+)",
+      "destination": "/api/legacy-listing?listingRef=:id"
+    },
+    {
+      "source": "/sitemap-listings.xml",
+      "destination": "/api/feeds/properties?format=sitemap"
+    },
     {
       "source": "/api/property-feed/import",
       "destination": "https://rcrulfdobtmfxzpuyryn.supabase.co/functions/v1/property-feed-import"
@@ -99,6 +112,10 @@
   ],
   "buildCommand": "npm run build",
   "headers": [
+    {
+      "source": "/api/properties/:id([0-9]+)",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex" }]
+    },
     {
       "source": "/(.*)",
       "headers": [
