@@ -1,5 +1,3 @@
-import { toCanonicalPropertyPath } from "../src/features/listings/utils/formatting.ts";
-
 export default {
   async fetch(request: Request): Promise<Response> {
     if (request.method !== "GET" && request.method !== "HEAD") {
@@ -35,9 +33,16 @@ export default {
       if (listing.is_online === false || listing.status === "off_market") {
         return new Response(null, { status: 404 });
       }
+      const slug = listing.slug.toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+      const suffix = `-${id}`;
+      const canonicalSlug = slug.endsWith(suffix) ? slug.slice(0, -suffix.length) : slug;
       return new Response(null, {
         status: 308,
-        headers: { Location: toCanonicalPropertyPath(listing), "Cache-Control": "public, max-age=300" },
+        headers: { Location: `/biens/${id}-${canonicalSlug || "annonce"}`, "Cache-Control": "public, max-age=300" },
       });
     } catch {
       return unavailable();

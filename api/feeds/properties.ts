@@ -1,5 +1,3 @@
-import { toCanonicalPropertyPath } from "../../src/features/listings/utils/formatting.ts";
-
 declare const process: { env: Record<string, string | undefined> };
 
 type PropertyFeedItem = {
@@ -41,6 +39,19 @@ function plainText(value: unknown, maxLength = 2000): string {
   return String(value ?? "").replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "").trim().slice(0, maxLength);
 }
 
+function propertyPath(property: Pick<PropertyFeedItem, "id" | "slug">): string {
+  let slug = plainText(property.slug, 200)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  const idSuffix = `-${property.id}`;
+  if (slug.endsWith(idSuffix)) slug = slug.slice(0, -idSuffix.length);
+  return `/biens/${property.id}-${slug || "annonce"}`;
+}
+
 function isImageUrl(value: string | undefined): value is string {
   if (!value) return false;
   try {
@@ -71,7 +82,7 @@ function propertyDescription(property: PropertyFeedItem): string {
 }
 
 function rssItem(property: PropertyFeedItem, siteUrl: string): string {
-  const link = `${siteUrl}${toCanonicalPropertyPath(property)}`;
+  const link = `${siteUrl}${propertyPath(property)}`;
   const title = [plainText(property.title, 180), plainText(property.city?.name, 100)].filter(Boolean).join(" · ");
   const image = isImageUrl(property.coverImageUrl)
     ? `\n      <media:content url="${xmlEscape(property.coverImageUrl)}" medium="image" />`
@@ -174,7 +185,7 @@ export default {
         .filter(property => Number.isInteger(property.id) && property.id > 0 && property.title.trim());
 
       if (sitemap) {
-        const urls = properties.map(property => `  <url><loc>${xmlEscape(siteUrl + toCanonicalPropertyPath(property))}</loc></url>`);
+        const urls = properties.map(property => `  <url><loc>${xmlEscape(siteUrl + propertyPath(property))}</loc></url>`);
         const body = [
           '<?xml version="1.0" encoding="UTF-8"?>',
           '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
