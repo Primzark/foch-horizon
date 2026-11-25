@@ -76,6 +76,7 @@ import {
 } from "@/features/admin/api/adminProperties.service";
 
 type StatusFilter = "all" | AdminManagedPropertyStatus;
+type VisibilityFilter = "all" | "online" | "offline";
 type AdminLoginErrors = Partial<Record<"email" | "password", string>>;
 
 const adminLoginEmailSchema = z.string().trim().email().max(254);
@@ -628,6 +629,7 @@ export default function AdminPropertiesPage() {
   const [loginError, setLoginError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [visibilityFilter, setVisibilityFilter] = useState<VisibilityFilter>("all");
   const [savingIds, setSavingIds] = useState<Set<number>>(() => new Set());
 
   useSeo({
@@ -795,6 +797,7 @@ export default function AdminPropertiesPage() {
     const needle = normalizeSearch(search.trim());
     return allProperties.filter((property) => {
       if (statusFilter !== "all" && property.status !== statusFilter) return false;
+      if (visibilityFilter !== "all" && property.is_online !== (visibilityFilter === "online")) return false;
       if (!needle) return true;
       const haystack = normalizeSearch([
         property.title,
@@ -807,7 +810,7 @@ export default function AdminPropertiesPage() {
     }).sort((left, right) =>
       propertyPublicationTimestamp(right) - propertyPublicationTimestamp(left) || right.id - left.id,
     );
-  }, [allProperties, search, statusFilter]);
+  }, [allProperties, search, statusFilter, visibilityFilter]);
 
   if (!supabaseClient) {
     return (
@@ -1122,18 +1125,18 @@ export default function AdminPropertiesPage() {
             </section>
 
             <section aria-label="Liste des annonces" className="mt-7">
-              <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <h2 className="text-base font-semibold">Tous les biens</h2>
-                  <p className="mt-1 text-xs text-muted-foreground">{filteredProperties.length} résultat{filteredProperties.length === 1 ? "" : "s"} sur {allProperties.length}</p>
+                  <h2 className="text-base font-semibold">Liste des biens</h2>
+                  <p role="status" className="mt-1 text-xs text-muted-foreground">{filteredProperties.length} résultat{filteredProperties.length === 1 ? "" : "s"} sur {allProperties.length}</p>
                 </div>
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <div className="relative sm:w-[300px]">
+                <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_190px_170px] lg:grid-cols-[300px_190px_170px]">
+                  <div className="relative">
                     <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
                     <Input
                       value={search}
                       onChange={(event) => setSearch(event.target.value)}
-                      placeholder="Rechercher un bien, une ville, une référence…"
+                      placeholder="Bien, ville, référence"
                       aria-label="Rechercher parmi les annonces"
                       className="h-10 bg-card pl-9 pr-9 text-xs"
                     />
@@ -1144,7 +1147,7 @@ export default function AdminPropertiesPage() {
                     )}
                   </div>
                   <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as StatusFilter)}>
-                    <SelectTrigger aria-label="Filtrer par statut" className="h-10 gap-2 bg-card text-xs sm:w-[190px]">
+                    <SelectTrigger aria-label="Filtrer par statut" className="h-10 gap-2 bg-card text-xs">
                       <SlidersHorizontal className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
                       <SelectValue />
                     </SelectTrigger>
@@ -1163,6 +1166,16 @@ export default function AdminPropertiesPage() {
                       })}
                     </SelectContent>
                   </Select>
+                  <Select value={visibilityFilter} onValueChange={(value) => setVisibilityFilter(value as VisibilityFilter)}>
+                    <SelectTrigger aria-label="Filtrer par visibilité" className="h-10 gap-2 bg-card text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent align="end">
+                      <SelectItem value="all">Toutes les visibilités</SelectItem>
+                      <SelectItem value="online">En ligne</SelectItem>
+                      <SelectItem value="offline">Hors ligne</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
@@ -1171,9 +1184,18 @@ export default function AdminPropertiesPage() {
                   <div>
                     <Search className="mx-auto h-5 w-5 text-muted-foreground" aria-hidden="true" />
                     <h3 className="mt-3 text-sm font-semibold">Aucune annonce trouvée</h3>
-                    <p className="mt-1 text-xs text-muted-foreground">Modifiez la recherche ou le filtre de statut.</p>
-                    {(search || statusFilter !== "all") && (
-                      <Button variant="ghost" size="sm" className="mt-3" onClick={() => { setSearch(""); setStatusFilter("all"); }}>
+                    <p className="mt-1 text-xs text-muted-foreground">Modifiez la recherche ou les filtres.</p>
+                    {(search || statusFilter !== "all" || visibilityFilter !== "all") && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="mt-3"
+                        onClick={() => {
+                          setSearch("");
+                          setStatusFilter("all");
+                          setVisibilityFilter("all");
+                        }}
+                      >
                         Effacer les filtres
                       </Button>
                     )}
